@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group 'com.litiengine.input'
+version '1.0-SNAPSHOT'
+
+application {
+    mainClass = 'com.litiengine.input.natives.Program'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).each {
+    it.options.compilerArgs.add('--enable-preview')
+}
+
+tasks.withType(JavaExec).configureEach {
+    jvmArgs += '--enable-preview'
+}
+
+compileJava {
+    options.compilerArgs += ['--enable-preview']
+}
+
+
