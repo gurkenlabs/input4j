@@ -3,6 +3,7 @@ package de.gurkenlabs.litiengine.input.natives;
 import java.lang.foreign.*;
 import java.lang.invoke.VarHandle;
 
+import static de.gurkenlabs.litiengine.input.natives.IDirectInput8W.Vtable.EnumDevices$VH;
 import static java.lang.foreign.ValueLayout.ADDRESS;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 
@@ -14,15 +15,25 @@ final class IDirectInput8W {
   static final VarHandle lpVtbl$VH = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("lpVtbl"));
   public MemorySegment _self;
 
-  public MemorySegment vtablePointer;
+  public MemorySegment vtable;
+
+  private MemorySegment vtablePointerSegment;
 
   public static IDirectInput8W read(MemorySegment segment, MemorySession memorySession) {
     var directInput = new IDirectInput8W();
     directInput._self = segment;
     var pointer = (MemoryAddress) lpVtbl$VH.get(segment);
 
-    directInput.vtablePointer = MemorySegment.ofAddress(pointer, Vtable.$LAYOUT.byteSize(), memorySession);
+    directInput.vtablePointerSegment = MemorySegment.ofAddress(pointer, Vtable.$LAYOUT.byteSize(), memorySession);
+
+    // Dereference the pointer for the memory segment of the virtual table
+    directInput.vtable = MemorySegment.ofAddress(directInput.vtablePointerSegment.get(ADDRESS, 0), Vtable.$LAYOUT.byteSize(), memorySession);
     return directInput;
+  }
+
+  public int EnumDevices(int dwDevType, Addressable lpCallback, Addressable pvRef, int dwFlags) {
+    var enumDevices = Vtable.EnumDevices.ofAddress((MemoryAddress) EnumDevices$VH.get(vtable));
+    return enumDevices.apply(this.vtablePointerSegment, dwDevType, lpCallback, pvRef, dwFlags);
   }
 
   static class Vtable {
@@ -50,11 +61,6 @@ final class IDirectInput8W {
 
     static final VarHandle EnumDevices$VH = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("EnumDevices"));
 
-    public static EnumDevices EnumDevices(MemorySegment vtablePointer, MemorySession session) {
-      // Dereference the pointer for the virtual table
-      var vtableSeg = MemorySegment.ofAddress(vtablePointer.get(ADDRESS, 0), $LAYOUT.byteSize(), session);
-      return EnumDevices.ofAddress((MemoryAddress) EnumDevices$VH.get(vtableSeg));
-    }
 
     public interface EnumDevices {
 

@@ -60,17 +60,7 @@ public class DirectInputPlayground {
       }
 
       var directInput8 = IDirectInput8W.read(ppvOut, memorySession);
-
-      // Create a method handle to the Java function as a callback
-      MethodHandle onEnumDevices = MethodHandles.lookup()
-              .findStatic(DirectInputPlayground.class, "enumDevicesCallback", MethodType.methodType(long.class, MemoryAddress.class, MemoryAddress.class));
-
-      MemorySegment onEnumDevicesNativeSymbol = Linker.nativeLinker().upcallStub(
-              onEnumDevices, FunctionDescriptor.of(JAVA_LONG, ADDRESS, ADDRESS), memorySession);
-
-      var enumDevices = IDirectInput8W.Vtable.EnumDevices(directInput8.vtablePointer, memorySession);
-
-      int result = enumDevices.apply(directInput8.vtablePointer, DI8DEVCLASS_GAMECTRL, onEnumDevicesNativeSymbol, MemoryAddress.NULL, DIEDFL_ALLDEVICES);
+      var result = directInput8.EnumDevices(DI8DEVCLASS_GAMECTRL, enumDevicesCallbackNative(memorySession), MemoryAddress.NULL, DIEDFL_ALLDEVICES);
       if (result == DIERR_INVALIDPARAM) {
         System.out.println("DIERR_INVALIDPARAM: An invalid parameter was passed to the returning function, or the object was not in a state that permitted the function to be called.");
         return;
@@ -102,5 +92,14 @@ public class DirectInputPlayground {
       }
     }
     return DIENUM_CONTINUE;
+  }
+
+  private static MemorySegment enumDevicesCallbackNative(MemorySession memorySession) throws Throwable {
+    // Create a method handle to the Java function as a callback
+    MethodHandle onEnumDevices = MethodHandles.lookup()
+            .findStatic(DirectInputPlayground.class, "enumDevicesCallback", MethodType.methodType(long.class, MemoryAddress.class, MemoryAddress.class));
+
+    return Linker.nativeLinker().upcallStub(
+            onEnumDevices, FunctionDescriptor.of(JAVA_LONG, ADDRESS, ADDRESS), memorySession);
   }
 }
