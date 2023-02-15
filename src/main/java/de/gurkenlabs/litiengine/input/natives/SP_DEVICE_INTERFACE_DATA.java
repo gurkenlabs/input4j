@@ -1,4 +1,4 @@
-package com.litiengine.input.natives;
+package de.gurkenlabs.litiengine.input.natives;
 
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;

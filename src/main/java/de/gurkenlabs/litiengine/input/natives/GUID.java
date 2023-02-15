@@ -1,7 +1,8 @@
-package com.litiengine.input.natives;
+package de.gurkenlabs.litiengine.input.natives;
 
 import java.lang.foreign.*;
 import java.lang.invoke.VarHandle;
+import java.util.UUID;
 
 /**
  * A GUID identifies an object such as a COM interfaces, or a COM class object, or a manager entry-point vector (EPV).
@@ -19,10 +20,10 @@ record GUID(int Data1, short Data2, short Data3, byte... Data4) {
   static int DATA4_LENGTH = 8;
 
   static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
-      ValueLayout.JAVA_INT.withName("Data1"),
-      ValueLayout.JAVA_SHORT.withName("Data2"),
-      ValueLayout.JAVA_SHORT.withName("Data3"),
-      MemoryLayout.sequenceLayout(8, ValueLayout.JAVA_BYTE).withName("Data4")
+          ValueLayout.JAVA_INT.withName("Data1"),
+          ValueLayout.JAVA_SHORT.withName("Data2"),
+          ValueLayout.JAVA_SHORT.withName("Data3"),
+          MemoryLayout.sequenceLayout(8, ValueLayout.JAVA_BYTE).withName("Data4")
   ).withName("GUID");
 
   static final VarHandle VH_Data1 = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Data1"));
@@ -55,9 +56,12 @@ record GUID(int Data1, short Data2, short Data3, byte... Data4) {
 
   @Override
   public String toString() {
+    return ("{" + this.rawString() + "}").toUpperCase();
+  }
+
+  private String rawString() {
     var sb = new StringBuilder();
-    sb.append("{");
-    sb.append(String.format("%08X",Data1));
+    sb.append(String.format("%08X", Data1));
     sb.append("-");
     sb.append(String.format("%04X", Data2));
     sb.append("-");
@@ -71,8 +75,10 @@ record GUID(int Data1, short Data2, short Data3, byte... Data4) {
       }
     }
 
-    sb.append("}");
+    return sb.toString();
+  }
 
-    return sb.toString().toUpperCase();
+  public UUID toUUID() {
+    return UUID.fromString(this.rawString());
   }
 }

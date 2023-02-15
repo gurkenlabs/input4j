@@ -1,4 +1,4 @@
-package com.litiengine.input.natives;
+package de.gurkenlabs.litiengine.input.natives;
 
 import java.lang.foreign.Linker;
 import java.lang.foreign.FunctionDescriptor;

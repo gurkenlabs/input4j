@@ -1,36 +1,37 @@
 plugins {
-    id 'java'
-    id 'application'
+  id 'java'
+  id 'application'
 }
 
 group 'com.litiengine.input'
 version '1.0-SNAPSHOT'
 
 application {
-    mainClass = 'com.litiengine.input.natives.Program'
+  mainClass = 'de.gurkenlabs.litiengine.input.natives.Program'
 }
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
 }
 
 test {
-    useJUnitPlatform()
+  useJUnitPlatform()
 }
 
 tasks.withType(JavaCompile).each {
-    it.options.compilerArgs.add('--enable-preview')
+  it.options.compilerArgs.add('--enable-preview')
 }
 
 tasks.withType(JavaExec).configureEach {
-    jvmArgs += '--enable-preview'
+  jvmArgs += '--enable-preview'
+  jvmArgs += '--enable-native-access=ALL-UNNAMED'
 }
 
 compileJava {
-    options.compilerArgs += ['--enable-preview']
+  options.compilerArgs += ['--enable-preview']
 }
 
 

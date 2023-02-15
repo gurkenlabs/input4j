@@ -1,29 +1,81 @@
-package com.litiengine.input.natives;
+package de.gurkenlabs.litiengine.input.natives;
 
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.VarHandle;
 
-public class DIDEVICEINSTANCE {
+/**
+ * Describes an instance of a DirectInput device.
+ * This structure is used with the IDirectInput8::EnumDevices, IDirectInput8::EnumDevicesBySemantics,
+ * and IDirectInputDevice8::GetDeviceInfo methods.
+ */
+class DIDEVICEINSTANCE {
   static final int MAX_PATH = 260;
 
+  /**
+   * Size of this structure, in bytes. This member must be initialized before the structure is used.
+   */
   public int dwSize = (int) $LAYOUT.byteSize();
 
+  /**
+   * Unique identifier for the instance of the device. An application can save the instance globally unique identifier
+   * (GUID) into a configuration file and use it at a later time. Instance GUIDs are specific to a particular computer.
+   * An instance GUID obtained from one computer is unrelated to instance GUIDs on another.
+   */
   public GUID guidInstance;
 
+  /**
+   * Unique identifier for the product. This identifier is established by the manufacturer of the device.
+   */
   public GUID guidProduct;
 
+  /**
+   * Device type specifier. The least-significant byte of the device type description code specifies the device type.
+   * The next-significant byte specifies the device subtype.
+   * This value can also be combined with DIDEVTYPE_HID, which specifies a Human Interface Device (human interface device).
+   */
   public int dwDevType;
 
+  /**
+   * Friendly name for the instance. For example, "Joystick 1."
+   */
   public char[] tszInstanceName = new char[MAX_PATH];
 
+  /**
+   * Friendly name for the product.
+   */
   public char[] tszProductName = new char[MAX_PATH];
 
+  /**
+   * Unique identifier for the driver being used for force feedback.
+   * The driver's manufacturer establishes this identifier.
+   */
   public GUID guidFFDriver;
 
+  /**
+   * If the device is a Human Interface Device (HID), this member contains the HID usage page code.
+   * <ul>
+   *  <li>0x01	Generic Desktop Controls</li>
+   *  <lI>0x05	Game Controls</lI>
+   *  <lI>0x08	LEDs</lI>
+   *  <lI>0x09	Button</lI>
+   * </ul>
+   */
   public short wUsagePage;
 
+  /**
+   * If the device is a Human Interface Device (HID), this member contains the HID usage code.
+   * <ul>
+   *  <li>0x01	Pointer</li>
+   *  <li>0x02	Mouse</li>
+   *  <li>0x04	Joystick</li>
+   *  <li>0x05	Game Pad</li>
+   *  <li>0x06	Keyboard</li>
+   *  <li>0x07	Keypad</li>
+   *  <li>0x08	Multi-axis Controller</li>
+   * </ul>
+   */
   public short wUsage;
 
   static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(

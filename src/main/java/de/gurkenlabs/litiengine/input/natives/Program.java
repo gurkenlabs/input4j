@@ -1,10 +1,13 @@
-package com.litiengine.input.natives;
+package de.gurkenlabs.litiengine.input.natives;
 
+
+import de.gurkenlabs.litiengine.input.RawGamepad;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.util.ArrayList;
 import java.util.Objects;
 
 import static java.lang.foreign.ValueLayout.*;
@@ -32,6 +35,10 @@ public class Program {
 
   public static final int DIERR_INVALIDPARAM = 0x80070057;
 
+  private static final int DIENUM_CONTINUE = 1;
+
+  private static final int DIENUM_STOP = 0;
+
   static GUID GUID_DEVINTERFACE_HID = new GUID(0x4d1e55b2,
           (short) 0xf16f,
           (short) 0x11cf,
@@ -56,8 +63,6 @@ public class Program {
   static MethodHandle directInput8Create;
 
   static MethodHandle getModuleHandle;
-
-  static MethodHandle enumDevices;
 
   static {
     getLastError = RuntimeHelper.downcallHandle("GetLastError",
@@ -90,7 +95,10 @@ public class Program {
 
   public static void main(String[] args) throws Throwable {
     // listSetupAPIDevices();
+    enumDirectInput8Devices();
+  }
 
+  private static void enumDirectInput8Devices() throws Throwable {
     try (var memorySession = MemorySession.openConfined()) {
       // Create a method handle to the Java function as a callback
       var riidltf = memorySession.allocate(GUID.$LAYOUT);
@@ -118,20 +126,33 @@ public class Program {
         System.out.println("DIERR_INVALIDPARAM: An invalid parameter was passed to the returning function, or the object was not in a state that permitted the function to be called.");
       }
 
-      System.out.println(directInput8);
+      System.out.println("Found " + gamepads.size() + " gamepads.");
+      for (var gamepad : gamepads) {
+        System.out.println("\t" + gamepad.instanceName());
+      }
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
 
+  static ArrayList<RawGamepad> gamepads = new ArrayList<>();
+
   public static long enumDevicesCallback(MemoryAddress lpddiSegment, MemoryAddress pvRef) {
     try (var memorySession = MemorySession.openConfined()) {
       var device = DIDEVICEINSTANCE.read(MemorySegment.ofAddress(lpddiSegment, DIDEVICEINSTANCE.$LAYOUT.byteSize(), memorySession));
-      var name = new String(device.tszInstanceName);
-      var product = new String(device.tszProductName);
-      System.out.println(device);
+      var name = new String(device.tszInstanceName).trim();
+      var product = new String(device.tszProductName).trim();
+      var type = DI8DEVTYPE.fromDwDevType(device.dwDevType);
+
+      // for now we're only interested in gamepads, will add other types later
+      if (type == DI8DEVTYPE.DI8DEVTYPE_GAMEPAD) {
+        var gamepad = new RawGamepad(device.guidProduct.toUUID(), device.guidInstance.toUUID(), name, product);
+        gamepads.add(gamepad);
+      }else {
+        System.out.println("found device that is not a gamepad: " + name + "[" + type + "]");
+      }
     }
-    return 0;
+    return DIENUM_CONTINUE;
   }
 
   private static void listSetupAPIDevices() throws Throwable {
