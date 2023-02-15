@@ -29,6 +29,13 @@ final class SP_DEVINFO_DATA {
 
   /**
    * The GUID of the device's setup class.
+   * <p>see <a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/install/system-defined-device-setup-classes-available-to-vendors">...</a></p>
+   * <b>Some common values:</b>
+   * <ul>
+   *   <li>Human Interface Devices (HID) - {745a17a0-74d3-11d0-b6fe-00a0c90f57da}</li>
+   *   <li>Keyboard - {4d36e96b-e325-11ce-bfc1-08002be10318}</li>
+   *   <li>Mouse - {4d36e96f-e325-11ce-bfc1-08002be10318}</li>
+   * </ul>
    */
   public GUID ClassGuid;
 
