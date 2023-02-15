@@ -10,7 +10,7 @@ import java.lang.invoke.VarHandle;
  * This structure is used with the IDirectInput8::EnumDevices, IDirectInput8::EnumDevicesBySemantics,
  * and IDirectInputDevice8::GetDeviceInfo methods.
  */
-class DIDEVICEINSTANCE {
+final class DIDEVICEINSTANCE {
   static final int MAX_PATH = 260;
 
   /**

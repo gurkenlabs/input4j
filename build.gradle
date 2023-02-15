@@ -3,11 +3,11 @@ plugins {
   id 'application'
 }
 
-group 'com.litiengine.input'
+group 'de.gurkenlabs.litiengine.input'
 version '1.0-SNAPSHOT'
 
 application {
-  mainClass = 'de.gurkenlabs.litiengine.input.natives.Program'
+  mainClass = 'de.gurkenlabs.litiengine.input.natives.DirectInputPlayground'
 }
 
 repositories {
