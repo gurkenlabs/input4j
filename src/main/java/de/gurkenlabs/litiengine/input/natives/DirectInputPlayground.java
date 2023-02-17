@@ -33,7 +33,7 @@ public class DirectInputPlayground {
 
   private static MethodHandle getModuleHandle;
 
-  static Map<DIDEVICEINSTANCE, RawGamepad> deviceInstances = new ConcurrentHashMap<>();
+  static Map<IDirectInputDevice8, RawGamepad> deviceInstances = new ConcurrentHashMap<>();
 
   static {
     getModuleHandle = RuntimeHelper.downcallHandle("GetModuleHandleW",
@@ -49,28 +49,33 @@ public class DirectInputPlayground {
 
   private static void enumDirectInput8Devices() throws Throwable {
     try (var memorySession = MemorySession.openConfined()) {
-      // Create a method handle to the Java function as a callback
       var riidltf = memorySession.allocate(GUID.$LAYOUT);
       IID_IDirectInput8W.write(riidltf);
-      var ppvOut = memorySession.allocate(IDirectInput8W.$LAYOUT);
+      var ppvOut = memorySession.allocate(IDirectInput8.$LAYOUT);
 
       if ((int) directInput8Create.invoke(getModuleHandle.invoke(MemoryAddress.NULL), DIRECTINPUT_VERSION, riidltf, ppvOut, MemoryAddress.NULL) != DI_OK) {
         System.out.println("oops");
         return;
       }
 
-      var directInput8 = IDirectInput8W.read(ppvOut, memorySession);
-      var result = directInput8.EnumDevices(DI8DEVCLASS_GAMECTRL, enumDevicesCallbackNative(memorySession), MemoryAddress.NULL, DIEDFL_ALLDEVICES);
+      var directInput = IDirectInput8.read(ppvOut, memorySession);
+      var result = directInput.EnumDevices(DI8DEVCLASS_GAMECTRL, enumDevicesCallbackNative(memorySession), MemoryAddress.NULL, DIEDFL_ALLDEVICES);
       if (result == DIERR_INVALIDPARAM) {
         System.out.println("DIERR_INVALIDPARAM: An invalid parameter was passed to the returning function, or the object was not in a state that permitted the function to be called.");
         return;
       }
 
       System.out.println("Found " + deviceInstances.size() + " gamepads.");
-      for (var gamepad : deviceInstances.values()) {
-        System.out.println("\t" + gamepad.instanceName());
-      }
+      for (var gamepad : deviceInstances.entrySet()) {
+        System.out.println("\t" + gamepad.getValue().instanceName());
+        var directInputDevice = gamepad.getKey();
+        var deviceAddress = memorySession.allocate(JAVA_LONG.byteSize());
+        var deviceGuidMemorySegment = memorySession.allocate(GUID.$LAYOUT);
+        directInputDevice.deviceInstance.guidInstance.write(deviceGuidMemorySegment);
 
+        directInput.CreateDevice(deviceGuidMemorySegment, deviceAddress);
+        directInputDevice.create(deviceAddress, memorySession);
+      }
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -78,15 +83,15 @@ public class DirectInputPlayground {
 
   public static long enumDevicesCallback(MemoryAddress lpddiSegment, MemoryAddress pvRef) {
     try (var memorySession = MemorySession.openConfined()) {
-      var device = DIDEVICEINSTANCE.read(MemorySegment.ofAddress(lpddiSegment, DIDEVICEINSTANCE.$LAYOUT.byteSize(), memorySession));
-      var name = new String(device.tszInstanceName).trim();
-      var product = new String(device.tszProductName).trim();
-      var type = DI8DEVTYPE.fromDwDevType(device.dwDevType);
+      var deviceInstance = DIDEVICEINSTANCE.read(MemorySegment.ofAddress(lpddiSegment, DIDEVICEINSTANCE.$LAYOUT.byteSize(), memorySession));
+      var name = new String(deviceInstance.tszInstanceName).trim();
+      var product = new String(deviceInstance.tszProductName).trim();
+      var type = DI8DEVTYPE.fromDwDevType(deviceInstance.dwDevType);
 
       // for now, we're only interested in gamepads, will add other types later
       if (type == DI8DEVTYPE.DI8DEVTYPE_GAMEPAD) {
-        var gamepad = new RawGamepad(device.guidInstance.toUUID(), device.guidProduct.toUUID(), name, product);
-        deviceInstances.put(device, gamepad);
+        var gamepad = new RawGamepad(deviceInstance.guidInstance.toUUID(), deviceInstance.guidProduct.toUUID(), name, product);
+        deviceInstances.put(new IDirectInputDevice8(deviceInstance), gamepad);
       } else {
         System.out.println("found device that is not a gamepad: " + name + "[" + type + "]");
       }
