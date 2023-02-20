@@ -100,7 +100,7 @@ final class DIDEVICEINSTANCE {
   public static DIDEVICEINSTANCE read(MemorySegment segment) {
     var data = new DIDEVICEINSTANCE();
     data.dwSize = (int) VH_dwSize.get(segment);
-    // ensure the offset of the cbSize integer before reading the guid
+    // ensure the offset of the dwSize integer before reading the guid
     data.guidInstance = GUID.read(segment.asSlice(ValueLayout.JAVA_INT.byteSize()));
     data.guidProduct = GUID.read(segment.asSlice(ValueLayout.JAVA_INT.byteSize() + GUID.$LAYOUT.byteSize()));
     data.dwDevType = (int) VH_dwDevType.get(segment);

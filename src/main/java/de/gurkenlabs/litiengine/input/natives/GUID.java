@@ -2,6 +2,8 @@ package de.gurkenlabs.litiengine.input.natives;
 
 import java.lang.foreign.*;
 import java.lang.invoke.VarHandle;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -9,14 +11,8 @@ import java.util.UUID;
  * A GUID is a 128-bit value consisting of one group of 8 hexadecimal digits, followed by three groups of 4 hexadecimal
  * digits each, followed by one group of 12 hexadecimal digits. The following example GUID shows the groupings of
  * hexadecimal digits in a GUID: 6B29FC40-CA47-1067-B31D-00DD010662DA.
- *
- * @param Data1 Specifies the first 8 hexadecimal digits of the GUID.
- * @param Data2 Specifies the first group of 4 hexadecimal digits.
- * @param Data3 Specifies the second group of 4 hexadecimal digits.
- * @param Data4 Array of 8 bytes. The first 2 bytes contain the third group of 4 hexadecimal digits.
- *              The remaining 6 bytes contain the final 12 hexadecimal digits.
  */
-record GUID(int Data1, short Data2, short Data3, byte... Data4) {
+final class GUID {
   static int DATA4_LENGTH = 8;
 
   static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
@@ -30,6 +26,24 @@ record GUID(int Data1, short Data2, short Data3, byte... Data4) {
   static final VarHandle VH_Data2 = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Data2"));
   static final VarHandle VH_Data3 = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Data3"));
   static final VarHandle VH_Data4 = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Data4"), MemoryLayout.PathElement.sequenceElement());
+  public final int Data1;
+  public final short Data2;
+  public final short Data3;
+  public final byte[] Data4;
+
+  /**
+   * @param Data1 Specifies the first 8 hexadecimal digits of the GUID.
+   * @param Data2 Specifies the first group of 4 hexadecimal digits.
+   * @param Data3 Specifies the second group of 4 hexadecimal digits.
+   * @param Data4 Array of 8 bytes. The first 2 bytes contain the third group of 4 hexadecimal digits.
+   *              The remaining 6 bytes contain the final 12 hexadecimal digits.
+   */
+  GUID(int Data1, short Data2, short Data3, byte... Data4) {
+    this.Data1 = Data1;
+    this.Data2 = Data2;
+    this.Data3 = Data3;
+    this.Data4 = Data4;
+  }
 
   public static GUID read(MemorySegment segment) {
     var data1 = (int) VH_Data1.get(segment);
@@ -45,13 +59,33 @@ record GUID(int Data1, short Data2, short Data3, byte... Data4) {
   }
 
   public void write(MemorySegment segment) {
-    VH_Data1.set(segment, Data1());
-    VH_Data2.set(segment, Data2());
-    VH_Data3.set(segment, Data3());
+    VH_Data1.set(segment, Data1);
+    VH_Data2.set(segment, Data2);
+    VH_Data3.set(segment, Data3);
 
     for (int i = 0; i < DATA4_LENGTH; i++) {
-      VH_Data4.set(segment, i, Data4()[i]);
+      VH_Data4.set(segment, i, Data4[i]);
     }
+  }
+
+
+  public UUID toUUID() {
+    return UUID.fromString(this.rawString());
+  }
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) return true;
+    if (obj == null || obj.getClass() != this.getClass()) return false;
+    var that = (GUID) obj;
+    return this.Data1 == that.Data1 &&
+            this.Data2 == that.Data2 &&
+            this.Data3 == that.Data3 &&
+            Arrays.equals(this.Data4, that.Data4);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(Data1, Data2, Data3, Arrays.hashCode(Data4));
   }
 
   @Override
@@ -76,9 +110,5 @@ record GUID(int Data1, short Data2, short Data3, byte... Data4) {
     }
 
     return sb.toString();
-  }
-
-  public UUID toUUID() {
-    return UUID.fromString(this.rawString());
   }
 }

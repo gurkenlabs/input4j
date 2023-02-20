@@ -15,19 +15,13 @@ import static java.lang.foreign.ValueLayout.*;
 public class DirectInputPlayground {
   public static final int DI8DEVCLASS_GAMECTRL = 4;
 
-  public static final int DIEDFL_ALLDEVICES = 0x00000000;
-
   public static final int DIRECTINPUT_VERSION = 0x0800;
 
   public static final int DI_OK = 0x00000000;
 
   public static final int DIERR_INVALIDPARAM = 0x80070057;
 
-  private static final int DIENUM_CONTINUE = 1;
-
-  private static final int DIENUM_STOP = 0;
-
-  private static GUID IID_IDirectInput8W = new GUID(0xBF798031, (short) 0x483A, (short) 0x4DA2, (byte) 0xAA, (byte) 0x99, (byte) 0x5D, (byte) 0x64, (byte) 0xED, (byte) 0x36, (byte) 0x97, (byte) 0x00);
+  public static final int DIERR_NOTINITIALIZED = 0x80070015;
 
   private static MethodHandle directInput8Create;
 
@@ -50,7 +44,7 @@ public class DirectInputPlayground {
   private static void enumDirectInput8Devices() throws Throwable {
     try (var memorySession = MemorySession.openConfined()) {
       var riidltf = memorySession.allocate(GUID.$LAYOUT);
-      IID_IDirectInput8W.write(riidltf);
+      IDirectInput8.IID_IDirectInput8W.write(riidltf);
       var ppvOut = memorySession.allocate(IDirectInput8.$LAYOUT);
 
       if ((int) directInput8Create.invoke(getModuleHandle.invoke(MemoryAddress.NULL), DIRECTINPUT_VERSION, riidltf, ppvOut, MemoryAddress.NULL) != DI_OK) {
@@ -59,29 +53,45 @@ public class DirectInputPlayground {
       }
 
       var directInput = IDirectInput8.read(ppvOut, memorySession);
-      var result = directInput.EnumDevices(DI8DEVCLASS_GAMECTRL, enumDevicesCallbackNative(memorySession), MemoryAddress.NULL, DIEDFL_ALLDEVICES);
-      if (result == DIERR_INVALIDPARAM) {
-        System.out.println("DIERR_INVALIDPARAM: An invalid parameter was passed to the returning function, or the object was not in a state that permitted the function to be called.");
+      var result = directInput.EnumDevices(DI8DEVCLASS_GAMECTRL, enumDevicesCallbackNative(memorySession), IDirectInput8.DIEDFL_ALLDEVICES);
+      if (result != DI_OK) {
+        System.out.println("Could not enumerate direct input devices (" + result);
         return;
       }
 
       System.out.println("Found " + deviceInstances.size() + " gamepads.");
-      for (var gamepad : deviceInstances.entrySet()) {
-        System.out.println("\t" + gamepad.getValue().instanceName());
-        var directInputDevice = gamepad.getKey();
+      for (var device : deviceInstances.entrySet()) {
+        var directInputDevice = device.getKey();
+        var gamepad = device.getValue();
+        System.out.println("\t" + gamepad.instanceName());
+
         var deviceAddress = memorySession.allocate(JAVA_LONG.byteSize());
         var deviceGuidMemorySegment = memorySession.allocate(GUID.$LAYOUT);
         directInputDevice.deviceInstance.guidInstance.write(deviceGuidMemorySegment);
 
-        directInput.CreateDevice(deviceGuidMemorySegment, deviceAddress);
+        if (directInput.CreateDevice(deviceGuidMemorySegment, deviceAddress) != DI_OK) {
+          System.out.println("Device " + gamepad.instanceName() + " could not be created");
+          continue;
+        }
         directInputDevice.create(deviceAddress, memorySession);
+        if (directInputDevice.EnumObjects(enumObjectsCallbackNative(memorySession), IDirectInputDevice8.DIDFT_BUTTON | IDirectInputDevice8.DIDFT_AXIS | IDirectInputDevice8.DIDFT_POV) != DI_OK) {
+          System.out.println("Could not enumerate the device instance objects for " + gamepad.instanceName());
+          continue;
+        }
       }
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
 
-  public static long enumDevicesCallback(MemoryAddress lpddiSegment, MemoryAddress pvRef) {
+  /**
+   * This is called out of native code while enumerating the available devices.
+   *
+   * @param lpddiSegment The pointer to the {@link DIDEVICEINSTANCE} address.
+   * @param pvRef
+   * @return True to indicate for the native code to continue with the enumeration otherwise false.
+   */
+  private static boolean enumDevicesCallback(MemoryAddress lpddiSegment, MemoryAddress pvRef) {
     try (var memorySession = MemorySession.openConfined()) {
       var deviceInstance = DIDEVICEINSTANCE.read(MemorySegment.ofAddress(lpddiSegment, DIDEVICEINSTANCE.$LAYOUT.byteSize(), memorySession));
       var name = new String(deviceInstance.tszInstanceName).trim();
@@ -89,22 +99,41 @@ public class DirectInputPlayground {
       var type = DI8DEVTYPE.fromDwDevType(deviceInstance.dwDevType);
 
       // for now, we're only interested in gamepads, will add other types later
-      if (type == DI8DEVTYPE.DI8DEVTYPE_GAMEPAD) {
+      if (type == DI8DEVTYPE.DI8DEVTYPE_GAMEPAD || type == DI8DEVTYPE.DI8DEVTYPE_JOYSTICK) {
         var gamepad = new RawGamepad(deviceInstance.guidInstance.toUUID(), deviceInstance.guidProduct.toUUID(), name, product);
         deviceInstances.put(new IDirectInputDevice8(deviceInstance), gamepad);
       } else {
         System.out.println("found device that is not a gamepad: " + name + "[" + type + "]");
       }
     }
-    return DIENUM_CONTINUE;
+    return true;
+  }
+
+  private static boolean enumObjectsCallback(MemoryAddress lpddoiSegment, MemoryAddress pvRef) {
+    try (var memorySession = MemorySession.openConfined()) {
+      var deviceObjectInstance = DIDEVICEOBJECTINSTANCE.read(MemorySegment.ofAddress(lpddoiSegment, DIDEVICEINSTANCE.$LAYOUT.byteSize(), memorySession));
+      var name = new String(deviceObjectInstance.tszName).trim();
+      var deviceObjectType = DI8DEVOBJECTTYPE.from(deviceObjectInstance.guidType);
+      System.out.println("\t\t" + deviceObjectType + " (" + name + ") - " + deviceObjectInstance.dwOfs);
+    }
+    return true;
   }
 
   private static MemorySegment enumDevicesCallbackNative(MemorySession memorySession) throws Throwable {
     // Create a method handle to the Java function as a callback
     MethodHandle onEnumDevices = MethodHandles.lookup()
-            .findStatic(DirectInputPlayground.class, "enumDevicesCallback", MethodType.methodType(long.class, MemoryAddress.class, MemoryAddress.class));
+            .findStatic(DirectInputPlayground.class, "enumDevicesCallback", MethodType.methodType(boolean.class, MemoryAddress.class, MemoryAddress.class));
 
     return Linker.nativeLinker().upcallStub(
-            onEnumDevices, FunctionDescriptor.of(JAVA_LONG, ADDRESS, ADDRESS), memorySession);
+            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, ADDRESS), memorySession);
+  }
+
+  private static MemorySegment enumObjectsCallbackNative(MemorySession memorySession) throws Throwable {
+    // Create a method handle to the Java function as a callback
+    MethodHandle onEnumDevices = MethodHandles.lookup()
+            .findStatic(DirectInputPlayground.class, "enumObjectsCallback", MethodType.methodType(boolean.class, MemoryAddress.class, MemoryAddress.class));
+
+    return Linker.nativeLinker().upcallStub(
+            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, ADDRESS), memorySession);
   }
 }

@@ -7,6 +7,10 @@ import java.lang.invoke.VarHandle;
 import static java.lang.foreign.ValueLayout.*;
 
 final class IDirectInput8 {
+  static GUID IID_IDirectInput8W = new GUID(0xBF798031, (short) 0x483A, (short) 0x4DA2, (byte) 0xAA, (byte) 0x99, (byte) 0x5D, (byte) 0x64, (byte) 0xED, (byte) 0x36, (byte) 0x97, (byte) 0x00);
+
+  static final int DIEDFL_ALLDEVICES = 0x00000000;
+
   static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
           ADDRESS.withName("lpVtbl")
   ).withName("IDirectInput8W");
@@ -39,12 +43,32 @@ final class IDirectInput8 {
     return directInput;
   }
 
-  public int EnumDevices(int dwDevType, Addressable lpCallback, Addressable pvRef, int dwFlags) throws Throwable {
-    return (int) enumDevices.invokeExact((Addressable) this.vtablePointerSegment, dwDevType, lpCallback, pvRef, dwFlags);
+  /**
+   * Enumerates available devices.
+   *
+   * @param dwDevType  Device type filter.
+   *                   To restrict the enumeration to a particular type of device, set this parameter to a {@link DI8DEVTYPE} value.
+   * @param lpCallback Address of a callback function to be called once for each device enumerated.
+   * @param dwFlags    Flag value that specifies the scope of the enumeration (e.g. {@code DIEDFL_ALLDEVICES}).
+   * @return If the method succeeds, the return value is DI_OK. If the method fails, the return value can be one of the
+   * following error values: DIERR_INVALIDPARAM, DIERR_NOTINITIALIZED.
+   * @throws Throwable If the native invokation fails this can throw
+   */
+  public int EnumDevices(int dwDevType, Addressable lpCallback, int dwFlags) throws Throwable {
+    return (int) enumDevices.invokeExact((Addressable) this.vtablePointerSegment, dwDevType, lpCallback, (Addressable) MemoryAddress.NULL, dwFlags);
   }
 
+  /**
+   * Creates and initializes an instance of a device based on a given globally unique identifier (GUID), and obtains an IDirectInputDevice8 Interface interface.
+   *
+   * @param rguid                 Reference to the GUID for the desired input device.
+   * @param lplpDirectInputDevice Address of a variable to receive the IDirectInputDevice8 Interface interface pointer if successful.
+   * @return If the method succeeds, the return value is DI_OK. If the method fails, the return value can be one of the
+   * following: DIERR_DEVICENOTREG, DIERR_INVALIDPARAM, DIERR_NOINTERFACE, DIERR_NOTINITIALIZED, DIERR_OUTOFMEMORY.
+   * @throws Throwable If the native invokation fails this can throw
+   */
   public int CreateDevice(Addressable rguid, Addressable lplpDirectInputDevice) throws Throwable {
-    return (int) createDevice.invokeExact((Addressable) this.vtablePointerSegment, rguid, lplpDirectInputDevice, (Addressable)MemoryAddress.NULL);
+    return (int) createDevice.invokeExact((Addressable) this.vtablePointerSegment, rguid, lplpDirectInputDevice, (Addressable) MemoryAddress.NULL);
   }
 
   static class Vtable {
