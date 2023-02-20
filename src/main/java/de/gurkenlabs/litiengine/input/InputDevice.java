@@ -1,14 +1,17 @@
 package de.gurkenlabs.litiengine.input;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
-public final class RawGamepad {
+public final class InputDevice {
   private final UUID instance;
   private final UUID product;
   private final String instanceName;
   private final String productName;
 
-  public RawGamepad(UUID instance, UUID product, String instanceName, String productName) {
+  private final ArrayList<DeviceComponent> components = new ArrayList<>();
+
+  public InputDevice(UUID instance, UUID product, String instanceName, String productName) {
     this.instance = instance;
     this.product = product;
     this.instanceName = instanceName;
@@ -31,4 +34,11 @@ public final class RawGamepad {
     return productName;
   }
 
+  public ArrayList<DeviceComponent> getComponents() {
+    return components;
+  }
+
+  public void addComponents(ArrayList<DeviceComponent> component) {
+    this.components.addAll(component);
+  }
 }

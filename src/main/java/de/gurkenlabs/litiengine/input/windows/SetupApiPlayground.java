@@ -1,4 +1,4 @@
-package de.gurkenlabs.litiengine.input.natives;
+package de.gurkenlabs.litiengine.input.windows;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;

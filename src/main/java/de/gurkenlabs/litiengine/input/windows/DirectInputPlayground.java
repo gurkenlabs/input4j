@@ -1,18 +1,21 @@
-package de.gurkenlabs.litiengine.input.natives;
+package de.gurkenlabs.litiengine.input.windows;
 
 
-import de.gurkenlabs.litiengine.input.RawGamepad;
+import de.gurkenlabs.litiengine.input.DeviceComponent;
+import de.gurkenlabs.litiengine.input.ComponentType;
+import de.gurkenlabs.litiengine.input.InputDevice;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.foreign.ValueLayout.*;
 
-public class DirectInputPlayground {
+final class DirectInputPlayground {
   public static final int DI8DEVCLASS_GAMECTRL = 4;
 
   public static final int DIRECTINPUT_VERSION = 0x0800;
@@ -27,7 +30,9 @@ public class DirectInputPlayground {
 
   private static MethodHandle getModuleHandle;
 
-  static Map<IDirectInputDevice8, RawGamepad> deviceInstances = new ConcurrentHashMap<>();
+  static final Map<IDirectInputDevice8, InputDevice> deviceInstances = new ConcurrentHashMap<>();
+
+  private static final ArrayList<DeviceComponent> currentComponents = new ArrayList<>();
 
   static {
     getModuleHandle = RuntimeHelper.downcallHandle("GetModuleHandleW",
@@ -61,6 +66,7 @@ public class DirectInputPlayground {
 
       System.out.println("Found " + deviceInstances.size() + " gamepads.");
       for (var device : deviceInstances.entrySet()) {
+        currentComponents.clear();
         var directInputDevice = device.getKey();
         var gamepad = device.getValue();
         System.out.println("\t" + gamepad.instanceName());
@@ -78,6 +84,10 @@ public class DirectInputPlayground {
           System.out.println("Could not enumerate the device instance objects for " + gamepad.instanceName());
           continue;
         }
+
+        gamepad.addComponents(currentComponents);
+
+
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -100,7 +110,7 @@ public class DirectInputPlayground {
 
       // for now, we're only interested in gamepads, will add other types later
       if (type == DI8DEVTYPE.DI8DEVTYPE_GAMEPAD || type == DI8DEVTYPE.DI8DEVTYPE_JOYSTICK) {
-        var gamepad = new RawGamepad(deviceInstance.guidInstance.toUUID(), deviceInstance.guidProduct.toUUID(), name, product);
+        var gamepad = new InputDevice(deviceInstance.guidInstance.toUUID(), deviceInstance.guidProduct.toUUID(), name, product);
         deviceInstances.put(new IDirectInputDevice8(deviceInstance), gamepad);
       } else {
         System.out.println("found device that is not a gamepad: " + name + "[" + type + "]");
@@ -114,6 +124,9 @@ public class DirectInputPlayground {
       var deviceObjectInstance = DIDEVICEOBJECTINSTANCE.read(MemorySegment.ofAddress(lpddoiSegment, DIDEVICEINSTANCE.$LAYOUT.byteSize(), memorySession));
       var name = new String(deviceObjectInstance.tszName).trim();
       var deviceObjectType = DI8DEVOBJECTTYPE.from(deviceObjectInstance.guidType);
+
+      var component = new DeviceComponent(ComponentType.valueOf(deviceObjectType.name()), name);
+      currentComponents.add(component);
       System.out.println("\t\t" + deviceObjectType + " (" + name + ") - " + deviceObjectInstance.dwOfs);
     }
     return true;

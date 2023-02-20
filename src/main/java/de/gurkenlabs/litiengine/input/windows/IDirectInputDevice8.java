@@ -1,4 +1,4 @@
-package de.gurkenlabs.litiengine.input.natives;
+package de.gurkenlabs.litiengine.input.windows;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
@@ -7,7 +7,7 @@ import java.lang.invoke.VarHandle;
 import static java.lang.foreign.ValueLayout.ADDRESS;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 
-class IDirectInputDevice8 {
+final class IDirectInputDevice8 {
   public final static int DIDFT_AXIS = 0x00000003;
   public final static int DIDFT_BUTTON = 0x0000000C;
 

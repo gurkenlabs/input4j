@@ -1,8 +1,8 @@
-package de.gurkenlabs.litiengine.input.natives;
+package de.gurkenlabs.litiengine.input.windows;
 
 import java.util.Arrays;
 
-public enum DI8DEVOBJECTTYPE {
+enum DI8DEVOBJECTTYPE {
   XAxis(DIDEVICEOBJECTINSTANCE.GUID_XAxis),
   YAxis(DIDEVICEOBJECTINSTANCE.GUID_YAxis),
   ZAxis(DIDEVICEOBJECTINSTANCE.GUID_ZAxis),

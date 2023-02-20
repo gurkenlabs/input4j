@@ -1,4 +1,4 @@
-package de.gurkenlabs.litiengine.input.natives;
+package de.gurkenlabs.litiengine.input.windows;
 
 import java.util.Arrays;
 
