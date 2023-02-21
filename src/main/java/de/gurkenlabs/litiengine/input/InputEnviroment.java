@@ -4,6 +4,7 @@ import java.util.logging.Logger;
 
 public final class InputEnviroment {
   private static final Logger log = Logger.getLogger(InputEnviroment.class.getName());
+
   private static InputDeviceProvider deviceProvider;
 
   public static void init() throws Exception {
@@ -15,7 +16,7 @@ public final class InputEnviroment {
 
     String deviceProviderClassName = null;
     if (osName.contains("windows")) {
-      deviceProviderClassName = "de.gurkenlabs.litiengine.input.windows.WindowsDeviceProvider";
+      deviceProviderClassName = "de.gurkenlabs.litiengine.input.windows.DirectInputDeviceProvider";
     } else if (osName.contains("linux")) {
 
     } else if (osName.contains("mac os")) {

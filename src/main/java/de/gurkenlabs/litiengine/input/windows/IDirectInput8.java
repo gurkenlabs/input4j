@@ -4,7 +4,7 @@ import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
 
-import static de.gurkenlabs.litiengine.input.windows.WindowsInputDeviceProvider.downcallHandle;
+import static de.gurkenlabs.litiengine.input.windows.DirectInputDeviceProvider.downcallHandle;
 import static java.lang.foreign.ValueLayout.*;
 
 final class IDirectInput8 {
