@@ -2,6 +2,7 @@ package de.gurkenlabs.litiengine.input;
 
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public final class InputDevice {
   private final UUID instance;
@@ -9,28 +10,31 @@ public final class InputDevice {
   private final String instanceName;
   private final String productName;
 
+  private final Consumer<InputDevice> pollCallback;
+
   private final ArrayList<DeviceComponent> components = new ArrayList<>();
 
-  public InputDevice(UUID instance, UUID product, String instanceName, String productName) {
+  public InputDevice(UUID instance, UUID product, String instanceName, String productName, Consumer<InputDevice> pollCallback) {
     this.instance = instance;
     this.product = product;
     this.instanceName = instanceName;
     this.productName = productName;
+    this.pollCallback = pollCallback;
   }
 
-  public UUID instance() {
+  public UUID getInstance() {
     return instance;
   }
 
-  public UUID product() {
+  public UUID getProduct() {
     return product;
   }
 
-  public String instanceName() {
+  public String getInstanceName() {
     return instanceName;
   }
 
-  public String productName() {
+  public String getProductName() {
     return productName;
   }
 
@@ -40,5 +44,9 @@ public final class InputDevice {
 
   public void addComponents(ArrayList<DeviceComponent> component) {
     this.components.addAll(component);
+  }
+
+  public void poll() {
+    this.pollCallback.accept(this);
   }
 }

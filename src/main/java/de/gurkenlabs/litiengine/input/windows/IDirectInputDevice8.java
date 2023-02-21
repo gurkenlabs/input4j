@@ -4,6 +4,7 @@ import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
 
+import static de.gurkenlabs.litiengine.input.windows.WindowsInputDeviceProvider.downcallHandle;
 import static java.lang.foreign.ValueLayout.ADDRESS;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 
@@ -39,7 +40,7 @@ final class IDirectInputDevice8 {
 
     // init API method handles
     var enumDevicesPointer = (MemoryAddress) Vtable.VH_EnumObjects.get(this.vtable);
-    this.enumObjects = RuntimeHelper.downcallHandle(enumDevicesPointer, Vtable.enumObjectsDescriptor);
+    this.enumObjects = downcallHandle(enumDevicesPointer, Vtable.enumObjectsDescriptor);
   }
 
   public int EnumObjects(Addressable lpCallback, int dwFlags) throws Throwable {

@@ -6,8 +6,9 @@ plugins {
 group 'de.gurkenlabs.litiengine.input'
 version '1.0-SNAPSHOT'
 
+
 application {
-  mainClass = 'de.gurkenlabs.litiengine.input.natives.DirectInputPlayground'
+  mainClass = 'de.gurkenlabs.litiengine.input.Program'
 }
 
 repositories {
@@ -34,4 +35,10 @@ compileJava {
   options.compilerArgs += ['--enable-preview']
 }
 
+jar {
+  manifest {
+    attributes 'Implementation-Title': "LITIENGINE input playground",
+            'Main-Class': 'de.gurkenlabs.litiengine.input.Program'
+  }
+}
 
