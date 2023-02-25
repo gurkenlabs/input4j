@@ -1,5 +1,7 @@
 package de.gurkenlabs.litiengine.input.windows;
 
+import de.gurkenlabs.litiengine.input.InputDevice;
+
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
@@ -17,21 +19,30 @@ final class IDirectInputDevice8 {
           ADDRESS.withName("lpVtbl")
   ).withName("IDirectInputDevice8A");
 
-  private static final VarHandle lpVtbl$VH = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("lpVtbl"));
+  private static final VarHandle VH_lpVtbl = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("lpVtbl"));
 
   public MemorySegment vtable;
   final DIDEVICEINSTANCE deviceInstance;
+
+  final InputDevice inputDevice;
 
   private MemorySegment vtablePointerSegment;
 
   private MethodHandle enumObjects;
 
-  IDirectInputDevice8(DIDEVICEINSTANCE deviceInstance) {
+  private MethodHandle acquire;
+
+  private MethodHandle unacquire;
+
+  private MethodHandle poll;
+
+  IDirectInputDevice8(DIDEVICEINSTANCE deviceInstance, InputDevice inputDevice) {
     this.deviceInstance = deviceInstance;
+    this.inputDevice = inputDevice;
   }
 
   public void create(MemorySegment segment, MemorySession memorySession) {
-    var pointer = (MemoryAddress) lpVtbl$VH.get(segment);
+    var pointer = (MemoryAddress) VH_lpVtbl.get(segment);
 
     this.vtablePointerSegment = MemorySegment.ofAddress(pointer, IDirectInputDevice8.Vtable.$LAYOUT.byteSize(), memorySession);
 
@@ -41,10 +52,31 @@ final class IDirectInputDevice8 {
     // init API method handles
     var enumDevicesPointer = (MemoryAddress) Vtable.VH_EnumObjects.get(this.vtable);
     this.enumObjects = downcallHandle(enumDevicesPointer, Vtable.enumObjectsDescriptor);
+
+    var acquirePointer = (MemoryAddress) Vtable.VH_Acquire.get(this.vtable);
+    this.acquire = downcallHandle(acquirePointer, Vtable.acquireDescriptor);
+
+    var unacquirePointer = (MemoryAddress) Vtable.VH_Unacquire.get(this.vtable);
+    this.unacquire = downcallHandle(unacquirePointer, Vtable.unacquireDescriptor);
+
+    var pollPointer = (MemoryAddress) Vtable.VH_Poll.get(this.vtable);
+    this.poll = downcallHandle(pollPointer, Vtable.pollDescriptor);
   }
 
   public int EnumObjects(Addressable lpCallback, int dwFlags) throws Throwable {
     return (int) enumObjects.invokeExact((Addressable) this.vtablePointerSegment, lpCallback, (Addressable) MemoryAddress.NULL, dwFlags);
+  }
+
+  public int Acquire() throws Throwable {
+    return (int) acquire.invokeExact((Addressable) this.vtablePointerSegment);
+  }
+
+  public void Unacquire() throws Throwable {
+    unacquire.invokeExact((Addressable) this.vtablePointerSegment);
+  }
+
+  public int Poll() throws Throwable {
+    return (int) poll.invokeExact((Addressable) this.vtablePointerSegment);
   }
 
   static class Vtable {
@@ -86,5 +118,17 @@ final class IDirectInputDevice8 {
     private static final FunctionDescriptor enumObjectsDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS, JAVA_INT);
 
     private static final VarHandle VH_EnumObjects = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("EnumObjects"));
+
+    private static final FunctionDescriptor acquireDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS);
+
+    private static final VarHandle VH_Acquire = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Acquire"));
+
+    private static final FunctionDescriptor unacquireDescriptor = FunctionDescriptor.ofVoid(ADDRESS);
+
+    private static final VarHandle VH_Unacquire = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Unacquire"));
+
+    private static final FunctionDescriptor pollDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS);
+
+    private static final VarHandle VH_Poll = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Poll"));
   }
 }

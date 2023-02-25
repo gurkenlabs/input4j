@@ -72,6 +72,7 @@ final class GUID {
   public UUID toUUID() {
     return UUID.fromString(this.rawString());
   }
+
   @Override
   public boolean equals(Object obj) {
     if (obj == this) return true;

@@ -16,7 +16,7 @@ final class IDirectInput8 {
           ADDRESS.withName("lpVtbl")
   ).withName("IDirectInput8W");
 
-  private static final VarHandle lpVtbl$VH = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("lpVtbl"));
+  private static final VarHandle VH_lpVtbl = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("lpVtbl"));
 
   public MemorySegment vtable;
 
@@ -27,7 +27,7 @@ final class IDirectInput8 {
 
   public static IDirectInput8 read(MemorySegment segment, MemorySession memorySession) {
     var directInput = new IDirectInput8();
-    var pointer = (MemoryAddress) lpVtbl$VH.get(segment);
+    var pointer = (MemoryAddress) VH_lpVtbl.get(segment);
 
     directInput.vtablePointerSegment = MemorySegment.ofAddress(pointer, Vtable.$LAYOUT.byteSize(), memorySession);
 
@@ -70,6 +70,10 @@ final class IDirectInput8 {
    */
   public int CreateDevice(Addressable rguid, Addressable lplpDirectInputDevice) throws Throwable {
     return (int) createDevice.invokeExact((Addressable) this.vtablePointerSegment, rguid, lplpDirectInputDevice, (Addressable) MemoryAddress.NULL);
+  }
+
+  public void Release(){
+
   }
 
   static class Vtable {
