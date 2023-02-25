@@ -57,7 +57,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     for (var device : this.devices) {
       try {
         device.Unacquire();
@@ -106,7 +106,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
         return;
       }
 
-      // 3. create devices and enumerate their components
+      // 3. create devices
       for (var device : this.devices) {
         currentComponents.clear();
         log.log(Level.INFO, "Found input device: " + device.inputDevice.getInstanceName());
@@ -120,12 +120,15 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
         }
 
         device.create(deviceAddress, memorySession);
+
+        // 4. enumerate the components
         var enumObjectsResult = device.EnumObjects(enumObjectsCallbackNative(memorySession), IDirectInputDevice8.DIDFT_BUTTON | IDirectInputDevice8.DIDFT_AXIS | IDirectInputDevice8.DIDFT_POV);
         if (enumObjectsResult != Result.DI_OK) {
           log.log(Level.WARNING, "Could not enumerate the device instance objects for " + device.inputDevice.getInstanceName() + ": " + Result.toString(enumObjectsResult));
           continue;
         }
 
+        // 5. prepare the device for retrieving data
         var dataFormat = defineDataFormat(currentComponents.keySet().stream().toList(), memorySession);
         var setDataFormatResult = device.SetDataFormat(dataFormat);
         if (setDataFormatResult != Result.DI_OK) {
@@ -133,7 +136,14 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
           continue;
         }
 
-        // TODO: Call IDirectInputDevice8::SetDataFormat first or this will always return DIERR_INVALIDPARAM
+        var setCooperativeLevelResult = device.SetCooperativeLevel(MemoryAddress.NULL, IDirectInputDevice8.DISCL_BACKGROUND | IDirectInputDevice8.DISCL_NONEXCLUSIVE);
+        if (setCooperativeLevelResult != Result.DI_OK) {
+          log.log(Level.WARNING, "Could not set the cooperative level for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setDataFormatResult));
+          continue;
+        }
+
+        //setBufferSize(AbstractController.EVENT_QUEUE_DEPTH);
+
         var acquireResult = device.Acquire();
         if (acquireResult != Result.DI_OK) {
           log.log(Level.WARNING, "Could not acquire direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(acquireResult));

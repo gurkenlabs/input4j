@@ -7,8 +7,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
 
 import static de.gurkenlabs.litiengine.input.windows.DirectInputDeviceProvider.downcallHandle;
-import static java.lang.foreign.ValueLayout.ADDRESS;
-import static java.lang.foreign.ValueLayout.JAVA_INT;
+import static java.lang.foreign.ValueLayout.*;
 
 final class IDirectInputDevice8 {
   public final static int DIDFT_AXIS = 0x00000003;
@@ -16,8 +15,15 @@ final class IDirectInputDevice8 {
 
   public final static int DIDFT_POV = 0x00000010;
 
-  public final static int DIDF_ABSAXIS			= 0x00000001;
-  public final static int DIDF_RELAXIS			= 0x00000002;
+  public final static int DIDF_ABSAXIS = 0x00000001;
+  public final static int DIDF_RELAXIS = 0x00000002;
+
+  public final static int DISCL_EXCLUSIVE		= 0x00000001;
+  public final static int DISCL_NONEXCLUSIVE  = 0x00000002;
+  public final static int DISCL_FOREGROUND	= 0x00000004;
+  public final static int DISCL_BACKGROUND	= 0x00000008;
+  public final static int DISCL_NOWINKEY		= 0x00000010;
+
   static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
           ADDRESS.withName("lpVtbl")
   ).withName("IDirectInputDevice8A");
@@ -40,6 +46,8 @@ final class IDirectInputDevice8 {
   private MethodHandle poll;
 
   private MethodHandle setDataFormat;
+
+  private MethodHandle setCooperativeLevel;
 
   IDirectInputDevice8(DIDEVICEINSTANCE deviceInstance, InputDevice inputDevice) {
     this.deviceInstance = deviceInstance;
@@ -69,6 +77,9 @@ final class IDirectInputDevice8 {
 
     var setDataFormatPointer = (MemoryAddress) Vtable.VH_SetDataFormat.get(this.vtable);
     this.setDataFormat = downcallHandle(setDataFormatPointer, Vtable.setDataFormatDescriptor);
+
+    var setCooperativeLevelPointer = (MemoryAddress) Vtable.VH_SetCooperativeLevel.get(this.vtable);
+    this.setCooperativeLevel = downcallHandle(setCooperativeLevelPointer, Vtable.setCooperativeLevelDescriptor);
   }
 
   public int EnumObjects(Addressable lpCallback, int dwFlags) throws Throwable {
@@ -89,6 +100,10 @@ final class IDirectInputDevice8 {
 
   public int SetDataFormat(Addressable lpdf) throws Throwable {
     return (int) setDataFormat.invokeExact((Addressable) this.vtablePointerSegment, lpdf);
+  }
+
+  public int SetCooperativeLevel(Addressable hwnd, int dwFlags) throws Throwable {
+    return (int) setCooperativeLevel.invokeExact((Addressable) this.vtablePointerSegment, hwnd, dwFlags);
   }
 
   static class Vtable {
@@ -132,11 +147,13 @@ final class IDirectInputDevice8 {
     private static final FunctionDescriptor unacquireDescriptor = FunctionDescriptor.ofVoid(ADDRESS);
     private static final FunctionDescriptor pollDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS);
     private static final FunctionDescriptor setDataFormatDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS);
+    private static final FunctionDescriptor setCooperativeLevelDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, JAVA_INT);
 
     private static final VarHandle VH_EnumObjects = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("EnumObjects"));
     private static final VarHandle VH_Acquire = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Acquire"));
     private static final VarHandle VH_Unacquire = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Unacquire"));
     private static final VarHandle VH_Poll = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Poll"));
     private static final VarHandle VH_SetDataFormat = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("SetDataFormat"));
+    private static final VarHandle VH_SetCooperativeLevel = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("SetCooperativeLevel"));
   }
 }
