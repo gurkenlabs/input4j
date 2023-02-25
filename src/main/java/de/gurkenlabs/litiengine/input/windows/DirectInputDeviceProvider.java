@@ -7,10 +7,7 @@ import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -175,8 +172,22 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
     try {
       var pollResult = directInputDevice.Poll();
       if (pollResult != Result.DI_OK) {
+        // TODO: I think BUFFEROVERFLOW should not occur here and could hint to a falsely defined data format
         log.log(Level.WARNING, "Could not poll device " + inputDevice.getInstanceName() + ": " + Result.toString(pollResult));
       }
+
+      var arrSize = inputDevice.getComponents().size();
+      var deviceStates = new int[arrSize];
+      var deviceStatesSegment = memorySession.allocateArray(JAVA_INT, arrSize);
+      var getDeviceDataResult = directInputDevice.GetDeviceState((int) (deviceStates.length * JAVA_INT.byteSize()), deviceStatesSegment);
+      if (getDeviceDataResult != Result.DI_OK) {
+        log.log(Level.WARNING, "Could not get deivce data " + inputDevice.getInstanceName() + ": " + Result.toString(pollResult));
+      }
+
+      for (int i = 0; i < arrSize; i++) {
+        deviceStates[i] = deviceStatesSegment.get(JAVA_INT, i* JAVA_INT.byteSize());
+      }
+      System.out.println(Arrays.toString(deviceStates));
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);
     }
