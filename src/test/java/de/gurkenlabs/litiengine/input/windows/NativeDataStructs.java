@@ -52,7 +52,6 @@ class NativeDataStructs {
     final GUID FORMAT_GUID2 = new GUID(0x22222222, (short) 0x2222, (short) 0x2222, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22);
     final GUID FORMAT_GUID3 = new GUID(0x33333333, (short) 0x3333, (short) 0x3333, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33);
 
-
     try (var memorySession = MemorySession.openConfined()) {
       var guidsSegment = memorySession.allocate(MemoryLayout.sequenceLayout(3, GUID.$LAYOUT));
       FORMAT_GUID1.write(guidsSegment);

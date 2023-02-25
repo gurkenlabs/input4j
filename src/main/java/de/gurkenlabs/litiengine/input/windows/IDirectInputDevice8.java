@@ -24,6 +24,8 @@ final class IDirectInputDevice8 {
   public final static int DISCL_BACKGROUND	= 0x00000008;
   public final static int DISCL_NOWINKEY		= 0x00000010;
 
+  static final MemoryAddress DIPROP_BUFFERSIZE = MemoryAddress.ofLong(1L);
+
   static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
           ADDRESS.withName("lpVtbl")
   ).withName("IDirectInputDevice8A");
@@ -48,6 +50,8 @@ final class IDirectInputDevice8 {
   private MethodHandle setDataFormat;
 
   private MethodHandle setCooperativeLevel;
+
+  private MethodHandle setProperty;
 
   IDirectInputDevice8(DIDEVICEINSTANCE deviceInstance, InputDevice inputDevice) {
     this.deviceInstance = deviceInstance;
@@ -80,6 +84,9 @@ final class IDirectInputDevice8 {
 
     var setCooperativeLevelPointer = (MemoryAddress) Vtable.VH_SetCooperativeLevel.get(this.vtable);
     this.setCooperativeLevel = downcallHandle(setCooperativeLevelPointer, Vtable.setCooperativeLevelDescriptor);
+
+    var setPropertyPointer = (MemoryAddress) Vtable.VH_SetProperty.get(this.vtable);
+    this.setProperty = downcallHandle(setPropertyPointer, Vtable.setPropertyDescriptor);
   }
 
   public int EnumObjects(Addressable lpCallback, int dwFlags) throws Throwable {
@@ -104,6 +111,10 @@ final class IDirectInputDevice8 {
 
   public int SetCooperativeLevel(Addressable hwnd, int dwFlags) throws Throwable {
     return (int) setCooperativeLevel.invokeExact((Addressable) this.vtablePointerSegment, hwnd, dwFlags);
+  }
+
+  public int SetProperty(Addressable rguidProp, Addressable pdiph) throws Throwable {
+    return (int) setProperty.invokeExact((Addressable) this.vtablePointerSegment, rguidProp, pdiph);
   }
 
   static class Vtable {
@@ -148,6 +159,7 @@ final class IDirectInputDevice8 {
     private static final FunctionDescriptor pollDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS);
     private static final FunctionDescriptor setDataFormatDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS);
     private static final FunctionDescriptor setCooperativeLevelDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, JAVA_INT);
+    private static final FunctionDescriptor setPropertyDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS);
 
     private static final VarHandle VH_EnumObjects = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("EnumObjects"));
     private static final VarHandle VH_Acquire = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Acquire"));
@@ -155,5 +167,6 @@ final class IDirectInputDevice8 {
     private static final VarHandle VH_Poll = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Poll"));
     private static final VarHandle VH_SetDataFormat = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("SetDataFormat"));
     private static final VarHandle VH_SetCooperativeLevel = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("SetCooperativeLevel"));
+    private static final VarHandle VH_SetProperty = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("SetProperty"));
   }
 }

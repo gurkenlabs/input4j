@@ -3,7 +3,6 @@ package de.gurkenlabs.litiengine.input.windows;
 
 import de.gurkenlabs.litiengine.input.*;
 
-import java.io.IOException;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -21,9 +20,11 @@ import static java.lang.foreign.ValueLayout.*;
 public final class DirectInputDeviceProvider implements InputDeviceProvider {
   private static final Logger log = Logger.getLogger(DirectInputDeviceProvider.class.getName());
 
-  public static final int DI8DEVCLASS_GAMECTRL = 4;
+  static final int DI8DEVCLASS_GAMECTRL = 4;
 
-  public static final int DIRECTINPUT_VERSION = 0x0800;
+  static final int DIRECTINPUT_VERSION = 0x0800;
+
+  final static int EVENT_QUEUE_DEPTH = 32;
 
   private static final MethodHandle directInput8Create;
 
@@ -142,7 +143,12 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
           continue;
         }
 
-        //setBufferSize(AbstractController.EVENT_QUEUE_DEPTH);
+        var setBufferSizeResult = device.SetProperty(IDirectInputDevice8.DIPROP_BUFFERSIZE, getDataBufferPropertyNative(memorySession));
+        if (setBufferSizeResult != Result.DI_OK) {
+          log.log(Level.WARNING, "Could not set the buffer size for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setDataFormatResult));
+          continue;
+        }
+
 
         var acquireResult = device.Acquire();
         if (acquireResult != Result.DI_OK) {
@@ -267,6 +273,18 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
 
     return Linker.nativeLinker().upcallStub(
             onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, ADDRESS), memorySession);
+  }
+
+  private Addressable getDataBufferPropertyNative(MemorySession memorySession) {
+    var propValue = new DIPROPDWORD();
+    propValue.diph = new DIPROPHEADER();
+    propValue.diph.dwSize = (int) DIPROPDWORD.$LAYOUT.byteSize();
+    propValue.diph.dwHow = DIPROPHEADER.DIPH_DEVICE;
+    propValue.dwData = EVENT_QUEUE_DEPTH;
+
+    var propertySegment = memorySession.allocate(DIPROPDWORD.$LAYOUT);
+    propValue.write(propertySegment);
+    return propertySegment;
   }
 
   private static class Result {
