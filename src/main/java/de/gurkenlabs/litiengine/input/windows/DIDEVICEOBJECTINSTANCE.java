@@ -64,6 +64,14 @@ final class DIDEVICEOBJECTINSTANCE {
 
   public short wReportId;
 
+  public int getInstance(){
+    return dwType >> 8;
+  }
+
+  public int getType (){
+    return dwType & 0xFF;
+  }
+
   static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
           JAVA_INT.withName("dwSize"),
           GUID.$LAYOUT.withName("guidType"),

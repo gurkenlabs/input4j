@@ -8,8 +8,10 @@ import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,7 +31,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
 
   private final Collection<IDirectInputDevice8> devices = ConcurrentHashMap.newKeySet();
 
-  private final ArrayList<DeviceComponent> currentComponents = new ArrayList<>();
+  private final Map<DIDEVICEOBJECTINSTANCE, DeviceComponent> currentComponents = new HashMap<>();
 
   private final MemorySession memorySession = MemorySession.openConfined();
 
@@ -80,11 +82,16 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
   private void enumDirectInput8Devices() {
     try {
       // 1. Initialize DirectInput
-      var riidltf = memorySession.allocate(GUID.$LAYOUT);
-      IDirectInput8.IID_IDirectInput8W.write(riidltf);
       var ppvOut = memorySession.allocate(IDirectInput8.$LAYOUT);
 
-      var directInputCreateResult = (int) directInput8Create.invoke(getModuleHandle.invoke(MemoryAddress.NULL), DIRECTINPUT_VERSION, riidltf, ppvOut, MemoryAddress.NULL);
+      var directInputCreateResult = (int) directInput8Create.invoke(
+              getModuleHandle.invoke(MemoryAddress.NULL),
+              DIRECTINPUT_VERSION,
+              IDirectInput8.IID_IDirectInput8W.write(memorySession),
+              ppvOut,
+              MemoryAddress.NULL);
+
+
       if (directInputCreateResult != Result.DI_OK) {
         log.log(Level.SEVERE, "Could not create DirectInput8: " + Result.toString(directInputCreateResult));
         return;
@@ -105,8 +112,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
         log.log(Level.INFO, "Found input device: " + device.inputDevice.getInstanceName());
 
         var deviceAddress = memorySession.allocate(JAVA_LONG.byteSize());
-        var deviceGuidMemorySegment = memorySession.allocate(GUID.$LAYOUT);
-        device.deviceInstance.guidInstance.write(deviceGuidMemorySegment);
+        var deviceGuidMemorySegment = device.deviceInstance.guidInstance.write(memorySession);
 
         if (directInput.CreateDevice(deviceGuidMemorySegment, deviceAddress) != Result.DI_OK) {
           log.log(Level.WARNING, "Device " + device.inputDevice.getInstanceName() + " could not be created");
@@ -120,6 +126,13 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
           continue;
         }
 
+        var dataFormat = defineDataFormat(currentComponents.keySet().stream().toList(), memorySession);
+        var setDataFormatResult = device.SetDataFormat(dataFormat);
+        if (setDataFormatResult != Result.DI_OK) {
+          log.log(Level.WARNING, "Could not set the data format for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setDataFormatResult));
+          continue;
+        }
+
         // TODO: Call IDirectInputDevice8::SetDataFormat first or this will always return DIERR_INVALIDPARAM
         var acquireResult = device.Acquire();
         if (acquireResult != Result.DI_OK) {
@@ -127,7 +140,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
           continue;
         }
 
-        device.inputDevice.addComponents(currentComponents);
+        device.inputDevice.addComponents(currentComponents.values());
       }
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);
@@ -190,9 +203,44 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
     var deviceObjectType = DI8DEVOBJECTTYPE.from(deviceObjectInstance.guidType);
 
     var component = new DeviceComponent(ComponentType.valueOf(deviceObjectType.name()), name);
-    this.currentComponents.add(component);
+    this.currentComponents.put(deviceObjectInstance, component);
     log.log(Level.FINE, "\t\t" + deviceObjectType + " (" + name + ") - " + deviceObjectInstance.dwOfs);
     return true;
+  }
+
+  private static MemorySegment defineDataFormat(List<DIDEVICEOBJECTINSTANCE> deviceObjects, MemorySession memorySession) {
+    var dataFormat = new DIDATAFORMAT();
+    dataFormat.dwNumObjs = deviceObjects.size();
+    dataFormat.dwDataSize = (int) (dataFormat.dwNumObjs * JAVA_INT.byteSize());
+    dataFormat.dwFlags = IDirectInputDevice8.DIDF_ABSAXIS; // TODO: Evaluate if there is any relative axis
+
+    var objectFormats = new DIOBJECTDATAFORMAT[dataFormat.dwNumObjs];
+
+    for (int i = 0; i < deviceObjects.size(); i++) {
+      var deviceObject = deviceObjects.get(i);
+      var objectFormat = new DIOBJECTDATAFORMAT();
+      objectFormat.dwOfs = (int) (i * JAVA_INT.byteSize());
+
+      var guidPointer = memorySession.allocate(GUID.$LAYOUT);
+      deviceObject.guidType.write(guidPointer);
+
+      objectFormat.pguid = guidPointer.address();
+      objectFormat.dwFlags = dataFormat.dwFlags |
+              DIDEVICEOBJECTINSTANCE.DIDOI_ASPECTACCEL
+              | DIDEVICEOBJECTINSTANCE.DIDOI_ASPECTFORCE
+              | DIDEVICEOBJECTINSTANCE.DIDOI_ASPECTPOSITION
+              | DIDEVICEOBJECTINSTANCE.DIDOI_ASPECTVELOCITY;
+
+      objectFormat.dwType = deviceObject.dwType;
+      objectFormats[i] = objectFormat;
+    }
+
+    dataFormat.setObjectDataFormats(objectFormats);
+
+    var dataFormatMemorySegment = memorySession.allocate(dataFormat.dwSize);
+    dataFormat.write(dataFormatMemorySegment, memorySession);
+
+    return dataFormatMemorySegment;
   }
 
   // passed to native code for callback

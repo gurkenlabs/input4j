@@ -58,6 +58,12 @@ final class GUID {
     return new GUID(data1, data2, data3, data4);
   }
 
+  public MemorySegment write(MemorySession memorySession) {
+    var memorySegment = memorySession.allocate($LAYOUT);
+    write(memorySegment);
+    return memorySegment;
+  }
+
   public void write(MemorySegment segment) {
     VH_Data1.set(segment, Data1);
     VH_Data2.set(segment, Data2);

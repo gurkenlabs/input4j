@@ -15,6 +15,9 @@ final class IDirectInputDevice8 {
   public final static int DIDFT_BUTTON = 0x0000000C;
 
   public final static int DIDFT_POV = 0x00000010;
+
+  public final static int DIDF_ABSAXIS			= 0x00000001;
+  public final static int DIDF_RELAXIS			= 0x00000002;
   static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
           ADDRESS.withName("lpVtbl")
   ).withName("IDirectInputDevice8A");
@@ -35,6 +38,8 @@ final class IDirectInputDevice8 {
   private MethodHandle unacquire;
 
   private MethodHandle poll;
+
+  private MethodHandle setDataFormat;
 
   IDirectInputDevice8(DIDEVICEINSTANCE deviceInstance, InputDevice inputDevice) {
     this.deviceInstance = deviceInstance;
@@ -61,6 +66,9 @@ final class IDirectInputDevice8 {
 
     var pollPointer = (MemoryAddress) Vtable.VH_Poll.get(this.vtable);
     this.poll = downcallHandle(pollPointer, Vtable.pollDescriptor);
+
+    var setDataFormatPointer = (MemoryAddress) Vtable.VH_SetDataFormat.get(this.vtable);
+    this.setDataFormat = downcallHandle(setDataFormatPointer, Vtable.setDataFormatDescriptor);
   }
 
   public int EnumObjects(Addressable lpCallback, int dwFlags) throws Throwable {
@@ -77,6 +85,10 @@ final class IDirectInputDevice8 {
 
   public int Poll() throws Throwable {
     return (int) poll.invokeExact((Addressable) this.vtablePointerSegment);
+  }
+
+  public int SetDataFormat(Addressable lpdf) throws Throwable {
+    return (int) setDataFormat.invokeExact((Addressable) this.vtablePointerSegment, lpdf);
   }
 
   static class Vtable {
@@ -116,19 +128,15 @@ final class IDirectInputDevice8 {
     ).withName("IDirectInputDevice8AVtbl");
 
     private static final FunctionDescriptor enumObjectsDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS, JAVA_INT);
+    private static final FunctionDescriptor acquireDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS);
+    private static final FunctionDescriptor unacquireDescriptor = FunctionDescriptor.ofVoid(ADDRESS);
+    private static final FunctionDescriptor pollDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS);
+    private static final FunctionDescriptor setDataFormatDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS);
 
     private static final VarHandle VH_EnumObjects = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("EnumObjects"));
-
-    private static final FunctionDescriptor acquireDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS);
-
     private static final VarHandle VH_Acquire = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Acquire"));
-
-    private static final FunctionDescriptor unacquireDescriptor = FunctionDescriptor.ofVoid(ADDRESS);
-
     private static final VarHandle VH_Unacquire = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Unacquire"));
-
-    private static final FunctionDescriptor pollDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS);
-
     private static final VarHandle VH_Poll = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Poll"));
+    private static final VarHandle VH_SetDataFormat = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("SetDataFormat"));
   }
 }

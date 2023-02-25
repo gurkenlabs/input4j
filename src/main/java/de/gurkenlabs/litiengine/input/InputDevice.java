@@ -1,6 +1,7 @@
 package de.gurkenlabs.litiengine.input;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -42,7 +43,7 @@ public final class InputDevice {
     return components;
   }
 
-  public void addComponents(ArrayList<DeviceComponent> component) {
+  public void addComponents(Collection<DeviceComponent> component) {
     this.components.addAll(component);
   }
 
