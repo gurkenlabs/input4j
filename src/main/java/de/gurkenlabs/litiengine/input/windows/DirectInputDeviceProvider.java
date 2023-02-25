@@ -225,11 +225,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
       deviceObject.guidType.write(guidPointer);
 
       objectFormat.pguid = guidPointer.address();
-      objectFormat.dwFlags = dataFormat.dwFlags |
-              DIDEVICEOBJECTINSTANCE.DIDOI_ASPECTACCEL
-              | DIDEVICEOBJECTINSTANCE.DIDOI_ASPECTFORCE
-              | DIDEVICEOBJECTINSTANCE.DIDOI_ASPECTPOSITION
-              | DIDEVICEOBJECTINSTANCE.DIDOI_ASPECTVELOCITY;
+      objectFormat.dwFlags = 0; // TODO: setting this to 0 works but I'm not sure whether we need any aspect specified
 
       objectFormat.dwType = deviceObject.dwType;
       objectFormats[i] = objectFormat;
