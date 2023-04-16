@@ -25,20 +25,20 @@ final class IDirectInput8 {
   private MethodHandle enumDevices;
   private MethodHandle createDevice;
 
-  public static IDirectInput8 read(MemorySegment segment, MemorySession memorySession) {
+  public static IDirectInput8 read(MemorySegment segment) {
     var directInput = new IDirectInput8();
-    var pointer = (MemoryAddress) VH_lpVtbl.get(segment);
+    var pointer = (long) VH_lpVtbl.get(segment);
 
-    directInput.vtablePointerSegment = MemorySegment.ofAddress(pointer, Vtable.$LAYOUT.byteSize(), memorySession);
+    directInput.vtablePointerSegment = MemorySegment.ofAddress(pointer, Vtable.$LAYOUT.byteSize(), segment.scope());
 
     // Dereference the pointer for the memory segment of the virtual table
-    directInput.vtable = MemorySegment.ofAddress(directInput.vtablePointerSegment.get(ADDRESS, 0), Vtable.$LAYOUT.byteSize(), memorySession);
+    directInput.vtable = MemorySegment.ofAddress(directInput.vtablePointerSegment.get(ADDRESS, 0).address(), Vtable.$LAYOUT.byteSize(), segment.scope());
 
     // init API method handles
-    var enumDevicesPointer = (MemoryAddress) Vtable.VH_EnumDevices.get(directInput.vtable);
+    var enumDevicesPointer = (MemorySegment) Vtable.VH_EnumDevices.get(directInput.vtable);
     directInput.enumDevices = downcallHandle(enumDevicesPointer, Vtable.enumDevicesDescriptor);
 
-    var createDevicePointer = (MemoryAddress) Vtable.VH_CreateDevice.get(directInput.vtable);
+    var createDevicePointer = (MemorySegment) Vtable.VH_CreateDevice.get(directInput.vtable);
     directInput.createDevice = downcallHandle(createDevicePointer, Vtable.createDeviceDescriptor);
 
     return directInput;
@@ -55,8 +55,8 @@ final class IDirectInput8 {
    * following error values: DIERR_INVALIDPARAM, DIERR_NOTINITIALIZED.
    * @throws Throwable If the native invokation fails this can throw
    */
-  public int EnumDevices(int dwDevType, Addressable lpCallback, int dwFlags) throws Throwable {
-    return (int) enumDevices.invokeExact((Addressable) this.vtablePointerSegment, dwDevType, lpCallback, (Addressable) MemoryAddress.NULL, dwFlags);
+  public int EnumDevices(int dwDevType, MemorySegment lpCallback, int dwFlags) throws Throwable {
+    return (int) enumDevices.invokeExact(this.vtablePointerSegment, dwDevType, lpCallback, MemorySegment.NULL, dwFlags);
   }
 
   /**
@@ -68,8 +68,8 @@ final class IDirectInput8 {
    * following: DIERR_DEVICENOTREG, DIERR_INVALIDPARAM, DIERR_NOINTERFACE, DIERR_NOTINITIALIZED, DIERR_OUTOFMEMORY.
    * @throws Throwable If the native invokation fails this can throw
    */
-  public int CreateDevice(Addressable rguid, Addressable lplpDirectInputDevice) throws Throwable {
-    return (int) createDevice.invokeExact((Addressable) this.vtablePointerSegment, rguid, lplpDirectInputDevice, (Addressable) MemoryAddress.NULL);
+  public int CreateDevice(MemorySegment rguid, MemorySegment lplpDirectInputDevice) throws Throwable {
+    return (int) createDevice.invokeExact(this.vtablePointerSegment, rguid, lplpDirectInputDevice, MemorySegment.NULL);
   }
 
   public void Release(){

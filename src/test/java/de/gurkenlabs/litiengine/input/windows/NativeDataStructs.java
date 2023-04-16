@@ -2,8 +2,8 @@ package de.gurkenlabs.litiengine.input.windows;
 
 import org.junit.jupiter.api.Test;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout;
-import java.lang.foreign.MemorySession;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,7 +13,7 @@ class NativeDataStructs {
 
   @Test
   void testGUID() {
-    try (var memorySession = MemorySession.openConfined()) {
+    try (var memorySession = Arena.openConfined()) {
       var segment = memorySession.allocate(GUID.$LAYOUT);
       TEST_GUID.write(segment);
 
@@ -33,8 +33,8 @@ class NativeDataStructs {
     objectDataFormat.dwType = 4;
     objectDataFormat.dwFlags = 2;
 
-    try (var memorySession = MemorySession.openConfined()) {
-      objectDataFormat.pguid = memorySession.allocate(GUID.$LAYOUT).address();
+    try (var memorySession = Arena.openConfined()) {
+      objectDataFormat.pguid = memorySession.allocate(GUID.$LAYOUT);
       var segment = memorySession.allocate(DIOBJECTDATAFORMAT.$LAYOUT);
       objectDataFormat.write(segment);
 
@@ -52,8 +52,8 @@ class NativeDataStructs {
     final GUID FORMAT_GUID2 = new GUID(0x22222222, (short) 0x2222, (short) 0x2222, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22);
     final GUID FORMAT_GUID3 = new GUID(0x33333333, (short) 0x3333, (short) 0x3333, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33);
 
-    try (var memorySession = MemorySession.openConfined()) {
-      var guidsSegment = memorySession.allocate(MemoryLayout.sequenceLayout(3, GUID.$LAYOUT));
+    try (var memoryArea = Arena.openConfined()) {
+      var guidsSegment = memoryArea.allocate(MemoryLayout.sequenceLayout(3, GUID.$LAYOUT));
       FORMAT_GUID1.write(guidsSegment);
 
       var secondSegment = guidsSegment.asSlice(GUID.$LAYOUT.byteSize());
@@ -62,9 +62,9 @@ class NativeDataStructs {
       var thirdSegment = guidsSegment.asSlice(GUID.$LAYOUT.byteSize());
       FORMAT_GUID3.write(thirdSegment);
 
-      var objectDataFormat1 = new DIOBJECTDATAFORMAT(guidsSegment.address(), 1, 1, 1);
-      var objectDataFormat2 = new DIOBJECTDATAFORMAT(secondSegment.address(), 2, 2, 2);
-      var objectDataFormat3 = new DIOBJECTDATAFORMAT(thirdSegment.address(), 3, 3, 3);
+      var objectDataFormat1 = new DIOBJECTDATAFORMAT(guidsSegment, 1, 1, 1);
+      var objectDataFormat2 = new DIOBJECTDATAFORMAT(secondSegment, 2, 2, 2);
+      var objectDataFormat3 = new DIOBJECTDATAFORMAT(thirdSegment, 3, 3, 3);
       var dataFormat = new DIDATAFORMAT();
       dataFormat.dwFlags = IDirectInputDevice8.DIDF_ABSAXIS;
       dataFormat.dwNumObjs = 3;
@@ -72,10 +72,10 @@ class NativeDataStructs {
       dataFormat.setObjectDataFormats(new DIOBJECTDATAFORMAT[]{objectDataFormat1, objectDataFormat2, objectDataFormat3});
 
 
-      var segment = memorySession.allocate(DIDATAFORMAT.$LAYOUT);
-      dataFormat.write(segment, memorySession);
+      var segment = memoryArea.allocate(DIDATAFORMAT.$LAYOUT);
+      dataFormat.write(segment, memoryArea);
 
-      var testDataFormat = DIDATAFORMAT.read(segment, memorySession);
+      var testDataFormat = DIDATAFORMAT.read(segment);
       assertEquals(dataFormat.dwSize, testDataFormat.dwSize);
       assertEquals(dataFormat.dwObjSize, testDataFormat.dwObjSize);
       assertEquals(dataFormat.dwFlags, testDataFormat.dwFlags);

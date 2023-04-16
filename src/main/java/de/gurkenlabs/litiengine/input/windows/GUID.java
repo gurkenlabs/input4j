@@ -58,7 +58,7 @@ final class GUID {
     return new GUID(data1, data2, data3, data4);
   }
 
-  public MemorySegment write(MemorySession memorySession) {
+  public MemorySegment write(Arena memorySession) {
     var memorySegment = memorySession.allocate($LAYOUT);
     write(memorySegment);
     return memorySegment;

@@ -12,7 +12,7 @@ class DIDATAFORMAT {
   public int dwDataSize;
   public int dwNumObjs;
 
-  public MemoryAddress rgodf;
+  public MemorySegment rgodf;
 
   private DIOBJECTDATAFORMAT[] objectDataFormats;
 
@@ -33,16 +33,16 @@ class DIDATAFORMAT {
   static final VarHandle VH_dwNumObjs = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("dwNumObjs"));
   static final VarHandle VH_rgodf = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("rgodf"));
 
-  public static DIDATAFORMAT read(MemorySegment segment, MemorySession memorySession) {
+  public static DIDATAFORMAT read(MemorySegment segment) {
     var data = new DIDATAFORMAT();
     data.dwSize = (int) VH_dwSize.get(segment);
     data.dwObjSize = (int) VH_dwObjSize.get(segment);
     data.dwFlags = (int) VH_dwFlags.get(segment);
     data.dwDataSize = (int) VH_dwDataSize.get(segment);
     data.dwNumObjs = (int) VH_dwNumObjs.get(segment);
-    data.rgodf = (MemoryAddress) VH_rgodf.get(segment);
+    data.rgodf = (MemorySegment) VH_rgodf.get(segment);
 
-    var objetDataFormatPointerSegment = MemorySegment.ofAddress(data.rgodf, DIOBJECTDATAFORMAT.$LAYOUT.byteSize() * data.dwNumObjs, memorySession);
+    var objetDataFormatPointerSegment = MemorySegment.ofAddress(data.rgodf.address(), DIOBJECTDATAFORMAT.$LAYOUT.byteSize() * data.dwNumObjs, segment.scope());
 
     data.objectDataFormats = new DIOBJECTDATAFORMAT[data.dwNumObjs];
     for (int i = 0; i < data.dwNumObjs; i++) {
@@ -52,20 +52,20 @@ class DIDATAFORMAT {
     return data;
   }
 
-  public void write(MemorySegment segment, MemorySession memorySession) {
+  public void write(MemorySegment segment, Arena memoryArea) {
     VH_dwSize.set(segment, dwSize);
     VH_dwObjSize.set(segment, dwObjSize);
     VH_dwFlags.set(segment, dwFlags);
     VH_dwDataSize.set(segment, dwDataSize);
     VH_dwNumObjs.set(segment, dwNumObjs);
 
-    var objectDataFormatSegment = memorySession.allocate(MemoryLayout.sequenceLayout(dwNumObjs, DIOBJECTDATAFORMAT.$LAYOUT));
+    var objectDataFormatSegment = memoryArea.allocate(MemoryLayout.sequenceLayout(dwNumObjs, DIOBJECTDATAFORMAT.$LAYOUT));
     for (int i = 0; i < dwNumObjs; i++) {
       var objectFormat = this.objectDataFormats[i];
       objectFormat.write(objectDataFormatSegment.asSlice(i * DIOBJECTDATAFORMAT.$LAYOUT.byteSize()));
     }
 
-    rgodf = objectDataFormatSegment.address();
+    rgodf = objectDataFormatSegment;
     VH_rgodf.set(segment, rgodf);
   }
 

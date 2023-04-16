@@ -31,7 +31,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
 
   private final Map<DIDEVICEOBJECTINSTANCE, DeviceComponent> currentComponents = new HashMap<>();
 
-  private final MemorySession memorySession = MemorySession.openConfined();
+  private final Arena memoryArea = Arena.openConfined();
 
   static {
     System.loadLibrary("Kernel32");
@@ -63,31 +63,29 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
         log.log(Level.SEVERE, e.getMessage(), e);
       }
     }
-
-    memorySession.close();
   }
 
   static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc) {
-    return SymbolLookup.loaderLookup().lookup(name).or(() -> Linker.nativeLinker().defaultLookup().lookup(name)).
+    return SymbolLookup.loaderLookup().find(name).or(() -> Linker.nativeLinker().defaultLookup().find(name)).
             map(addr -> Linker.nativeLinker().downcallHandle(addr, fdesc)).
             orElse(null);
   }
 
-  static MethodHandle downcallHandle(MemoryAddress address, FunctionDescriptor fdesc) {
+  static MethodHandle downcallHandle(MemorySegment address, FunctionDescriptor fdesc) {
     return Linker.nativeLinker().downcallHandle(address, fdesc);
   }
 
   private void enumDirectInput8Devices() {
     try {
       // 1. Initialize DirectInput
-      var ppvOut = memorySession.allocate(IDirectInput8.$LAYOUT);
+      var ppvOut = memoryArea.allocate(IDirectInput8.$LAYOUT);
 
       var directInputCreateResult = (int) directInput8Create.invoke(
-              getModuleHandle.invoke(MemoryAddress.NULL),
+              getModuleHandle.invoke(MemorySegment.NULL),
               DIRECTINPUT_VERSION,
-              IDirectInput8.IID_IDirectInput8W.write(memorySession),
+              IDirectInput8.IID_IDirectInput8W.write(memoryArea),
               ppvOut,
-              MemoryAddress.NULL);
+              MemorySegment.NULL);
 
 
       if (directInputCreateResult != Result.DI_OK) {
@@ -95,10 +93,10 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
         return;
       }
 
-      var directInput = IDirectInput8.read(ppvOut, memorySession);
+      var directInput = IDirectInput8.read(ppvOut);
 
       // 2. enumerate input devices
-      var enumDevicesResult = directInput.EnumDevices(DI8DEVCLASS_GAMECTRL, enumDevicesCallbackNative(memorySession), IDirectInput8.DIEDFL_ALLDEVICES);
+      var enumDevicesResult = directInput.EnumDevices(DI8DEVCLASS_GAMECTRL, enumDevicesCallbackNative(), IDirectInput8.DIEDFL_ALLDEVICES);
       if (enumDevicesResult != Result.DI_OK) {
         log.log(Level.SEVERE, "Could not enumerate DirectInput devices: " + Result.toString(enumDevicesResult));
         return;
@@ -109,38 +107,39 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
         currentComponents.clear();
         log.log(Level.INFO, "Found input device: " + device.inputDevice.getInstanceName());
 
-        var deviceAddress = memorySession.allocate(JAVA_LONG.byteSize());
-        var deviceGuidMemorySegment = device.deviceInstance.guidInstance.write(memorySession);
+        var deviceAddress = memoryArea.allocate(JAVA_LONG.byteSize());
+        var deviceGuidMemorySegment = device.deviceInstance.guidInstance.write(memoryArea);
 
         if (directInput.CreateDevice(deviceGuidMemorySegment, deviceAddress) != Result.DI_OK) {
           log.log(Level.WARNING, "Device " + device.inputDevice.getInstanceName() + " could not be created");
           continue;
         }
 
-        device.create(deviceAddress, memorySession);
+        device.create(deviceAddress, this.memoryArea.scope());
 
         // 4. enumerate the components
-        var enumObjectsResult = device.EnumObjects(enumObjectsCallbackNative(memorySession), IDirectInputDevice8.DIDFT_BUTTON | IDirectInputDevice8.DIDFT_AXIS | IDirectInputDevice8.DIDFT_POV);
+        var enumObjectsResult = device.EnumObjects(enumObjectsCallbackNative(), IDirectInputDevice8.DIDFT_BUTTON | IDirectInputDevice8.DIDFT_AXIS | IDirectInputDevice8.DIDFT_POV);
         if (enumObjectsResult != Result.DI_OK) {
           log.log(Level.WARNING, "Could not enumerate the device instance objects for " + device.inputDevice.getInstanceName() + ": " + Result.toString(enumObjectsResult));
           continue;
         }
 
         // 5. prepare the device for retrieving data
-        var dataFormat = defineDataFormat(currentComponents.keySet().stream().toList(), memorySession);
+        var dataFormat = defineDataFormat(currentComponents.keySet().stream().toList(), this.memoryArea);
         var setDataFormatResult = device.SetDataFormat(dataFormat);
         if (setDataFormatResult != Result.DI_OK) {
           log.log(Level.WARNING, "Could not set the data format for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setDataFormatResult));
           continue;
         }
 
-        var setCooperativeLevelResult = device.SetCooperativeLevel(MemoryAddress.NULL, IDirectInputDevice8.DISCL_BACKGROUND | IDirectInputDevice8.DISCL_NONEXCLUSIVE);
+        var setCooperativeLevelResult = device.SetCooperativeLevel(MemorySegment.NULL, IDirectInputDevice8.DISCL_BACKGROUND | IDirectInputDevice8.DISCL_NONEXCLUSIVE);
         if (setCooperativeLevelResult != Result.DI_OK) {
           log.log(Level.WARNING, "Could not set the cooperative level for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setDataFormatResult));
           continue;
         }
 
-        var setBufferSizeResult = device.SetProperty(IDirectInputDevice8.DIPROP_BUFFERSIZE, getDataBufferPropertyNative(memorySession));
+        // 1L = DIPROP_BUFFERSIZE
+        var setBufferSizeResult = device.SetProperty(this.memoryArea.allocate(JAVA_LONG, 1L), getDataBufferPropertyNative(this.memoryArea));
         if (setBufferSizeResult != Result.DI_OK) {
           log.log(Level.WARNING, "Could not set the buffer size for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setDataFormatResult));
           continue;
@@ -178,7 +177,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
 
       var arrSize = inputDevice.getComponents().size();
       var deviceStates = new int[arrSize];
-      var deviceStatesSegment = memorySession.allocateArray(JAVA_INT, arrSize);
+      var deviceStatesSegment = this.memoryArea.allocateArray(JAVA_INT, arrSize);
       var getDeviceDataResult = directInputDevice.GetDeviceState((int) (deviceStates.length * JAVA_INT.byteSize()), deviceStatesSegment);
       if (getDeviceDataResult != Result.DI_OK) {
         log.log(Level.WARNING, "Could not get deivce data " + inputDevice.getInstanceName() + ": " + Result.toString(pollResult));
@@ -200,8 +199,8 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
    * @param pvRef        An application specific reference pointer (not used by our library).
    * @return True to indicate for the native code to continue with the enumeration otherwise false.
    */
-  private boolean enumDevicesCallback(MemoryAddress lpddiSegment, MemoryAddress pvRef) {
-    var deviceInstance = DIDEVICEINSTANCE.read(MemorySegment.ofAddress(lpddiSegment, DIDEVICEINSTANCE.$LAYOUT.byteSize(), memorySession));
+  private boolean enumDevicesCallback(long lpddiSegment, long pvRef) {
+    var deviceInstance = DIDEVICEINSTANCE.read(MemorySegment.ofAddress(lpddiSegment, DIDEVICEINSTANCE.$LAYOUT.byteSize(), memoryArea.scope()));
     var name = new String(deviceInstance.tszInstanceName).trim();
     var product = new String(deviceInstance.tszProductName).trim();
     var type = DI8DEVTYPE.fromDwDevType(deviceInstance.dwDevType);
@@ -224,8 +223,8 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
    * @param pvRef         An application specific reference pointer (not used by our library).
    * @return True to indicate for the native code to continue with the enumeration otherwise false.
    */
-  private boolean enumObjectsCallback(MemoryAddress lpddoiSegment, MemoryAddress pvRef) {
-    var deviceObjectInstance = DIDEVICEOBJECTINSTANCE.read(MemorySegment.ofAddress(lpddoiSegment, DIDEVICEINSTANCE.$LAYOUT.byteSize(), memorySession));
+  private boolean enumObjectsCallback(long lpddoiSegment, long pvRef) {
+    var deviceObjectInstance = DIDEVICEOBJECTINSTANCE.read(MemorySegment.ofAddress(lpddoiSegment, DIDEVICEINSTANCE.$LAYOUT.byteSize(), this.memoryArea.scope()));
     var name = new String(deviceObjectInstance.tszName).trim();
     var deviceObjectType = DI8DEVOBJECTTYPE.from(deviceObjectInstance.guidType);
 
@@ -235,7 +234,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
     return true;
   }
 
-  private static MemorySegment defineDataFormat(List<DIDEVICEOBJECTINSTANCE> deviceObjects, MemorySession memorySession) {
+  private static MemorySegment defineDataFormat(List<DIDEVICEOBJECTINSTANCE> deviceObjects, Arena memoryArea) {
     var dataFormat = new DIDATAFORMAT();
     dataFormat.dwNumObjs = deviceObjects.size();
     dataFormat.dwDataSize = (int) (dataFormat.dwNumObjs * JAVA_INT.byteSize());
@@ -248,10 +247,10 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
       var objectFormat = new DIOBJECTDATAFORMAT();
       objectFormat.dwOfs = (int) (i * JAVA_INT.byteSize());
 
-      var guidPointer = memorySession.allocate(GUID.$LAYOUT);
+      var guidPointer = memoryArea.allocate(GUID.$LAYOUT);
       deviceObject.guidType.write(guidPointer);
 
-      objectFormat.pguid = guidPointer.address();
+      objectFormat.pguid = guidPointer;
       objectFormat.dwFlags = 0; // TODO: setting this to 0 works but I'm not sure whether we need any aspect specified
 
       objectFormat.dwType = deviceObject.dwType;
@@ -260,40 +259,40 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
 
     dataFormat.setObjectDataFormats(objectFormats);
 
-    var dataFormatMemorySegment = memorySession.allocate(dataFormat.dwSize);
-    dataFormat.write(dataFormatMemorySegment, memorySession);
+    var dataFormatMemorySegment = memoryArea.allocate(dataFormat.dwSize);
+    dataFormat.write(dataFormatMemorySegment, memoryArea);
 
     return dataFormatMemorySegment;
   }
 
   // passed to native code for callback
-  private MemorySegment enumDevicesCallbackNative(MemorySession memorySession) throws Throwable {
+  private MemorySegment enumDevicesCallbackNative() throws Throwable {
     // Create a method handle to the Java function as a callback
     MethodHandle onEnumDevices = MethodHandles.lookup()
-            .bind(this, "enumDevicesCallback", MethodType.methodType(boolean.class, MemoryAddress.class, MemoryAddress.class));
+            .bind(this, "enumDevicesCallback", MethodType.methodType(boolean.class, long.class, long.class));
 
     return Linker.nativeLinker().upcallStub(
-            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, ADDRESS), memorySession);
+            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, ADDRESS), this.memoryArea.scope());
   }
 
   // passed to native code for callback
-  private MemorySegment enumObjectsCallbackNative(MemorySession memorySession) throws Throwable {
+  private MemorySegment enumObjectsCallbackNative() throws Throwable {
     // Create a method handle to the Java function as a callback
     MethodHandle onEnumDevices = MethodHandles.lookup()
-            .bind(this, "enumObjectsCallback", MethodType.methodType(boolean.class, MemoryAddress.class, MemoryAddress.class));
+            .bind(this, "enumObjectsCallback", MethodType.methodType(boolean.class, long.class, long.class));
 
     return Linker.nativeLinker().upcallStub(
-            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, ADDRESS), memorySession);
+            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, ADDRESS), this.memoryArea.scope());
   }
 
-  private Addressable getDataBufferPropertyNative(MemorySession memorySession) {
+  private static MemorySegment getDataBufferPropertyNative(Arena memoryArea) {
     var propValue = new DIPROPDWORD();
     propValue.diph = new DIPROPHEADER();
     propValue.diph.dwSize = (int) DIPROPDWORD.$LAYOUT.byteSize();
     propValue.diph.dwHow = DIPROPHEADER.DIPH_DEVICE;
     propValue.dwData = EVENT_QUEUE_DEPTH;
 
-    var propertySegment = memorySession.allocate(DIPROPDWORD.$LAYOUT);
+    var propertySegment = memoryArea.allocate(DIPROPDWORD.$LAYOUT);
     propValue.write(propertySegment);
     return propertySegment;
   }

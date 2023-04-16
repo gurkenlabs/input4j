@@ -8,7 +8,7 @@ import static java.lang.foreign.ValueLayout.ADDRESS;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 
 class DIOBJECTDATAFORMAT {
-  public MemoryAddress pguid;
+  public MemorySegment pguid;
 
   public int dwOfs;
 
@@ -19,7 +19,7 @@ class DIOBJECTDATAFORMAT {
   DIOBJECTDATAFORMAT() {
   }
 
-  DIOBJECTDATAFORMAT(MemoryAddress pguid, int dwOfs, int dwType, int dwFlags) {
+  DIOBJECTDATAFORMAT(MemorySegment pguid, int dwOfs, int dwType, int dwFlags) {
     this.pguid = pguid;
     this.dwOfs = dwOfs;
     this.dwType = dwType;
@@ -42,7 +42,7 @@ class DIOBJECTDATAFORMAT {
   public static DIOBJECTDATAFORMAT read(MemorySegment segment) {
     var data = new DIOBJECTDATAFORMAT();
 
-    data.pguid = (MemoryAddress) VH_pguid.get(segment);
+    data.pguid = (MemorySegment) VH_pguid.get(segment);
     data.dwOfs = (int) VH_dwOfs.get(segment);
     data.dwType = (int) VH_dwType.get(segment);
     data.dwFlags = (int) VH_dwFlags.get(segment);

@@ -24,8 +24,6 @@ final class IDirectInputDevice8 {
   public final static int DISCL_BACKGROUND	= 0x00000008;
   public final static int DISCL_NOWINKEY		= 0x00000010;
 
-  static final MemoryAddress DIPROP_BUFFERSIZE = MemoryAddress.ofLong(1L);
-
   static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
           ADDRESS.withName("lpVtbl")
   ).withName("IDirectInputDevice8A");
@@ -60,70 +58,70 @@ final class IDirectInputDevice8 {
     this.inputDevice = inputDevice;
   }
 
-  public void create(MemorySegment segment, MemorySession memorySession) {
-    var pointer = (MemoryAddress) VH_lpVtbl.get(segment);
+  public void create(MemorySegment segment, SegmentScope segmentScope) {
+    var pointer = (long) VH_lpVtbl.get(segment);
 
-    this.vtablePointerSegment = MemorySegment.ofAddress(pointer, IDirectInputDevice8.Vtable.$LAYOUT.byteSize(), memorySession);
+    this.vtablePointerSegment = MemorySegment.ofAddress(pointer, IDirectInputDevice8.Vtable.$LAYOUT.byteSize(), segmentScope);
 
     // Dereference the pointer for the memory segment of the virtual table
-    this.vtable = MemorySegment.ofAddress(this.vtablePointerSegment.get(ADDRESS, 0), IDirectInputDevice8.Vtable.$LAYOUT.byteSize(), memorySession);
+    this.vtable = MemorySegment.ofAddress(this.vtablePointerSegment.get(JAVA_LONG, 0), IDirectInputDevice8.Vtable.$LAYOUT.byteSize(), segmentScope);
 
     // init API method handles
-    var enumDevicesPointer = (MemoryAddress) Vtable.VH_EnumObjects.get(this.vtable);
+    var enumDevicesPointer = (MemorySegment) Vtable.VH_EnumObjects.get(this.vtable);
     this.enumObjects = downcallHandle(enumDevicesPointer, Vtable.enumObjectsDescriptor);
 
-    var acquirePointer = (MemoryAddress) Vtable.VH_Acquire.get(this.vtable);
+    var acquirePointer = (MemorySegment) Vtable.VH_Acquire.get(this.vtable);
     this.acquire = downcallHandle(acquirePointer, Vtable.acquireDescriptor);
 
-    var unacquirePointer = (MemoryAddress) Vtable.VH_Unacquire.get(this.vtable);
+    var unacquirePointer = (MemorySegment) Vtable.VH_Unacquire.get(this.vtable);
     this.unacquire = downcallHandle(unacquirePointer, Vtable.unacquireDescriptor);
 
-    var pollPointer = (MemoryAddress) Vtable.VH_Poll.get(this.vtable);
+    var pollPointer = (MemorySegment) Vtable.VH_Poll.get(this.vtable);
     this.poll = downcallHandle(pollPointer, Vtable.pollDescriptor);
 
-    var setDataFormatPointer = (MemoryAddress) Vtable.VH_SetDataFormat.get(this.vtable);
+    var setDataFormatPointer = (MemorySegment) Vtable.VH_SetDataFormat.get(this.vtable);
     this.setDataFormat = downcallHandle(setDataFormatPointer, Vtable.setDataFormatDescriptor);
 
-    var setCooperativeLevelPointer = (MemoryAddress) Vtable.VH_SetCooperativeLevel.get(this.vtable);
+    var setCooperativeLevelPointer = (MemorySegment) Vtable.VH_SetCooperativeLevel.get(this.vtable);
     this.setCooperativeLevel = downcallHandle(setCooperativeLevelPointer, Vtable.setCooperativeLevelDescriptor);
 
-    var setPropertyPointer = (MemoryAddress) Vtable.VH_SetProperty.get(this.vtable);
+    var setPropertyPointer = (MemorySegment) Vtable.VH_SetProperty.get(this.vtable);
     this.setProperty = downcallHandle(setPropertyPointer, Vtable.setPropertyDescriptor);
 
-    var getDeviceStatePointer = (MemoryAddress) Vtable.VH_GetDeviceState.get(this.vtable);
+    var getDeviceStatePointer = (MemorySegment) Vtable.VH_GetDeviceState.get(this.vtable);
     this.getDeviceState = downcallHandle(getDeviceStatePointer, Vtable.getDeviceStateDescriptor);
   }
 
-  public int EnumObjects(Addressable lpCallback, int dwFlags) throws Throwable {
-    return (int) enumObjects.invokeExact((Addressable) this.vtablePointerSegment, lpCallback, (Addressable) MemoryAddress.NULL, dwFlags);
+  public int EnumObjects(MemorySegment lpCallback, int dwFlags) throws Throwable {
+    return (int) enumObjects.invokeExact(this.vtablePointerSegment, lpCallback, MemorySegment.NULL, dwFlags);
   }
 
   public int Acquire() throws Throwable {
-    return (int) acquire.invokeExact((Addressable) this.vtablePointerSegment);
+    return (int) acquire.invokeExact(this.vtablePointerSegment);
   }
 
   public void Unacquire() throws Throwable {
-    unacquire.invokeExact((Addressable) this.vtablePointerSegment);
+    unacquire.invokeExact(this.vtablePointerSegment);
   }
 
   public int Poll() throws Throwable {
-    return (int) poll.invokeExact((Addressable) this.vtablePointerSegment);
+    return (int) poll.invokeExact(this.vtablePointerSegment);
   }
 
-  public int SetDataFormat(Addressable lpdf) throws Throwable {
-    return (int) setDataFormat.invokeExact((Addressable) this.vtablePointerSegment, lpdf);
+  public int SetDataFormat(MemorySegment lpdf) throws Throwable {
+    return (int) setDataFormat.invokeExact(this.vtablePointerSegment, lpdf);
   }
 
-  public int SetCooperativeLevel(Addressable hwnd, int dwFlags) throws Throwable {
-    return (int) setCooperativeLevel.invokeExact((Addressable) this.vtablePointerSegment, hwnd, dwFlags);
+  public int SetCooperativeLevel(MemorySegment hwnd, int dwFlags) throws Throwable {
+    return (int) setCooperativeLevel.invokeExact(this.vtablePointerSegment, hwnd, dwFlags);
   }
 
-  public int SetProperty(Addressable rguidProp, Addressable pdiph) throws Throwable {
-    return (int) setProperty.invokeExact((Addressable) this.vtablePointerSegment, rguidProp, pdiph);
+  public int SetProperty(MemorySegment rguidProp, MemorySegment pdiph) throws Throwable {
+    return (int) setProperty.invokeExact(this.vtablePointerSegment, rguidProp, pdiph);
   }
 
-  public int GetDeviceState(int cbData, Addressable lpvData) throws Throwable {
-    return (int) getDeviceState.invokeExact((Addressable) this.vtablePointerSegment, cbData, lpvData);
+  public int GetDeviceState(int cbData, MemorySegment lpvData) throws Throwable {
+    return (int) getDeviceState.invokeExact(this.vtablePointerSegment, cbData, lpvData);
   }
 
   static class Vtable {
