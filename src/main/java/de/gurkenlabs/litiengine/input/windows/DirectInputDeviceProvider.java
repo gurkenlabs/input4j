@@ -134,14 +134,14 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
 
         var setCooperativeLevelResult = device.SetCooperativeLevel(MemorySegment.NULL, IDirectInputDevice8.DISCL_BACKGROUND | IDirectInputDevice8.DISCL_NONEXCLUSIVE);
         if (setCooperativeLevelResult != Result.DI_OK) {
-          log.log(Level.WARNING, "Could not set the cooperative level for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setDataFormatResult));
+          log.log(Level.WARNING, "Could not set the cooperative level for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setCooperativeLevelResult));
           continue;
         }
 
         // 1L = DIPROP_BUFFERSIZE
         var setBufferSizeResult = device.SetProperty(this.memoryArea.allocate(JAVA_LONG, 1L), getDataBufferPropertyNative(this.memoryArea));
         if (setBufferSizeResult != Result.DI_OK) {
-          log.log(Level.WARNING, "Could not set the buffer size for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setDataFormatResult));
+          log.log(Level.WARNING, "Could not set the buffer size for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setBufferSizeResult));
           continue;
         }
 
