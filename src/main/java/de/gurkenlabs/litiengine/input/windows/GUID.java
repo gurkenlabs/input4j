@@ -45,6 +45,13 @@ final class GUID {
     this.Data4 = Data4;
   }
 
+  GUID(int Data1, int Data2, int Data3, int Data4_1, int Data4_2, int Data4_3, int Data4_4, int Data4_5, int Data4_6, int Data4_7, int Data4_8) {
+    this.Data1 = Data1;
+    this.Data2 = (short) Data2;
+    this.Data3 = (short) Data3;
+    this.Data4 = new byte[]{(byte) Data4_1, (byte) Data4_2, (byte) Data4_3, (byte) Data4_4, (byte) Data4_5, (byte) Data4_6, (byte) Data4_7, (byte) Data4_8,};
+  }
+
   public static GUID read(MemorySegment segment) {
     var data1 = (int) VH_Data1.get(segment);
     var data2 = (short) VH_Data2.get(segment);

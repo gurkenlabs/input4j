@@ -1,35 +1,36 @@
 package de.gurkenlabs.litiengine.input.windows;
 
-import java.lang.foreign.GroupLayout;
-import java.lang.foreign.MemoryLayout;
-import java.lang.foreign.MemorySegment;
-import java.lang.foreign.ValueLayout;
+import java.lang.foreign.*;
 import java.lang.invoke.VarHandle;
+import java.util.logging.Logger;
 
+import static de.gurkenlabs.litiengine.input.windows.IDirectInputDevice8.*;
 import static java.lang.foreign.ValueLayout.*;
 
 final class DIDEVICEOBJECTINSTANCE {
-  final static GUID GUID_XAxis = new GUID(0xA36D02E0, (short) 0xC9F3, (short) 0x11CF, (byte) 0xBF, (byte) 0xC7, (byte) 0x44, (byte) 0x45, (byte) 0x53, (byte) 0x54, (byte) 0x00, (byte) 0x00);
-  final static GUID GUID_YAxis = new GUID(0xA36D02E1, (short) 0xC9F3, (short) 0x11CF, (byte) 0xBF, (byte) 0xC7, (byte) 0x44, (byte) 0x45, (byte) 0x53, (byte) 0x54, (byte) 0x00, (byte) 0x00);
-  final static GUID GUID_ZAxis = new GUID(0xA36D02E2, (short) 0xC9F3, (short) 0x11CF, (byte) 0xBF, (byte) 0xC7, (byte) 0x44, (byte) 0x45, (byte) 0x53, (byte) 0x54, (byte) 0x00, (byte) 0x00);
-  final static GUID GUID_RxAxis = new GUID(0xA36D02F4, (short) 0xC9F3, (short) 0x11CF, (byte) 0xBF, (byte) 0xC7, (byte) 0x44, (byte) 0x45, (byte) 0x53, (byte) 0x54, (byte) 0x00, (byte) 0x00);
-  final static GUID GUID_RyAxis = new GUID(0xA36D02F5, (short) 0xC9F3, (short) 0x11CF, (byte) 0xBF, (byte) 0xC7, (byte) 0x44, (byte) 0x45, (byte) 0x53, (byte) 0x54, (byte) 0x00, (byte) 0x00);
-  final static GUID GUID_RzAxis = new GUID(0xA36D02E3, (short) 0xC9F3, (short) 0x11CF, (byte) 0xBF, (byte) 0xC7, (byte) 0x44, (byte) 0x45, (byte) 0x53, (byte) 0x54, (byte) 0x00, (byte) 0x00);
-  final static GUID GUID_Slider = new GUID(0xA36D02E4, (short) 0xC9F3, (short) 0x11CF, (byte) 0xBF, (byte) 0xC7, (byte) 0x44, (byte) 0x45, (byte) 0x53, (byte) 0x54, (byte) 0x00, (byte) 0x00);
-  final static GUID GUID_Button = new GUID(0xA36D02F0, (short) 0xC9F3, (short) 0x11CF, (byte) 0xBF, (byte) 0xC7, (byte) 0x44, (byte) 0x45, (byte) 0x53, (byte) 0x54, (byte) 0x00, (byte) 0x00);
-  final static GUID GUID_Key = new GUID(0x55728220, (short) 0xD33C, (short) 0x11CF, (byte) 0xBF, (byte) 0xC7, (byte) 0x44, (byte) 0x45, (byte) 0x53, (byte) 0x54, (byte) 0x00, (byte) 0x00);
-  final static GUID GUID_POV = new GUID(0xA36D02F2, (short) 0xC9F3, (short) 0x11CF, (byte) 0xBF, (byte) 0xC7, (byte) 0x44, (byte) 0x45, (byte) 0x53, (byte) 0x54, (byte) 0x00, (byte) 0x00);
-  final static GUID GUID_Unknown = new GUID(0xA36D02F3, (short) 0xC9F3, (short) 0x11CF, (byte) 0xBF, (byte) 0xC7, (byte) 0x44, (byte) 0x45, (byte) 0x53, (byte) 0x54, (byte) 0x00, (byte) 0x00);
+  private static final Logger log = Logger.getLogger(DIDEVICEOBJECTINSTANCE.class.getName());
 
-  final static int DIDOI_FFACTUATOR		= 0x00000001;
-  final static int DIDOI_FFEFFECTTRIGGER   = 0x00000002;
-  final static int DIDOI_POLLED			= 0x00008000;
-  final static int DIDOI_ASPECTPOSITION	= 0x00000100;
-  final static int DIDOI_ASPECTVELOCITY	= 0x00000200;
-  final static int DIDOI_ASPECTACCEL	   = 0x00000300;
-  final static int DIDOI_ASPECTFORCE	   = 0x00000400;
-  final static int DIDOI_ASPECTMASK		= 0x00000F00;
-  final static int DIDOI_GUIDISUSAGE	   = 0x00010000;
+  final static GUID GUID_XAxis = new GUID(0xA36D02E0, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
+  final static GUID GUID_YAxis = new GUID(0xA36D02E1, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
+  final static GUID GUID_ZAxis = new GUID(0xA36D02E2, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
+  final static GUID GUID_RxAxis = new GUID(0xA36D02F4, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
+  final static GUID GUID_RyAxis = new GUID(0xA36D02F5, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
+  final static GUID GUID_RzAxis = new GUID(0xA36D02E3, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
+  final static GUID GUID_Slider = new GUID(0xA36D02E4, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
+  final static GUID GUID_Button = new GUID(0xA36D02F0, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
+  final static GUID GUID_Key = new GUID(0x55728220, 0xD33C, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
+  final static GUID GUID_POV = new GUID(0xA36D02F2, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
+  final static GUID GUID_Unknown = new GUID(0xA36D02F3, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
+
+  final static int DIDOI_FFACTUATOR = 0x00000001;
+  final static int DIDOI_FFEFFECTTRIGGER = 0x00000002;
+  final static int DIDOI_POLLED = 0x00008000;
+  final static int DIDOI_ASPECTPOSITION = 0x00000100;
+  final static int DIDOI_ASPECTVELOCITY = 0x00000200;
+  final static int DIDOI_ASPECTACCEL = 0x00000300;
+  final static int DIDOI_ASPECTFORCE = 0x00000400;
+  final static int DIDOI_ASPECTMASK = 0x00000F00;
+  final static int DIDOI_GUIDISUSAGE = 0x00010000;
 
   public int dwSize = (int) $LAYOUT.byteSize();
 
@@ -64,11 +65,17 @@ final class DIDEVICEOBJECTINSTANCE {
 
   public short wReportId;
 
-  public int getInstance(){
+  public long min;
+  public long max;
+  public int deadzone;
+
+  public DI8DEVOBJECTTYPE objectType;
+
+  public int getInstance() {
     return dwType >> 8;
   }
 
-  public int getType (){
+  public int getType() {
     return dwType & 0xFF;
   }
 
@@ -131,6 +138,29 @@ final class DIDEVICEOBJECTINSTANCE {
     data.wExponent = (short) VH_wExponent.get(segment);
     data.wReportId = (short) VH_wReportId.get(segment);
     return data;
+  }
+
+  boolean isAxis() {
+    return (dwType & DIDFT_AXIS) != 0;
+  }
+
+  boolean isRelative() {
+    return this.isAxis() && (dwType & DIDFT_RELAXIS) != 0;
+  }
+
+  boolean isButton() {
+    return (dwType & DIDFT_BUTTON) != 0;
+  }
+
+  float convertValue(float value) {
+    if (this.isButton()) {
+      return (((int) value) & 0x80) != 0 ? 1 : 0;
+    } else if (this.objectType == DI8DEVOBJECTTYPE.POV) {
+      return DI8DEVOBJECTTYPE.getPOV((int) value);
+    } else if (this.isAxis() && !this.isRelative()) {
+      return 2 * (value - min) / (float) (max - min) - 1;
+    }
+    return value;
   }
 
 }

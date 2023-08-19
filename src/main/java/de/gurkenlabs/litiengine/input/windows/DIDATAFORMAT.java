@@ -52,14 +52,14 @@ class DIDATAFORMAT {
     return data;
   }
 
-  public void write(MemorySegment segment, Arena memoryArea) {
+  public void write(MemorySegment segment, Arena memoryArena) {
     VH_dwSize.set(segment, dwSize);
     VH_dwObjSize.set(segment, dwObjSize);
     VH_dwFlags.set(segment, dwFlags);
     VH_dwDataSize.set(segment, dwDataSize);
     VH_dwNumObjs.set(segment, dwNumObjs);
 
-    var objectDataFormatSegment = memoryArea.allocate(MemoryLayout.sequenceLayout(dwNumObjs, DIOBJECTDATAFORMAT.$LAYOUT));
+    var objectDataFormatSegment = memoryArena.allocate(MemoryLayout.sequenceLayout(dwNumObjs, DIOBJECTDATAFORMAT.$LAYOUT));
     for (int i = 0; i < dwNumObjs; i++) {
       var objectFormat = this.objectDataFormats[i];
       objectFormat.write(objectDataFormatSegment.asSlice(i * DIOBJECTDATAFORMAT.$LAYOUT.byteSize()));

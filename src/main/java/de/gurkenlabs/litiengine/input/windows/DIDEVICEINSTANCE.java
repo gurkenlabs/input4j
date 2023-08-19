@@ -78,8 +78,6 @@ final class DIDEVICEINSTANCE {
    */
   public short wUsage;
 
-  public MemorySegment deviceStateResultSegment;
-
   static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
           ValueLayout.JAVA_INT.withName("dwSize"),
           GUID.$LAYOUT.withName("guidInstance"),

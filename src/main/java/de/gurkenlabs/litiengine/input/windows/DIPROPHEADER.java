@@ -13,7 +13,7 @@ class DIPROPHEADER {
   static final int DIPH_BYID = 2;
   static final int DIPH_BYUSAGE = 3;
 
-  public int dwSize = (int) DIPROPDWORD.$LAYOUT.byteSize();
+  public int dwSize;
   public int dwHeaderSize = (int) $LAYOUT.byteSize();
   public int dwObj;
   public int dwHow;

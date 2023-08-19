@@ -5,6 +5,7 @@ import de.gurkenlabs.litiengine.input.InputDevice;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.util.List;
 
 import static de.gurkenlabs.litiengine.input.windows.DirectInputDeviceProvider.downcallHandle;
 import static java.lang.foreign.ValueLayout.*;
@@ -15,16 +16,28 @@ final class IDirectInputDevice8 {
 
   public final static int DIDFT_POV = 0x00000010;
 
+  public final static int DIDFT_RELAXIS = 0x00000001;
+
   public final static int DIDF_ABSAXIS = 0x00000001;
   public final static int DIDF_RELAXIS = 0x00000002;
 
-  public final static int DISCL_EXCLUSIVE		= 0x00000001;
-  public final static int DISCL_NONEXCLUSIVE  = 0x00000002;
-  public final static int DISCL_FOREGROUND	= 0x00000004;
-  public final static int DISCL_BACKGROUND	= 0x00000008;
-  public final static int DISCL_NOWINKEY		= 0x00000010;
+  public final static int DISCL_EXCLUSIVE = 0x00000001;
+  public final static int DISCL_NONEXCLUSIVE = 0x00000002;
+  public final static int DISCL_FOREGROUND = 0x00000004;
+  public final static int DISCL_BACKGROUND = 0x00000008;
+  public final static int DISCL_NOWINKEY = 0x00000010;
+
+  final static int DIPROPRANGE_NOMIN = -2147483648;
+
+  final static int DIPROPRANGE_NOMAX = 2147483647;
 
   final static MemorySegment DIPROP_BUFFERSIZE = MemorySegment.ofAddress(1L);
+  static final MemorySegment DIPROP_AXISMODE = MemorySegment.ofAddress(2L);
+  static final MemorySegment DIPROP_GRANULARITY = MemorySegment.ofAddress(3L);
+  static final MemorySegment DIPROP_RANGE = MemorySegment.ofAddress(4L);
+  static final MemorySegment DIPROP_DEADZONE = MemorySegment.ofAddress(5L);
+  static final MemorySegment DIPROP_SATURATION = MemorySegment.ofAddress(6L);
+  static final MemorySegment DIPROP_FFGAIN = MemorySegment.ofAddress(7L);
 
   static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
           JAVA_LONG.withName("lpVtbl")
@@ -34,6 +47,8 @@ final class IDirectInputDevice8 {
 
   public MemorySegment vtable;
   final DIDEVICEINSTANCE deviceInstance;
+
+  List<DIDEVICEOBJECTINSTANCE> deviceObjects;
 
   final InputDevice inputDevice;
 
@@ -56,6 +71,8 @@ final class IDirectInputDevice8 {
   private MethodHandle getDeviceState;
 
   private MethodHandle getDeviceData;
+
+  private MethodHandle getProperty;
 
   IDirectInputDevice8(DIDEVICEINSTANCE deviceInstance, InputDevice inputDevice) {
     this.deviceInstance = deviceInstance;
@@ -97,6 +114,9 @@ final class IDirectInputDevice8 {
 
     var getDeviceDataPointer = (MemorySegment) Vtable.VH_GetDeviceData.get(this.vtable);
     this.getDeviceData = downcallHandle(getDeviceDataPointer, Vtable.getDeviceDataDescriptor);
+
+    var getPropertyPointer = (MemorySegment) Vtable.VH_GetProperty.get(this.vtable);
+    this.getProperty = downcallHandle(getPropertyPointer, Vtable.getPropertyDescriptor);
   }
 
   public int EnumObjects(MemorySegment lpCallback, int dwFlags) throws Throwable {
@@ -132,7 +152,11 @@ final class IDirectInputDevice8 {
   }
 
   public int GetDeviceData(MemorySegment rgdod, MemorySegment pdwInOut) throws Throwable {
-    return (int) getDeviceData.invokeExact(this.vtablePointerSegment, (int)DIDEVICEOBJECTDATA.$LAYOUT.byteSize(), rgdod, pdwInOut, 0);
+    return (int) getDeviceData.invokeExact(this.vtablePointerSegment, (int) DIDEVICEOBJECTDATA.$LAYOUT.byteSize(), rgdod, pdwInOut, 0);
+  }
+
+  public int GetProperty(MemorySegment rguidProp, MemorySegment pdiph) throws Throwable {
+    return (int) getProperty.invokeExact(this.vtablePointerSegment, rguidProp, pdiph);
   }
 
 
@@ -181,6 +205,7 @@ final class IDirectInputDevice8 {
     private static final FunctionDescriptor setPropertyDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS);
     private static final FunctionDescriptor getDeviceStateDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, ADDRESS);
     private static final FunctionDescriptor getDeviceDataDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, ADDRESS, ADDRESS, JAVA_INT);
+    private static final FunctionDescriptor getPropertyDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS);
 
     private static final VarHandle VH_EnumObjects = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("EnumObjects"));
     private static final VarHandle VH_Acquire = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Acquire"));
@@ -191,5 +216,6 @@ final class IDirectInputDevice8 {
     private static final VarHandle VH_SetProperty = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("SetProperty"));
     private static final VarHandle VH_GetDeviceState = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("GetDeviceState"));
     private static final VarHandle VH_GetDeviceData = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("GetDeviceData"));
+    private static final VarHandle VH_GetProperty = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("GetProperty"));
   }
 }

@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class NativeDataStructs {
   final static GUID TEST_GUID = new GUID(0x00000001, (short) 0x0002, (short) 0x0003, (byte) 0x04, (byte) 0x05, (byte) 0x06, (byte) 0x07, (byte) 0x08, (byte) 0x09, (byte) 0x10, (byte) 0x11);
+  final static GUID TEST_GUID2 = new GUID(0x00000001, 0x0002, 0x0003, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11);
 
   @Test
   void testGUID() {
@@ -22,6 +23,14 @@ class NativeDataStructs {
       assertEquals(TEST_GUID.Data2, testGuid.Data2);
       assertEquals(TEST_GUID.Data3, testGuid.Data3);
       assertArrayEquals(TEST_GUID.Data4, testGuid.Data4);
+
+      TEST_GUID2.write(segment);
+
+      var testGuid2 = GUID.read(segment);
+      assertEquals(TEST_GUID2.Data1, testGuid2.Data1);
+      assertEquals(TEST_GUID2.Data2, testGuid2.Data2);
+      assertEquals(TEST_GUID2.Data3, testGuid2.Data3);
+      assertArrayEquals(TEST_GUID2.Data4, testGuid2.Data4);
     }
   }
 
@@ -52,8 +61,8 @@ class NativeDataStructs {
     final GUID FORMAT_GUID2 = new GUID(0x22222222, (short) 0x2222, (short) 0x2222, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22);
     final GUID FORMAT_GUID3 = new GUID(0x33333333, (short) 0x3333, (short) 0x3333, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33);
 
-    try (var memoryArea = Arena.openConfined()) {
-      var guidsSegment = memoryArea.allocate(MemoryLayout.sequenceLayout(3, GUID.$LAYOUT));
+    try (var memoryArena = Arena.openConfined()) {
+      var guidsSegment = memoryArena.allocate(MemoryLayout.sequenceLayout(3, GUID.$LAYOUT));
       FORMAT_GUID1.write(guidsSegment);
 
       var secondSegment = guidsSegment.asSlice(GUID.$LAYOUT.byteSize());
@@ -72,8 +81,8 @@ class NativeDataStructs {
       dataFormat.setObjectDataFormats(new DIOBJECTDATAFORMAT[]{objectDataFormat1, objectDataFormat2, objectDataFormat3});
 
 
-      var segment = memoryArea.allocate(DIDATAFORMAT.$LAYOUT);
-      dataFormat.write(segment, memoryArea);
+      var segment = memoryArena.allocate(DIDATAFORMAT.$LAYOUT);
+      dataFormat.write(segment, memoryArena);
 
       var testDataFormat = DIDATAFORMAT.read(segment);
       assertEquals(dataFormat.dwSize, testDataFormat.dwSize);

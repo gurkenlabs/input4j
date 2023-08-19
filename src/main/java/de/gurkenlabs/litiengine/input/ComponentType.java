@@ -19,4 +19,8 @@ public enum ComponentType {
       default -> false;
     };
   }
+
+  public boolean isButton() {
+    return this == Button;
+  }
 }

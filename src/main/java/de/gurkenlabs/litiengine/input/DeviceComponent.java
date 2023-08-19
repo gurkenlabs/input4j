@@ -6,7 +6,9 @@ public final class DeviceComponent {
 
   private float value;
 
-  public DeviceComponent(ComponentType type, String name) {
+  private boolean relative;
+
+  public DeviceComponent(ComponentType type, String name, boolean relative) {
     this.type = type;
     this.name = name;
   }
@@ -29,5 +31,9 @@ public final class DeviceComponent {
 
   public String getName() {
     return name;
+  }
+
+  public boolean isRelative() {
+    return relative;
   }
 }
