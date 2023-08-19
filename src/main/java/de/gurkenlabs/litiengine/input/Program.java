@@ -1,17 +1,20 @@
 package de.gurkenlabs.litiengine.input;
 
+import java.util.stream.Collectors;
+
 public class Program {
   public static void main(String[] args) {
-    // TODO: update code base accoring to foreign API changes of Java 20: https://openjdk.org/jeps/434
-    // TODO: Replace MemoryAddress with long for stored pointers (MemoryAddress are now zero length MemorySegments)
-    // TODO: Replace usages of MemorySession with Area/SegmentScope
     try (var inputDeviceProvider = InputDeviceProvider.init()) {
       inputDeviceProvider.collectDevices();
 
-      for (var inputDevice : inputDeviceProvider.getDevices()) {
-        System.out.println(inputDevice.getInstanceName());
+      while (true) {
+        for (var inputDevice : inputDeviceProvider.getDevices()) {
+          inputDevice.poll();
+          System.out.println(inputDevice.getInstanceName() + ":" + inputDevice.getComponents().stream().map(x -> x.getValue()).collect(Collectors.toList()));
+        }
 
-        inputDevice.poll();
+
+        Thread.sleep(1000);
       }
 
     } catch (Exception e) {

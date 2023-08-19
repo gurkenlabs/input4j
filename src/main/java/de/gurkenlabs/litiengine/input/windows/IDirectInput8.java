@@ -63,7 +63,7 @@ final class IDirectInput8 {
    * Creates and initializes an instance of a device based on a given globally unique identifier (GUID), and obtains an IDirectInputDevice8 Interface interface.
    *
    * @param rguid                 Reference to the GUID for the desired input device.
-   * @param lplpDirectInputDevice Address of a variable to receive the IDirectInputDevice8 Interface interface pointer if successful.
+   * @param lplpDirectInputDevice Address of a variable to receive the IDirectInputDevice8 interface pointer if successful.
    * @return If the method succeeds, the return value is DI_OK. If the method fails, the return value can be one of the
    * following: DIERR_DEVICENOTREG, DIERR_INVALIDPARAM, DIERR_NOINTERFACE, DIERR_NOTINITIALIZED, DIERR_OUTOFMEMORY.
    * @throws Throwable If the native invokation fails this can throw

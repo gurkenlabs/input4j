@@ -80,8 +80,9 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
       // 1. Initialize DirectInput
       var ppvOut = memoryArea.allocate(IDirectInput8.$LAYOUT);
 
+      var moduleHandle = (MemorySegment) getModuleHandle.invoke(MemorySegment.NULL);
       var directInputCreateResult = (int) directInput8Create.invoke(
-              getModuleHandle.invoke(MemorySegment.NULL),
+              moduleHandle,
               DIRECTINPUT_VERSION,
               IDirectInput8.IID_IDirectInput8W.write(memoryArea),
               ppvOut,
@@ -144,7 +145,6 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
           continue;
         }
 
-
         var acquireResult = device.Acquire();
         if (acquireResult != Result.DI_OK) {
           log.log(Level.WARNING, "Could not acquire direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(acquireResult));
@@ -168,24 +168,28 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
     }
 
     try {
+      final int DI_NOEFFECT = 1;
+
       var pollResult = directInputDevice.Poll();
-      if (pollResult != Result.DI_OK) {
-        // TODO: I think BUFFEROVERFLOW should not occur here and could hint to a falsely defined data format
+      if (pollResult != Result.DI_OK && pollResult != DI_NOEFFECT) {
         log.log(Level.WARNING, "Could not poll device " + inputDevice.getInstanceName() + ": " + Result.toString(pollResult));
+        return;
       }
 
-      var arrSize = inputDevice.getComponents().size();
-      var deviceStates = new int[arrSize];
-      var deviceStatesSegment = this.memoryArea.allocateArray(JAVA_INT, arrSize);
-      var getDeviceDataResult = directInputDevice.GetDeviceState((int) (deviceStates.length * JAVA_INT.byteSize()), deviceStatesSegment);
-      if (getDeviceDataResult != Result.DI_OK) {
-        log.log(Level.WARNING, "Could not get deivce data " + inputDevice.getInstanceName() + ": " + Result.toString(pollResult));
+      // for details on the difference of GetDeviceState and GetDeviceData read http://doc.51windows.net/Directx9_SDK/input/using/devicedata/bufferedimmediatedata.htm
+      var componentCount = inputDevice.getComponents().size();
+      if(directInputDevice.deviceInstance.deviceStateResultSegment == null){
+        directInputDevice.deviceInstance.deviceStateResultSegment = this.memoryArea.allocateArray(JAVA_INT, componentCount);
       }
 
-      for (int i = 0; i < arrSize; i++) {
-        deviceStates[i] = deviceStatesSegment.get(JAVA_INT, i* JAVA_INT.byteSize());
+      var getDeviceStateResult = directInputDevice.GetDeviceState((int) (componentCount * JAVA_INT.byteSize()), directInputDevice.deviceInstance.deviceStateResultSegment);
+      if (getDeviceStateResult != Result.DI_OK) {
+        log.log(Level.WARNING, "Could not get device state " + inputDevice.getInstanceName() + ": " + Result.toString(getDeviceStateResult));
       }
-      System.out.println(Arrays.toString(deviceStates));
+
+      for (int i = 0; i < componentCount; i++) {
+        inputDevice.getComponents().get(i).setValue(directInputDevice.deviceInstance.deviceStateResultSegment.get(JAVA_INT, i * JAVA_INT.byteSize()));
+      }
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);
     }
@@ -244,15 +248,13 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
     for (int i = 0; i < deviceObjects.size(); i++) {
       var deviceObject = deviceObjects.get(i);
       var objectFormat = new DIOBJECTDATAFORMAT();
-      objectFormat.dwOfs = (int) (i * JAVA_INT.byteSize());
-
       var guidPointer = memoryArea.allocate(GUID.$LAYOUT);
       deviceObject.guidType.write(guidPointer);
-
       objectFormat.pguid = guidPointer;
-      objectFormat.dwFlags = 0; // TODO: setting this to 0 works but I'm not sure whether we need any aspect specified
-
+      objectFormat.dwOfs = (int) (i * JAVA_INT.byteSize());
       objectFormat.dwType = deviceObject.dwType;
+      objectFormat.dwFlags = deviceObject.dwFlags & (DIDEVICEOBJECTINSTANCE.DIDOI_ASPECTACCEL | DIDEVICEOBJECTINSTANCE.DIDOI_ASPECTFORCE | DIDEVICEOBJECTINSTANCE.DIDOI_ASPECTPOSITION | DIDEVICEOBJECTINSTANCE.DIDOI_ASPECTVELOCITY);
+
       objectFormats[i] = objectFormat;
     }
 
@@ -287,20 +289,18 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
   private static MemorySegment getDataBufferPropertyNative(Arena memoryArea) {
     var propValue = new DIPROPDWORD();
     propValue.diph = new DIPROPHEADER();
-    propValue.diph.dwSize = (int) DIPROPDWORD.$LAYOUT.byteSize();
-    propValue.diph.dwHeaderSize = (int) DIPROPHEADER.$LAYOUT.byteSize();
     propValue.diph.dwObj = 0;
     propValue.diph.dwHow = DIPROPHEADER.DIPH_DEVICE;
     propValue.dwData = EVENT_QUEUE_DEPTH;
 
-    // TODO: have a closer look at this. This might be related to the DI_BUFFEROVERFLOW exception
-    var propertySegment = memoryArea.allocate(DIPROPHEADER.$LAYOUT);
-    propValue.diph.write(propertySegment);
+    var propertySegment = memoryArea.allocate(DIPROPDWORD.$LAYOUT);
+    propValue.write(propertySegment);
     return propertySegment;
   }
 
   private static class Result {
     static final int DI_OK = 0x00000000;
+
     static final int DIERR_INVALIDPARAM = 0x80070057;
     static final int DIERR_NOTINITIALIZED = 0x80070015;
     static final int DI_BUFFEROVERFLOW = 0x00000001;

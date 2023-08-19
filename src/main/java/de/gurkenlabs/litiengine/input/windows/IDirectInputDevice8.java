@@ -55,6 +55,8 @@ final class IDirectInputDevice8 {
 
   private MethodHandle getDeviceState;
 
+  private MethodHandle getDeviceData;
+
   IDirectInputDevice8(DIDEVICEINSTANCE deviceInstance, InputDevice inputDevice) {
     this.deviceInstance = deviceInstance;
     this.inputDevice = inputDevice;
@@ -92,6 +94,9 @@ final class IDirectInputDevice8 {
 
     var getDeviceStatePointer = (MemorySegment) Vtable.VH_GetDeviceState.get(this.vtable);
     this.getDeviceState = downcallHandle(getDeviceStatePointer, Vtable.getDeviceStateDescriptor);
+
+    var getDeviceDataPointer = (MemorySegment) Vtable.VH_GetDeviceData.get(this.vtable);
+    this.getDeviceData = downcallHandle(getDeviceDataPointer, Vtable.getDeviceDataDescriptor);
   }
 
   public int EnumObjects(MemorySegment lpCallback, int dwFlags) throws Throwable {
@@ -125,6 +130,11 @@ final class IDirectInputDevice8 {
   public int GetDeviceState(int cbData, MemorySegment lpvData) throws Throwable {
     return (int) getDeviceState.invokeExact(this.vtablePointerSegment, cbData, lpvData);
   }
+
+  public int GetDeviceData(MemorySegment rgdod, MemorySegment pdwInOut) throws Throwable {
+    return (int) getDeviceData.invokeExact(this.vtablePointerSegment, (int)DIDEVICEOBJECTDATA.$LAYOUT.byteSize(), rgdod, pdwInOut, 0);
+  }
+
 
   static class Vtable {
     static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
@@ -170,6 +180,7 @@ final class IDirectInputDevice8 {
     private static final FunctionDescriptor setCooperativeLevelDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, JAVA_INT);
     private static final FunctionDescriptor setPropertyDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS);
     private static final FunctionDescriptor getDeviceStateDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, ADDRESS);
+    private static final FunctionDescriptor getDeviceDataDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, ADDRESS, ADDRESS, JAVA_INT);
 
     private static final VarHandle VH_EnumObjects = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("EnumObjects"));
     private static final VarHandle VH_Acquire = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Acquire"));
@@ -179,6 +190,6 @@ final class IDirectInputDevice8 {
     private static final VarHandle VH_SetCooperativeLevel = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("SetCooperativeLevel"));
     private static final VarHandle VH_SetProperty = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("SetProperty"));
     private static final VarHandle VH_GetDeviceState = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("GetDeviceState"));
-
+    private static final VarHandle VH_GetDeviceData = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("GetDeviceData"));
   }
 }

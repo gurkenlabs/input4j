@@ -35,7 +35,7 @@ class DIDEVICEOBJECTDATA {
     data.dwData = (int) VH_dwData.get(segment);
     data.dwTimeStamp = (int) VH_dwTimeStamp.get(segment);
     data.dwSequence = (int) VH_dwSequence.get(segment);
-    data.uAppData = (int) VH_uAppData.get(segment);
+    data.uAppData = (long) VH_uAppData.get(segment);
     return data;
   }
 }
