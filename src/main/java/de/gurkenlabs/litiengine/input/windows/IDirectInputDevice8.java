@@ -24,6 +24,8 @@ final class IDirectInputDevice8 {
   public final static int DISCL_BACKGROUND	= 0x00000008;
   public final static int DISCL_NOWINKEY		= 0x00000010;
 
+  final static MemorySegment DIPROP_BUFFERSIZE = MemorySegment.ofAddress(1L);
+
   static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
           JAVA_LONG.withName("lpVtbl")
   ).withName("IDirectInputDevice8A");

@@ -138,8 +138,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
           continue;
         }
 
-        // 1L = DIPROP_BUFFERSIZE
-        var setBufferSizeResult = device.SetProperty(this.memoryArea.allocate(JAVA_LONG, 1L), getDataBufferPropertyNative(this.memoryArea));
+        var setBufferSizeResult = device.SetProperty(IDirectInputDevice8.DIPROP_BUFFERSIZE, getDataBufferPropertyNative(this.memoryArea));
         if (setBufferSizeResult != Result.DI_OK) {
           log.log(Level.WARNING, "Could not set the buffer size for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setBufferSizeResult));
           continue;
@@ -289,11 +288,14 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
     var propValue = new DIPROPDWORD();
     propValue.diph = new DIPROPHEADER();
     propValue.diph.dwSize = (int) DIPROPDWORD.$LAYOUT.byteSize();
+    propValue.diph.dwHeaderSize = (int) DIPROPHEADER.$LAYOUT.byteSize();
+    propValue.diph.dwObj = 0;
     propValue.diph.dwHow = DIPROPHEADER.DIPH_DEVICE;
     propValue.dwData = EVENT_QUEUE_DEPTH;
 
-    var propertySegment = memoryArea.allocate(DIPROPDWORD.$LAYOUT);
-    propValue.write(propertySegment);
+    // TODO: have a closer look at this. This might be related to the DI_BUFFEROVERFLOW exception
+    var propertySegment = memoryArea.allocate(DIPROPHEADER.$LAYOUT);
+    propValue.diph.write(propertySegment);
     return propertySegment;
   }
 
