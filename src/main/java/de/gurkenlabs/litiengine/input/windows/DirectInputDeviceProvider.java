@@ -272,7 +272,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
             .bind(this, "enumDevicesCallback", MethodType.methodType(boolean.class, long.class, long.class));
 
     return Linker.nativeLinker().upcallStub(
-            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, ADDRESS), this.memoryArea.scope());
+            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG), this.memoryArea.scope());
   }
 
   // passed to native code for callback
@@ -282,7 +282,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
             .bind(this, "enumObjectsCallback", MethodType.methodType(boolean.class, long.class, long.class));
 
     return Linker.nativeLinker().upcallStub(
-            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, ADDRESS), this.memoryArea.scope());
+            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG), this.memoryArea.scope());
   }
 
   private static MemorySegment getDataBufferPropertyNative(Arena memoryArea) {

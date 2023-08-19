@@ -13,7 +13,7 @@ final class IDirectInput8 {
   static final int DIEDFL_ALLDEVICES = 0x00000000;
 
   static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
-          ADDRESS.withName("lpVtbl")
+          JAVA_LONG.withName("lpVtbl")
   ).withName("IDirectInput8W");
 
   private static final VarHandle VH_lpVtbl = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("lpVtbl"));

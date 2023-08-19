@@ -25,7 +25,7 @@ final class IDirectInputDevice8 {
   public final static int DISCL_NOWINKEY		= 0x00000010;
 
   static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
-          ADDRESS.withName("lpVtbl")
+          JAVA_LONG.withName("lpVtbl")
   ).withName("IDirectInputDevice8A");
 
   private static final VarHandle VH_lpVtbl = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("lpVtbl"));
