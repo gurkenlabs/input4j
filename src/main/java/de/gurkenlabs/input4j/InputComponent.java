@@ -1,4 +1,4 @@
-package de.gurkenlabs.litiengine.input;
+package de.gurkenlabs.input4j;
 
 public final class InputComponent {
   private final InputDevice device;

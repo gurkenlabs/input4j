@@ -1,13 +1,13 @@
-package de.gurkenlabs.litiengine.input.windows.dinput;
+package de.gurkenlabs.input4j.windows.dinput;
 
-import de.gurkenlabs.litiengine.input.InputDevice;
+import de.gurkenlabs.input4j.InputDevice;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
 import java.util.List;
 
-import static de.gurkenlabs.litiengine.input.windows.dinput.DirectInputDeviceProvider.downcallHandle;
+import static de.gurkenlabs.input4j.windows.dinput.DirectInputDeviceProvider.downcallHandle;
 import static java.lang.foreign.ValueLayout.*;
 
 final class IDirectInputDevice8 {

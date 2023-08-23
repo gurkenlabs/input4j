@@ -1,4 +1,4 @@
-package de.gurkenlabs.litiengine.input;
+package de.gurkenlabs.input4j;
 
 import java.io.Closeable;
 import java.util.Collection;
@@ -59,12 +59,12 @@ public interface InputDevices extends Closeable {
   }
 
   enum Libraries {
-    WIN_DIRECTINPUT("de.gurkenlabs.litiengine.input.windows.dinput.DirectInputDeviceProvider"),
-    // WIN_XINPUT("de.gurkenlabs.litiengine.input.windows.xinput.XInputDeviceProvider");
-    LINUX_INPUT("de.gurkenlabs.litiengine.input.linux.JoystickProvider"),
+    WIN_DIRECTINPUT("de.gurkenlabs.input4j.windows.dinput.DirectInputDeviceProvider"),
+    // WIN_XINPUT("de.gurkenlabs.input4j.windows.xinput.XInputDeviceProvider");
+    LINUX_INPUT("de.gurkenlabs.input4j.linux.JoystickProvider"),
 
-    // OSX_IOKIT("de.gurkenlabs.litiengine.input.osx.hid.HumanInterfaceDeviceProvider")
-    OSX_GAMECONTROLLER("de.gurkenlabs.litiengine.input.osx.gc.GameControllerProvider");
+    // OSX_IOKIT("de.gurkenlabs.input4j.osx.hid.HumanInterfaceDeviceProvider")
+    OSX_GAMECONTROLLER("de.gurkenlabs.input4j.osx.gc.GameControllerProvider");
 
     private final String deviceProvider;
 

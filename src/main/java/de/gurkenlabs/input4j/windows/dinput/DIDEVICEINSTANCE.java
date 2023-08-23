@@ -1,4 +1,4 @@
-package de.gurkenlabs.litiengine.input.windows.dinput;
+package de.gurkenlabs.input4j.windows.dinput;
 
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;

@@ -1,4 +1,4 @@
-package de.gurkenlabs.litiengine.input;
+package de.gurkenlabs.input4j;
 
 import java.util.*;
 import java.util.function.Function;

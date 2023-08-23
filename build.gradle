@@ -3,12 +3,12 @@ plugins {
   id 'application'
 }
 
-group 'de.gurkenlabs.litiengine.input'
+group 'de.gurkenlabs.input4j'
 version '1.0-SNAPSHOT'
 
 
 application {
-  mainClass = 'de.gurkenlabs.litiengine.input.Program'
+  mainClass = 'de.gurkenlabs.input4j.Program'
 }
 
 repositories {
@@ -40,7 +40,7 @@ compileJava {
 jar {
   manifest {
     attributes 'Implementation-Title': "LITIENGINE input playground",
-            'Main-Class': 'de.gurkenlabs.litiengine.input.Program'
+            'Main-Class': 'de.gurkenlabs.input4j.Program'
   }
 }
 

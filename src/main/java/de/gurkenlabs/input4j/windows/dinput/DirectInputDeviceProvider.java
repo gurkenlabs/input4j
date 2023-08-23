@@ -1,7 +1,10 @@
-package de.gurkenlabs.litiengine.input.windows.dinput;
+package de.gurkenlabs.input4j.windows.dinput;
 
 
-import de.gurkenlabs.litiengine.input.*;
+import de.gurkenlabs.input4j.ComponentType;
+import de.gurkenlabs.input4j.InputComponent;
+import de.gurkenlabs.input4j.InputDevice;
+import de.gurkenlabs.input4j.InputDevices;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
@@ -16,6 +19,7 @@ import static java.lang.foreign.ValueLayout.*;
 
 /**
  * TODO: Implement support for force feedback/rumblers
+ * TODO: Implement hot swapping controllers
  */
 public final class DirectInputDeviceProvider implements InputDevices {
   private static final Logger log = Logger.getLogger(DirectInputDeviceProvider.class.getName());
