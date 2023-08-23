@@ -2,7 +2,7 @@ package de.gurkenlabs.litiengine.input;
 
 public class Program {
   public static void main(String[] args) {
-    try (var inputDeviceProvider = InputDeviceProvider.init()) {
+    try (var inputDeviceProvider = InputDevices.init()) {
       while (true) {
         for (var inputDevice : inputDeviceProvider.getDevices()) {
           inputDevice.poll();

@@ -1,4 +1,4 @@
-package de.gurkenlabs.litiengine.input.windows;
+package de.gurkenlabs.litiengine.input.windows.dinput;
 
 import org.junit.jupiter.api.Test;
 
@@ -8,7 +8,7 @@ import java.lang.foreign.MemoryLayout;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class NativeDataStructs {
+class NativeDataStructTests {
   final static GUID TEST_GUID = new GUID(0x00000001, (short) 0x0002, (short) 0x0003, (byte) 0x04, (byte) 0x05, (byte) 0x06, (byte) 0x07, (byte) 0x08, (byte) 0x09, (byte) 0x10, (byte) 0x11);
   final static GUID TEST_GUID2 = new GUID(0x00000001, 0x0002, 0x0003, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11);
 
@@ -57,9 +57,9 @@ class NativeDataStructs {
 
   @Test
   void testDIDATAFORMAT() {
-    final GUID FORMAT_GUID1 = new GUID(0x11111111, (short) 0x1111, (short) 0x1111, (byte) 0x11, (byte) 0x11, (byte) 0x11, (byte) 0x11, (byte) 0x11, (byte) 0x11, (byte) 0x11, (byte) 0x11);
-    final GUID FORMAT_GUID2 = new GUID(0x22222222, (short) 0x2222, (short) 0x2222, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22, (byte) 0x22);
-    final GUID FORMAT_GUID3 = new GUID(0x33333333, (short) 0x3333, (short) 0x3333, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33, (byte) 0x33);
+    final GUID FORMAT_GUID1 = new GUID(0x11111111, 0x1111, 0x1111, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11);
+    final GUID FORMAT_GUID2 = new GUID(0x22222222, 0x2222, 0x2222, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22);
+    final GUID FORMAT_GUID3 = new GUID(0x33333333, 0x3333, 0x3333, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33);
 
     try (var memoryArena = Arena.openConfined()) {
       var guidsSegment = memoryArena.allocate(MemoryLayout.sequenceLayout(3, GUID.$LAYOUT));

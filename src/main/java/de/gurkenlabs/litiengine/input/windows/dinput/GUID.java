@@ -1,4 +1,4 @@
-package de.gurkenlabs.litiengine.input.windows;
+package de.gurkenlabs.litiengine.input.windows.dinput;
 
 import java.lang.foreign.*;
 import java.lang.invoke.VarHandle;

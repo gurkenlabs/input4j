@@ -1,4 +1,4 @@
-package de.gurkenlabs.litiengine.input.windows;
+package de.gurkenlabs.litiengine.input.windows.dinput;
 
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
@@ -122,33 +122,5 @@ final class DIDEVICEINSTANCE {
     data.wUsagePage = (short) VH_wUsagePage.get(segment);
     data.wUsage = (short) VH_wUsage.get(segment);
     return data;
-  }
-
-  public void write(MemorySegment segment) {
-    VH_dwSize.set(segment, dwSize);
-    if (guidInstance != null) {
-      guidInstance.write(segment.asSlice(ValueLayout.JAVA_INT.byteSize()));
-    }
-
-    if (guidProduct != null) {
-      guidProduct.write(segment.asSlice(ValueLayout.JAVA_INT.byteSize() + GUID.$LAYOUT.byteSize()));
-    }
-
-    VH_dwDevType.set(segment, dwDevType);
-
-    for (int i = 0; i < tszInstanceName.length; i++) {
-      VH_tszInstanceName.set(segment, i, tszInstanceName[i]);
-    }
-
-    for (int i = 0; i < tszProductName.length; i++) {
-      VH_tszProductName.set(segment, i, tszProductName[i]);
-    }
-
-    if (guidFFDriver != null) {
-      guidFFDriver.write(segment.asSlice(ValueLayout.JAVA_INT.byteSize() + GUID.$LAYOUT.byteSize() + GUID.$LAYOUT.byteSize() + ValueLayout.JAVA_INT.byteSize() + MAX_PATH + MAX_PATH));
-    }
-
-    VH_wUsagePage.set(segment, wUsagePage);
-    VH_wUsage.set(segment, wUsage);
   }
 }

@@ -1,8 +1,7 @@
-package de.gurkenlabs.litiengine.input.windows;
+package de.gurkenlabs.litiengine.input.windows.dinput;
 
 import java.lang.foreign.*;
 import java.lang.invoke.VarHandle;
-import java.util.Arrays;
 
 import static java.lang.foreign.ValueLayout.ADDRESS;
 import static java.lang.foreign.ValueLayout.JAVA_INT;

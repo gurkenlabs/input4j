@@ -1,10 +1,9 @@
-package de.gurkenlabs.litiengine.input.windows;
+package de.gurkenlabs.litiengine.input.windows.dinput;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
 
-import static de.gurkenlabs.litiengine.input.windows.DirectInputDeviceProvider.downcallHandle;
 import static java.lang.foreign.ValueLayout.*;
 
 final class IDirectInput8 {
@@ -36,10 +35,10 @@ final class IDirectInput8 {
 
     // init API method handles
     var enumDevicesPointer = (MemorySegment) Vtable.VH_EnumDevices.get(directInput.vtable);
-    directInput.enumDevices = downcallHandle(enumDevicesPointer, Vtable.enumDevicesDescriptor);
+    directInput.enumDevices = DirectInputDeviceProvider.downcallHandle(enumDevicesPointer, Vtable.enumDevicesDescriptor);
 
     var createDevicePointer = (MemorySegment) Vtable.VH_CreateDevice.get(directInput.vtable);
-    directInput.createDevice = downcallHandle(createDevicePointer, Vtable.createDeviceDescriptor);
+    directInput.createDevice = DirectInputDeviceProvider.downcallHandle(createDevicePointer, Vtable.createDeviceDescriptor);
 
     return directInput;
   }
@@ -73,7 +72,7 @@ final class IDirectInput8 {
   }
 
   public void Release(){
-
+    // TODO: Release when DirectInputProvider is closed
   }
 
   static class Vtable {

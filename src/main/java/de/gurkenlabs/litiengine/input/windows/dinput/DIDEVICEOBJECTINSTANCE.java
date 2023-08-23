@@ -1,9 +1,8 @@
-package de.gurkenlabs.litiengine.input.windows;
+package de.gurkenlabs.litiengine.input.windows.dinput;
 
 import java.lang.foreign.*;
 import java.lang.invoke.VarHandle;
 
-import static de.gurkenlabs.litiengine.input.windows.IDirectInputDevice8.*;
 import static java.lang.foreign.ValueLayout.*;
 
 final class DIDEVICEOBJECTINSTANCE {
@@ -138,15 +137,15 @@ final class DIDEVICEOBJECTINSTANCE {
   }
 
   boolean isAxis() {
-    return (dwType & DIDFT_AXIS) != 0;
+    return (dwType & IDirectInputDevice8.DIDFT_AXIS) != 0;
   }
 
   boolean isRelative() {
-    return this.isAxis() && (dwType & DIDFT_RELAXIS) != 0;
+    return this.isAxis() && (dwType & IDirectInputDevice8.DIDFT_RELAXIS) != 0;
   }
 
   boolean isButton() {
-    return (dwType & DIDFT_BUTTON) != 0;
+    return (dwType & IDirectInputDevice8.DIDFT_BUTTON) != 0;
   }
 
   /**

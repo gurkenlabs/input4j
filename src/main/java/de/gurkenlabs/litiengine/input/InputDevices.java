@@ -4,15 +4,15 @@ import java.io.Closeable;
 import java.util.Collection;
 import java.util.logging.Logger;
 
-public interface InputDeviceProvider extends Closeable {
-  Logger log = Logger.getLogger(InputDeviceProvider.class.getName());
+public interface InputDevices extends Closeable {
+  Logger log = Logger.getLogger(InputDevices.class.getName());
 
   /**
-   * This is called internally when calling initializing the {@link  InputDeviceProvider }.
+   * This is called internally when calling initializing the {@link InputDevices }.
    *
-   * @see InputDeviceProvider#init()
+   * @see InputDevices#init()
    */
-  void initDevices();
+  void internalInitDevices();
 
   /**
    * Retrieves a collection of input devices.
@@ -31,7 +31,7 @@ public interface InputDeviceProvider extends Closeable {
    * @return The initialized input device provider.
    * @throws Exception if the input device provider cannot be initialized.
    */
-  static InputDeviceProvider init() throws Exception {
+  static InputDevices init() throws Exception {
     String osName = System.getProperty("os.name", "").trim().toLowerCase();
     String osVersion = System.getProperty("os.version");
     String osArch = System.getProperty("os.arch");
@@ -40,7 +40,7 @@ public interface InputDeviceProvider extends Closeable {
 
     String deviceProviderClassName = null;
     if (osName.contains("windows")) {
-      deviceProviderClassName = "de.gurkenlabs.litiengine.input.windows.DirectInputDeviceProvider";
+      deviceProviderClassName = Libraries.WIN_DIRECTINPUT.getDeviceProvider();
     } else if (osName.contains("linux")) {
       // TODO: Implement linux support
     } else if (osName.contains("mac os")) {
@@ -53,8 +53,27 @@ public interface InputDeviceProvider extends Closeable {
 
     var deviceProviderClass = Class.forName(deviceProviderClassName);
     var constructor = deviceProviderClass.getDeclaredConstructor();
-    var provider = (InputDeviceProvider) constructor.newInstance();
-    provider.initDevices();
+    var provider = (InputDevices) constructor.newInstance();
+    provider.internalInitDevices();
     return provider;
+  }
+
+  enum Libraries {
+    WIN_DIRECTINPUT("de.gurkenlabs.litiengine.input.windows.dinput.DirectInputDeviceProvider"),
+    // WIN_XINPUT("de.gurkenlabs.litiengine.input.windows.xinput.XInputDeviceProvider");
+    LINUX_INPUT("de.gurkenlabs.litiengine.input.linux.JoystickProvider"),
+
+    // OSX_IOKIT("de.gurkenlabs.litiengine.input.osx.hid.HumanInterfaceDeviceProvider")
+    OSX_GAMECONTROLLER("de.gurkenlabs.litiengine.input.osx.gc.GameControllerProvider");
+
+    private final String deviceProvider;
+
+    Libraries(String deviceProvider) {
+      this.deviceProvider = deviceProvider;
+    }
+
+    public String getDeviceProvider() {
+      return deviceProvider;
+    }
   }
 }

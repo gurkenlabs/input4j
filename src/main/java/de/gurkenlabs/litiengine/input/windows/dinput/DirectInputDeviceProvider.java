@@ -1,4 +1,4 @@
-package de.gurkenlabs.litiengine.input.windows;
+package de.gurkenlabs.litiengine.input.windows.dinput;
 
 
 import de.gurkenlabs.litiengine.input.*;
@@ -12,10 +12,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static de.gurkenlabs.litiengine.input.windows.IDirectInputDevice8.*;
 import static java.lang.foreign.ValueLayout.*;
 
-public final class DirectInputDeviceProvider implements InputDeviceProvider {
+/**
+ * TODO: Implement support for force feedback/rumblers
+ */
+public final class DirectInputDeviceProvider implements InputDevices {
   private static final Logger log = Logger.getLogger(DirectInputDeviceProvider.class.getName());
 
   static final int DI8DEVCLASS_GAMECTRL = 4;
@@ -51,7 +53,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
   }
 
   @Override
-  public void initDevices() {
+  public void internalInitDevices() {
     this.enumDirectInput8Devices();
   }
 
@@ -288,7 +290,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
 
       var rangePropSegment = this.memoryArena.allocate(DIPROPRANGE.$LAYOUT);
       rangeProp.write(rangePropSegment);
-      var rangePropResult = this.currentDevice.GetProperty(DIPROP_RANGE, rangePropSegment);
+      var rangePropResult = this.currentDevice.GetProperty(IDirectInputDevice8.DIPROP_RANGE, rangePropSegment);
       if (rangePropResult == Result.DI_OK) {
         var range = DIPROPRANGE.read(rangePropSegment);
         deviceObject.min = range.lMin;
@@ -304,14 +306,14 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
 
       var deadZonePropSegment = this.memoryArena.allocate(DIPROPDWORD.$LAYOUT);
       deadZoneProp.write(deadZonePropSegment);
-      var deadZoneResult = this.currentDevice.GetProperty(DIPROP_DEADZONE, deadZonePropSegment);
+      var deadZoneResult = this.currentDevice.GetProperty(IDirectInputDevice8.DIPROP_DEADZONE, deadZonePropSegment);
       if (deadZoneResult == Result.DI_OK) {
         var deadZone = DIPROPDWORD.read(deadZonePropSegment);
         deviceObject.deadzone = deadZone.dwData;
       }
     } else {
-      deviceObject.min = DIPROPRANGE_NOMIN;
-      deviceObject.max = DIPROPRANGE_NOMAX;
+      deviceObject.min = IDirectInputDevice8.DIPROPRANGE_NOMIN;
+      deviceObject.max = IDirectInputDevice8.DIPROPRANGE_NOMAX;
     }
   }
 
