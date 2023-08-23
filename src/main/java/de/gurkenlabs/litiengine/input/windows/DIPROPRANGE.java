@@ -6,7 +6,6 @@ import java.lang.foreign.MemorySegment;
 import java.lang.invoke.VarHandle;
 
 import static java.lang.foreign.ValueLayout.JAVA_INT;
-import static java.lang.foreign.ValueLayout.JAVA_LONG;
 
 class DIPROPRANGE {
   public DIPROPHEADER diph;

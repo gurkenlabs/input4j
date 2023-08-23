@@ -1,9 +1,7 @@
 package de.gurkenlabs.litiengine.input;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.UUID;
-import java.util.function.Consumer;
+import java.util.*;
+import java.util.function.Function;
 
 public final class InputDevice {
   private final UUID instance;
@@ -11,11 +9,11 @@ public final class InputDevice {
   private final String instanceName;
   private final String productName;
 
-  private final Consumer<InputDevice> pollCallback;
+  private final Function<InputDevice, float[]> pollCallback;
 
-  private final ArrayList<DeviceComponent> components = new ArrayList<>();
+  private final LinkedHashMap<InputComponent, Float> components = new LinkedHashMap<>();
 
-  public InputDevice(UUID instance, UUID product, String instanceName, String productName, Consumer<InputDevice> pollCallback) {
+  public InputDevice(UUID instance, UUID product, String instanceName, String productName, Function<InputDevice, float[]> pollCallback) {
     this.instance = instance;
     this.product = product;
     this.instanceName = instanceName;
@@ -39,15 +37,27 @@ public final class InputDevice {
     return productName;
   }
 
-  public ArrayList<DeviceComponent> getComponents() {
-    return components;
+  public Collection<InputComponent> getComponents() {
+    return components.keySet();
   }
 
-  public void addComponents(Collection<DeviceComponent> component) {
-    this.components.addAll(component);
+  public void addComponents(Collection<InputComponent> components) {
+    for (var component : components) {
+      this.components.put(component, 0f);
+    }
   }
 
   public void poll() {
-    this.pollCallback.accept(this);
+    var polledData = this.pollCallback.apply(this);
+
+    var componentList = new ArrayList<>(components.keySet());
+    for (var i = 0; i < polledData.length; i++) {
+      var component = componentList.get(i);
+      this.components.put(component, polledData[i]);
+    }
+  }
+
+  public float getData(InputComponent component) {
+    return this.components.get(component);
   }
 }

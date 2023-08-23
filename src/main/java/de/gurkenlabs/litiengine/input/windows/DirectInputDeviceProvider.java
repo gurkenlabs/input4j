@@ -31,10 +31,11 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
   private final Collection<IDirectInputDevice8> devices = ConcurrentHashMap.newKeySet();
 
   private IDirectInputDevice8 currentDevice;
+
   /**
    * The components of the device that is currently being initialized.
    */
-  private final Map<DIDEVICEOBJECTINSTANCE, DeviceComponent> currentComponents = new HashMap<>();
+  private final Map<DIDEVICEOBJECTINSTANCE, InputComponent> currentComponents = new HashMap<>();
 
   private final Arena memoryArena = Arena.openConfined();
 
@@ -50,7 +51,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
   }
 
   @Override
-  public void collectDevices() {
+  public void initDevices() {
     this.enumDirectInput8Devices();
   }
 
@@ -172,12 +173,13 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
     }
   }
 
-  private void pollDirectInputDevice(InputDevice inputDevice) {
+  private float[] pollDirectInputDevice(InputDevice inputDevice) {
+    var polledValues = new float[inputDevice.getComponents().size()];
     // find native DirectInputDevice and poll it
     var directInputDevice = this.devices.stream().filter(x -> x.inputDevice.equals(inputDevice)).findFirst().orElse(null);
     if (directInputDevice == null) {
       log.log(Level.WARNING, "DirectInput device not found for input device " + inputDevice.getInstanceName());
-      return;
+      return polledValues;
     }
 
     try {
@@ -186,7 +188,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
       var pollResult = directInputDevice.Poll();
       if (pollResult != Result.DI_OK && pollResult != DI_NOEFFECT) {
         log.log(Level.WARNING, "Could not poll device " + inputDevice.getInstanceName() + ": " + Result.toString(pollResult));
-        return;
+        return polledValues;
       }
 
       // for details on the difference of GetDeviceState and GetDeviceData read http://doc.51windows.net/Directx9_SDK/input/using/devicedata/bufferedimmediatedata.htm
@@ -199,12 +201,14 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
       }
 
       for (int i = 0; i < componentCount; i++) {
-        var value = directInputDevice.deviceObjects.get(i).convertValue(deviceStateResultSegment.get(JAVA_INT, i * JAVA_INT.byteSize()));
-        inputDevice.getComponents().get(i).setValue(value);
+        var convertedData = directInputDevice.deviceObjects.get(i).convertRawInputValue(deviceStateResultSegment.get(JAVA_INT, i * JAVA_INT.byteSize()));
+        polledValues[i] = convertedData;
       }
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);
     }
+
+    return polledValues;
   }
 
   /**
@@ -273,7 +277,7 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
     return propertySegment;
   }
 
-  void getProperties(DIDEVICEOBJECTINSTANCE deviceObject, String name) throws Throwable {
+  void getProperties(DIDEVICEOBJECTINSTANCE deviceObject) throws Throwable {
     if (deviceObject.isAxis() && !deviceObject.isRelative()) {
       // fetch range property
       var rangeProp = new DIPROPRANGE();
@@ -324,14 +328,14 @@ public final class DirectInputDeviceProvider implements InputDeviceProvider {
     var name = new String(deviceObjectInstance.tszName).trim();
     var deviceObjectType = DI8DEVOBJECTTYPE.from(deviceObjectInstance.guidType);
     deviceObjectInstance.objectType = deviceObjectType;
-    
+
     try {
-      getProperties(deviceObjectInstance, name);
+      getProperties(deviceObjectInstance);
     } catch (Throwable throwable) {
       log.warning("Could not get properties of device object " + name);
     }
 
-    var component = new DeviceComponent(ComponentType.valueOf(deviceObjectType.name()), name, deviceObjectInstance.isRelative());
+    var component = new InputComponent(this.currentDevice.inputDevice, ComponentType.valueOf(deviceObjectType.name()), name, deviceObjectInstance.isRelative());
     this.currentComponents.put(deviceObjectInstance, component);
     log.log(Level.FINE, "\t\t" + deviceObjectType + " (" + name + ") - " + deviceObjectInstance.dwOfs);
     return true;

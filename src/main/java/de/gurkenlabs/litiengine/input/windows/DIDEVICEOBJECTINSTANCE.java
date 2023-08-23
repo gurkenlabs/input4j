@@ -2,14 +2,11 @@ package de.gurkenlabs.litiengine.input.windows;
 
 import java.lang.foreign.*;
 import java.lang.invoke.VarHandle;
-import java.util.logging.Logger;
 
 import static de.gurkenlabs.litiengine.input.windows.IDirectInputDevice8.*;
 import static java.lang.foreign.ValueLayout.*;
 
 final class DIDEVICEOBJECTINSTANCE {
-  private static final Logger log = Logger.getLogger(DIDEVICEOBJECTINSTANCE.class.getName());
-
   final static GUID GUID_XAxis = new GUID(0xA36D02E0, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
   final static GUID GUID_YAxis = new GUID(0xA36D02E1, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
   final static GUID GUID_ZAxis = new GUID(0xA36D02E2, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);
@@ -152,15 +149,24 @@ final class DIDEVICEOBJECTINSTANCE {
     return (dwType & DIDFT_BUTTON) != 0;
   }
 
-  float convertValue(float value) {
+  /**
+   * Converts the raw input value to a unified relative value.
+   *
+   * @param rawValue The raw value from DirectInput API
+   * @return The unified relative value.
+   */
+  float convertRawInputValue(float rawValue) {
+    var convertedValue = rawValue;
     if (this.isButton()) {
-      return (((int) value) & 0x80) != 0 ? 1 : 0;
+      convertedValue = (((int) rawValue) & 0x80) != 0 ? 1 : 0;
     } else if (this.objectType == DI8DEVOBJECTTYPE.POV) {
-      return DI8DEVOBJECTTYPE.getPOV((int) value);
+      convertedValue = DI8DEVOBJECTTYPE.getPOV((int) rawValue);
     } else if (this.isAxis() && !this.isRelative()) {
-      return 2 * (value - min) / (float) (max - min) - 1;
+      convertedValue = 2 * (rawValue - min) / (float) (max - min) - 1;
     }
-    return value;
-  }
 
+    // this is used to minimize input noise and static small values that are usually related to a controller deadzone
+    final float minValue = 0.0001f;
+    return (Math.abs(convertedValue) < minValue) ? 0 : convertedValue;
+  }
 }
