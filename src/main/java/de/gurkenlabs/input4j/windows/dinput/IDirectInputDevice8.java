@@ -7,7 +7,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
 import java.util.List;
 
-import static de.gurkenlabs.input4j.windows.dinput.DirectInputDeviceProvider.downcallHandle;
+import static de.gurkenlabs.input4j.windows.dinput.DirectInputPlugin.downcallHandle;
 import static java.lang.foreign.ValueLayout.*;
 
 final class IDirectInputDevice8 {

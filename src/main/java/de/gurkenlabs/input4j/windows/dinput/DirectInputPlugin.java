@@ -1,10 +1,7 @@
 package de.gurkenlabs.input4j.windows.dinput;
 
 
-import de.gurkenlabs.input4j.ComponentType;
-import de.gurkenlabs.input4j.InputComponent;
-import de.gurkenlabs.input4j.InputDevice;
-import de.gurkenlabs.input4j.InputDevices;
+import de.gurkenlabs.input4j.*;
 
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
@@ -21,8 +18,8 @@ import static java.lang.foreign.ValueLayout.*;
  * TODO: Implement support for force feedback/rumblers
  * TODO: Implement hot swapping controllers
  */
-public final class DirectInputDeviceProvider implements InputDevices {
-  private static final Logger log = Logger.getLogger(DirectInputDeviceProvider.class.getName());
+public final class DirectInputPlugin implements InputDevicePlugin {
+  private static final Logger log = Logger.getLogger(DirectInputPlugin.class.getName());
 
   static final int DI8DEVCLASS_GAMECTRL = 4;
 
@@ -62,7 +59,7 @@ public final class DirectInputDeviceProvider implements InputDevices {
   }
 
   @Override
-  public Collection<InputDevice> getDevices() {
+  public Collection<InputDevice> getAll() {
     return this.devices.stream().map(x -> x.inputDevice).toList();
   }
 

@@ -35,10 +35,10 @@ final class IDirectInput8 {
 
     // init API method handles
     var enumDevicesPointer = (MemorySegment) Vtable.VH_EnumDevices.get(directInput.vtable);
-    directInput.enumDevices = DirectInputDeviceProvider.downcallHandle(enumDevicesPointer, Vtable.enumDevicesDescriptor);
+    directInput.enumDevices = DirectInputPlugin.downcallHandle(enumDevicesPointer, Vtable.enumDevicesDescriptor);
 
     var createDevicePointer = (MemorySegment) Vtable.VH_CreateDevice.get(directInput.vtable);
-    directInput.createDevice = DirectInputDeviceProvider.downcallHandle(createDevicePointer, Vtable.createDeviceDescriptor);
+    directInput.createDevice = DirectInputPlugin.downcallHandle(createDevicePointer, Vtable.createDeviceDescriptor);
 
     return directInput;
   }

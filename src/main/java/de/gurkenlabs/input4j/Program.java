@@ -2,9 +2,9 @@ package de.gurkenlabs.input4j;
 
 public class Program {
   public static void main(String[] args) throws Exception {
-    try (var inputDeviceProvider = InputDevices.init()) {
+    try (var inputDevices = InputDevices.init()) {
       while (true) {
-        for (var inputDevice : inputDeviceProvider.getDevices()) {
+        for (var inputDevice : inputDevices.getAll()) {
           inputDevice.poll();
           System.out.println(inputDevice.getInstanceName() + ":" + inputDevice.getComponents());
         }
