@@ -40,7 +40,7 @@ public final class DirectInputPlugin implements InputDevicePlugin {
    */
   private final Map<DIDEVICEOBJECTINSTANCE, InputComponent> currentComponents = new HashMap<>();
 
-  private final Arena memoryArena = Arena.openConfined();
+  private final Arena memoryArena = Arena.ofConfined();
 
   static {
     System.loadLibrary("Kernel32");
@@ -65,6 +65,7 @@ public final class DirectInputPlugin implements InputDevicePlugin {
 
   @Override
   public void close() {
+    // TODO: Release DirectInput8 instance when DirectInputPlugin is closed
     for (var device : this.devices) {
       try {
         device.Unacquire();
@@ -103,7 +104,7 @@ public final class DirectInputPlugin implements InputDevicePlugin {
         return;
       }
 
-      var directInput = IDirectInput8.read(ppvOut);
+      var directInput = IDirectInput8.read(ppvOut, memoryArena);
 
       // 2. enumerate input devices
       var enumDevicesResult = directInput.EnumDevices(DI8DEVCLASS_GAMECTRL, enumDevicesCallbackNative(), IDirectInput8.DIEDFL_ALLDEVICES);
@@ -120,15 +121,15 @@ public final class DirectInputPlugin implements InputDevicePlugin {
 
           log.log(Level.INFO, "Found input device: " + device.inputDevice.getInstanceName());
 
-          var deviceAddress = memoryArena.allocate(JAVA_LONG.byteSize());
-          var deviceGuidMemorySegment = device.deviceInstance.guidInstance.write(memoryArena);
+          var deviceAddress = this.memoryArena.allocate(JAVA_LONG.byteSize());
+          var deviceGuidMemorySegment = device.deviceInstance.guidInstance.write(this.memoryArena);
 
           if (directInput.CreateDevice(deviceGuidMemorySegment, deviceAddress) != Result.DI_OK) {
             log.log(Level.WARNING, "Device " + device.inputDevice.getInstanceName() + " could not be created");
             continue;
           }
 
-          device.create(deviceAddress, this.memoryArena.scope());
+          device.create(deviceAddress, this.memoryArena);
 
           // 4. enumerate the components
           var enumObjectsResult = device.EnumObjects(enumObjectsCallbackNative(), IDirectInputDevice8.DIDFT_BUTTON | IDirectInputDevice8.DIDFT_AXIS | IDirectInputDevice8.DIDFT_POV);
@@ -222,7 +223,7 @@ public final class DirectInputPlugin implements InputDevicePlugin {
    * @return True to indicate for the native code to continue with the enumeration otherwise false.
    */
   private boolean enumDevicesCallback(long lpddiSegment, long pvRef) {
-    var deviceInstance = DIDEVICEINSTANCE.read(MemorySegment.ofAddress(lpddiSegment, DIDEVICEINSTANCE.$LAYOUT.byteSize(), memoryArena.scope()));
+    var deviceInstance = DIDEVICEINSTANCE.read(MemorySegment.ofAddress(lpddiSegment).reinterpret(DIDEVICEINSTANCE.$LAYOUT.byteSize(), memoryArena, null));
     var name = new String(deviceInstance.tszInstanceName).trim();
     var product = new String(deviceInstance.tszProductName).trim();
     var type = DI8DEVTYPE.fromDwDevType(deviceInstance.dwDevType);
@@ -326,7 +327,7 @@ public final class DirectInputPlugin implements InputDevicePlugin {
    * @return True to indicate for the native code to continue with the enumeration otherwise false.
    */
   private boolean enumObjectsCallback(long lpddoiSegment, long pvRef) {
-    var deviceObjectInstance = DIDEVICEOBJECTINSTANCE.read(MemorySegment.ofAddress(lpddoiSegment, DIDEVICEINSTANCE.$LAYOUT.byteSize(), this.memoryArena.scope()));
+    var deviceObjectInstance = DIDEVICEOBJECTINSTANCE.read(MemorySegment.ofAddress(lpddoiSegment).reinterpret(DIDEVICEOBJECTINSTANCE.$LAYOUT.byteSize(), memoryArena, null));
 
     var name = new String(deviceObjectInstance.tszName).trim();
     var deviceObjectType = DI8DEVOBJECTTYPE.from(deviceObjectInstance.guidType);
@@ -351,7 +352,7 @@ public final class DirectInputPlugin implements InputDevicePlugin {
             .bind(this, "enumDevicesCallback", MethodType.methodType(boolean.class, long.class, long.class));
 
     return Linker.nativeLinker().upcallStub(
-            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG), this.memoryArena.scope());
+            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG), this.memoryArena);
   }
 
   // passed to native code for callback
@@ -361,7 +362,7 @@ public final class DirectInputPlugin implements InputDevicePlugin {
             .bind(this, "enumObjectsCallback", MethodType.methodType(boolean.class, long.class, long.class));
 
     return Linker.nativeLinker().upcallStub(
-            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG), this.memoryArena.scope());
+            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG), this.memoryArena);
   }
 
   private static class Result {

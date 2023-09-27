@@ -12,7 +12,7 @@ final class IDirectInput8 {
   static final int DIEDFL_ALLDEVICES = 0x00000000;
 
   static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
-          JAVA_LONG.withName("lpVtbl")
+          ADDRESS.withName("lpVtbl")
   ).withName("IDirectInput8W");
 
   private static final VarHandle VH_lpVtbl = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("lpVtbl"));
@@ -24,14 +24,14 @@ final class IDirectInput8 {
   private MethodHandle enumDevices;
   private MethodHandle createDevice;
 
-  public static IDirectInput8 read(MemorySegment segment) {
+  public static IDirectInput8 read(MemorySegment segment, Arena memoryArena) {
     var directInput = new IDirectInput8();
-    var pointer = (long) VH_lpVtbl.get(segment);
+    var pointer = (MemorySegment) VH_lpVtbl.get(segment);
 
-    directInput.vtablePointerSegment = MemorySegment.ofAddress(pointer, Vtable.$LAYOUT.byteSize(), segment.scope());
+    directInput.vtablePointerSegment = MemorySegment.ofAddress(pointer.address()).reinterpret(IDirectInput8.$LAYOUT.byteSize(), memoryArena, null);
 
     // Dereference the pointer for the memory segment of the virtual table
-    directInput.vtable = MemorySegment.ofAddress(directInput.vtablePointerSegment.get(ADDRESS, 0).address(), Vtable.$LAYOUT.byteSize(), segment.scope());
+    directInput.vtable = MemorySegment.ofAddress(directInput.vtablePointerSegment.get(ADDRESS, 0).address()).reinterpret(Vtable.$LAYOUT.byteSize(), memoryArena, null);
 
     // init API method handles
     var enumDevicesPointer = (MemorySegment) Vtable.VH_EnumDevices.get(directInput.vtable);
@@ -72,7 +72,7 @@ final class IDirectInput8 {
   }
 
   public void Release(){
-    // TODO: Release when DirectInputProvider is closed
+    // TODO: Release when DirectInputPlugin is closed
   }
 
   static class Vtable {

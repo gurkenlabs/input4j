@@ -5,16 +5,28 @@ import org.junit.jupiter.api.Test;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class NativeDataStructTests {
   final static GUID TEST_GUID = new GUID(0x00000001, (short) 0x0002, (short) 0x0003, (byte) 0x04, (byte) 0x05, (byte) 0x06, (byte) 0x07, (byte) 0x08, (byte) 0x09, (byte) 0x10, (byte) 0x11);
   final static GUID TEST_GUID2 = new GUID(0x00000001, 0x0002, 0x0003, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11);
 
   @Test
+  void testInitDirectInputPlugin() {
+    assertDoesNotThrow(DirectInputPlugin::new);
+  }
+
+  @Test
+  void testDirectInputInitDevices() {
+    try (var plugin = new DirectInputPlugin()) {
+      plugin.internalInitDevices();
+    }
+  }
+
+
+  @Test
   void testGUID() {
-    try (var memorySession = Arena.openConfined()) {
+    try (var memorySession = Arena.ofConfined()) {
       var segment = memorySession.allocate(GUID.$LAYOUT);
       TEST_GUID.write(segment);
 
@@ -42,7 +54,7 @@ class NativeDataStructTests {
     objectDataFormat.dwType = 4;
     objectDataFormat.dwFlags = 2;
 
-    try (var memorySession = Arena.openConfined()) {
+    try (var memorySession = Arena.ofConfined()) {
       objectDataFormat.pguid = memorySession.allocate(GUID.$LAYOUT);
       var segment = memorySession.allocate(DIOBJECTDATAFORMAT.$LAYOUT);
       objectDataFormat.write(segment);
@@ -61,7 +73,7 @@ class NativeDataStructTests {
     final GUID FORMAT_GUID2 = new GUID(0x22222222, 0x2222, 0x2222, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22);
     final GUID FORMAT_GUID3 = new GUID(0x33333333, 0x3333, 0x3333, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33);
 
-    try (var memoryArena = Arena.openConfined()) {
+    try (var memoryArena = Arena.ofConfined()) {
       var guidsSegment = memoryArena.allocate(MemoryLayout.sequenceLayout(3, GUID.$LAYOUT));
       FORMAT_GUID1.write(guidsSegment);
 
@@ -84,7 +96,7 @@ class NativeDataStructTests {
       var segment = memoryArena.allocate(DIDATAFORMAT.$LAYOUT);
       dataFormat.write(segment, memoryArena);
 
-      var testDataFormat = DIDATAFORMAT.read(segment);
+      var testDataFormat = DIDATAFORMAT.read(segment, memoryArena);
       assertEquals(dataFormat.dwSize, testDataFormat.dwSize);
       assertEquals(dataFormat.dwObjSize, testDataFormat.dwObjSize);
       assertEquals(dataFormat.dwFlags, testDataFormat.dwFlags);

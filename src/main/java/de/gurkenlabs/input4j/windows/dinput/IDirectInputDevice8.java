@@ -40,7 +40,7 @@ final class IDirectInputDevice8 {
   static final MemorySegment DIPROP_FFGAIN = MemorySegment.ofAddress(7L);
 
   static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
-          JAVA_LONG.withName("lpVtbl")
+          ADDRESS.withName("lpVtbl")
   ).withName("IDirectInputDevice8A");
 
   private static final VarHandle VH_lpVtbl = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("lpVtbl"));
@@ -79,13 +79,13 @@ final class IDirectInputDevice8 {
     this.inputDevice = inputDevice;
   }
 
-  public void create(MemorySegment segment, SegmentScope segmentScope) {
-    var pointer = (long) VH_lpVtbl.get(segment);
+  public void create(MemorySegment segment, Arena memoryArena) {
+    var pointer = (MemorySegment) VH_lpVtbl.get(segment);
 
-    this.vtablePointerSegment = MemorySegment.ofAddress(pointer, IDirectInputDevice8.Vtable.$LAYOUT.byteSize(), segmentScope);
+    this.vtablePointerSegment = MemorySegment.ofAddress(pointer.address()).reinterpret(IDirectInputDevice8.$LAYOUT.byteSize(), memoryArena, null);
 
     // Dereference the pointer for the memory segment of the virtual table
-    this.vtable = MemorySegment.ofAddress(this.vtablePointerSegment.get(JAVA_LONG, 0), IDirectInputDevice8.Vtable.$LAYOUT.byteSize(), segmentScope);
+    this.vtable = MemorySegment.ofAddress(this.vtablePointerSegment.get(ADDRESS, 0).address()).reinterpret(Vtable.$LAYOUT.byteSize(), memoryArena, null);
 
     // init API method handles
     var enumDevicesPointer = (MemorySegment) Vtable.VH_EnumObjects.get(this.vtable);

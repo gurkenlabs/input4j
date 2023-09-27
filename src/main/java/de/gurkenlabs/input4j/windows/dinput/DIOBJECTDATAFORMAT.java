@@ -30,7 +30,7 @@ class DIOBJECTDATAFORMAT {
           JAVA_INT.withName("dwOfs"),
           JAVA_INT.withName("dwType"),
           JAVA_INT.withName("dwFlags"),
-          MemoryLayout.paddingLayout(32)
+          MemoryLayout.paddingLayout(4)
   ).withName("DIOBJECTDATAFORMAT");
 
   static final VarHandle VH_pguid = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("pguid"));

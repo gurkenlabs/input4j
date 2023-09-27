@@ -22,7 +22,7 @@ class DIDATAFORMAT {
           JAVA_INT.withName("dwFlags"),
           JAVA_INT.withName("dwDataSize"),
           JAVA_INT.withName("dwNumObjs"),
-          MemoryLayout.paddingLayout(32),
+          MemoryLayout.paddingLayout(4),
           ADDRESS.withName("rgodf")
   ).withName("DIDATAFORMAT");
 
@@ -33,7 +33,7 @@ class DIDATAFORMAT {
   static final VarHandle VH_dwNumObjs = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("dwNumObjs"));
   static final VarHandle VH_rgodf = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("rgodf"));
 
-  public static DIDATAFORMAT read(MemorySegment segment) {
+  public static DIDATAFORMAT read(MemorySegment segment, Arena memoryArena) {
     var data = new DIDATAFORMAT();
     data.dwSize = (int) VH_dwSize.get(segment);
     data.dwObjSize = (int) VH_dwObjSize.get(segment);
@@ -42,7 +42,7 @@ class DIDATAFORMAT {
     data.dwNumObjs = (int) VH_dwNumObjs.get(segment);
     data.rgodf = (MemorySegment) VH_rgodf.get(segment);
 
-    var objetDataFormatPointerSegment = MemorySegment.ofAddress(data.rgodf.address(), DIOBJECTDATAFORMAT.$LAYOUT.byteSize() * data.dwNumObjs, segment.scope());
+    var objetDataFormatPointerSegment = data.rgodf.reinterpret(DIOBJECTDATAFORMAT.$LAYOUT.byteSize() * data.dwNumObjs, memoryArena, null);
 
     data.objectDataFormats = new DIOBJECTDATAFORMAT[data.dwNumObjs];
     for (int i = 0; i < data.dwNumObjs; i++) {

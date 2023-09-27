@@ -6,7 +6,7 @@ import java.util.Collection;
 public interface InputDevicePlugin extends Closeable {
 
   /**
-   * This is called internally when calling initializing the {@link InputDevices }.
+   * This is called internally when initializing the {@link InputDevices }.
    *
    * @see InputDevices#init()
    */
