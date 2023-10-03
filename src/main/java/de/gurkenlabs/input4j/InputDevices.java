@@ -22,7 +22,7 @@ public final class InputDevices {
     if (osName.contains("windows")) {
       pluginClassName = Libraries.WIN_DIRECTINPUT.getPlugin();
     } else if (osName.contains("linux")) {
-      // TODO: Implement linux support
+      pluginClassName = Libraries.LINUX_INPUT.getPlugin();
     } else if (osName.contains("mac os")) {
       // TODO: Implement mac support
     }
