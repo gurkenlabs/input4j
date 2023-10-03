@@ -41,7 +41,7 @@ public final class InputDevices {
   enum Libraries {
     WIN_DIRECTINPUT("de.gurkenlabs.input4j.windows.dinput.DirectInputPlugin"),
     // WIN_XINPUT("de.gurkenlabs.input4j.windows.xinput.XInputPlugin");
-    LINUX_INPUT("de.gurkenlabs.input4j.linux.LinuxJoystickPlugin"),
+    LINUX_INPUT("de.gurkenlabs.input4j.linux.LinuxEventDevicePlugin"),
 
     // OSX_IOKIT("de.gurkenlabs.input4j.osx.hid.HumanInterfaceDevicePlugin")
     OSX_GAMECONTROLLER("de.gurkenlabs.input4j.osx.gc.GameControllerPlugin");

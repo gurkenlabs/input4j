@@ -2,19 +2,15 @@ package de.gurkenlabs.input4j.linux;
 
 import de.gurkenlabs.input4j.InputDevice;
 import de.gurkenlabs.input4j.InputDevicePlugin;
-import de.gurkenlabs.input4j.InputDevices;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.logging.Logger;
 
 
-public class LinuxJoystickPlugin implements InputDevicePlugin {
-  private static final Logger log = Logger.getLogger(LinuxJoystickPlugin.class.getName());
+public class LinuxEventDevicePlugin implements InputDevicePlugin {
+  private static final Logger log = Logger.getLogger(LinuxEventDevicePlugin.class.getName());
 
-  static {
-    System.loadLibrary("input");
-  }
   @Override
   public void internalInitDevices() {
 
