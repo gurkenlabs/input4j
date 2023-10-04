@@ -5,13 +5,23 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
 import static java.lang.foreign.ValueLayout.ADDRESS;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 
-public class LinuxEventDevice implements Closeable {
+class LinuxEventDevice implements Closeable {
+  final static int ERROR = -1;
+  final static int O_RDWR = 2;
+  final static int O_RDONLY = 0;
+
+  private static final Logger log = Logger.getLogger(LinuxEventDevice.class.getName());
   private final String filename;
+
+  private boolean hasReadWriteAccess = true;
+
   private static final MethodHandle open;
 
   static {
@@ -23,18 +33,28 @@ public class LinuxEventDevice implements Closeable {
     this.filename = filename;
 
     var fileDescriptor = open(memoryArena);
-    if (fileDescriptor == -1) {
-      // TODO: log sth.
+    if (fileDescriptor == ERROR) {
+      log.log(Level.SEVERE, "Could not open linux event device " + filename);
       return;
     }
   }
 
   private int open(Arena memoryArena) {
-    final int O_RDWR = 2;
-    final int O_RDONLY = 0;
     var filenameMemorySegment = memoryArena.allocateArray(ValueLayout.JAVA_CHAR, this.filename.toCharArray());
-    // TODO
-    return -1;
+
+    var fileDescriptor = ERROR;
+    try {
+      // TODO
+      fileDescriptor = (int) open.invoke(filenameMemorySegment, O_RDWR);
+      if (fileDescriptor == ERROR) {
+        hasReadWriteAccess = false;
+        fileDescriptor = (int) open.invoke(filenameMemorySegment, O_RDONLY);
+      }
+    } catch (Throwable e) {
+      log.log(Level.SEVERE, e.getMessage(), e);
+    }
+
+    return fileDescriptor;
   }
 
   @Override
