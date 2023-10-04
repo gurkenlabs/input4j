@@ -17,6 +17,14 @@ public class NativeDataStructTests {
   }
 
   @Test
+  @EnabledOnOs(OS.LINUX)
+  void testLinuxEventDevicesInit() {
+    try (var plugin = new LinuxEventDevicePlugin()) {
+      plugin.internalInitDevices();
+    }
+  }
+
+  @Test
   public void testInputAbsInfo() {
     try (var memorySession = Arena.ofConfined()) {
       var absInfo = new input_absinfo();
