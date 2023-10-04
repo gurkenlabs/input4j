@@ -95,6 +95,10 @@ class LinuxEventDevice implements Closeable {
     return filename;
   }
 
+  public String getDeviceName() {
+    return deviceName;
+  }
+
   /**
    * see ioctl.h for details
    */

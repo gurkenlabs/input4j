@@ -35,7 +35,7 @@ public class LinuxEventDevicePlugin implements InputDevicePlugin {
 
     for (var eventDeviceFile : eventDeviceFiles) {
       LinuxEventDevice device = new LinuxEventDevice(eventDeviceFile.getAbsolutePath(), this.memoryArena);
-      log.log(Level.INFO, "Found input device: " + device.getFilename());
+      log.log(Level.INFO, "Found input device: " + device.getFilename() + " - " + device.getDeviceName());
     }
   }
 
