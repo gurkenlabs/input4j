@@ -1,4 +1,4 @@
-package de.gurkenlabs.input4j.windows.dinput;
+package de.gurkenlabs.input4j.foreign.windows.dinput;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;

@@ -39,12 +39,12 @@ public final class InputDevices {
   }
 
   enum Libraries {
-    WIN_DIRECTINPUT("de.gurkenlabs.input4j.windows.dinput.DirectInputPlugin"),
-    // WIN_XINPUT("de.gurkenlabs.input4j.windows.xinput.XInputPlugin");
-    LINUX_INPUT("de.gurkenlabs.input4j.linux.LinuxEventDevicePlugin"),
+    WIN_DIRECTINPUT("de.gurkenlabs.input4j.foreign.windows.dinput.DirectInputPlugin"),
+    // WIN_XINPUT("de.gurkenlabs.input4j.foreign.windows.xinput.XInputPlugin");
+    LINUX_INPUT("de.gurkenlabs.input4j.foreign.linux.LinuxEventDevicePlugin"),
 
-    // OSX_IOKIT("de.gurkenlabs.input4j.osx.hid.HumanInterfaceDevicePlugin")
-    OSX_GAMECONTROLLER("de.gurkenlabs.input4j.osx.gc.GameControllerPlugin");
+    // OSX_IOKIT("de.gurkenlabs.input4j.foreign.osx.hid.HumanInterfaceDevicePlugin")
+    OSX_GAMECONTROLLER("de.gurkenlabs.input4j.foreign.osx.gc.GameControllerPlugin");
 
     private final String plugin;
 

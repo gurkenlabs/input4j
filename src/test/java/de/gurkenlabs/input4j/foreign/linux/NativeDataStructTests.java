@@ -1,4 +1,4 @@
-package de.gurkenlabs.input4j.linux;
+package de.gurkenlabs.input4j.foreign.linux;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;

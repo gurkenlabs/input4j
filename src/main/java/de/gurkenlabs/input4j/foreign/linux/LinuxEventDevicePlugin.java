@@ -1,4 +1,4 @@
-package de.gurkenlabs.input4j.linux;
+package de.gurkenlabs.input4j.foreign.linux;
 
 import de.gurkenlabs.input4j.InputDevice;
 import de.gurkenlabs.input4j.InputDevicePlugin;

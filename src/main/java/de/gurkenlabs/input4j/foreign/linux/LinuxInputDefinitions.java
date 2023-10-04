@@ -1,4 +1,4 @@
-package de.gurkenlabs.input4j.linux;
+package de.gurkenlabs.input4j.foreign.linux;
 
 /**
  * native definitions from input-event-codes.h and input.h.

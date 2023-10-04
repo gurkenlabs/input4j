@@ -1,4 +1,4 @@
-package de.gurkenlabs.input4j.linux;
+package de.gurkenlabs.input4j.foreign.linux;
 
 import java.lang.foreign.GroupLayout;
 import java.lang.foreign.MemoryLayout;

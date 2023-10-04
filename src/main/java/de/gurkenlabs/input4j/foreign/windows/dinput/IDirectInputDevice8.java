@@ -1,4 +1,4 @@
-package de.gurkenlabs.input4j.windows.dinput;
+package de.gurkenlabs.input4j.foreign.windows.dinput;
 
 import de.gurkenlabs.input4j.InputDevice;
 
@@ -7,8 +7,9 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
 import java.util.List;
 
-import static de.gurkenlabs.input4j.windows.dinput.DirectInputPlugin.downcallHandle;
-import static java.lang.foreign.ValueLayout.*;
+import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
+import static java.lang.foreign.ValueLayout.ADDRESS;
+import static java.lang.foreign.ValueLayout.JAVA_INT;
 
 final class IDirectInputDevice8 {
   public final static int DIDFT_AXIS = 0x00000003;
