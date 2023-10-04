@@ -1,9 +1,7 @@
 package de.gurkenlabs.input4j.foreign.linux;
 
 import java.io.Closeable;
-import java.lang.foreign.Arena;
-import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.ValueLayout;
+import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,7 +30,8 @@ class LinuxEventDevice implements Closeable {
   private static final MethodHandle open;
 
   private static final MethodHandle ioctl;
-  private static final MethodHandle errno;
+
+  private static final MemorySegment errno;
 
   static {
     open = downcallHandle("open",
@@ -41,8 +40,7 @@ class LinuxEventDevice implements Closeable {
     ioctl = downcallHandle("ioctl",
             FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS));
 
-    errno = downcallHandle("errno",
-            FunctionDescriptor.of(JAVA_INT));
+    errno = SymbolLookup.loaderLookup().find("errno").get();
   }
 
   public LinuxEventDevice(String filename, Arena memoryArena) {
@@ -81,7 +79,7 @@ class LinuxEventDevice implements Closeable {
     try {
       var result = (int) ioctl.invoke(this.fileDescriptor, EVIOCGNAME, nameMemorySegment);
       if (result == ERROR) {
-        var error = (int)errno.invoke();
+        var error = errno.get(JAVA_INT, 0);
         log.log(Level.SEVERE, "Could not get name for linux event device " + filename + ". errno: " + error);
         return;
       }
