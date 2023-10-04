@@ -9,34 +9,47 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
-import static java.lang.foreign.ValueLayout.ADDRESS;
-import static java.lang.foreign.ValueLayout.JAVA_INT;
+import static java.lang.foreign.ValueLayout.*;
 
 class LinuxEventDevice implements Closeable {
   final static int ERROR = -1;
   final static int O_RDWR = 2;
   final static int O_RDONLY = 0;
+  final static int _IOC_READ = 2;
+  final static int BUFFER_SIZE = 1024;
+
+  final static int EVIOCGNAME = _IOC(_IOC_READ, 'E', 0x06, BUFFER_SIZE);
 
   private static final Logger log = Logger.getLogger(LinuxEventDevice.class.getName());
   private final String filename;
 
+  private final int fileDescriptor;
+
   private boolean hasReadWriteAccess = true;
 
+  private String deviceName;
+
   private static final MethodHandle open;
+
+  private static final MethodHandle ioctl;
 
   static {
     open = downcallHandle("open",
             FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT));
+
+    ioctl = downcallHandle("ioctl",
+            FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS));
   }
 
   public LinuxEventDevice(String filename, Arena memoryArena) {
     this.filename = filename;
 
-    var fileDescriptor = open(memoryArena);
-    if (fileDescriptor == ERROR) {
+    this.fileDescriptor = open(memoryArena);
+    if (this.fileDescriptor == ERROR) {
       log.log(Level.SEVERE, "Could not open linux event device " + filename);
       return;
     }
+
   }
 
   private int open(Arena memoryArena) {
@@ -44,7 +57,6 @@ class LinuxEventDevice implements Closeable {
 
     var fileDescriptor = ERROR;
     try {
-      // TODO
       fileDescriptor = (int) open.invoke(filenameMemorySegment, O_RDWR);
       if (fileDescriptor == ERROR) {
         hasReadWriteAccess = false;
@@ -57,6 +69,23 @@ class LinuxEventDevice implements Closeable {
     return fileDescriptor;
   }
 
+  private void getName(Arena memoryArena) {
+
+    var nameMemorySegment = memoryArena.allocateArray(JAVA_CHAR, new char[BUFFER_SIZE]);
+
+    try {
+      var result = (int) ioctl.invoke(this.fileDescriptor, EVIOCGNAME, nameMemorySegment);
+      if (result == ERROR) {
+        log.log(Level.SEVERE, "Could not get name for linux event device " + filename);
+        return;
+      }
+
+      this.deviceName = nameMemorySegment.getUtf8String(0);
+    } catch (Throwable e) {
+      log.log(Level.SEVERE, e.getMessage(), e);
+    }
+  }
+
   @Override
   public void close() {
 
@@ -64,5 +93,20 @@ class LinuxEventDevice implements Closeable {
 
   public String getFilename() {
     return filename;
+  }
+
+  /**
+   * see ioctl.h for details
+   */
+  private static int _IOC(int dir, char type, int nr, int size) {
+    final int IOC_DIRSHIFT = 30;
+    final int IOC_TYPESHIFT = 8;
+    final int IOC_NRSHIFT = 0;
+    final int IOC_SIZESHIFT = 16;
+
+    return ((dir << IOC_DIRSHIFT) |
+            (type << IOC_TYPESHIFT) |
+            (nr << IOC_NRSHIFT) |
+            (size << IOC_SIZESHIFT));
   }
 }
