@@ -26,7 +26,7 @@ class LinuxEventDevice implements Closeable {
 
   static {
     open = downcallHandle("open",
-            FunctionDescriptor.of(ADDRESS, JAVA_INT));
+            FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT));
   }
 
   public LinuxEventDevice(String filename, Arena memoryArena) {
