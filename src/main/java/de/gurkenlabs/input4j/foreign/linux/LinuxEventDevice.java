@@ -32,6 +32,7 @@ class LinuxEventDevice implements Closeable {
   private static final MethodHandle open;
 
   private static final MethodHandle ioctl;
+  private static final MethodHandle errno;
 
   static {
     open = downcallHandle("open",
@@ -39,6 +40,9 @@ class LinuxEventDevice implements Closeable {
 
     ioctl = downcallHandle("ioctl",
             FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS));
+
+    errno = downcallHandle("errno",
+            FunctionDescriptor.of(JAVA_INT));
   }
 
   public LinuxEventDevice(String filename, Arena memoryArena) {
@@ -77,7 +81,8 @@ class LinuxEventDevice implements Closeable {
     try {
       var result = (int) ioctl.invoke(this.fileDescriptor, EVIOCGNAME, nameMemorySegment);
       if (result == ERROR) {
-        log.log(Level.SEVERE, "Could not get name for linux event device " + filename);
+        var error = (int)errno.invoke();
+        log.log(Level.SEVERE, "Could not get name for linux event device " + filename + ". errno: " + error);
         return;
       }
 
