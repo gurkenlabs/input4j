@@ -50,6 +50,7 @@ class LinuxEventDevice implements Closeable {
       return;
     }
 
+    getName(memoryArena);
   }
 
   private int open(Arena memoryArena) {
