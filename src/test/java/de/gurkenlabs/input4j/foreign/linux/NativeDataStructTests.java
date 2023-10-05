@@ -5,9 +5,11 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 import java.lang.foreign.Arena;
+import java.lang.foreign.Linker;
+import java.lang.foreign.MemoryLayout;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class NativeDataStructTests {
   @Test
@@ -22,6 +24,20 @@ public class NativeDataStructTests {
     try (var plugin = new LinuxEventDevicePlugin()) {
       plugin.internalInitDevices();
     }
+  }
+
+  @Test
+  @EnabledOnOs(OS.LINUX)
+  void ensureCapturedStateContainsErrNo() {
+    var capturedNames = Linker.Option.captureStateLayout()
+            .memberLayouts()
+            .stream()
+            .map(MemoryLayout::name)
+            .flatMap(Optional::stream)
+            .toList();
+
+    assertNotNull(capturedNames);
+    assertTrue(capturedNames.contains("errno"));
   }
 
   @Test

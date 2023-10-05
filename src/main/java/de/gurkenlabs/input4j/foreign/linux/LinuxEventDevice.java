@@ -1,7 +1,8 @@
 package de.gurkenlabs.input4j.foreign.linux;
 
 import java.io.Closeable;
-import java.lang.foreign.*;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,32 +32,30 @@ class LinuxEventDevice implements Closeable {
 
   private static final MethodHandle ioctl;
 
-  private static final MemorySegment errno;
 
   static {
     open = downcallHandle("open",
             FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT));
 
     ioctl = downcallHandle("ioctl",
-            FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS));
-
-    errno = SymbolLookup.loaderLookup().find("errno").get();
+            FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS),
+            "errno");
   }
 
-  public LinuxEventDevice(String filename, Arena memoryArena) {
+  public LinuxEventDevice(String filename, NativeContext nativeContext) {
     this.filename = filename;
 
-    this.fileDescriptor = open(memoryArena);
+    this.fileDescriptor = open(nativeContext);
     if (this.fileDescriptor == ERROR) {
-      log.log(Level.SEVERE, "Could not open linux event device " + filename);
+      log.log(Level.SEVERE, "Could not open linux event device '" + filename + "'");
       return;
     }
 
-    getName(memoryArena);
+    getName(nativeContext);
   }
 
-  private int open(Arena memoryArena) {
-    var filenameMemorySegment = memoryArena.allocateArray(ValueLayout.JAVA_CHAR, this.filename.toCharArray());
+  private int open(NativeContext nativeContext) {
+    var filenameMemorySegment = nativeContext.getArena().allocateArray(ValueLayout.JAVA_CHAR, this.filename.toCharArray());
 
     var fileDescriptor = ERROR;
     try {
@@ -72,15 +71,16 @@ class LinuxEventDevice implements Closeable {
     return fileDescriptor;
   }
 
-  private void getName(Arena memoryArena) {
+  private void getName(NativeContext nativeContext) {
 
-    var nameMemorySegment = memoryArena.allocateArray(JAVA_CHAR, new char[BUFFER_SIZE]);
+    var nameMemorySegment = nativeContext.getArena().allocateArray(JAVA_CHAR, new char[BUFFER_SIZE]);
 
     try {
-      var result = (int) ioctl.invoke(this.fileDescriptor, EVIOCGNAME, nameMemorySegment);
+      // TOOD: fix errno: 25 -- Inappropriate ioctl for device (result from the capturing below)
+
+      var result = (int) ioctl.invoke(nativeContext.getCapturedState(), this.fileDescriptor, EVIOCGNAME, nameMemorySegment);
       if (result == ERROR) {
-        var error = errno.get(JAVA_INT, 0);
-        log.log(Level.SEVERE, "Could not get name for linux event device " + filename + ". errno: " + error);
+        log.log(Level.SEVERE, "Could not get name for '" + filename + "'. errno: " + nativeContext.getErrorNo() + " -- " + nativeContext.getError());
         return;
       }
 

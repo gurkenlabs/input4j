@@ -17,4 +17,12 @@ public final class NativeHelper {
   public static MethodHandle downcallHandle(MemorySegment address, FunctionDescriptor fdesc) {
     return Linker.nativeLinker().downcallHandle(address, fdesc);
   }
+
+  public static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc, String captureCallState){
+    Linker.Option ccs = Linker.Option.captureCallState(captureCallState);
+    return Linker.nativeLinker().downcallHandle(
+            SymbolLookup.loaderLookup().find(name).or(() -> Linker.nativeLinker().defaultLookup().find(name)).orElseThrow(),
+            fdesc,
+            ccs);
+  }
 }
