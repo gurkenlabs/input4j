@@ -56,7 +56,7 @@ public class LinuxEventDevicePlugin implements InputDevicePlugin, NativeContext 
 
     for (var eventDeviceFile : eventDeviceFiles) {
       LinuxEventDevice device = new LinuxEventDevice(eventDeviceFile.getAbsolutePath(), this);
-      log.log(Level.INFO, "Found input device: " + device.getFilename() + " - " + device.getDeviceName());
+      log.log(Level.INFO, "Found input device: " + device.getFilename() + " - " + device.getName());
     }
   }
 
