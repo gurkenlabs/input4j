@@ -1,7 +1,6 @@
 package de.gurkenlabs.input4j.foreign.linux;
 
 import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,7 +37,7 @@ class Linux {
   }
 
   static int open(NativeContext nativeContext, String fileName, int flags) {
-    var filenameMemorySegment = nativeContext.getArena().allocateArray(ValueLayout.JAVA_CHAR, fileName.toCharArray());
+    var filenameMemorySegment = nativeContext.getArena().allocateFrom(fileName);
 
     var fileDescriptor = ERROR;
     try {
@@ -51,7 +50,7 @@ class Linux {
   }
 
   static String getEventDeviceName(NativeContext nativeContext, int fileDescriptor) {
-    var nameMemorySegment = nativeContext.getArena().allocateArray(JAVA_CHAR, new char[NAME_BUFFER_SIZE]);
+    var nameMemorySegment = nativeContext.getArena().allocateFrom(JAVA_CHAR, new char[NAME_BUFFER_SIZE]);
     try {
       // TOOD: fix errno: 25 -- Inappropriate ioctl for device
       var result = (int) ioctl.invoke(nativeContext.getCapturedState(), fileDescriptor, EVIOCGNAME, nameMemorySegment);
@@ -60,7 +59,7 @@ class Linux {
         return null;
       }
 
-      return nameMemorySegment.getUtf8String(0);
+      return nameMemorySegment.getString(0);
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);
     }

@@ -1,14 +1,12 @@
 # Input4j 
 
-**Input4j** is a free and pure Java input library based on the **Foreign Function & Memory API** (FFM API - *previously known as 
-"Project Panama"*). This library doesn't have any additional native artifacts and directly interoperates with 
+**Input4j** is a free and pure Java input library based on the **Foreign Function & Memory API** (FFM API). 
+This library doesn't have any additional native artifacts and directly interoperates with 
 platform native libraries to access input devices.
 
-> ⚠ At the moment, the FFM API is in its third preview ([JEP 442](https://openjdk.org/jeps/442)) with **Java 21** .
-> The Input4j library will be updated accordingly with all the required changes until the official release of the FFM API.
-> Naturally, this library is only available for the most recent Java versions 
+> ⚠ The FFM API has been finalized with ([JEP 454](https://openjdk.org/jeps/454)) with **Java 22**. Naturally, this library is only available for the most recent Java versions.
 > 
-> Currently required version: **Java 21**
+> Required version: **Java 22**
 
 ## 🎮 Main Features
 ...
