@@ -1,10 +1,15 @@
-package de.gurkenlabs.input4j.windows.dinput;
+package de.gurkenlabs.input4j.foreign.windows.dinput;
 
-import java.lang.foreign.*;
+import java.lang.foreign.Arena;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
 
-import static java.lang.foreign.ValueLayout.*;
+import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
+import static java.lang.foreign.ValueLayout.ADDRESS;
+import static java.lang.foreign.ValueLayout.JAVA_INT;
 
 final class IDirectInput8 {
   static GUID IID_IDirectInput8W = new GUID(0xBF798031, (short) 0x483A, (short) 0x4DA2, (byte) 0xAA, (byte) 0x99, (byte) 0x5D, (byte) 0x64, (byte) 0xED, (byte) 0x36, (byte) 0x97, (byte) 0x00);
@@ -35,10 +40,10 @@ final class IDirectInput8 {
 
     // init API method handles
     var enumDevicesPointer = (MemorySegment) Vtable.VH_EnumDevices.get(directInput.vtable);
-    directInput.enumDevices = DirectInputPlugin.downcallHandle(enumDevicesPointer, Vtable.enumDevicesDescriptor);
+    directInput.enumDevices = downcallHandle(enumDevicesPointer, Vtable.enumDevicesDescriptor);
 
     var createDevicePointer = (MemorySegment) Vtable.VH_CreateDevice.get(directInput.vtable);
-    directInput.createDevice = DirectInputPlugin.downcallHandle(createDevicePointer, Vtable.createDeviceDescriptor);
+    directInput.createDevice = downcallHandle(createDevicePointer, Vtable.createDeviceDescriptor);
 
     return directInput;
   }

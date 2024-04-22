@@ -35,8 +35,8 @@ try (var inputDevices = InputDevices.init()) {
 
 ## 📦 Supported input APIs
  * **Windows**: DirectInput ✅
- * **Windows**: XInput 🚧
- * **Linux**: Linux Input 🚧
- * **OSX**: IOKIT 🚧
- * **OSX**: Game Controller 🚧
+ * **Windows**: XInput ❌
+ * **Linux**: Linux Input (evdev) 🚧
+ * **OSX**: IOKIT ❌
+ * **OSX**: Game Controller ❌
 

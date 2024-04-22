@@ -1,17 +1,27 @@
-package de.gurkenlabs.input4j.windows.dinput;
+package de.gurkenlabs.input4j.foreign.windows.dinput;
 
 
-import de.gurkenlabs.input4j.*;
+import de.gurkenlabs.input4j.ComponentType;
+import de.gurkenlabs.input4j.InputComponent;
+import de.gurkenlabs.input4j.InputDevice;
+import de.gurkenlabs.input4j.InputDevicePlugin;
 
-import java.lang.foreign.*;
+import java.lang.foreign.Arena;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
+import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
 import static java.lang.foreign.ValueLayout.*;
 
 /**
@@ -73,17 +83,14 @@ public final class DirectInputPlugin implements InputDevicePlugin {
         log.log(Level.SEVERE, e.getMessage(), e);
       }
     }
+
+    this.devices.clear();
+    this.currentDevice = null;
+    this.currentComponents.clear();
+
+    memoryArena.close();
   }
 
-  static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc) {
-    return SymbolLookup.loaderLookup().find(name).or(() -> Linker.nativeLinker().defaultLookup().find(name)).
-            map(addr -> Linker.nativeLinker().downcallHandle(addr, fdesc)).
-            orElse(null);
-  }
-
-  static MethodHandle downcallHandle(MemorySegment address, FunctionDescriptor fdesc) {
-    return Linker.nativeLinker().downcallHandle(address, fdesc);
-  }
 
   private void enumDirectInput8Devices() {
     try {

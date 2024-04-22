@@ -7,6 +7,14 @@ public final class InputComponent {
 
   private final boolean relative;
 
+  /**
+   * Creates a new instance of the InputComponent class.
+   *
+   * @param device   the input device associated with this component
+   * @param type     the type of the component (e.g., button, axis)
+   * @param name     the name of the component
+   * @param relative true if the component provides relative input, false otherwise
+   */
   public InputComponent(InputDevice device, ComponentType type, String name, boolean relative) {
     this.device = device;
     this.type = type;
@@ -39,7 +47,7 @@ public final class InputComponent {
   }
 
   @Override
-  public String toString(){
+  public String toString() {
     return this.getName() + ": " + device.getData(this);
   }
 }

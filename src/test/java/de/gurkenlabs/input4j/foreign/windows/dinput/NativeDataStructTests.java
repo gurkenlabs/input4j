@@ -1,6 +1,8 @@
-package de.gurkenlabs.input4j.windows.dinput;
+package de.gurkenlabs.input4j.foreign.windows.dinput;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout;
@@ -12,11 +14,13 @@ class NativeDataStructTests {
   final static GUID TEST_GUID2 = new GUID(0x00000001, 0x0002, 0x0003, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11);
 
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void testInitDirectInputPlugin() {
     assertDoesNotThrow(DirectInputPlugin::new);
   }
 
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void testDirectInputInitDevices() {
     try (var plugin = new DirectInputPlugin()) {
       plugin.internalInitDevices();
@@ -105,6 +109,5 @@ class NativeDataStructTests {
       assertEquals(dataFormat.rgodf, testDataFormat.rgodf);
       assertArrayEquals(dataFormat.getObjectDataFormats(), testDataFormat.getObjectDataFormats());
     }
-
   }
 }
