@@ -30,9 +30,9 @@ class input_event {
   public static input_event read(MemorySegment segment) {
     var inputEvent = new input_event();
     inputEvent.time = timeval.read(segment);
-    inputEvent.type = (int) VH_type.get(0, segment);
-    inputEvent.code = (int) VH_code.get(0, segment);
-    inputEvent.value = (int) VH_value.get(0, segment);
+    inputEvent.type = (int) VH_type.get(segment, 0);
+    inputEvent.code = (int) VH_code.get(segment, 0);
+    inputEvent.value = (int) VH_value.get(segment, 0);
 
     return inputEvent;
   }
