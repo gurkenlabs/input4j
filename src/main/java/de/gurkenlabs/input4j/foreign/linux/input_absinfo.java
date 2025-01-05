@@ -75,22 +75,22 @@ class input_absinfo {
 
   public static input_absinfo read(MemorySegment segment) {
     var absInfo = new input_absinfo();
-    absInfo.value = (int) VH_value.get(segment);
-    absInfo.minimum = (int) VH_minimum.get(segment);
-    absInfo.maximum = (int) VH_maximum.get(segment);
-    absInfo.fuzz = (int) VH_fuzz.get(segment);
-    absInfo.flat = (int) VH_flat.get(segment);
-    absInfo.resolution = (int) VH_resolution.get(segment);
+    absInfo.value = (int) VH_value.get(segment, 0);
+    absInfo.minimum = (int) VH_minimum.get(segment, 0);
+    absInfo.maximum = (int) VH_maximum.get(segment, 0);
+    absInfo.fuzz = (int) VH_fuzz.get(segment, 0);
+    absInfo.flat = (int) VH_flat.get(segment, 0);
+    absInfo.resolution = (int) VH_resolution.get(segment, 0);
 
     return absInfo;
   }
 
   public void write(MemorySegment segment) {
-    VH_value.set(segment, value);
-    VH_minimum.set(segment, minimum);
-    VH_maximum.set(segment, maximum);
-    VH_fuzz.set(segment, fuzz);
-    VH_flat.set(segment, flat);
-    VH_resolution.set(segment, resolution);
+    VH_value.set(segment, 0, value);
+    VH_minimum.set(segment, 0, minimum);
+    VH_maximum.set(segment, 0, maximum);
+    VH_fuzz.set(segment, 0, fuzz);
+    VH_flat.set(segment, 0, flat);
+    VH_resolution.set(segment, 0, resolution);
   }
 }

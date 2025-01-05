@@ -30,18 +30,18 @@ class input_id {
 
   public static input_id read(MemorySegment segment) {
     var inputId = new input_id();
-    inputId.bustype = (short) VH_bustype.get(segment);
-    inputId.vendor = (short) VH_vendor.get(segment);
-    inputId.product = (short) VH_product.get(segment);
-    inputId.version = (short) VH_version.get(segment);
+    inputId.bustype = (short) VH_bustype.get(segment, 0);
+    inputId.vendor = (short) VH_vendor.get(segment, 0);
+    inputId.product = (short) VH_product.get(segment, 0);
+    inputId.version = (short) VH_version.get(segment, 0);
 
     return inputId;
   }
 
   public void write(MemorySegment segment) {
-    VH_bustype.set(segment, bustype);
-    VH_vendor.set(segment, vendor);
-    VH_product.set(segment, product);
-    VH_version.set(segment, version);
+    VH_bustype.set(segment, 0, bustype);
+    VH_vendor.set(segment, 0, vendor);
+    VH_product.set(segment, 0, product);
+    VH_version.set(segment, 0, version);
   }
 }

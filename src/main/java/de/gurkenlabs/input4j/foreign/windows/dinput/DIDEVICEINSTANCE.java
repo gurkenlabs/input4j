@@ -99,28 +99,28 @@ final class DIDEVICEINSTANCE {
 
   public static DIDEVICEINSTANCE read(MemorySegment segment) {
     var data = new DIDEVICEINSTANCE();
-    data.dwSize = (int) VH_dwSize.get(segment);
+    data.dwSize = (int) VH_dwSize.get(segment, 0);
     // ensure the offset of the dwSize integer before reading the guid
     data.guidInstance = GUID.read(segment.asSlice(ValueLayout.JAVA_INT.byteSize()));
     data.guidProduct = GUID.read(segment.asSlice(ValueLayout.JAVA_INT.byteSize() + GUID.$LAYOUT.byteSize()));
-    data.dwDevType = (int) VH_dwDevType.get(segment);
+    data.dwDevType = (int) VH_dwDevType.get(segment, 0);
 
     char[] tszInstanceName = new char[MAX_PATH];
     for (int i = 0; i < MAX_PATH; i++) {
-      tszInstanceName[i] = (char) VH_tszInstanceName.get(segment, i);
+      tszInstanceName[i] = (char) VH_tszInstanceName.get(segment,0, i);
     }
 
     data.tszInstanceName = tszInstanceName;
 
     char[] tszProductName = new char[MAX_PATH];
     for (int i = 0; i < MAX_PATH; i++) {
-      tszProductName[i] = (char) VH_tszProductName.get(segment, i);
+      tszProductName[i] = (char) VH_tszProductName.get(segment, 0, i);
     }
 
     data.tszProductName = tszProductName;
     data.guidFFDriver = GUID.read(segment.asSlice(ValueLayout.JAVA_INT.byteSize() + GUID.$LAYOUT.byteSize() + GUID.$LAYOUT.byteSize() + ValueLayout.JAVA_INT.byteSize() + MAX_PATH + MAX_PATH));
-    data.wUsagePage = (short) VH_wUsagePage.get(segment);
-    data.wUsage = (short) VH_wUsage.get(segment);
+    data.wUsagePage = (short) VH_wUsagePage.get(segment, 0);
+    data.wUsage = (short) VH_wUsage.get(segment, 0);
     return data;
   }
 }

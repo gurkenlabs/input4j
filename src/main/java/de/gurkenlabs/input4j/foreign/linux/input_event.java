@@ -30,17 +30,17 @@ class input_event {
   public static input_event read(MemorySegment segment) {
     var inputEvent = new input_event();
     inputEvent.time = timeval.read(segment);
-    inputEvent.type = (int) VH_type.get(segment);
-    inputEvent.code = (int) VH_code.get(segment);
-    inputEvent.value = (int) VH_value.get(segment);
+    inputEvent.type = (int) VH_type.get(0, segment);
+    inputEvent.code = (int) VH_code.get(0, segment);
+    inputEvent.value = (int) VH_value.get(0, segment);
 
     return inputEvent;
   }
 
   public void write(MemorySegment segment) {
     time.write(segment);
-    VH_type.set(segment, type);
-    VH_code.set(segment, code);
-    VH_value.set(segment, value);
+    VH_type.set(segment, 0, type);
+    VH_code.set(segment, 0, code);
+    VH_value.set(segment, 0, value);
   }
 }

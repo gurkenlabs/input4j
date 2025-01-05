@@ -43,19 +43,19 @@ class DIOBJECTDATAFORMAT {
   public static DIOBJECTDATAFORMAT read(MemorySegment segment) {
     var data = new DIOBJECTDATAFORMAT();
 
-    data.pguid = (MemorySegment) VH_pguid.get(segment);
-    data.dwOfs = (int) VH_dwOfs.get(segment);
-    data.dwType = (int) VH_dwType.get(segment);
-    data.dwFlags = (int) VH_dwFlags.get(segment);
+    data.pguid = (MemorySegment) VH_pguid.get(segment, 0);
+    data.dwOfs = (int) VH_dwOfs.get(segment, 0);
+    data.dwType = (int) VH_dwType.get(segment, 0);
+    data.dwFlags = (int) VH_dwFlags.get(segment, 0);
 
     return data;
   }
 
   public void write(MemorySegment segment) {
-    VH_pguid.set(segment, pguid);
-    VH_dwOfs.set(segment, dwOfs);
-    VH_dwType.set(segment, dwType);
-    VH_dwFlags.set(segment, dwFlags);
+    VH_pguid.set(segment, 0, pguid);
+    VH_dwOfs.set(segment, 0, dwOfs);
+    VH_dwType.set(segment, 0, dwType);
+    VH_dwFlags.set(segment, 0, dwFlags);
   }
 
   @Override

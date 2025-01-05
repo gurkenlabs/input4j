@@ -6,10 +6,7 @@ import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
 import de.gurkenlabs.input4j.InputDevicePlugin;
 
-import java.lang.foreign.Arena;
-import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.Linker;
-import java.lang.foreign.MemorySegment;
+import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -204,7 +201,7 @@ public final class DirectInputPlugin implements InputDevicePlugin {
 
       // for details on the difference of GetDeviceState and GetDeviceData read http://doc.51windows.net/Directx9_SDK/input/using/devicedata/bufferedimmediatedata.htm
       var componentCount = inputDevice.getComponents().size();
-      var deviceStateResultSegment = this.memoryArena.allocateArray(JAVA_INT, componentCount);
+      var deviceStateResultSegment = this.memoryArena.allocate(MemoryLayout.sequenceLayout(componentCount, JAVA_INT));
 
       var getDeviceStateResult = directInputDevice.GetDeviceState((int) (componentCount * JAVA_INT.byteSize()), deviceStateResultSegment);
       if (getDeviceStateResult != Result.DI_OK) {

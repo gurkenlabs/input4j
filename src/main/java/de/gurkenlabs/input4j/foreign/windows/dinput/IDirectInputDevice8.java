@@ -81,7 +81,7 @@ final class IDirectInputDevice8 {
   }
 
   public void create(MemorySegment segment, Arena memoryArena) {
-    var pointer = (MemorySegment) VH_lpVtbl.get(segment);
+    var pointer = (MemorySegment) VH_lpVtbl.get(segment, 0);
 
     this.vtablePointerSegment = MemorySegment.ofAddress(pointer.address()).reinterpret(IDirectInputDevice8.$LAYOUT.byteSize(), memoryArena, null);
 
@@ -89,34 +89,34 @@ final class IDirectInputDevice8 {
     this.vtable = MemorySegment.ofAddress(this.vtablePointerSegment.get(ADDRESS, 0).address()).reinterpret(Vtable.$LAYOUT.byteSize(), memoryArena, null);
 
     // init API method handles
-    var enumDevicesPointer = (MemorySegment) Vtable.VH_EnumObjects.get(this.vtable);
+    var enumDevicesPointer = (MemorySegment) Vtable.VH_EnumObjects.get(this.vtable, 0);
     this.enumObjects = downcallHandle(enumDevicesPointer, Vtable.enumObjectsDescriptor);
 
-    var acquirePointer = (MemorySegment) Vtable.VH_Acquire.get(this.vtable);
+    var acquirePointer = (MemorySegment) Vtable.VH_Acquire.get(this.vtable, 0);
     this.acquire = downcallHandle(acquirePointer, Vtable.acquireDescriptor);
 
-    var unacquirePointer = (MemorySegment) Vtable.VH_Unacquire.get(this.vtable);
+    var unacquirePointer = (MemorySegment) Vtable.VH_Unacquire.get(this.vtable, 0);
     this.unacquire = downcallHandle(unacquirePointer, Vtable.unacquireDescriptor);
 
-    var pollPointer = (MemorySegment) Vtable.VH_Poll.get(this.vtable);
+    var pollPointer = (MemorySegment) Vtable.VH_Poll.get(this.vtable, 0);
     this.poll = downcallHandle(pollPointer, Vtable.pollDescriptor);
 
-    var setDataFormatPointer = (MemorySegment) Vtable.VH_SetDataFormat.get(this.vtable);
+    var setDataFormatPointer = (MemorySegment) Vtable.VH_SetDataFormat.get(this.vtable, 0);
     this.setDataFormat = downcallHandle(setDataFormatPointer, Vtable.setDataFormatDescriptor);
 
-    var setCooperativeLevelPointer = (MemorySegment) Vtable.VH_SetCooperativeLevel.get(this.vtable);
+    var setCooperativeLevelPointer = (MemorySegment) Vtable.VH_SetCooperativeLevel.get(this.vtable, 0);
     this.setCooperativeLevel = downcallHandle(setCooperativeLevelPointer, Vtable.setCooperativeLevelDescriptor);
 
-    var setPropertyPointer = (MemorySegment) Vtable.VH_SetProperty.get(this.vtable);
+    var setPropertyPointer = (MemorySegment) Vtable.VH_SetProperty.get(this.vtable, 0);
     this.setProperty = downcallHandle(setPropertyPointer, Vtable.setPropertyDescriptor);
 
-    var getDeviceStatePointer = (MemorySegment) Vtable.VH_GetDeviceState.get(this.vtable);
+    var getDeviceStatePointer = (MemorySegment) Vtable.VH_GetDeviceState.get(this.vtable, 0);
     this.getDeviceState = downcallHandle(getDeviceStatePointer, Vtable.getDeviceStateDescriptor);
 
-    var getDeviceDataPointer = (MemorySegment) Vtable.VH_GetDeviceData.get(this.vtable);
+    var getDeviceDataPointer = (MemorySegment) Vtable.VH_GetDeviceData.get(this.vtable, 0);
     this.getDeviceData = downcallHandle(getDeviceDataPointer, Vtable.getDeviceDataDescriptor);
 
-    var getPropertyPointer = (MemorySegment) Vtable.VH_GetProperty.get(this.vtable);
+    var getPropertyPointer = (MemorySegment) Vtable.VH_GetProperty.get(this.vtable, 0);
     this.getProperty = downcallHandle(getPropertyPointer, Vtable.getPropertyDescriptor);
   }
 

@@ -26,15 +26,15 @@ class DIPROPRANGE {
   public static DIPROPRANGE read(MemorySegment segment) {
     var data = new DIPROPRANGE();
     data.diph = DIPROPHEADER.read(segment);
-    data.lMin = (int) VH_lMin.get(segment);
-    data.lMax = (int) VH_lMax.get(segment);
+    data.lMin = (int) VH_lMin.get(segment, 0);
+    data.lMax = (int) VH_lMax.get(segment, 0);
 
     return data;
   }
 
   public void write(MemorySegment segment) {
     diph.write(segment);
-    VH_lMin.set(segment, lMin);
-    VH_lMax.set(segment, lMax);
+    VH_lMin.set(segment, 0, lMin);
+    VH_lMax.set(segment, 0, lMax);
   }
 }

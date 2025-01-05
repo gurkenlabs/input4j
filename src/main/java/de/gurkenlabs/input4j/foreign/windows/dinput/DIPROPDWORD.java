@@ -23,7 +23,7 @@ class DIPROPDWORD {
   public static DIPROPDWORD read(MemorySegment segment) {
     var data = new DIPROPDWORD();
     data.diph = DIPROPHEADER.read(segment);
-    data.dwData = (int) VH_dwData.get(segment);
+    data.dwData = (int) VH_dwData.get(segment, 0);
 
     return data;
   }
@@ -31,6 +31,6 @@ class DIPROPDWORD {
   public void write(MemorySegment segment) {
     diph.write(segment);
 
-    VH_dwData.set(segment, dwData);
+    VH_dwData.set(segment, 0, dwData);
   }
 }

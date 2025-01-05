@@ -56,13 +56,13 @@ final class GUID {
   }
 
   public static GUID read(MemorySegment segment) {
-    var data1 = (int) VH_Data1.get(segment);
-    var data2 = (short) VH_Data2.get(segment);
-    var data3 = (short) VH_Data3.get(segment);
+    var data1 = (int) VH_Data1.get(segment, 0);
+    var data2 = (short) VH_Data2.get(segment, 0);
+    var data3 = (short) VH_Data3.get(segment, 0);
 
     byte[] data4 = new byte[DATA4_LENGTH];
     for (int i = 0; i < DATA4_LENGTH; i++) {
-      data4[i] = (byte) VH_Data4.get(segment, i);
+      data4[i] = (byte) VH_Data4.get(segment, 0, i);
     }
 
     return new GUID(data1, data2, data3, data4);
@@ -75,12 +75,12 @@ final class GUID {
   }
 
   public void write(MemorySegment segment) {
-    VH_Data1.set(segment, Data1);
-    VH_Data2.set(segment, Data2);
-    VH_Data3.set(segment, Data3);
+    VH_Data1.set(segment, 0, Data1);
+    VH_Data2.set(segment, 0, Data2);
+    VH_Data3.set(segment, 0, Data3);
 
     for (int i = 0; i < DATA4_LENGTH; i++) {
-      VH_Data4.set(segment, i, Data4[i]);
+      VH_Data4.set(segment, 0, (long)i, Data4[i]);
     }
   }
 

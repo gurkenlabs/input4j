@@ -31,11 +31,11 @@ class DIDEVICEOBJECTDATA {
 
   public static DIDEVICEOBJECTDATA read(MemorySegment segment) {
     var data = new DIDEVICEOBJECTDATA();
-    data.dwOfs = (int) VH_dwOfs.get(segment);
-    data.dwData = (int) VH_dwData.get(segment);
-    data.dwTimeStamp = (int) VH_dwTimeStamp.get(segment);
-    data.dwSequence = (int) VH_dwSequence.get(segment);
-    data.uAppData = (long) VH_uAppData.get(segment);
+    data.dwOfs = (int) VH_dwOfs.get(segment, 0);
+    data.dwData = (int) VH_dwData.get(segment, 0);
+    data.dwTimeStamp = (int) VH_dwTimeStamp.get(segment, 0);
+    data.dwSequence = (int) VH_dwSequence.get(segment, 0);
+    data.uAppData = (long) VH_uAppData.get(segment, 0);
     return data;
   }
 }

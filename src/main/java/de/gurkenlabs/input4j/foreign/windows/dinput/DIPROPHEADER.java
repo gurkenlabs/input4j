@@ -32,18 +32,18 @@ class DIPROPHEADER {
 
   public static DIPROPHEADER read(MemorySegment segment) {
     var data = new DIPROPHEADER();
-    data.dwSize = (int) VH_dwSize.get(segment);
-    data.dwHeaderSize = (int) VH_dwHeaderSize.get(segment);
-    data.dwObj = (int) VH_dwObj.get(segment);
-    data.dwHow = (int) VH_dwHow.get(segment);
+    data.dwSize = (int) VH_dwSize.get(segment, 0);
+    data.dwHeaderSize = (int) VH_dwHeaderSize.get(segment, 0);
+    data.dwObj = (int) VH_dwObj.get(segment, 0);
+    data.dwHow = (int) VH_dwHow.get(segment, 0);
 
     return data;
   }
 
   public void write(MemorySegment segment) {
-    VH_dwSize.set(segment, dwSize);
-    VH_dwHeaderSize.set(segment, dwHeaderSize);
-    VH_dwObj.set(segment, dwObj);
-    VH_dwHow.set(segment, dwHow);
+    VH_dwSize.set(segment, 0, dwSize);
+    VH_dwHeaderSize.set(segment, 0, dwHeaderSize);
+    VH_dwObj.set(segment, 0, dwObj);
+    VH_dwHow.set(segment, 0, dwHow);
   }
 }

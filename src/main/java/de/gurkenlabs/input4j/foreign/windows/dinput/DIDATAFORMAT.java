@@ -39,12 +39,12 @@ class DIDATAFORMAT {
 
   public static DIDATAFORMAT read(MemorySegment segment, Arena memoryArena) {
     var data = new DIDATAFORMAT();
-    data.dwSize = (int) VH_dwSize.get(segment);
-    data.dwObjSize = (int) VH_dwObjSize.get(segment);
-    data.dwFlags = (int) VH_dwFlags.get(segment);
-    data.dwDataSize = (int) VH_dwDataSize.get(segment);
-    data.dwNumObjs = (int) VH_dwNumObjs.get(segment);
-    data.rgodf = (MemorySegment) VH_rgodf.get(segment);
+    data.dwSize = (int) VH_dwSize.get(segment, 0);
+    data.dwObjSize = (int) VH_dwObjSize.get(segment, 0);
+    data.dwFlags = (int) VH_dwFlags.get(segment, 0);
+    data.dwDataSize = (int) VH_dwDataSize.get(segment, 0);
+    data.dwNumObjs = (int) VH_dwNumObjs.get(segment, 0);
+    data.rgodf = (MemorySegment) VH_rgodf.get(segment, 0);
 
     var objetDataFormatPointerSegment = data.rgodf.reinterpret(DIOBJECTDATAFORMAT.$LAYOUT.byteSize() * data.dwNumObjs, memoryArena, null);
 
@@ -57,11 +57,11 @@ class DIDATAFORMAT {
   }
 
   public void write(MemorySegment segment, Arena memoryArena) {
-    VH_dwSize.set(segment, dwSize);
-    VH_dwObjSize.set(segment, dwObjSize);
-    VH_dwFlags.set(segment, dwFlags);
-    VH_dwDataSize.set(segment, dwDataSize);
-    VH_dwNumObjs.set(segment, dwNumObjs);
+    VH_dwSize.set(segment, 0, dwSize);
+    VH_dwObjSize.set(segment, 0, dwObjSize);
+    VH_dwFlags.set(segment, 0, dwFlags);
+    VH_dwDataSize.set(segment, 0, dwDataSize);
+    VH_dwNumObjs.set(segment, 0, dwNumObjs);
 
     var objectDataFormatSegment = memoryArena.allocate(MemoryLayout.sequenceLayout(dwNumObjs, DIOBJECTDATAFORMAT.$LAYOUT));
     for (int i = 0; i < dwNumObjs; i++) {
@@ -70,7 +70,7 @@ class DIDATAFORMAT {
     }
 
     rgodf = objectDataFormatSegment;
-    VH_rgodf.set(segment, rgodf);
+    VH_rgodf.set(segment, 0, rgodf);
   }
 
   public DIOBJECTDATAFORMAT[] getObjectDataFormats() {

@@ -8,6 +8,7 @@ import java.io.File;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -90,7 +91,7 @@ public class LinuxEventDevicePlugin implements InputDevicePlugin, NativeContext 
     try {
       // Convert errno code to a string message
       return ((MemorySegment) strerror.invoke(this.getErrorNo()))
-              .reinterpret(Long.MAX_VALUE).getUtf8String(0);
+              .reinterpret(Long.MAX_VALUE).getString(0, Charset.defaultCharset());
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);
     }

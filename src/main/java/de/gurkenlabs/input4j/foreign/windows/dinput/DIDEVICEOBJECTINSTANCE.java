@@ -114,29 +114,29 @@ final class DIDEVICEOBJECTINSTANCE {
 
   public static DIDEVICEOBJECTINSTANCE read(MemorySegment segment) {
     var data = new DIDEVICEOBJECTINSTANCE();
-    data.dwSize = (int) VH_dwSize.get(segment);
+    data.dwSize = (int) VH_dwSize.get(segment, 0);
     // ensure the offset of the dwSize integer before reading the guid
     data.guidType = GUID.read(segment.asSlice(ValueLayout.JAVA_INT.byteSize()));
 
-    data.dwOfs = (int) VH_dwOfs.get(segment);
-    data.dwType = (int) VH_dwType.get(segment);
-    data.dwFlags = (int) VH_dwFlags.get(segment);
+    data.dwOfs = (int) VH_dwOfs.get(segment, 0);
+    data.dwType = (int) VH_dwType.get(segment, 0);
+    data.dwFlags = (int) VH_dwFlags.get(segment, 0);
 
     char[] tszName = new char[DIDEVICEINSTANCE.MAX_PATH];
     for (int i = 0; i < DIDEVICEINSTANCE.MAX_PATH; i++) {
-      tszName[i] = (char) VH_tszName.get(segment, i);
+      tszName[i] = (char) VH_tszName.get(segment, 0, i);
     }
 
     data.tszName = tszName;
-    data.dwFFMaxForce = (int) VH_dwFFMaxForce.get(segment);
-    data.dwFFForceResolution = (int) VH_dwFFForceResolution.get(segment);
-    data.wCollectionNumber = (short) VH_wCollectionNumber.get(segment);
-    data.wDesignatorIndex = (short) VH_wDesignatorIndex.get(segment);
-    data.wUsagePage = (short) VH_wUsagePage.get(segment);
-    data.wUsage = (short) VH_wUsage.get(segment);
-    data.dwDimension = (int) VH_dwDimension.get(segment);
-    data.wExponent = (short) VH_wExponent.get(segment);
-    data.wReportId = (short) VH_wReportId.get(segment);
+    data.dwFFMaxForce = (int) VH_dwFFMaxForce.get(segment, 0);
+    data.dwFFForceResolution = (int) VH_dwFFForceResolution.get(segment, 0);
+    data.wCollectionNumber = (short) VH_wCollectionNumber.get(segment, 0);
+    data.wDesignatorIndex = (short) VH_wDesignatorIndex.get(segment, 0);
+    data.wUsagePage = (short) VH_wUsagePage.get(segment, 0);
+    data.wUsage = (short) VH_wUsage.get(segment, 0);
+    data.dwDimension = (int) VH_dwDimension.get(segment, 0);
+    data.wExponent = (short) VH_wExponent.get(segment, 0);
+    data.wReportId = (short) VH_wReportId.get(segment, 0);
     return data;
   }
 

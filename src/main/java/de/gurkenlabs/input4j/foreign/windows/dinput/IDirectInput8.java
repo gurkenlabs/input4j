@@ -31,7 +31,7 @@ final class IDirectInput8 {
 
   public static IDirectInput8 read(MemorySegment segment, Arena memoryArena) {
     var directInput = new IDirectInput8();
-    var pointer = (MemorySegment) VH_lpVtbl.get(segment);
+    var pointer = (MemorySegment) VH_lpVtbl.get(segment, 0);
 
     directInput.vtablePointerSegment = MemorySegment.ofAddress(pointer.address()).reinterpret(IDirectInput8.$LAYOUT.byteSize(), memoryArena, null);
 
@@ -39,10 +39,10 @@ final class IDirectInput8 {
     directInput.vtable = MemorySegment.ofAddress(directInput.vtablePointerSegment.get(ADDRESS, 0).address()).reinterpret(Vtable.$LAYOUT.byteSize(), memoryArena, null);
 
     // init API method handles
-    var enumDevicesPointer = (MemorySegment) Vtable.VH_EnumDevices.get(directInput.vtable);
+    var enumDevicesPointer = (MemorySegment) Vtable.VH_EnumDevices.get(directInput.vtable, 0);
     directInput.enumDevices = downcallHandle(enumDevicesPointer, Vtable.enumDevicesDescriptor);
 
-    var createDevicePointer = (MemorySegment) Vtable.VH_CreateDevice.get(directInput.vtable);
+    var createDevicePointer = (MemorySegment) Vtable.VH_CreateDevice.get(directInput.vtable, 0);
     directInput.createDevice = downcallHandle(createDevicePointer, Vtable.createDeviceDescriptor);
 
     return directInput;

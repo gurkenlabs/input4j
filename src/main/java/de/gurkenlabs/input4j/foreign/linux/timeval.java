@@ -28,14 +28,14 @@ class timeval {
 
   public static timeval read(MemorySegment segment) {
     var timeval = new timeval();
-    timeval.tv_sec = (long) VH_tv_sec.get(segment);
-    timeval.tv_usec = (long) VH_tv_usec.get(segment);
+    timeval.tv_sec = (long) VH_tv_sec.get(segment, 0);
+    timeval.tv_usec = (long) VH_tv_usec.get(segment, 0);
 
     return timeval;
   }
 
   public void write(MemorySegment segment) {
-    VH_tv_sec.set(segment, tv_sec);
-    VH_tv_usec.set(segment, tv_usec);
+    VH_tv_sec.set(segment, 0, tv_sec);
+    VH_tv_usec.set(segment, 0, tv_usec);
   }
 }
