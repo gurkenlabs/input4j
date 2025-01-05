@@ -3,9 +3,8 @@ plugins {
   id 'application'
 }
 
-group 'de.gurkenlabs.input4j'
-version '1.0-SNAPSHOT'
-
+group='de.gurkenlabs.input4j'
+version='1.0-SNAPSHOT'
 
 application {
   mainClass = 'de.gurkenlabs.input4j.Program'
