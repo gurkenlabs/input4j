@@ -4,6 +4,7 @@ import de.gurkenlabs.input4j.InputDevice;
 import de.gurkenlabs.input4j.InputDevicePlugin;
 import de.gurkenlabs.input4j.foreign.NativeHelper;
 
+import java.awt.*;
 import java.io.File;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
@@ -40,7 +41,7 @@ public class LinuxEventDevicePlugin implements InputDevicePlugin, NativeContext 
   }
 
   @Override
-  public void internalInitDevices() {
+  public void internalInitDevices(Frame owner) {
     enumEventDevices();
   }
 

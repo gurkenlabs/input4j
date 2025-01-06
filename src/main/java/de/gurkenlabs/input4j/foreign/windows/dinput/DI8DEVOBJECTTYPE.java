@@ -2,6 +2,10 @@ package de.gurkenlabs.input4j.foreign.windows.dinput;
 
 import java.util.Arrays;
 
+/**
+ * The `DI8DEVOBJECTTYPE` enum represents various types of DirectInput device objects.
+ * Each enum constant corresponds to a specific object type GUID.
+ */
 enum DI8DEVOBJECTTYPE {
   XAxis(DIDEVICEOBJECTINSTANCE.GUID_XAxis),
   YAxis(DIDEVICEOBJECTINSTANCE.GUID_YAxis),
@@ -21,15 +25,32 @@ enum DI8DEVOBJECTTYPE {
     this.typeGuid = typeGuid;
   }
 
+  /**
+   * Converts a GUID to its corresponding {@link DI8DEVOBJECTTYPE} enum constant.
+   *
+   * @param typeGuid The GUID of the device object type.
+   * @return The corresponding {@link DI8DEVOBJECTTYPE} enum constant, or {@code null} if no match is found.
+   */
   public static DI8DEVOBJECTTYPE from(GUID typeGuid) {
     //  The least-significant byte of the device type description code specifies the device type.
     return Arrays.stream(DI8DEVOBJECTTYPE.values()).filter(x -> x.typeGuid.equals(typeGuid)).findFirst().orElse(null);
   }
 
+  /**
+   * Gets the GUID associated with this enum constant.
+   *
+   * @return The GUID of the device object type.
+   */
   public GUID getTypeGuid() {
     return typeGuid;
   }
 
+  /**
+   * Converts a POV value to a normalized float value.
+   *
+   * @param value The POV value.
+   * @return The normalized float value.
+   */
   public static float getPOV(int value){
     if ((value & 0xFFFF) == 0xFFFF)
       return 0.0f;

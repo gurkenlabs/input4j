@@ -26,6 +26,7 @@ final class IDirectInput8 {
 
   private MemorySegment vtablePointerSegment;
 
+  private MethodHandle release;
   private MethodHandle enumDevices;
   private MethodHandle createDevice;
 
@@ -39,6 +40,9 @@ final class IDirectInput8 {
     directInput.vtable = MemorySegment.ofAddress(directInput.vtablePointerSegment.get(ADDRESS, 0).address()).reinterpret(Vtable.$LAYOUT.byteSize(), memoryArena, null);
 
     // init API method handles
+    var releasePointer = (MemorySegment) Vtable.VH_Release.get(directInput.vtable, 0);
+    directInput.release = downcallHandle(releasePointer, Vtable.releaseDescriptor);
+
     var enumDevicesPointer = (MemorySegment) Vtable.VH_EnumDevices.get(directInput.vtable, 0);
     directInput.enumDevices = downcallHandle(enumDevicesPointer, Vtable.enumDevicesDescriptor);
 
@@ -76,8 +80,17 @@ final class IDirectInput8 {
     return (int) createDevice.invokeExact(this.vtablePointerSegment, rguid, lplpDirectInputDevice, MemorySegment.NULL);
   }
 
-  public void Release(){
-    // TODO: Release when DirectInputPlugin is closed
+  /**
+   * Releases the reference to the DirectInput object.
+   * <p>
+   * This method calls the native `Release` function of the DirectInput 8 COM interface,
+   * which decreases the reference count of the object. When the reference count reaches zero,
+   * the object is freed.
+   *
+   * @throws Throwable If the native invocation fails, this can throw an exception.
+   */
+  public void Release() throws Throwable {
+    release.invokeExact(this.vtablePointerSegment);
   }
 
   static class Vtable {
@@ -95,12 +108,12 @@ final class IDirectInput8 {
             ADDRESS.withName("ConfigureDevices")
     ).withName("IDirectInput8WVtbl");
 
+    private static final FunctionDescriptor releaseDescriptor = FunctionDescriptor.ofVoid(ADDRESS);
     private static final FunctionDescriptor enumDevicesDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, ADDRESS, ADDRESS, JAVA_INT);
-
-    private static final VarHandle VH_EnumDevices = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("EnumDevices"));
-
     private static final FunctionDescriptor createDeviceDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS, ADDRESS);
 
+    private static final VarHandle VH_Release = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Release"));
+    private static final VarHandle VH_EnumDevices = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("EnumDevices"));
     private static final VarHandle VH_CreateDevice = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("CreateDevice"));
   }
 }

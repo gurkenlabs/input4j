@@ -23,10 +23,9 @@ class NativeDataStructTests {
   @EnabledOnOs(OS.WINDOWS)
   void testDirectInputInitDevices() {
     try (var plugin = new DirectInputPlugin()) {
-      plugin.internalInitDevices();
+      plugin.internalInitDevices(null);
     }
   }
-
 
   @Test
   void testGUID() {
@@ -47,6 +46,28 @@ class NativeDataStructTests {
       assertEquals(TEST_GUID2.Data2, testGuid2.Data2);
       assertEquals(TEST_GUID2.Data3, testGuid2.Data3);
       assertArrayEquals(TEST_GUID2.Data4, testGuid2.Data4);
+    }
+  }
+
+  @Test
+  void testDIDEVICEOBJECTDATA() {
+    var diDeviceObjectData = new DIDEVICEOBJECTDATA();
+    diDeviceObjectData.dwOfs = 1;
+    diDeviceObjectData.dwData = 5;
+    diDeviceObjectData.dwTimeStamp = 1123;
+    diDeviceObjectData.dwSequence = 123;
+    diDeviceObjectData.uAppData = 99L;
+
+    try (var memorySession = Arena.ofConfined()) {
+      var segment = memorySession.allocate(DIDEVICEOBJECTDATA.$LAYOUT);
+      diDeviceObjectData.write(segment);
+
+      var testDIDeviceObjectData = DIDEVICEOBJECTDATA.read(segment);
+      assertEquals(diDeviceObjectData.dwOfs, testDIDeviceObjectData.dwOfs);
+      assertEquals(diDeviceObjectData.dwData, testDIDeviceObjectData.dwData);
+      assertEquals(diDeviceObjectData.dwTimeStamp, testDIDeviceObjectData.dwTimeStamp);
+      assertEquals(diDeviceObjectData.dwSequence, testDIDeviceObjectData.dwSequence);
+      assertEquals(diDeviceObjectData.uAppData, testDIDeviceObjectData.uAppData);
     }
   }
 
@@ -108,6 +129,27 @@ class NativeDataStructTests {
       assertEquals(dataFormat.dwDataSize, testDataFormat.dwDataSize);
       assertEquals(dataFormat.rgodf, testDataFormat.rgodf);
       assertArrayEquals(dataFormat.getObjectDataFormats(), testDataFormat.getObjectDataFormats());
+    }
+  }
+
+  @Test
+  void testDIPROPHEADER() {
+    var diPropHeader = new DIPROPHEADER();
+
+    diPropHeader.dwSize = 123;
+    diPropHeader.dwHeaderSize = 111;
+    diPropHeader.dwObj = 1234;
+    diPropHeader.dwHow = 9999;
+
+    try (var memorySession = Arena.ofConfined()) {
+      var segment = memorySession.allocate(DIPROPHEADER.$LAYOUT);
+      diPropHeader.write(segment);
+
+      var testDIPropHeader = DIPROPHEADER.read(segment);
+      assertEquals(diPropHeader.dwSize, testDIPropHeader.dwSize);
+      assertEquals(diPropHeader.dwHeaderSize, testDIPropHeader.dwHeaderSize);
+      assertEquals(diPropHeader.dwObj, testDIPropHeader.dwObj);
+      assertEquals(diPropHeader.dwHow, testDIPropHeader.dwHow);
     }
   }
 }

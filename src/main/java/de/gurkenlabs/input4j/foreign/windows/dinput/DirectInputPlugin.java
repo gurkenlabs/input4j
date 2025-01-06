@@ -6,6 +6,7 @@ import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
 import de.gurkenlabs.input4j.InputDevicePlugin;
 
+import java.awt.*;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -38,8 +39,8 @@ public final class DirectInputPlugin implements InputDevicePlugin {
 
   private static final MethodHandle getModuleHandle;
 
+  private IDirectInput8 directInput;
   private final Collection<IDirectInputDevice8> devices = ConcurrentHashMap.newKeySet();
-
   private IDirectInputDevice8 currentDevice;
 
   /**
@@ -61,8 +62,15 @@ public final class DirectInputPlugin implements InputDevicePlugin {
   }
 
   @Override
-  public void internalInitDevices() {
-    this.enumDirectInput8Devices();
+  public void internalInitDevices(Frame owner) {
+    try {
+      this.initializeDirectInput();
+
+      var hwnd = owner != null ? WindowHelper.getHWND(owner) : 0L;
+      this.initializeDevices(hwnd);
+    } catch (Throwable e) {
+      log.log(Level.SEVERE, e.getMessage(), e);
+    }
   }
 
   @Override
@@ -72,7 +80,6 @@ public final class DirectInputPlugin implements InputDevicePlugin {
 
   @Override
   public void close() {
-    // TODO: Release DirectInput8 instance when DirectInputPlugin is closed
     for (var device : this.devices) {
       try {
         device.Unacquire();
@@ -85,99 +92,110 @@ public final class DirectInputPlugin implements InputDevicePlugin {
     this.currentDevice = null;
     this.currentComponents.clear();
 
+    try {
+      this.directInput.Release();
+    } catch (Throwable e) {
+      log.log(Level.SEVERE, e.getMessage(), e);
+    }
+
     memoryArena.close();
   }
 
+  private void initializeDirectInput() throws Throwable {
+    var ppvOut = memoryArena.allocate(IDirectInput8.$LAYOUT);
 
-  private void enumDirectInput8Devices() {
-    try {
-      // 1. Initialize DirectInput
-      var ppvOut = memoryArena.allocate(IDirectInput8.$LAYOUT);
+    var moduleHandle = (MemorySegment) getModuleHandle.invoke(MemorySegment.NULL);
+    var directInputCreateResult = (int) directInput8Create.invoke(
+            moduleHandle,
+            DIRECTINPUT_VERSION,
+            IDirectInput8.IID_IDirectInput8W.write(memoryArena),
+            ppvOut,
+            MemorySegment.NULL);
 
-      var moduleHandle = (MemorySegment) getModuleHandle.invoke(MemorySegment.NULL);
-      var directInputCreateResult = (int) directInput8Create.invoke(
-              moduleHandle,
-              DIRECTINPUT_VERSION,
-              IDirectInput8.IID_IDirectInput8W.write(memoryArena),
-              ppvOut,
-              MemorySegment.NULL);
+    if (directInputCreateResult != Result.DI_OK) {
+      log.log(Level.SEVERE, "Could not create DirectInput8: " + Result.toString(directInputCreateResult));
+      return;
+    }
 
+    this.directInput = IDirectInput8.read(ppvOut, memoryArena);
+  }
 
-      if (directInputCreateResult != Result.DI_OK) {
-        log.log(Level.SEVERE, "Could not create DirectInput8: " + Result.toString(directInputCreateResult));
-        return;
-      }
+  private void initializeDevices(long hwnd) throws Throwable {
 
-      var directInput = IDirectInput8.read(ppvOut, memoryArena);
+    // 1. enumerate input devices
+    var enumDevicesResult = this.directInput.EnumDevices(DI8DEVCLASS_GAMECTRL, enumDevicesPointer(), IDirectInput8.DIEDFL_ALLDEVICES);
+    if (enumDevicesResult != Result.DI_OK) {
+      log.log(Level.SEVERE, "Could not enumerate DirectInput devices: " + Result.toString(enumDevicesResult));
+      return;
+    }
 
-      // 2. enumerate input devices
-      var enumDevicesResult = directInput.EnumDevices(DI8DEVCLASS_GAMECTRL, enumDevicesCallbackNative(), IDirectInput8.DIEDFL_ALLDEVICES);
-      if (enumDevicesResult != Result.DI_OK) {
-        log.log(Level.SEVERE, "Could not enumerate DirectInput devices: " + Result.toString(enumDevicesResult));
-        return;
-      }
+    // 2. create devices
+    for (var device : this.devices) {
+      currentDevice = device;
 
-      // 3. create devices
-      for (var device : this.devices) {
-        currentDevice = device;
+      try {
 
-        try {
+        log.log(Level.INFO, "Found input device: " + device.inputDevice.getInstanceName());
 
-          log.log(Level.INFO, "Found input device: " + device.inputDevice.getInstanceName());
+        var deviceAddress = this.memoryArena.allocate(JAVA_LONG.byteSize());
+        var deviceGuidMemorySegment = device.deviceInstance.guidInstance.write(this.memoryArena);
 
-          var deviceAddress = this.memoryArena.allocate(JAVA_LONG.byteSize());
-          var deviceGuidMemorySegment = device.deviceInstance.guidInstance.write(this.memoryArena);
-
-          if (directInput.CreateDevice(deviceGuidMemorySegment, deviceAddress) != Result.DI_OK) {
-            log.log(Level.WARNING, "Device " + device.inputDevice.getInstanceName() + " could not be created");
-            continue;
-          }
-
-          device.create(deviceAddress, this.memoryArena);
-
-          // 4. enumerate the components
-          var enumObjectsResult = device.EnumObjects(enumObjectsCallbackNative(), IDirectInputDevice8.DIDFT_BUTTON | IDirectInputDevice8.DIDFT_AXIS | IDirectInputDevice8.DIDFT_POV);
-          if (enumObjectsResult != Result.DI_OK) {
-            log.log(Level.WARNING, "Could not enumerate the device instance objects for " + device.inputDevice.getInstanceName() + ": " + Result.toString(enumObjectsResult));
-            continue;
-          }
-
-          // 5. prepare the device for retrieving data
-          var deviceObjects = currentComponents.keySet().stream().toList();
-          var dataFormat = defineDataFormat(deviceObjects, this.memoryArena);
-          var setDataFormatResult = device.SetDataFormat(dataFormat);
-          if (setDataFormatResult != Result.DI_OK) {
-            log.log(Level.WARNING, "Could not set the data format for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setDataFormatResult));
-            continue;
-          }
-
-          var setCooperativeLevelResult = device.SetCooperativeLevel(MemorySegment.NULL, IDirectInputDevice8.DISCL_BACKGROUND | IDirectInputDevice8.DISCL_NONEXCLUSIVE);
-          if (setCooperativeLevelResult != Result.DI_OK) {
-            log.log(Level.WARNING, "Could not set the cooperative level for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setCooperativeLevelResult));
-            continue;
-          }
-
-          var setBufferSizeResult = device.SetProperty(IDirectInputDevice8.DIPROP_BUFFERSIZE, getDataBufferPropertyNative(this.memoryArena));
-          if (setBufferSizeResult != Result.DI_OK) {
-            log.log(Level.WARNING, "Could not set the buffer size for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setBufferSizeResult));
-            continue;
-          }
-
-          var acquireResult = device.Acquire();
-          if (acquireResult != Result.DI_OK) {
-            log.log(Level.WARNING, "Could not acquire direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(acquireResult));
-            continue;
-          }
-
-          device.inputDevice.addComponents(currentComponents.values());
-          device.deviceObjects = deviceObjects;
-        } finally {
-          this.currentDevice = null;
-          this.currentComponents.clear();
+        if (this.directInput.CreateDevice(deviceGuidMemorySegment, deviceAddress) != Result.DI_OK) {
+          log.log(Level.WARNING, "Device " + device.inputDevice.getInstanceName() + " could not be created");
+          continue;
         }
+
+        device.create(deviceAddress, this.memoryArena);
+
+        // 3. enumerate the components
+        var enumObjectsResult = device.EnumObjects(enumObjectsPointer(), IDirectInputDevice8.DIDFT_BUTTON | IDirectInputDevice8.DIDFT_AXIS | IDirectInputDevice8.DIDFT_POV);
+        if (enumObjectsResult != Result.DI_OK) {
+          log.log(Level.WARNING, "Could not enumerate the device instance objects for " + device.inputDevice.getInstanceName() + ": " + Result.toString(enumObjectsResult));
+          continue;
+        }
+
+        // 4. prepare the device for retrieving data
+        var deviceObjects = currentComponents.keySet().stream().toList();
+        var dataFormat = defineDataFormat(deviceObjects, this.memoryArena);
+        var setDataFormatResult = device.SetDataFormat(dataFormat);
+        if (setDataFormatResult != Result.DI_OK) {
+          log.log(Level.WARNING, "Could not set the data format for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setDataFormatResult));
+          continue;
+        }
+
+        // Some controllers, like the Xbox 360 controller, require exclusive acquisition.
+        // This requires a valid owner instance instead of null (must be the focused window - can't be a hidden window).
+        // When the owner is passed by the consuming application use foreground and exclusive mode; otherwise, use background and non-exclusive mode.
+        int setCooperativeLevelResult;
+        if (hwnd == 0) {
+          setCooperativeLevelResult = device.SetCooperativeLevel(0, IDirectInputDevice8.DISCL_BACKGROUND | IDirectInputDevice8.DISCL_NONEXCLUSIVE);
+        } else {
+          setCooperativeLevelResult = device.SetCooperativeLevel(hwnd, IDirectInputDevice8.DISCL_FOREGROUND | IDirectInputDevice8.DISCL_EXCLUSIVE);
+        }
+
+        if (setCooperativeLevelResult != Result.DI_OK) {
+          log.log(Level.WARNING, "Could not set the cooperative level for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setCooperativeLevelResult));
+          continue;
+        }
+
+        var setBufferSizeResult = device.SetProperty(IDirectInputDevice8.DIPROP_BUFFERSIZE, getDataBufferPropertyNative(this.memoryArena));
+        if (setBufferSizeResult != Result.DI_OK) {
+          log.log(Level.WARNING, "Could not set the buffer size for direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(setBufferSizeResult));
+          continue;
+        }
+
+        var acquireResult = device.Acquire();
+        if (acquireResult != Result.DI_OK) {
+          log.log(Level.WARNING, "Could not acquire direct input device " + device.inputDevice.getInstanceName() + ": " + Result.toString(acquireResult));
+          continue;
+        }
+
+        device.inputDevice.addComponents(currentComponents.values());
+        device.deviceObjects = deviceObjects;
+      } finally {
+        this.currentDevice = null;
+        this.currentComponents.clear();
       }
-    } catch (Throwable e) {
-      log.log(Level.SEVERE, e.getMessage(), e);
     }
   }
 
@@ -194,6 +212,15 @@ public final class DirectInputPlugin implements InputDevicePlugin {
       final int DI_NOEFFECT = 1;
 
       var pollResult = directInputDevice.Poll();
+
+      // there are multiple options why this result can happen:
+      // 1. The physical controller has been disconnected or powered off.
+      // 2. The device is operating in 'DISCL_FOREGROUND' mode and the application loses focus, the device state is no longer accessible.
+      // 3. Another application or process may have reset the device, causing DirectInput to lose the device context.
+      if (pollResult == Result.DIERR_INPUTLOST || pollResult == Result.DIERR_NOTACQUIRED) {
+        // TODO: handle disconnect or permanent unavailability => retry X times => handle in hotplug thread if a device is unavailable throw it away
+        directInputDevice.Acquire();
+      }
       if (pollResult != Result.DI_OK && pollResult != DI_NOEFFECT) {
         log.log(Level.WARNING, "Could not poll device " + inputDevice.getInstanceName() + ": " + Result.toString(pollResult));
         return polledValues;
@@ -217,30 +244,6 @@ public final class DirectInputPlugin implements InputDevicePlugin {
     }
 
     return polledValues;
-  }
-
-  /**
-   * This is called out of native code while enumerating the available devices.
-   *
-   * @param lpddiSegment The pointer to the {@link DIDEVICEINSTANCE} address.
-   * @param pvRef        An application specific reference pointer (not used by our library).
-   * @return True to indicate for the native code to continue with the enumeration otherwise false.
-   */
-  private boolean enumDevicesCallback(long lpddiSegment, long pvRef) {
-    var deviceInstance = DIDEVICEINSTANCE.read(MemorySegment.ofAddress(lpddiSegment).reinterpret(DIDEVICEINSTANCE.$LAYOUT.byteSize(), memoryArena, null));
-    var name = new String(deviceInstance.tszInstanceName).trim();
-    var product = new String(deviceInstance.tszProductName).trim();
-    var type = DI8DEVTYPE.fromDwDevType(deviceInstance.dwDevType);
-
-    // for now, we're only interested in gamepads, will add other types later
-    if (type == DI8DEVTYPE.DI8DEVTYPE_GAMEPAD || type == DI8DEVTYPE.DI8DEVTYPE_JOYSTICK) {
-      var inputDevice = new InputDevice(deviceInstance.guidInstance.toUUID(), deviceInstance.guidProduct.toUUID(), name, product, this::pollDirectInputDevice);
-      this.devices.add(new IDirectInputDevice8(deviceInstance, inputDevice));
-    } else {
-      log.log(Level.WARNING, "found device that is not a gamepad or joystick: " + name + "[" + type + "]");
-    }
-
-    return true;
   }
 
   private static MemorySegment defineDataFormat(List<DIDEVICEOBJECTINSTANCE> deviceObjects, Arena memoryArena) {
@@ -324,13 +327,33 @@ public final class DirectInputPlugin implements InputDevicePlugin {
   }
 
   /**
+   * This is called out of native code while enumerating the available devices.
+   *
+   * @param lpddiSegment The pointer to the {@link DIDEVICEINSTANCE} address.
+   * @param pvRef        An application specific reference pointer (not used by our library).
+   * @return True to indicate for the native code to continue with the enumeration otherwise false.
+   */
+  private boolean enumDeviceCallback(long lpddiSegment, long pvRef) {
+    var deviceInstance = DIDEVICEINSTANCE.read(MemorySegment.ofAddress(lpddiSegment).reinterpret(DIDEVICEINSTANCE.$LAYOUT.byteSize(), memoryArena, null));
+    var name = new String(deviceInstance.tszInstanceName).trim();
+    var product = new String(deviceInstance.tszProductName).trim();
+
+    // TODO: Make it an option to decide whether only certain types should be considered (e.g. if someone only wants gamepads for his application)
+    // var type = DI8DEVTYPE.fromDwDevType(deviceInstance.dwDevType);
+    var inputDevice = new InputDevice(deviceInstance.guidInstance.toUUID(), deviceInstance.guidProduct.toUUID(), name, product, this::pollDirectInputDevice);
+    this.devices.add(new IDirectInputDevice8(deviceInstance, inputDevice));
+
+    return true;
+  }
+
+  /**
    * This is called out of native code while enumerating the available objects of a device.
    *
    * @param lpddoiSegment The pointer to the {@link DIDEVICEOBJECTINSTANCE} address.
    * @param pvRef         An application specific reference pointer (not used by our library).
    * @return True to indicate for the native code to continue with the enumeration otherwise false.
    */
-  private boolean enumObjectsCallback(long lpddoiSegment, long pvRef) {
+  private boolean enumObjectCallback(long lpddoiSegment, long pvRef) {
     var deviceObjectInstance = DIDEVICEOBJECTINSTANCE.read(MemorySegment.ofAddress(lpddoiSegment).reinterpret(DIDEVICEOBJECTINSTANCE.$LAYOUT.byteSize(), memoryArena, null));
 
     var name = new String(deviceObjectInstance.tszName).trim();
@@ -349,50 +372,27 @@ public final class DirectInputPlugin implements InputDevicePlugin {
     return true;
   }
 
-  // passed to native code for callback
-  private MemorySegment enumDevicesCallbackNative() throws Throwable {
+  /**
+   * Passed to native code for callback on {@link #enumDeviceCallback(long, long)}
+   **/
+  private MemorySegment enumDevicesPointer() throws Throwable {
     // Create a method handle to the Java function as a callback
-    MethodHandle onEnumDevices = MethodHandles.lookup()
-            .bind(this, "enumDevicesCallback", MethodType.methodType(boolean.class, long.class, long.class));
+    MethodHandle enumDeviceMethodHandle = MethodHandles.lookup()
+            .bind(this, "enumDeviceCallback", MethodType.methodType(boolean.class, long.class, long.class));
 
     return Linker.nativeLinker().upcallStub(
-            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG), this.memoryArena);
+            enumDeviceMethodHandle, FunctionDescriptor.of(JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG), this.memoryArena);
   }
 
-  // passed to native code for callback
-  private MemorySegment enumObjectsCallbackNative() throws Throwable {
+  /**
+   * Passed to native code for callback on {@link #enumObjectCallback(long, long)}
+   **/
+  private MemorySegment enumObjectsPointer() throws Throwable {
     // Create a method handle to the Java function as a callback
-    MethodHandle onEnumDevices = MethodHandles.lookup()
-            .bind(this, "enumObjectsCallback", MethodType.methodType(boolean.class, long.class, long.class));
+    MethodHandle enumObjectMethodHandle = MethodHandles.lookup()
+            .bind(this, "enumObjectCallback", MethodType.methodType(boolean.class, long.class, long.class));
 
     return Linker.nativeLinker().upcallStub(
-            onEnumDevices, FunctionDescriptor.of(JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG), this.memoryArena);
-  }
-
-  private static class Result {
-    static final int DI_OK = 0x00000000;
-
-    static final int DIERR_INVALIDPARAM = 0x80070057;
-    static final int DIERR_NOTINITIALIZED = 0x80070015;
-    static final int DI_BUFFEROVERFLOW = 0x00000001;
-    static final int DIERR_INPUTLOST = 0x8007001E;
-    static final int DIERR_NOTACQUIRED = 0x8007000C;
-    static final int DIERR_OTHERAPPHASPRIO = 0x80070005;
-
-    static String toString(int HRESULT) {
-      var hexResult = String.format("%08X", HRESULT);
-      return switch (HRESULT) {
-        case DI_OK -> "DI_OK: " + hexResult;
-        case DIERR_INVALIDPARAM -> "DIERR_INVALIDPARAM: " + hexResult;
-        case DIERR_NOTINITIALIZED -> "DIERR_NOTINITIALIZED: " + hexResult;
-        case DI_BUFFEROVERFLOW -> "DI_BUFFEROVERFLOW: " + hexResult;
-        case DIERR_INPUTLOST -> "DIERR_INPUTLOST: " + hexResult;
-        case DIERR_NOTACQUIRED -> "DIERR_NOTACQUIRED: " + hexResult;
-        case DIERR_OTHERAPPHASPRIO -> "DIERR_OTHERAPPHASPRIO: " + hexResult;
-
-        default -> hexResult;
-      };
-
-    }
+            enumObjectMethodHandle, FunctionDescriptor.of(JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG), this.memoryArena);
   }
 }

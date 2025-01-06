@@ -1,5 +1,6 @@
 package de.gurkenlabs.input4j;
 
+import java.awt.*;
 import java.util.logging.Logger;
 
 public final class InputDevices {
@@ -7,11 +8,11 @@ public final class InputDevices {
 
   /**
    * Initializes the input device provider based on the detected operating system.
-   *
+   * @param owner The owner to be passed to individual plugins, or null if running in background.
    * @return The initialized input device provider.
    * @throws Exception if the input device provider cannot be initialized.
    */
-  static InputDevicePlugin init() throws Exception {
+  static InputDevicePlugin init(Frame owner) throws Exception {
     String osName = System.getProperty("os.name", "").trim().toLowerCase();
     String osVersion = System.getProperty("os.version");
     String osArch = System.getProperty("os.arch");
@@ -34,7 +35,7 @@ public final class InputDevices {
     var pluginClass = Class.forName(pluginClassName);
     var constructor = pluginClass.getDeclaredConstructor();
     var provider = (InputDevicePlugin) constructor.newInstance();
-    provider.internalInitDevices();
+    provider.internalInitDevices(owner);
     return provider;
   }
 

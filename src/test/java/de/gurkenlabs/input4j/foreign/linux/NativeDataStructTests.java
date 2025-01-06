@@ -22,7 +22,7 @@ public class NativeDataStructTests {
   @EnabledOnOs(OS.LINUX)
   void testLinuxEventDevicesInit() {
     try (var plugin = new LinuxEventDevicePlugin()) {
-      plugin.internalInitDevices();
+      plugin.internalInitDevices(null);
     }
   }
 

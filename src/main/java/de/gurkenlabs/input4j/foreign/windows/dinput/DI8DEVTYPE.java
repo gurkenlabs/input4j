@@ -2,6 +2,10 @@ package de.gurkenlabs.input4j.foreign.windows.dinput;
 
 import java.util.Arrays;
 
+/**
+ * The `DI8DEVTYPE` enum represents various types of DirectInput devices.
+ * Each enum constant corresponds to a specific device type code.
+ */
 enum DI8DEVTYPE {
   DI8DEVTYPE_DEVICE(0x11),
   DI8DEVTYPE_MOUSE(0x12),
@@ -21,12 +25,23 @@ enum DI8DEVTYPE {
     this.devType = devType;
   }
 
+  /**
+   * Converts a device type description code to its corresponding {@link DI8DEVTYPE} enum constant.
+   *
+   * @param dwDevType The device type description code.
+   * @return The corresponding {@link DI8DEVTYPE} enum constant, or {@code null} if no match is found.
+   */
   public static DI8DEVTYPE fromDwDevType(int dwDevType) {
     //  The least-significant byte of the device type description code specifies the device type.
     var devType = (dwDevType & 0xFF);
     return Arrays.stream(DI8DEVTYPE.values()).filter(x -> x.devType == devType).findFirst().orElse(null);
   }
 
+  /**
+   * Gets the device type code associated with this enum constant.
+   *
+   * @return The device type code.
+   */
   public int getDevType() {
     return devType;
   }

@@ -1,16 +1,23 @@
 package de.gurkenlabs.input4j;
 
+import java.awt.*;
 import java.io.Closeable;
 import java.util.Collection;
 
 public interface InputDevicePlugin extends Closeable {
 
   /**
-   * This is called internally when initializing the {@link InputDevices }.
+   * Initializes the input devices for the plugin.
+   * <p>
+   * This method is called internally when initializing the {@link InputDevices}.
+   * It sets up the necessary input devices based on the provided owner frame.
+   * If the owner frame is null, the input devices are initialized to run in the background.
+   * </p>
    *
-   * @see InputDevices#init()
+   * @param owner The frame owner to be passed to individual plugins, or null if running in the background.
+   * @see InputDevices#init(Frame)
    */
-  void internalInitDevices();
+  void internalInitDevices(Frame owner);
 
   /**
    * Retrieves a collection of input devices.

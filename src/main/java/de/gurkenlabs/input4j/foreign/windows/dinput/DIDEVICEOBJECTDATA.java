@@ -38,4 +38,12 @@ class DIDEVICEOBJECTDATA {
     data.uAppData = (long) VH_uAppData.get(segment, 0);
     return data;
   }
+
+  public void write(MemorySegment segment) {
+    VH_dwOfs.set(segment, 0, dwOfs);
+    VH_dwData.set(segment, 0, dwData);
+    VH_dwTimeStamp.set(segment, 0, dwTimeStamp);
+    VH_dwSequence.set(segment, 0, dwSequence);
+    VH_uAppData.set(segment, 0, uAppData);
+  }
 }
