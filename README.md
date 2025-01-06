@@ -16,18 +16,17 @@ platform native libraries to access input devices.
 ## 💻 Code examples
 
 ```java
-// iterate all available input devices and poll their data every second
 try (var inputDevices = InputDevices.init()) {
-    while (true) {
-          for (var inputDevice : inputDevices.getAll()) {
-
-            // print all devices and polled data to the console
-            System.out.println(inputDevice.getInstanceName());
-            System.out.println("\t" + inputDevice.getComponents());
-        }
-        
-        Thread.sleep(1000);
+  while (!inputDevices.getAll().isEmpty()) {
+    
+    // iterate all available input devices and poll their data every second
+    for (var inputDevice : inputDevices.getAll()) {
+      inputDevice.poll();
+      System.out.println(inputDevice.getInstanceName() + ":" + inputDevice.getComponents());
     }
+
+    Thread.sleep(1000);
+  }
 }
 ```
 
