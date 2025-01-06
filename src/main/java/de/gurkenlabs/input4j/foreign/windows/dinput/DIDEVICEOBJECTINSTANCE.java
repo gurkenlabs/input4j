@@ -45,7 +45,7 @@ final class DIDEVICEOBJECTINSTANCE {
 
   public int dwFlags;
 
-  public char[] tszName = new char[DIDEVICEINSTANCE.MAX_PATH];
+  public char[] tszName = new char[DIDEVICEINSTANCE.MAX_STRING_LENGTH];
 
   public int dwFFMaxForce;
 
@@ -85,7 +85,7 @@ final class DIDEVICEOBJECTINSTANCE {
           JAVA_INT.withName("dwOfs"),
           JAVA_INT.withName("dwType"),
           JAVA_INT.withName("dwFlags"),
-          MemoryLayout.sequenceLayout(DIDEVICEINSTANCE.MAX_PATH, ValueLayout.JAVA_CHAR).withName("tszName"),
+          MemoryLayout.sequenceLayout(DIDEVICEINSTANCE.MAX_STRING_LENGTH, ValueLayout.JAVA_CHAR).withName("tszName"),
           JAVA_INT.withName("dwFFMaxForce"),
           JAVA_INT.withName("dwFFForceResolution"),
           JAVA_SHORT.withName("wCollectionNumber"),
@@ -122,8 +122,8 @@ final class DIDEVICEOBJECTINSTANCE {
     data.dwType = (int) VH_dwType.get(segment, 0);
     data.dwFlags = (int) VH_dwFlags.get(segment, 0);
 
-    char[] tszName = new char[DIDEVICEINSTANCE.MAX_PATH];
-    for (int i = 0; i < DIDEVICEINSTANCE.MAX_PATH; i++) {
+    char[] tszName = new char[DIDEVICEINSTANCE.MAX_STRING_LENGTH];
+    for (int i = 0; i < DIDEVICEINSTANCE.MAX_STRING_LENGTH; i++) {
       tszName[i] = (char) VH_tszName.get(segment, 0, i);
     }
 

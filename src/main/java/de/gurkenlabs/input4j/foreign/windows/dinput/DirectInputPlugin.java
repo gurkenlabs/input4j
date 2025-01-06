@@ -1,10 +1,10 @@
 package de.gurkenlabs.input4j.foreign.windows.dinput;
 
 
+import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
 import de.gurkenlabs.input4j.ComponentType;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
-import de.gurkenlabs.input4j.InputDevicePlugin;
 
 import java.awt.*;
 import java.lang.foreign.*;
@@ -23,10 +23,10 @@ import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
 import static java.lang.foreign.ValueLayout.*;
 
 /**
- * TODO: Implement support for force feedback/rumblers
  * TODO: Implement hot swapping controllers
+ * TODO: Implement configuration for certain options without exposing internals.
  */
-public final class DirectInputPlugin implements InputDevicePlugin {
+public final class DirectInputPlugin extends AbstractInputDevicePlugin {
   private static final Logger log = Logger.getLogger(DirectInputPlugin.class.getName());
 
   static final int DI8DEVCLASS_GAMECTRL = 4;
@@ -154,6 +154,13 @@ public final class DirectInputPlugin implements InputDevicePlugin {
           continue;
         }
 
+        // 4. enumerate the effects
+        var enumEffectsResult = device.EnumEffects(enumEffectsPointer(), IDirectInputDevice8.DIEFT_ALL);
+        if (enumEffectsResult != Result.DI_OK) {
+          log.log(Level.WARNING, "Could not enumerate the device instance effects for " + device.inputDevice.getInstanceName() + ": " + Result.toString(enumEffectsResult));
+          continue;
+        }
+
         // 4. prepare the device for retrieving data
         var deviceObjects = currentComponents.keySet().stream().toList();
         var dataFormat = defineDataFormat(deviceObjects, this.memoryArena);
@@ -250,7 +257,27 @@ public final class DirectInputPlugin implements InputDevicePlugin {
     var dataFormat = new DIDATAFORMAT();
     dataFormat.dwNumObjs = deviceObjects.size();
     dataFormat.dwDataSize = (int) (dataFormat.dwNumObjs * JAVA_INT.byteSize());
-    dataFormat.dwFlags = IDirectInputDevice8.DIDF_ABSAXIS; // TODO: Evaluate if there is any relative axis
+
+    /* Note: The DIDF_ABSAXIS flag is set if any axes are absolute.
+     * DirectInput devices have their axis mode set per-device rather than per-axis.
+     * To handle this, all axes are treated as absolute and adjusted for relative axes.
+     *
+     * Note: If all axes are relative (e.g., a mouse device), setting the DIDF_ABSAXIS flag
+     * will result in incorrect axis values returned from GetDeviceData.
+     */
+    boolean allRelative = true;
+    boolean hasAxis = false;
+    for (var obj : deviceObjects) {
+      if (obj.isAxis()) {
+        hasAxis = true;
+        if (!obj.isRelative()) {
+          allRelative = false;
+          break;
+        }
+      }
+    }
+
+    dataFormat.dwFlags = allRelative && hasAxis ? IDirectInputDevice8.DIDF_RELAXIS : IDirectInputDevice8.DIDF_ABSAXIS;
 
     var objectFormats = new DIOBJECTDATAFORMAT[dataFormat.dwNumObjs];
 
@@ -338,7 +365,6 @@ public final class DirectInputPlugin implements InputDevicePlugin {
     var name = new String(deviceInstance.tszInstanceName).trim();
     var product = new String(deviceInstance.tszProductName).trim();
 
-    // TODO: Make it an option to decide whether only certain types should be considered (e.g. if someone only wants gamepads for his application)
     // var type = DI8DEVTYPE.fromDwDevType(deviceInstance.dwDevType);
     var inputDevice = new InputDevice(deviceInstance.guidInstance.toUUID(), deviceInstance.guidProduct.toUUID(), name, product, this::pollDirectInputDevice);
     this.devices.add(new IDirectInputDevice8(deviceInstance, inputDevice));
@@ -372,6 +398,23 @@ public final class DirectInputPlugin implements InputDevicePlugin {
     return true;
   }
 
+  private boolean enumEffectCallback(long lpdeiSegment, long pvRef) {
+    var effectInfo = DIEFFECTINFO.read(MemorySegment.ofAddress(lpdeiSegment).reinterpret(DIEFFECTINFO.$LAYOUT.byteSize(), memoryArena, null));
+    var effectType = DIEFFECTTYPE.fromDwEffType(effectInfo.dwEffType);
+    if (effectType == DIEFFECTTYPE.DIEFT_NONE) {
+      // ignore empty effects
+      return true;
+    }
+
+    var name = new String(effectInfo.tszName).trim();
+
+    log.log(Level.FINE, "Found effect: " + name + " (Type: " + effectType + ")");
+
+    // TODO: Implement support to create effects for the device. This requires DIEFFECT and other structs.
+    //       It needs to be evaluated how to make such feature available on the abstract API layer without exposing direct input details
+    return true;
+  }
+
   /**
    * Passed to native code for callback on {@link #enumDeviceCallback(long, long)}
    **/
@@ -391,6 +434,15 @@ public final class DirectInputPlugin implements InputDevicePlugin {
     // Create a method handle to the Java function as a callback
     MethodHandle enumObjectMethodHandle = MethodHandles.lookup()
             .bind(this, "enumObjectCallback", MethodType.methodType(boolean.class, long.class, long.class));
+
+    return Linker.nativeLinker().upcallStub(
+            enumObjectMethodHandle, FunctionDescriptor.of(JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG), this.memoryArena);
+  }
+
+  private MemorySegment enumEffectsPointer() throws Throwable {
+    // Create a method handle to the Java function as a callback
+    MethodHandle enumObjectMethodHandle = MethodHandles.lookup()
+            .bind(this, "enumEffectCallback", MethodType.methodType(boolean.class, long.class, long.class));
 
     return Linker.nativeLinker().upcallStub(
             enumObjectMethodHandle, FunctionDescriptor.of(JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG), this.memoryArena);

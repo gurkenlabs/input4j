@@ -11,7 +11,7 @@ import java.lang.invoke.VarHandle;
  * and IDirectInputDevice8::GetDeviceInfo methods.
  */
 final class DIDEVICEINSTANCE {
-  static final int MAX_PATH = 260;
+  static final int MAX_STRING_LENGTH = 260;
 
   /**
    * Size of this structure, in bytes. This member must be initialized before the structure is used.
@@ -40,12 +40,12 @@ final class DIDEVICEINSTANCE {
   /**
    * Friendly name for the instance. For example, "Joystick 1."
    */
-  public char[] tszInstanceName = new char[MAX_PATH];
+  public char[] tszInstanceName = new char[MAX_STRING_LENGTH];
 
   /**
    * Friendly name for the product.
    */
-  public char[] tszProductName = new char[MAX_PATH];
+  public char[] tszProductName = new char[MAX_STRING_LENGTH];
 
   /**
    * Unique identifier for the driver being used for force feedback.
@@ -83,8 +83,8 @@ final class DIDEVICEINSTANCE {
           GUID.$LAYOUT.withName("guidInstance"),
           GUID.$LAYOUT.withName("guidProduct"),
           ValueLayout.JAVA_INT.withName("dwDevType"),
-          MemoryLayout.sequenceLayout(MAX_PATH, ValueLayout.JAVA_CHAR).withName("tszInstanceName"),
-          MemoryLayout.sequenceLayout(MAX_PATH, ValueLayout.JAVA_CHAR).withName("tszProductName"),
+          MemoryLayout.sequenceLayout(MAX_STRING_LENGTH, ValueLayout.JAVA_CHAR).withName("tszInstanceName"),
+          MemoryLayout.sequenceLayout(MAX_STRING_LENGTH, ValueLayout.JAVA_CHAR).withName("tszProductName"),
           GUID.$LAYOUT.withName("guidFFDriver"),
           ValueLayout.JAVA_SHORT.withName("wUsagePage"),
           ValueLayout.JAVA_SHORT.withName("wUsage")
@@ -105,20 +105,20 @@ final class DIDEVICEINSTANCE {
     data.guidProduct = GUID.read(segment.asSlice(ValueLayout.JAVA_INT.byteSize() + GUID.$LAYOUT.byteSize()));
     data.dwDevType = (int) VH_dwDevType.get(segment, 0);
 
-    char[] tszInstanceName = new char[MAX_PATH];
-    for (int i = 0; i < MAX_PATH; i++) {
+    char[] tszInstanceName = new char[MAX_STRING_LENGTH];
+    for (int i = 0; i < MAX_STRING_LENGTH; i++) {
       tszInstanceName[i] = (char) VH_tszInstanceName.get(segment,0, i);
     }
 
     data.tszInstanceName = tszInstanceName;
 
-    char[] tszProductName = new char[MAX_PATH];
-    for (int i = 0; i < MAX_PATH; i++) {
+    char[] tszProductName = new char[MAX_STRING_LENGTH];
+    for (int i = 0; i < MAX_STRING_LENGTH; i++) {
       tszProductName[i] = (char) VH_tszProductName.get(segment, 0, i);
     }
 
     data.tszProductName = tszProductName;
-    data.guidFFDriver = GUID.read(segment.asSlice(ValueLayout.JAVA_INT.byteSize() + GUID.$LAYOUT.byteSize() + GUID.$LAYOUT.byteSize() + ValueLayout.JAVA_INT.byteSize() + MAX_PATH + MAX_PATH));
+    data.guidFFDriver = GUID.read(segment.asSlice(ValueLayout.JAVA_INT.byteSize() + GUID.$LAYOUT.byteSize() + GUID.$LAYOUT.byteSize() + ValueLayout.JAVA_INT.byteSize() + MAX_STRING_LENGTH + MAX_STRING_LENGTH));
     data.wUsagePage = (short) VH_wUsagePage.get(segment, 0);
     data.wUsage = (short) VH_wUsage.get(segment, 0);
     return data;

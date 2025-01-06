@@ -21,6 +21,22 @@ final class IDirectInputDevice8 {
   public final static int DIDF_ABSAXIS = 0x00000001;
   public final static int DIDF_RELAXIS = 0x00000002;
 
+  public final static int DIEFT_ALL = 0x00000000;
+
+  public final static int DIEFT_FFATTACK				  = 0x00000200;
+  public final static int DIEFT_FFFADE					 = 0x00000400;
+  public final static int DIEFT_SATURATION				= 0x00000800;
+  public final static int DIEFT_POSNEGCOEFFICIENTS	 = 0x00001000;
+  public final static int DIEFT_POSNEGSATURATION		= 0x00002000;
+  public final static int DIEFT_DEADBAND				  = 0x00004000;
+  public final static int DIEFT_STARTDELAY				= 0x00008000;
+
+  public final static int DIEFF_OBJECTIDS			 = 0x00000001;
+  public final static int DIEFF_OBJECTOFFSETS		 = 0x00000002;
+  public final static int DIEFF_CARTESIAN			 = 0x00000010;
+  public final static int DIEFF_POLAR				 = 0x00000020;
+  public final static int DIEFF_SPHERICAL			 = 0x00000040;
+
   /**
    * Exclusive cooperative level. The application has exclusive access to the device.
    * Other applications cannot acquire the device while it is acquired at this level.
@@ -145,6 +161,11 @@ final class IDirectInputDevice8 {
   public int EnumObjects(MemorySegment lpCallback, int dwFlags) throws Throwable {
     return (int) enumObjects.invokeExact(this.vtablePointerSegment, lpCallback, MemorySegment.NULL, dwFlags);
   }
+
+  public int EnumEffects(MemorySegment lpCallback, int dwFlags) throws Throwable {
+    return (int) enumObjects.invokeExact(this.vtablePointerSegment, lpCallback, MemorySegment.NULL, dwFlags);
+  }
+
 
   /**
    * Acquires the device, which allows the application to receive input from the device.

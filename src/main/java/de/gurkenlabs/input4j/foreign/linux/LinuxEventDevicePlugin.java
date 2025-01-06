@@ -1,7 +1,7 @@
 package de.gurkenlabs.input4j.foreign.linux;
 
+import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
 import de.gurkenlabs.input4j.InputDevice;
-import de.gurkenlabs.input4j.InputDevicePlugin;
 import de.gurkenlabs.input4j.foreign.NativeHelper;
 
 import java.awt.*;
@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-public class LinuxEventDevicePlugin implements InputDevicePlugin, NativeContext {
+public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin implements NativeContext {
   private static final Logger log = Logger.getLogger(LinuxEventDevicePlugin.class.getName());
   private static final VarHandle errnoHandle;
 
