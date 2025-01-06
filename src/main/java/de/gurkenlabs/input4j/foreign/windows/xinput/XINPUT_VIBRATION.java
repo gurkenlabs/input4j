@@ -11,6 +11,11 @@ import java.lang.invoke.VarHandle;
  */
 final class XINPUT_VIBRATION {
   /**
+   * The maximum value for motor speed.
+   */
+  static final int MAX_VIBRATION = 65535;
+
+  /**
    * The speed of the left motor.
    * Value range: 0 to 65535.
    */

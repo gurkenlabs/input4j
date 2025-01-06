@@ -1,6 +1,7 @@
 package de.gurkenlabs.input4j;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
@@ -14,7 +15,8 @@ public final class InputDevice {
   private final String instanceName;
   private final String productName;
   private final Function<InputDevice, float[]> pollCallback;
-  private final LinkedHashMap<InputComponent, Float> components = new LinkedHashMap<>();
+  private final BiConsumer<InputDevice, float[]> rumbleCallback;
+  private final Map<String, InputComponent> components = new LinkedHashMap<>();
 
   /**
    * Creates a new instance of the InputDevice class.
@@ -25,12 +27,13 @@ public final class InputDevice {
    * @param productName  the name of the product of the input device
    * @param pollCallback the function to be called when polling for input data from the device
    */
-  public InputDevice(UUID instance, UUID product, String instanceName, String productName, Function<InputDevice, float[]> pollCallback) {
+  public InputDevice(UUID instance, UUID product, String instanceName, String productName, Function<InputDevice, float[]> pollCallback, BiConsumer<InputDevice, float[]> rumbleCallback) {
     this.instance = instance;
     this.product = product;
     this.instanceName = instanceName;
     this.productName = productName;
     this.pollCallback = pollCallback;
+    this.rumbleCallback = rumbleCallback;
   }
 
   /**
@@ -75,7 +78,15 @@ public final class InputDevice {
    * @return the collection of input components
    */
   public Collection<InputComponent> getComponents() {
-    return components.keySet();
+    return components.values();
+  }
+
+  public Optional<InputComponent> getComponent(String name) {
+    if (name == null) {
+      return Optional.empty();
+    }
+
+    return Optional.ofNullable(components.get(name));
   }
 
   /**
@@ -85,7 +96,7 @@ public final class InputDevice {
    */
   public void addComponents(Collection<InputComponent> components) {
     for (var component : components) {
-      this.components.put(component, 0f);
+      this.components.put(component.getName(), component);
     }
   }
 
@@ -95,20 +106,30 @@ public final class InputDevice {
   public void poll() {
     var polledData = this.pollCallback.apply(this);
 
-    var componentList = new ArrayList<>(components.keySet());
+    var componentList = new ArrayList<>(components.values());
     for (var i = 0; i < polledData.length; i++) {
       var component = componentList.get(i);
-      this.components.put(component, polledData[i]);
+      component.setData(polledData[i]);
     }
   }
 
   /**
-   * Gets the input data for a specific input component.
+   * Sets the rumble (vibration) intensity for the input device.
+   * The intensity values should be between 0 and 1.
    *
-   * @param component the input component to get the data for
-   * @return the input data for the specified component
+   * @param intensity The intensity values for the rumble.
+   *                  <ul>
+   *                    <li>If values are provided, they are used for the corresponding motors in order.</li>
+   *                    <li>If fewer values are provided than the number of motors, the last provided value is used for the remaining motors.</li>
+   *                    <li>If no values are provided, the rumble is stopped (intensity set to 0).</li>
+   *                  </ul>
    */
-  public float getData(InputComponent component) {
-    return this.components.get(component);
+  public void rumble(float... intensity) {
+    if (this.rumbleCallback == null) {
+      // rumble not supported if no rumble callback is provided by the library
+      return;
+    }
+
+    this.rumbleCallback.accept(this, intensity);
   }
 }
