@@ -29,9 +29,6 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin implements
   private static final MethodHandle strerror;
   private static final MethodHandle select;
   private static final MethodHandle read;
-  private static final MethodHandle ioctl;
-  private static final MethodHandle open;
-  private static final int O_RDONLY = 0;
   private static final int EVIOCGRAB = 0x40044590;
   private static final int EV_SYN = 0x00;
   private static final int SYN_MT_REPORT = 0x02;
@@ -53,8 +50,6 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin implements
     strerror = NativeHelper.downcallHandle("strerror", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
     select = NativeHelper.downcallHandle("select", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS), "errno");
     read = NativeHelper.downcallHandle("read", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
-    ioctl = NativeHelper.downcallHandle("ioctl", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-    open = NativeHelper.downcallHandle("open", FunctionDescriptor.of(ValueLayout.JAVA_INT, Linker.Option.captureStateLayout(), ValueLayout.ADDRESS, ValueLayout.JAVA_INT), "errno");
   }
 
   public LinuxEventDevicePlugin() {
@@ -78,9 +73,8 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin implements
 
     for (var eventDeviceFile : eventDeviceFiles) {
       LinuxEventDevice device = new LinuxEventDevice(eventDeviceFile.getAbsolutePath(), this);
-      log.log(Level.INFO, "Found input device: " + device.getFilename() + " - " + device.getName());
+      log.log(Level.INFO, "Found input device: " + device.filename + " - " + device.name);
 
-      // TODO: It is mandatory to get the file descriptor in this thread and not in a separate one
       new Thread(() -> printEvents(device)).start();
     }
   }
@@ -89,23 +83,22 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin implements
     try (Arena arena = Arena.ofConfined()) {
       MemorySegment ev = arena.allocate(input_event.$LAYOUT);
       fd_set rdfs = new fd_set();
-      int fd = getFileDescriptor(device);
 
-      if (fd < 0) {
-        log.log(Level.SEVERE, "Failed to open device: " + device.getFilename());
+      if (device.fd < 0) {
+        log.log(Level.SEVERE, "Failed to open device: " + device.filename);
         return;
       }
 
       while (!stop) {
         rdfs.FD_ZERO();
-        rdfs.FD_SET(fd);
+        rdfs.FD_SET(device.fd);
 
         var rdfsSegment = arena.allocate(fd_set.$LAYOUT);
         rdfs.write(rdfsSegment);
-        select.invoke(capturedState, fd + 1, rdfsSegment, MemorySegment.NULL, MemorySegment.NULL, MemorySegment.NULL);
+        select.invoke(capturedState, device.fd + 1, rdfsSegment, MemorySegment.NULL, MemorySegment.NULL, MemorySegment.NULL);
         if (stop) break;
 
-        int rd = (int) read.invoke(fd, ev, ev.byteSize());
+        int rd = (int) read.invoke(device.fd, ev, ev.byteSize());
         if (rd < input_event.$LAYOUT.byteSize()) {
           log.log(Level.SEVERE, "Expected " + input_event.$LAYOUT.byteSize() + " bytes, got " + rd);
           return;
@@ -117,27 +110,12 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin implements
         }
       }
 
-      ioctl.invoke(fd, EVIOCGRAB, MemorySegment.NULL);
+      // ioctl.invoke(device.fd, EVIOCGRAB, MemorySegment.NULL);
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);
     }
   }
 
-  private int getFileDescriptor(LinuxEventDevice device) {
-    try {
-      MemorySegment filename = memoryArena.allocateFrom(device.getFilename());
-      int fd = (int) open.invoke(capturedState, filename, O_RDONLY);
-      if (fd < 0) {
-        int errno = getErrorNo();
-        log.log(Level.SEVERE, "Failed to open device: " + device.getFilename() + ", errno: " + errno + ", error: " + getError());
-      }
-
-      return fd;
-    } catch (Throwable e) {
-      log.log(Level.SEVERE, e.getMessage(), e);
-      return -1;
-    }
-  }
 
   private void logEvent(input_event event) {
     int type = event.type;

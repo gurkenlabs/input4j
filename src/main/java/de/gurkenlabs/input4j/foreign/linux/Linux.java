@@ -24,29 +24,26 @@ class Linux {
 
 
   private static final MethodHandle open;
-
   private static final MethodHandle ioctl;
 
   static {
-    open = downcallHandle("open",
-            FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT));
-
-    ioctl = downcallHandle("ioctl",
-            FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS),
-            "errno");
+    open = downcallHandle("open", FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT), "errno");
+    ioctl = downcallHandle("ioctl", FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), "errno");
   }
 
-  static int open(NativeContext nativeContext, String fileName, int flags) {
-    var filenameMemorySegment = nativeContext.getArena().allocateFrom(fileName);
-
-    var fileDescriptor = ERROR;
+  static int open(NativeContext nativeContext, String fileName) {
     try {
-      fileDescriptor = (int) open.invoke(filenameMemorySegment, flags);
+      var filenameMemorySegment = nativeContext.getArena().allocateFrom(fileName);
+      int fd = (int) open.invoke(nativeContext.getCapturedState(), filenameMemorySegment, O_RDONLY);
+      if (fd == ERROR) {
+        log.log(Level.SEVERE, "Failed to open device: " + fileName + ", errno: " + nativeContext.getErrorNo() + ", error: " + nativeContext.getError());
+      }
+
+      return fd;
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);
+      return ERROR;
     }
-
-    return fileDescriptor;
   }
 
   static String getEventDeviceName(NativeContext nativeContext, int fileDescriptor) {
