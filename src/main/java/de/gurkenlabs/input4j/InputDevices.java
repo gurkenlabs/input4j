@@ -39,7 +39,7 @@ public final class InputDevices {
    * @throws Exception if the input device provider cannot be initialized.
    */
   static InputDevicePlugin init(InputLibrary library) throws Exception {
-    return init(null, InputLibrary.PLATFORM_DEFAULT);
+    return init(null, library);
   }
 
   /**
