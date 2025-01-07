@@ -19,7 +19,7 @@ class fd_set {
     var fdSet = new fd_set();
     // Read the fds_bits array from the segment
     for (int i = 0; i < FD_SETSIZE / 32; i++) {
-      fdSet.fds_bits[i] = (int) VH_fds_bits.get(segment, i);
+      fdSet.fds_bits[i] = (int) VH_fds_bits.get(segment, 0,  i);
     }
     return fdSet;
   }
@@ -27,7 +27,7 @@ class fd_set {
   public void write(MemorySegment segment) {
     // Write the fds_bits array to the segment
     for (int i = 0; i < FD_SETSIZE / 32; i++) {
-      VH_fds_bits.set(segment, i, fds_bits[i]);
+      VH_fds_bits.set(segment, 0, i, fds_bits[i]);
     }
   }
 

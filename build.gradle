@@ -48,3 +48,13 @@ test {
   jvmArgs += '--enable-native-access=ALL-UNNAMED'
 }
 
+task remoteDebug(type: JavaExec) {
+  mainClass = 'de.gurkenlabs.input4j.Program'  // replace with your main class
+  classpath = sourceSets.main.runtimeClasspath
+  args = ['run']
+
+  jvmArgs = [
+          '-Xdebug',
+          '-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005'
+  ]
+}

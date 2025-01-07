@@ -6,20 +6,21 @@ import java.lang.foreign.MemorySegment;
 import java.lang.invoke.VarHandle;
 
 import static java.lang.foreign.ValueLayout.JAVA_INT;
+import static java.lang.foreign.ValueLayout.JAVA_SHORT;
 
 /*
  * The event structure itself
  */
 class input_event {
   public timeval time;
-  public int type;
-  public int code;
+  public short type;
+  public short code;
   public int value;
 
   static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
           timeval.$LAYOUT.withName("time"),
-          JAVA_INT.withName("type"),
-          JAVA_INT.withName("code"),
+          JAVA_SHORT.withName("type"),
+          JAVA_SHORT.withName("code"),
           JAVA_INT.withName("value")
   ).withName("input_event");
 
@@ -30,8 +31,8 @@ class input_event {
   public static input_event read(MemorySegment segment) {
     var inputEvent = new input_event();
     inputEvent.time = timeval.read(segment);
-    inputEvent.type = (int) VH_type.get(segment, 0);
-    inputEvent.code = (int) VH_code.get(segment, 0);
+    inputEvent.type = (short) VH_type.get(segment, 0);
+    inputEvent.code = (short) VH_code.get(segment, 0);
     inputEvent.value = (int) VH_value.get(segment, 0);
 
     return inputEvent;

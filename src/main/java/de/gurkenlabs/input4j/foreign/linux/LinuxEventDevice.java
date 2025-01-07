@@ -18,9 +18,9 @@ class LinuxEventDevice implements Closeable {
     this.filename = filename;
 
     this.fd = Linux.open(nativeContext, this.filename);
-    this.name = Linux.getEventDeviceName(nativeContext, this.fd);
-    this.id = Linux.getEventDeviceId(nativeContext, this.fd);
-    this.version = Linux.getEventDeviceVersion(nativeContext, this.fd);
+    this.name = this.fd != Linux.ERROR ? Linux.getEventDeviceName(nativeContext, this.fd) : null;
+    this.id = this.fd != Linux.ERROR ? Linux.getEventDeviceId(nativeContext, this.fd): null;
+    this.version = this.fd != Linux.ERROR ? Linux.getEventDeviceVersion(nativeContext, this.fd): 0;
   }
 
   @Override

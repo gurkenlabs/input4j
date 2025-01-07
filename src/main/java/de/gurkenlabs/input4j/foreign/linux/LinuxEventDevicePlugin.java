@@ -75,7 +75,8 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin implements
       LinuxEventDevice device = new LinuxEventDevice(eventDeviceFile.getAbsolutePath(), this);
       log.log(Level.INFO, "Found input device: " + device.filename + " - " + device.name);
 
-      new Thread(() -> printEvents(device)).start();
+      // TODO: this needs to mova anyway
+      printEvents(device);
     }
   }
 
