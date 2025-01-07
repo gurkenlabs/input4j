@@ -47,12 +47,14 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin implements
 
   static {
     StructLayout capturedStateLayout = Linker.Option.captureStateLayout();
+
+    // TODO: this is (partially) redundant to the Linux class
     errnoHandle = capturedStateLayout.varHandle(MemoryLayout.PathElement.groupElement("errno"));
     strerror = NativeHelper.downcallHandle("strerror", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
-    select = NativeHelper.downcallHandle("select", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+    select = NativeHelper.downcallHandle("select", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS), "errno");
     read = NativeHelper.downcallHandle("read", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
     ioctl = NativeHelper.downcallHandle("ioctl", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS));
-    open = NativeHelper.downcallHandle("open", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+    open = NativeHelper.downcallHandle("open", FunctionDescriptor.of(ValueLayout.JAVA_INT, Linker.Option.captureStateLayout(), ValueLayout.ADDRESS, ValueLayout.JAVA_INT), "errno");
   }
 
   public LinuxEventDevicePlugin() {
@@ -77,6 +79,8 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin implements
     for (var eventDeviceFile : eventDeviceFiles) {
       LinuxEventDevice device = new LinuxEventDevice(eventDeviceFile.getAbsolutePath(), this);
       log.log(Level.INFO, "Found input device: " + device.getFilename() + " - " + device.getName());
+
+      // TODO: It is mandatory to get the file descriptor in this thread and not in a separate one
       new Thread(() -> printEvents(device)).start();
     }
   }
@@ -84,7 +88,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin implements
   private void printEvents(LinuxEventDevice device) {
     try (Arena arena = Arena.ofConfined()) {
       MemorySegment ev = arena.allocate(input_event.$LAYOUT);
-      MemorySegment rdfs = arena.allocate(ValueLayout.JAVA_INT.byteSize());
+      fd_set rdfs = new fd_set();
       int fd = getFileDescriptor(device);
 
       if (fd < 0) {
@@ -93,10 +97,12 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin implements
       }
 
       while (!stop) {
-        FD_ZERO(rdfs);
-        FD_SET(fd, rdfs);
+        rdfs.FD_ZERO();
+        rdfs.FD_SET(fd);
 
-        select.invoke(fd + 1, rdfs, MemorySegment.NULL, MemorySegment.NULL, MemorySegment.NULL);
+        var rdfsSegment = arena.allocate(fd_set.$LAYOUT);
+        rdfs.write(rdfsSegment);
+        select.invoke(capturedState, fd + 1, rdfsSegment, MemorySegment.NULL, MemorySegment.NULL, MemorySegment.NULL);
         if (stop) break;
 
         int rd = (int) read.invoke(fd, ev, ev.byteSize());
@@ -120,7 +126,13 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin implements
   private int getFileDescriptor(LinuxEventDevice device) {
     try {
       MemorySegment filename = memoryArena.allocateFrom(device.getFilename());
-      return (int) open.invoke(filename, O_RDONLY);
+      int fd = (int) open.invoke(capturedState, filename, O_RDONLY);
+      if (fd < 0) {
+        int errno = getErrorNo();
+        log.log(Level.SEVERE, "Failed to open device: " + device.getFilename() + ", errno: " + errno + ", error: " + getError());
+      }
+
+      return fd;
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);
       return -1;
@@ -156,7 +168,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin implements
 
   @Override
   public int getErrorNo() {
-    return (int) errnoHandle.get(getCapturedState());
+    return (int) errnoHandle.get(getCapturedState(), 0);
   }
 
   @Override
