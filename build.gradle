@@ -23,12 +23,7 @@ test {
   useJUnitPlatform()
 }
 
-tasks.withType(JavaCompile).each {
-  it.options.compilerArgs.add('--enable-preview')
-}
-
 tasks.withType(JavaExec).configureEach {
-  jvmArgs += '--enable-preview'
   jvmArgs += '--enable-native-access=ALL-UNNAMED'
 }
 
@@ -44,7 +39,6 @@ jar {
 }
 
 test {
-  jvmArgs += '--enable-preview'
   jvmArgs += '--enable-native-access=ALL-UNNAMED'
 }
 
