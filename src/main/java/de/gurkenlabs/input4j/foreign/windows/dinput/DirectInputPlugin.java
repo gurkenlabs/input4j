@@ -83,6 +83,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
     for (var device : this.devices) {
       try {
         device.Unacquire();
+        device.inputDevice.close();
       } catch (Throwable e) {
         log.log(Level.SEVERE, e.getMessage(), e);
       }

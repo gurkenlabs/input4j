@@ -1,6 +1,8 @@
 package de.gurkenlabs.input4j;
 
+import java.io.Closeable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -9,14 +11,16 @@ import java.util.function.Function;
  * An input device is a physical device that can provide input to a computer system,
  * such as a keyboard, mouse, or game controller.
  */
-public final class InputDevice {
+public final class InputDevice implements Closeable {
   private final UUID instance;
   private final UUID product;
   private final String instanceName;
   private final String productName;
+  private final Map<String, InputComponent> components = new LinkedHashMap<>();
+  private final Collection<InputDeviceListener> listeners = ConcurrentHashMap.newKeySet();
+
   private final Function<InputDevice, float[]> pollCallback;
   private final BiConsumer<InputDevice, float[]> rumbleCallback;
-  private final Map<String, InputComponent> components = new LinkedHashMap<>();
 
   /**
    * Creates a new instance of the InputDevice class.
@@ -107,9 +111,17 @@ public final class InputDevice {
     var polledData = this.pollCallback.apply(this);
 
     var componentList = new ArrayList<>(components.values());
-    for (var i = 0; i < polledData.length; i++) {
+    for (var i = 0; i < polledData.length && i < componentList.size(); i++) {
       var component = componentList.get(i);
-      component.setData(polledData[i]);
+      var oldData = component.getData();
+      var newData = polledData[i];
+      if (oldData != newData) {
+        component.setData(polledData[i]);
+
+        for (var listener : listeners) {
+          listener.onValueChanged(component, oldData, newData);
+        }
+      }
     }
   }
 
@@ -131,5 +143,10 @@ public final class InputDevice {
     }
 
     this.rumbleCallback.accept(this, intensity);
+  }
+
+  @Override
+  public void close() {
+    listeners.clear();
   }
 }

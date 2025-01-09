@@ -58,10 +58,12 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
         if (state == null) {
           continue;
         }
+
         // Prepare components list based on the gamepad fields and XInputButton
         var components = new ArrayList<InputComponent>();
         var device = new InputDevice(UUID.randomUUID(), null, Integer.toString(i), "XInput Device", this::pollXInputDevice, this::rumbleXInputDevice);
 
+        // order is important here, as the order of the components is used to map the polled data
         for (XInputButton button : XInputButton.values()) {
           components.add(new InputComponent(device, ComponentType.Button, button.name(), false));
         }
@@ -165,6 +167,9 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
    */
   @Override
   public void close() {
+    for(var device : this.devices) {
+      device.close();
+    }
     this.devices.clear();
   }
 
@@ -174,7 +179,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
    * @param userIndex The user index.
    * @return The state of the XInput device, or {@code null} if the device is not connected.
    */
-  public XINPUT_STATE getState(int userIndex) {
+  private XINPUT_STATE getState(int userIndex) {
     try (var memorySession = Arena.ofConfined()) {
       var segment = memorySession.allocate(XINPUT_STATE.$LAYOUT);
 
@@ -200,7 +205,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
    * @param wLeftMotorSpeed  The speed of the left motor.
    * @param wRightMotorSpeed The speed of the right motor.
    */
-  public void setVibration(int userIndex, short wLeftMotorSpeed, short wRightMotorSpeed) {
+  private void setVibration(int userIndex, short wLeftMotorSpeed, short wRightMotorSpeed) {
     try (var memorySession = Arena.ofConfined()) {
       var vibration = new XINPUT_VIBRATION();
       vibration.wLeftMotorSpeed = wLeftMotorSpeed;
