@@ -13,14 +13,14 @@ final class XINPUT_STATE {
   /**
    * The packet number of the XInput device.
    */
-  public int dwPacketNumber;
+  int dwPacketNumber;
 
   /**
    * The gamepad state of the XInput device.
    */
-  public XINPUT_GAMEPAD Gamepad;
+  XINPUT_GAMEPAD Gamepad;
 
-  public static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
+  static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
           ValueLayout.JAVA_INT.withName("dwPacketNumber"),
           XINPUT_GAMEPAD.$LAYOUT.withName("Gamepad")
   );
@@ -33,7 +33,7 @@ final class XINPUT_STATE {
    * @param segment The memory segment to read from.
    * @return The {@code XINPUT_STATE} instance.
    */
-  public static XINPUT_STATE read(MemorySegment segment) {
+  static XINPUT_STATE read(MemorySegment segment) {
     var state = new XINPUT_STATE();
     state.dwPacketNumber = (int) VH_dwPacketNumber.get(segment, 0);
     state.Gamepad = XINPUT_GAMEPAD.read(segment.asSlice($LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("Gamepad"))));
@@ -45,7 +45,7 @@ final class XINPUT_STATE {
    *
    * @param segment The memory segment to write to.
    */
-  public void write(MemorySegment segment) {
+  void write(MemorySegment segment) {
     VH_dwPacketNumber.set(segment, 0, dwPacketNumber);
     Gamepad.write(segment.asSlice($LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("Gamepad"))));
   }

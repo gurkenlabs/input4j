@@ -10,6 +10,10 @@ import java.lang.invoke.VarHandle;
  * It includes information about the buttons, triggers, and thumbsticks of the gamepad.
  */
 final class XINPUT_GAMEPAD {
+  static final int XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE = 7849;
+  static final int XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE = 8689;
+  static final int XINPUT_GAMEPAD_TRIGGER_THRESHOLD = 30;
+
   /**
    * The buttons pressed on the gamepad.
    * Potential values:
@@ -30,45 +34,45 @@ final class XINPUT_GAMEPAD {
    *   <li>{@code 0x8000}: Y</li>
    * </ul>
    */
-  public short wButtons;
+  short wButtons;
 
   /**
    * Represents the pressure applied to the left trigger.
    * Value range: 0 to 255.
    */
-  public byte bLeftTrigger;
+  byte bLeftTrigger;
 
   /**
    * Represents the pressure applied to the right trigger.
    * Value range: 0 to 255.
    */
-  public byte bRightTrigger;
+  byte bRightTrigger;
 
   /**
    * Represents the position of the left thumbstick along the X-axis.
    * Value range: -32768 to 32767.
    */
-  public short sThumbLX;
+  short sThumbLX;
 
   /**
    * Represents the position of the left thumbstick along the Y-axis.
    * Value range: -32768 to 32767.
    */
-  public short sThumbLY;
+  short sThumbLY;
 
   /**
    * Represents the position of the right thumbstick along the X-axis.
    * Value range: -32768 to 32767.
    */
-  public short sThumbRX;
+  short sThumbRX;
 
   /**
    * Represents the position of the right thumbstick along the Y-axis.
    * Value range: -32768 to 32767.
    */
-  public short sThumbRY;
+  short sThumbRY;
 
-  public static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
+  static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
           ValueLayout.JAVA_SHORT.withName("wButtons"),
           ValueLayout.JAVA_BYTE.withName("bLeftTrigger"),
           ValueLayout.JAVA_BYTE.withName("bRightTrigger"),
@@ -92,7 +96,7 @@ final class XINPUT_GAMEPAD {
    * @param segment The memory segment to read from.
    * @return The {@code XINPUT_GAMEPAD} instance.
    */
-  public static XINPUT_GAMEPAD read(MemorySegment segment) {
+  static XINPUT_GAMEPAD read(MemorySegment segment) {
     var gamepad = new XINPUT_GAMEPAD();
     gamepad.wButtons = (short) VH_wButtons.get(segment, 0);
     gamepad.bLeftTrigger = (byte) VH_bLeftTrigger.get(segment, 0);
@@ -109,7 +113,7 @@ final class XINPUT_GAMEPAD {
    *
    * @param segment The memory segment to write to.
    */
-  public void write(MemorySegment segment) {
+  void write(MemorySegment segment) {
     VH_wButtons.set(segment, 0, wButtons);
     VH_bLeftTrigger.set(segment, 0, bLeftTrigger);
     VH_bRightTrigger.set(segment, 0, bRightTrigger);

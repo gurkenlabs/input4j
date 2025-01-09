@@ -19,15 +19,15 @@ final class XINPUT_VIBRATION {
    * The speed of the left motor.
    * Value range: 0 to 65535.
    */
-  public short wLeftMotorSpeed;
+  short wLeftMotorSpeed;
 
   /**
    * The speed of the right motor.
    * Value range: 0 to 65535.
    */
-  public short wRightMotorSpeed;
+  short wRightMotorSpeed;
 
-  public static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
+  static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
           ValueLayout.JAVA_SHORT.withName("wLeftMotorSpeed"),
           ValueLayout.JAVA_SHORT.withName("wRightMotorSpeed")
   );
@@ -41,7 +41,7 @@ final class XINPUT_VIBRATION {
    * @param segment The memory segment to read from.
    * @return The {@code XINPUT_VIBRATION} instance.
    */
-  public static XINPUT_VIBRATION read(MemorySegment segment) {
+  static XINPUT_VIBRATION read(MemorySegment segment) {
     var vibration = new XINPUT_VIBRATION();
     vibration.wLeftMotorSpeed = (short) VH_wLeftMotorSpeed.get(segment, 0);
     vibration.wRightMotorSpeed = (short) VH_wRightMotorSpeed.get(segment, 0);
@@ -53,7 +53,7 @@ final class XINPUT_VIBRATION {
    *
    * @param segment The memory segment to write to.
    */
-  public void write(MemorySegment segment) {
+  void write(MemorySegment segment) {
     VH_wLeftMotorSpeed.set(segment, 0, wLeftMotorSpeed);
     VH_wRightMotorSpeed.set(segment, 0, wRightMotorSpeed);
   }

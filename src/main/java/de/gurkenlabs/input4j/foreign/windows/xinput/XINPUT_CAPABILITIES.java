@@ -19,7 +19,7 @@ final class XINPUT_CAPABILITIES {
    *   <li>{@code 0x01}: Headset</li>
    * </ul>
    */
-  public byte Type;
+  byte Type;
 
   /**
    * The subtype of the XInput device.
@@ -38,7 +38,7 @@ final class XINPUT_CAPABILITIES {
    *   <li>{@code 0x0B}: Arcade Pad</li>
    * </ul>
    */
-  public byte SubType;
+  byte SubType;
 
   /**
    * The flags indicating the capabilities of the XInput device.
@@ -48,19 +48,19 @@ final class XINPUT_CAPABILITIES {
    *   <li>{@code 0x0001}: Voice supported</li>
    * </ul>
    */
-  public short Flags;
+  short Flags;
 
   /**
    * The gamepad capabilities of the XInput device.
    */
-  public XINPUT_GAMEPAD Gamepad;
+  XINPUT_GAMEPAD Gamepad;
 
   /**
    * The vibration capabilities of the XInput device.
    */
-  public XINPUT_VIBRATION Vibration;
+  XINPUT_VIBRATION Vibration;
 
-  public static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
+  static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
           ValueLayout.JAVA_BYTE.withName("Type"),
           ValueLayout.JAVA_BYTE.withName("SubType"),
           ValueLayout.JAVA_SHORT.withName("Flags"),
@@ -78,7 +78,7 @@ final class XINPUT_CAPABILITIES {
    * @param segment The memory segment to read from.
    * @return The {@code XINPUT_CAPABILITIES} instance.
    */
-  public static XINPUT_CAPABILITIES read(MemorySegment segment) {
+  static XINPUT_CAPABILITIES read(MemorySegment segment) {
     var capabilities = new XINPUT_CAPABILITIES();
     capabilities.Type = (byte) VH_Type.get(segment, 0);
     capabilities.SubType = (byte) VH_SubType.get(segment, 0);
@@ -93,7 +93,7 @@ final class XINPUT_CAPABILITIES {
    *
    * @param segment The memory segment to write to.
    */
-  public void write(MemorySegment segment) {
+  void write(MemorySegment segment) {
     VH_Type.set(segment, 0, Type);
     VH_SubType.set(segment, 0, SubType);
     VH_Flags.set(segment, 0, Flags);
