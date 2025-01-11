@@ -189,8 +189,9 @@ class Linux {
       if (result == ERROR) {
         var errorNo = getErrorNo(capturedState);
         log.log(Level.SEVERE, "Could not invoke '" + methodHandle + "' - " + getErrorString(errorNo) + "(" + errorNo + ")");
-        return result;
       }
+
+      return result;
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);
     }
