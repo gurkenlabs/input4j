@@ -11,7 +11,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class NativeDataStructTests {
+public class LinuxDataStructTests {
   @Test
   @EnabledOnOs(OS.LINUX)
   void testInitLinuxEventDevicePlugin() {

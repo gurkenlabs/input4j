@@ -6,7 +6,7 @@ import java.lang.foreign.Arena;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class NativeDataStructTests {
+class XInputDataStructTests {
   @Test
   void testXInputVibration() {
     var vibration = new XINPUT_VIBRATION();

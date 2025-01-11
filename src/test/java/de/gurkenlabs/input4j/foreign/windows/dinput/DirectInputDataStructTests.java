@@ -9,7 +9,7 @@ import java.lang.foreign.MemoryLayout;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class NativeDataStructTests {
+class DirectInputDataStructTests {
   final static GUID TEST_GUID = new GUID(0x00000001, (short) 0x0002, (short) 0x0003, (byte) 0x04, (byte) 0x05, (byte) 0x06, (byte) 0x07, (byte) 0x08, (byte) 0x09, (byte) 0x10, (byte) 0x11);
   final static GUID TEST_GUID2 = new GUID(0x00000001, 0x0002, 0x0003, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11);
 
