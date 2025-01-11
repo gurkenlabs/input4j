@@ -118,7 +118,7 @@ public final class InputDevices {
       String osVersion = System.getProperty("os.version");
       String osArch = System.getProperty("os.arch");
 
-      log.warning("Detected OS: " + osName + " Version: " + osVersion + " (" + osArch + ")");
+      log.fine("Detected OS: " + osName + " Version: " + osVersion + " (" + osArch + ")");
 
       String pluginClassName = null;
       if (osName.contains("windows")) {
