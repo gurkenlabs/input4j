@@ -175,7 +175,17 @@ class Linux {
   private static int invoke(MethodHandle methodHandle, Arena memoryArena, Object arg1, Object arg2, Object arg3) {
     var capturedState = memoryArena.allocate(Linker.Option.captureStateLayout());
     try {
-      var result = (int) methodHandle.invoke(capturedState, arg1, arg2, arg3);
+      var result = ERROR;
+      if (arg1 == null) {
+        result = (int) methodHandle.invoke(capturedState);
+      } else if (arg2 == null) {
+        result = (int) methodHandle.invoke(capturedState, arg1);
+      } else if (arg3 == null) {
+        result = (int) methodHandle.invoke(capturedState, arg1, arg2);
+      } else {
+        result = (int) methodHandle.invoke(capturedState, arg1, arg2, arg3);
+      }
+
       if (result == ERROR) {
         var errorNo = getErrorNo(capturedState);
         log.log(Level.SEVERE, "Could not invoke '" + methodHandle + "' - " + getErrorString(errorNo) + "(" + errorNo + ")");
