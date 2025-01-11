@@ -6,7 +6,7 @@ public class Program {
       while (!inputDevices.getAll().isEmpty()) {
         for (var inputDevice : inputDevices.getAll()) {
           inputDevice.poll();
-          System.out.println(inputDevice.getInstanceName() + ":" + inputDevice.getComponents());
+          System.out.println(inputDevice.getInstanceName() + ":" + inputDevice.getComponents().stream().filter(x -> x.getData() != 0).toList());
 
           // Rumble the device if the X button is pressed
           // handleRumble(inputDevice);
@@ -14,6 +14,8 @@ public class Program {
 
         Thread.sleep(1000);
       }
+
+      System.out.println("Exiting: No input devices found.");
     }
   }
 
