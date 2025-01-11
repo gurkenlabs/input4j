@@ -80,6 +80,10 @@ public final class InputDevice implements Closeable {
     }
   }
 
+  public void addComponent(InputComponent component) {
+    this.components.put(component.getName(), component);
+  }
+
   /**
    * Polls the input device for input data and updates the associated input components.
    */
