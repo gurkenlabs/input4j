@@ -67,12 +67,12 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
           components.add(new InputComponent(device, ComponentType.Button, button.name(), false));
         }
 
-        components.add(new InputComponent(device, ComponentType.ZAxis, "Left Trigger", false));
-        components.add(new InputComponent(device, ComponentType.ZAxis, "Right Trigger", false));
-        components.add(new InputComponent(device, ComponentType.XAxis, "Left Thumb X", false));
-        components.add(new InputComponent(device, ComponentType.YAxis, "Left Thumb Y", false));
-        components.add(new InputComponent(device, ComponentType.XAxis, "Right Thumb X", false));
-        components.add(new InputComponent(device, ComponentType.YAxis, "Right Thumb Y", false));
+        components.add(new InputComponent(device, ComponentType.ZAxis, "LEFT TRIGGER", false));
+        components.add(new InputComponent(device, ComponentType.ZAxis, "RIGHT TRIGGER", false));
+        components.add(new InputComponent(device, ComponentType.XAxis, "LEFT THUMB X", false));
+        components.add(new InputComponent(device, ComponentType.YAxis, "LEFT THUMB Y", false));
+        components.add(new InputComponent(device, ComponentType.XAxis, "RIGHT THUMB X", false));
+        components.add(new InputComponent(device, ComponentType.YAxis, "RIGHT THUMB Y", false));
         device.addComponents(components);
 
         devices.add(device);
