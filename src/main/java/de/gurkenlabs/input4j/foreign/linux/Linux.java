@@ -44,6 +44,7 @@ class Linux {
 
   private static final VarHandle errnoHandle;
   private static final MethodHandle strerror;
+
   private static final MethodHandle open;
   private static final MethodHandle close;
   private static final MethodHandle ioctl;
@@ -54,10 +55,11 @@ class Linux {
 
     errnoHandle = capturedStateLayout.varHandle(MemoryLayout.PathElement.groupElement(ERRNO));
     strerror = NativeHelper.downcallHandle("strerror", FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
+
     open = downcallHandle("open", FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT), ERRNO);
     close = downcallHandle("close", FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT), ERRNO);
     ioctl = downcallHandle("ioctl", FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), ERRNO);
-    read = NativeHelper.downcallHandle("read", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+    read = NativeHelper.downcallHandle("read", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG), ERRNO);
   }
 
   static int open(Arena memoryArena, String fileName) {
