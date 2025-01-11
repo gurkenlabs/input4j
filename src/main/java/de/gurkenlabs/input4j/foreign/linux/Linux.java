@@ -28,6 +28,7 @@ class Linux {
   private final static int EVIOCGVERSION = _IOR('E', 0x01, JAVA_INT.byteSize());
   private final static int EVIOCGID = _IOR('E', 0x02, input_id.$LAYOUT.byteSize());
   private final static int EVIOCGNAME = _IOC(_IOC_READ, 'E', 0x06, NAME_BUFFER_SIZE);
+  private static final int EVIOCGEFFECTS = _IOR('E', 0x84, JAVA_INT.byteSize());
 
   private static int EVIOCGKEY(int len) {
     return _IOC(_IOC_READ, 'E', 0x18, len);
@@ -115,6 +116,16 @@ class Linux {
     absInfo.flat = (int) input_absinfo.VH_flat.get(absInfoSegment, 0);
 
     return absInfo;
+  }
+
+  static int getNumEffects(Arena memoryArena, int fd) {
+    MemorySegment numEffectsSegment = memoryArena.allocate(JAVA_INT);
+    int result = invoke(ioctl, memoryArena, fd, EVIOCGEFFECTS, numEffectsSegment);
+    if (result == ERROR) {
+      log.log(Level.SEVERE, "Failed to get number of device effects (" + fd + ")");
+      return ERROR;
+    }
+    return numEffectsSegment.get(JAVA_INT, 0);
   }
 
   static boolean[] getKeyStates(Arena memoryArena, int fd) {

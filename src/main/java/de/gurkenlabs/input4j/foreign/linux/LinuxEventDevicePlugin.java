@@ -42,7 +42,6 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   private volatile boolean stop = false;
 
   static {
-
     read = NativeHelper.downcallHandle("read", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
   }
 
