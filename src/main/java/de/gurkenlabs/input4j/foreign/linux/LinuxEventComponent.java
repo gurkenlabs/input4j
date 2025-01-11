@@ -23,14 +23,20 @@ final class LinuxEventComponent {
     } else if (nativeType == LinuxEventDevice.EV_ABS || this.relative) {
       this.linuxComponentType = LinuxComponentType.fromCode(nativeCode, true, nativeType == LinuxEventDevice.EV_REL);
     } else {
-      this.linuxComponentType = LinuxComponentType.BTN_UNKNOWN;
+      this.linuxComponentType = LinuxComponentType.UNKNOWN;
     }
 
     if (nativeType == LinuxEventDevice.EV_ABS) {
       input_absinfo absInfo = Linux.getAbsInfo(memoryArena, device.fd, nativeCode);
-      this.min = absInfo.minimum;
-      this.max = absInfo.maximum;
-      this.flat = absInfo.flat;
+      if(absInfo == null) {
+        this.min = Integer.MIN_VALUE;
+        this.max = Integer.MAX_VALUE;
+        this.flat = 0;
+      } else {
+        this.min = absInfo.minimum;
+        this.max = absInfo.maximum;
+        this.flat = absInfo.flat;
+      }
     } else {
       this.min = Integer.MIN_VALUE;
       this.max = Integer.MAX_VALUE;

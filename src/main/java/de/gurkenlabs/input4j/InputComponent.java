@@ -8,6 +8,8 @@ package de.gurkenlabs.input4j;
 public final class InputComponent {
   private final InputDevice device;
   private final ComponentType type;
+
+  // TODO: This needs to be unique for the library and definitely not platform-specific.
   private final String name;
   private final boolean relative;
 

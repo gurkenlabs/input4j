@@ -102,7 +102,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       for (int i = 0; i < max; i++) {
         if (LinuxEventDevice.isBitSet(components, i)) {
           var component = new LinuxEventComponent(memoryArena, device, eventType, i);
-          inputDevice.addComponent(new InputComponent(inputDevice, component.componentType, component.linuxComponentType.getIdentifier(), component.relative));
+          inputDevice.addComponent(new InputComponent(inputDevice, component.componentType, component.linuxComponentType.getIdentifier(i), component.relative));
         }
       }
     }
