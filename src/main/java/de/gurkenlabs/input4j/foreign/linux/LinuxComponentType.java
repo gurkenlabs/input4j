@@ -87,7 +87,7 @@ public enum LinuxComponentType {
 
   public static LinuxComponentType fromCode(int nativeCode, boolean axis, boolean relative) {
     return Arrays.stream(LinuxComponentType.values())
-            .filter(type -> type.code == nativeCode && (!axis || (relative ? type.name().startsWith("REL") : type.name().startsWith("ABS"))))
+            .filter(type -> type.code == nativeCode && type.name().startsWith("BTN") || (axis && (relative ? type.name().startsWith("REL") : type.name().startsWith("ABS"))))
             .findFirst()
             .orElse(BTN_UNKNOWN);
   }
