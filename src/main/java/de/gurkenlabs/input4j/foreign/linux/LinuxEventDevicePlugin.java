@@ -67,6 +67,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     for (var eventDeviceFile : eventDeviceFiles) {
       LinuxEventDevice device = new LinuxEventDevice(this.memoryArena, eventDeviceFile.getAbsolutePath());
       if (device.fd == Linux.ERROR) {
+        log.log(Level.SEVERE, "Failed to open " + eventDeviceFile.getAbsolutePath());
         continue;
       }
 
@@ -87,8 +88,6 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       addComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_REL, LinuxEventDevice.REL_MAX, "EV_REL");
 
       this.devices.add(inputDevice);
-
-      printEvents(device);
     }
   }
 
