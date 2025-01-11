@@ -21,6 +21,8 @@ public enum LinuxComponentType {
   BTN_MIDDLE(0x112),
   BTN_SIDE(0x113),
   BTN_EXTRA(0x114),
+  BTN_FORWARD(0x115),
+  BTN_BACK(0x116),
   BTN_TRIGGER(0x120),
   BTN_THUMB(0x121),
   BTN_THUMB2(0x122),
