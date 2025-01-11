@@ -159,6 +159,10 @@ final class DIDEVICEOBJECTINSTANCE {
    * @return The unified relative value.
    */
   float convertRawInputValue(float rawValue) {
+    if(this.deadzone != 0 && Math.abs(rawValue) < this.deadzone) {
+      return 0;
+    }
+
     var convertedValue = rawValue;
     if (this.isButton()) {
       convertedValue = (((int) rawValue) & 0x80) != 0 ? 1 : 0;
@@ -169,7 +173,7 @@ final class DIDEVICEOBJECTINSTANCE {
     }
 
     // this is used to minimize input noise and static small values that are usually related to a controller deadzone
-    final float minValue = 0.0001f;
+    final float minValue = 0.01f;
     return (Math.abs(convertedValue) < minValue) ? 0 : convertedValue;
   }
 }
