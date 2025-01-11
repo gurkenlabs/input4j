@@ -26,8 +26,9 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
 
   private static final MethodHandle xInputGetState;
   private static final MethodHandle xInputSetState;
+  private static final MethodHandle xInputGetCapabilities;
 
-  private final Collection<InputDevice> devices = ConcurrentHashMap.newKeySet();
+  private final Collection<XINPUT_GAMEPAD> devices = ConcurrentHashMap.newKeySet();
 
   static {
     System.loadLibrary("XInput1_4");
@@ -40,6 +41,11 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
     xInputSetState = NativeHelper.downcallHandle(
             "XInputSetState",
             FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+    );
+
+    xInputGetCapabilities = NativeHelper.downcallHandle(
+            "XInputGetCapabilities",
+            FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
     );
   }
 
@@ -58,9 +64,19 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
           continue;
         }
 
+        state.Gamepad.userIndex = i;
+
+        var type = "XInput Device";
+        var capabilities = getCapabilities(i);
+        if (capabilities != null) {
+          type = capabilities.getTypeName();
+        }
+
         // Prepare components list based on the gamepad fields and XInputButton
         var components = new ArrayList<InputComponent>();
-        var device = new InputDevice(Integer.toString(i), "XInput Device", this::pollXInputDevice, this::rumbleXInputDevice);
+
+        var instanceName = type + " (" + state.Gamepad.userIndex + ")";
+        var device = new InputDevice(instanceName, null, this::pollXInputDevice, this::rumbleXInputDevice);
 
         // order is important here, as the order of the components is used to map the polled data
         for (XInputButton button : XInputButton.values()) {
@@ -75,7 +91,8 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
         components.add(new InputComponent(device, ComponentType.YAxis, "RIGHT THUMB Y", false));
         device.addComponents(components);
 
-        devices.add(device);
+        state.Gamepad.inputDevice = device;
+        devices.add(state.Gamepad);
         log.log(Level.INFO, "Found XInput device: " + i);
       }
     } catch (Throwable e) {
@@ -110,29 +127,34 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
    * @return The current state of the input device's components.
    */
   private float[] pollXInputDevice(InputDevice inputDevice) {
-    var userIndex = Integer.parseInt(inputDevice.getInstanceName());
+    var polledValues = new float[inputDevice.getComponents().size()];
 
-    var state = getState(userIndex);
+    // find native XINPUT_GAMEPAD and poll it
+    var xinputGamepad = this.devices.stream().filter(x -> x.inputDevice.equals(inputDevice)).findFirst().orElse(null);
+    if (xinputGamepad == null) {
+      log.log(Level.WARNING, "DirectInput device not found for input device " + inputDevice.getInstanceName());
+      return polledValues;
+    }
+
+    var state = getState(xinputGamepad.userIndex);
     if (state == null) {
       return new float[0];
     }
 
-    var polledData = new float[inputDevice.getComponents().size()];
-
     int i = 0;
     for (; i < XInputButton.values().length; i++) {
       var button = XInputButton.values()[i];
-      polledData[i] = button.isPressed(state.Gamepad.wButtons) ? 1 : 0;
+      polledValues[i] = button.isPressed(state.Gamepad.wButtons) ? 1 : 0;
     }
 
-    polledData[i++] = normalizeTrigger(state.Gamepad.bLeftTrigger);
-    polledData[i++] = normalizeTrigger(state.Gamepad.bRightTrigger);
-    polledData[i++] = normalizeSignedShort(state.Gamepad.sThumbLX, XINPUT_GAMEPAD.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
-    polledData[i++] = normalizeSignedShort(state.Gamepad.sThumbLY, XINPUT_GAMEPAD.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
-    polledData[i++] = normalizeSignedShort(state.Gamepad.sThumbRX, XINPUT_GAMEPAD.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
-    polledData[i] = normalizeSignedShort(state.Gamepad.sThumbRY, XINPUT_GAMEPAD.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+    polledValues[i++] = normalizeTrigger(state.Gamepad.bLeftTrigger);
+    polledValues[i++] = normalizeTrigger(state.Gamepad.bRightTrigger);
+    polledValues[i++] = normalizeSignedShort(state.Gamepad.sThumbLX, XINPUT_GAMEPAD.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+    polledValues[i++] = normalizeSignedShort(state.Gamepad.sThumbLY, XINPUT_GAMEPAD.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+    polledValues[i++] = normalizeSignedShort(state.Gamepad.sThumbRX, XINPUT_GAMEPAD.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+    polledValues[i] = normalizeSignedShort(state.Gamepad.sThumbRY, XINPUT_GAMEPAD.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
 
-    return polledData;
+    return polledValues;
   }
 
   /**
@@ -177,7 +199,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
    */
   @Override
   public Collection<InputDevice> getAll() {
-    return this.devices;
+    return this.devices.stream().map(x -> x.inputDevice).toList();
   }
 
   /**
@@ -186,9 +208,29 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
   @Override
   public void close() {
     for (var device : this.devices) {
-      device.close();
+      device.inputDevice.close();
     }
+
     this.devices.clear();
+  }
+
+  public static XINPUT_CAPABILITIES getCapabilities(int userIndex) {
+    try (var memorySession = Arena.ofConfined()) {
+      var capabilitiesSegment = memorySession.allocate(XINPUT_CAPABILITIES.$LAYOUT);
+
+      int result = (int) xInputGetCapabilities.invoke(userIndex, 0, capabilitiesSegment);
+      if (result == Result.ERROR_SUCCESS) {
+        return XINPUT_CAPABILITIES.read(capabilitiesSegment);
+      } else if (result == Result.ERROR_DEVICE_NOT_CONNECTED) {
+        return null;
+      } else {
+        log.log(Level.WARNING, "XInputGetCapabilities failed for userIndex " + userIndex + " with error result " + Result.toString(result));
+        return null;
+      }
+    } catch (Throwable e) {
+      log.log(Level.SEVERE, e.getMessage(), e);
+      return null;
+    }
   }
 
   /**

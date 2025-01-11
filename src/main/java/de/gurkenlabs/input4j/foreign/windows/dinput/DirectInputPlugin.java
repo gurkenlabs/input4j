@@ -412,7 +412,6 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
     log.log(Level.FINE, "Found effect: " + name + " (Type: " + effectType + ")");
 
     // TODO: Implement support to create effects for the device. This requires DIEFFECT and other structs.
-    //       It needs to be evaluated how to make such feature available on the abstract API layer without exposing direct input details
     return true;
   }
 

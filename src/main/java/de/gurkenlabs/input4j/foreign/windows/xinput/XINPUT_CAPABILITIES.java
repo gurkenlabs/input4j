@@ -100,4 +100,31 @@ final class XINPUT_CAPABILITIES {
     Gamepad.write(segment.asSlice($LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("Gamepad"))));
     Vibration.write(segment.asSlice($LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("Vibration"))));
   }
+
+  public String getTypeName() {
+    switch (SubType) {
+      case 0x01:
+        return "Gamepad";
+      case 0x02:
+        return "Wheel";
+      case 0x03:
+        return "Arcade Stick";
+      case 0x04:
+        return "Flight Stick";
+      case 0x05:
+        return "Dance Pad";
+      case 0x06:
+        return "Guitar";
+      case 0x07:
+        return "Guitar Alternate";
+      case 0x08:
+        return "Drum Kit";
+      case 0x0B:
+        return "Guitar Bass";
+      case 0x0C:
+        return "Arcade Pad";
+      default:
+        return "Unknown";
+    }
+  }
 }

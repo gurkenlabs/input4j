@@ -1,5 +1,7 @@
 package de.gurkenlabs.input4j.foreign.windows.xinput;
 
+import de.gurkenlabs.input4j.InputDevice;
+
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
@@ -71,6 +73,9 @@ final class XINPUT_GAMEPAD {
    * Value range: -32768 to 32767.
    */
   short sThumbRY;
+
+  int userIndex;
+  InputDevice inputDevice;
 
   static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
           ValueLayout.JAVA_SHORT.withName("wButtons"),
