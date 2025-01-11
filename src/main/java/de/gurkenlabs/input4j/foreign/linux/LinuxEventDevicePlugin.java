@@ -17,19 +17,9 @@ import java.util.logging.Logger;
 /**
  * The {@code LinuxEventDevicePlugin} class is responsible for managing Linux event devices.
  * It initializes and adds them to the collection of devices.
- * <p>
- * TODO: Test this on raspberrypi3b with SNES USB controller and old controller
  */
 public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   private static final Logger log = Logger.getLogger(LinuxEventDevicePlugin.class.getName());
-
-  private static final int EVIOCGRAB = 0x40044590;
-
-  private static final int SYN_MT_REPORT = 0x02;
-  private static final int SYN_DROPPED = 0x03;
-  private static final int EV_MSC = 0x04;
-  private static final int MSC_RAW = 0x03;
-  private static final int MSC_SCAN = 0x04;
 
   private final Arena memoryArena = Arena.ofConfined();
   private final Collection<LinuxEventDevice> devices = ConcurrentHashMap.newKeySet();
@@ -105,24 +95,32 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       return polledValues;
     }
 
-    // TODO: assign the button states from this
+    // TODO: assign the button states from this?
+    //  Not sure if this is only necessary for keyboard input and how this overlaps with the input events
     var keyState = Linux.getKeyStates(this.memoryArena, linuxEventDevice.fd);
-    for(var key : keyState) {
-      if(key) {
+    for (var key : keyState) {
+      if (key) {
         log.log(Level.WARNING, "Key is pressed");
       }
     }
     input_event nextInputEvent;
-    do{
-      nextInputEvent= Linux.readEvent(this.memoryArena, linuxEventDevice.fd);
-      if(nextInputEvent != null){
+    int i = 0;
+    do {
+      nextInputEvent = Linux.readEvent(this.memoryArena, linuxEventDevice.fd);
+      if (nextInputEvent != null) {
+        // TODO: normalize the value to a float
         log.log(Level.INFO, "Event type: " + nextInputEvent.type + " Code: " + nextInputEvent.code + " Value: " + nextInputEvent.value);
+        polledValues[i] = nextInputEvent.value;
+        i++;
       }
-    } while(nextInputEvent != null);
+    } while (nextInputEvent != null && i < polledValues.length);
 
     return new float[0];
   }
 
+  /**
+   * TODO: Support for rumble and force feedback. ioctl(fd, EVIOCSFF, &effect) and requires ff_effect struct.
+   */
   private void rumbleLinuxEventDevice(InputDevice inputDevice, float[] floats) {
   }
 
