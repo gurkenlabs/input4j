@@ -13,7 +13,6 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,7 +27,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
   private static final MethodHandle xInputGetState;
   private static final MethodHandle xInputSetState;
 
-  private Collection<InputDevice> devices = ConcurrentHashMap.newKeySet();
+  private final Collection<InputDevice> devices = ConcurrentHashMap.newKeySet();
 
   static {
     System.loadLibrary("XInput1_4");
@@ -61,7 +60,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
 
         // Prepare components list based on the gamepad fields and XInputButton
         var components = new ArrayList<InputComponent>();
-        var device = new InputDevice(UUID.randomUUID(), null, Integer.toString(i), "XInput Device", this::pollXInputDevice, this::rumbleXInputDevice);
+        var device = new InputDevice(Integer.toString(i), "XInput Device", this::pollXInputDevice, this::rumbleXInputDevice);
 
         // order is important here, as the order of the components is used to map the polled data
         for (XInputButton button : XInputButton.values()) {

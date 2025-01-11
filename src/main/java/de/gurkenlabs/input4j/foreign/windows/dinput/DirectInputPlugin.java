@@ -367,7 +367,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
     var product = new String(deviceInstance.tszProductName).trim();
 
     // var type = DI8DEVTYPE.fromDwDevType(deviceInstance.dwDevType);
-    var inputDevice = new InputDevice(deviceInstance.guidInstance.toUUID(), deviceInstance.guidProduct.toUUID(), name, product, this::pollDirectInputDevice, null);
+    var inputDevice = new InputDevice(name, product, this::pollDirectInputDevice, null);
     this.devices.add(new IDirectInputDevice8(deviceInstance, inputDevice));
 
     return true;

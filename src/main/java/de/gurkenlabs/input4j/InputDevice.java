@@ -12,8 +12,6 @@ import java.util.function.Function;
  * such as a keyboard, mouse, or game controller.
  */
 public final class InputDevice implements Closeable {
-  private final UUID instance;
-  private final UUID product;
   private final String instanceName;
   private final String productName;
   private final Map<String, InputComponent> components = new LinkedHashMap<>();
@@ -25,37 +23,15 @@ public final class InputDevice implements Closeable {
   /**
    * Creates a new instance of the InputDevice class.
    *
-   * @param instance     the unique identifier for the instance of the input device
-   * @param product      the unique identifier for the product of the input device
    * @param instanceName the name of the instance of the input device
    * @param productName  the name of the product of the input device
    * @param pollCallback the function to be called when polling for input data from the device
    */
-  public InputDevice(UUID instance, UUID product, String instanceName, String productName, Function<InputDevice, float[]> pollCallback, BiConsumer<InputDevice, float[]> rumbleCallback) {
-    this.instance = instance;
-    this.product = product;
+  public InputDevice(String instanceName, String productName, Function<InputDevice, float[]> pollCallback, BiConsumer<InputDevice, float[]> rumbleCallback) {
     this.instanceName = instanceName;
     this.productName = productName;
     this.pollCallback = pollCallback;
     this.rumbleCallback = rumbleCallback;
-  }
-
-  /**
-   * Gets the unique identifier for the instance of the input device.
-   *
-   * @return the instance identifier
-   */
-  public UUID getInstance() {
-    return instance;
-  }
-
-  /**
-   * Gets the unique identifier for the product of the input device.
-   *
-   * @return the product identifier
-   */
-  public UUID getProduct() {
-    return product;
   }
 
   /**
