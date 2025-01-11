@@ -1,5 +1,7 @@
 package de.gurkenlabs.input4j.foreign.linux;
 
+import de.gurkenlabs.input4j.InputDevice;
+
 import java.lang.foreign.Arena;
 import java.util.logging.Logger;
 
@@ -25,10 +27,12 @@ class LinuxEventDevice {
   static final int FF_MAX = 0x7f;
 
   private static final Logger log = Logger.getLogger(LinuxEventDevice.class.getName());
-  public final String filename;
-  public final int fd;
-  public final String name;
-  public final input_id id;
+  final String filename;
+  final int fd;
+  final String name;
+  final input_id id;
+
+  InputDevice inputDevice;
 
   public int version;
 

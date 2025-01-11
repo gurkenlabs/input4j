@@ -38,7 +38,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   private static final int MSC_SCAN = 0x04;
 
   private final Arena memoryArena = Arena.ofConfined();
-  private final Collection<InputDevice> devices = ConcurrentHashMap.newKeySet();
+  private final Collection<LinuxEventDevice> devices = ConcurrentHashMap.newKeySet();
   private volatile boolean stop = false;
 
   static {
@@ -72,6 +72,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       }
 
       var inputDevice = new InputDevice(device.name, device.name, this::pollLinuxEventDevice, this::rumbleLinuxEventDevice);
+      device.inputDevice = inputDevice;
 
       log.log(Level.INFO, "Found input device: " + device.filename + " - " + device.name);
 
@@ -87,7 +88,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       addComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_ABS, LinuxEventDevice.ABS_MAX, "EV_ABS");
       addComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_REL, LinuxEventDevice.REL_MAX, "EV_REL");
 
-      this.devices.add(inputDevice);
+      this.devices.add(device);
     }
   }
 
@@ -109,6 +110,18 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   }
 
   private float[] pollLinuxEventDevice(InputDevice inputDevice) {
+    var polledValues = new float[inputDevice.getComponents().size()];
+
+    // find native LinuxEventDevice and poll it
+    var directInputDevice = this.devices.stream().filter(x -> x.inputDevice.equals(inputDevice)).findFirst().orElse(null);
+    if (directInputDevice == null) {
+      log.log(Level.WARNING, "LinuxEventDevice not found for input device " + inputDevice.getInstanceName());
+      return polledValues;
+    }
+
+    // TODO: assign the button states from this
+    var keyState = Linux.getKeyStates(this.memoryArena, directInputDevice.fd);
+
     return new float[0];
   }
 
@@ -145,7 +158,6 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     }
   }
 
-
   private void logEvent(input_event event) {
     int type = event.type;
     int code = event.code;
@@ -154,13 +166,15 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
   @Override
   public Collection<InputDevice> getAll() {
-    return this.devices;
+    return this.devices.stream().map(x -> x.inputDevice).toList();
   }
 
   @Override
   public void close() {
     stop = true;
-    // TODO: close all devices
+    for (LinuxEventDevice device : devices) {
+      device.close(this.memoryArena);
+    }
     memoryArena.close();
   }
 }
