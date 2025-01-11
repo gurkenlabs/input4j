@@ -60,11 +60,11 @@ class Linux {
 
   static int open(Arena memoryArena, String fileName) {
     var filenameMemorySegment = memoryArena.allocateFrom(fileName);
-    return invoke(open, memoryArena, filenameMemorySegment, O_RDONLY);
+    return invoke(open, memoryArena, filenameMemorySegment, O_RDONLY, null);
   }
 
   static void close(Arena memoryArena, int fd) {
-    invoke(close, memoryArena, fd);
+    invoke(close, memoryArena, fd, null, null);
   }
 
   static String getEventDeviceName(Arena memoryArena, int fd) {
@@ -172,10 +172,10 @@ class Linux {
     return bits;
   }
 
-  private static int invoke(MethodHandle methodHandle, Arena memoryArena, Object... args) {
+  private static int invoke(MethodHandle methodHandle, Arena memoryArena, Object arg1, Object arg2, Object arg3) {
     var capturedState = memoryArena.allocate(Linker.Option.captureStateLayout());
     try {
-      var result = (int) methodHandle.invoke(capturedState, args);
+      var result = (int) methodHandle.invoke(capturedState, arg1, arg2, arg3);
       if (result == ERROR) {
         var errorNo = getErrorNo(capturedState);
         log.log(Level.SEVERE, "Could not invoke '" + methodHandle + "' - " + getErrorString(errorNo) + "(" + errorNo + ")");
