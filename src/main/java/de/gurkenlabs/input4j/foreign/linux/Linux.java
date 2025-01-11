@@ -47,6 +47,7 @@ class Linux {
   private static final MethodHandle open;
   private static final MethodHandle close;
   private static final MethodHandle ioctl;
+  private static final MethodHandle read;
 
   static {
     StructLayout capturedStateLayout = Linker.Option.captureStateLayout();
@@ -56,6 +57,7 @@ class Linux {
     open = downcallHandle("open", FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT), ERRNO);
     close = downcallHandle("close", FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT), ERRNO);
     ioctl = downcallHandle("ioctl", FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), ERRNO);
+    read = NativeHelper.downcallHandle("read", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
   }
 
   static int open(Arena memoryArena, String fileName) {
@@ -170,6 +172,17 @@ class Linux {
     }
 
     return bits;
+  }
+
+  public static input_event readEvent(Arena memoryArena, int fd) {
+    MemorySegment inputEventMemorySegment = memoryArena.allocate(input_event.$LAYOUT);
+    int result = invoke(read, memoryArena, fd, inputEventMemorySegment, input_event.$LAYOUT.byteSize());
+    if(result == ERROR) {
+      log.log(Level.FINE, "No more events to read from device (" + fd + ")");
+      return null;
+    }
+
+    return input_event.read(inputEventMemorySegment);
   }
 
   private static int invoke(MethodHandle methodHandle, Arena memoryArena, Object arg1, Object arg2, Object arg3) {

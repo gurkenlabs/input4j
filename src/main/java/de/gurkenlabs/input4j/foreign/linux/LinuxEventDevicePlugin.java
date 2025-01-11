@@ -3,15 +3,10 @@ package de.gurkenlabs.input4j.foreign.linux;
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
-import de.gurkenlabs.input4j.foreign.NativeHelper;
 
 import java.awt.*;
 import java.io.File;
 import java.lang.foreign.Arena;
-import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.MemorySegment;
-import java.lang.foreign.ValueLayout;
-import java.lang.invoke.MethodHandle;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -28,7 +23,6 @@ import java.util.logging.Logger;
 public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   private static final Logger log = Logger.getLogger(LinuxEventDevicePlugin.class.getName());
 
-  private static final MethodHandle read;
   private static final int EVIOCGRAB = 0x40044590;
 
   private static final int SYN_MT_REPORT = 0x02;
@@ -40,14 +34,6 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   private final Arena memoryArena = Arena.ofConfined();
   private final Collection<LinuxEventDevice> devices = ConcurrentHashMap.newKeySet();
   private volatile boolean stop = false;
-
-  static {
-    read = NativeHelper.downcallHandle("read", FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
-  }
-
-  public LinuxEventDevicePlugin() {
-
-  }
 
   @Override
   public void internalInitDevices(Frame owner) {
@@ -113,55 +99,31 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     var polledValues = new float[inputDevice.getComponents().size()];
 
     // find native LinuxEventDevice and poll it
-    var directInputDevice = this.devices.stream().filter(x -> x.inputDevice.equals(inputDevice)).findFirst().orElse(null);
-    if (directInputDevice == null) {
+    var linuxEventDevice = this.devices.stream().filter(x -> x.inputDevice.equals(inputDevice)).findFirst().orElse(null);
+    if (linuxEventDevice == null) {
       log.log(Level.WARNING, "LinuxEventDevice not found for input device " + inputDevice.getInstanceName());
       return polledValues;
     }
 
     // TODO: assign the button states from this
-    var keyState = Linux.getKeyStates(this.memoryArena, directInputDevice.fd);
+    var keyState = Linux.getKeyStates(this.memoryArena, linuxEventDevice.fd);
+    for(var key : keyState) {
+      if(key) {
+        log.log(Level.WARNING, "Key is pressed");
+      }
+    }
+    input_event nextInputEvent;
+    do{
+      nextInputEvent= Linux.readEvent(this.memoryArena, linuxEventDevice.fd);
+      if(nextInputEvent != null){
+        log.log(Level.INFO, "Event type: " + nextInputEvent.type + " Code: " + nextInputEvent.code + " Value: " + nextInputEvent.value);
+      }
+    } while(nextInputEvent != null);
 
     return new float[0];
   }
 
   private void rumbleLinuxEventDevice(InputDevice inputDevice, float[] floats) {
-  }
-
-  private void printEvents(LinuxEventDevice device) {
-    try (Arena arena = Arena.ofConfined()) {
-      MemorySegment ev = arena.allocate(input_event.$LAYOUT);
-
-      while (!stop) {
-
-        // TODO:
-        // Plan is to basically copy the jinput approach here.
-        // required native calls are:
-        //
-        if (stop) break;
-
-        int rd = (int) read.invoke(device.fd, ev, ev.byteSize());
-        if (rd == Linux.ERROR) {
-          log.log(Level.SEVERE, "Expected " + input_event.$LAYOUT.byteSize() + " bytes, got " + rd);
-          return;
-        }
-
-        for (int i = 0; i < rd / input_event.$LAYOUT.byteSize(); i++) {
-          input_event event = input_event.read(ev.asSlice(i * input_event.$LAYOUT.byteSize()));
-          logEvent(event);
-        }
-      }
-
-      // ioctl.invoke(device.fd, EVIOCGRAB, MemorySegment.NULL);
-    } catch (Throwable e) {
-      log.log(Level.SEVERE, e.getMessage(), e);
-    }
-  }
-
-  private void logEvent(input_event event) {
-    int type = event.type;
-    int code = event.code;
-    log.log(Level.INFO, "Event: time " + event.time.tv_sec + "." + event.time.tv_usec + ", type " + type + ", code " + code + ", value " + event.value);
   }
 
   @Override
