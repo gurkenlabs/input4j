@@ -23,18 +23,11 @@ test {
   useJUnitPlatform()
 }
 
-tasks.withType(JavaExec).configureEach {
-  jvmArgs += '--enable-native-access=ALL-UNNAMED'
-}
-
-compileJava {
-  options.compilerArgs += ['--enable-preview']
-}
-
 jar {
   manifest {
     attributes 'Implementation-Title': "LITIENGINE input playground",
-            'Main-Class': 'de.gurkenlabs.input4j.Program'
+            'Main-Class': 'de.gurkenlabs.input4j.Program',
+            'Enable-Native-Access': 'ALL-UNNAMED'
   }
 }
 
@@ -49,6 +42,10 @@ task remoteDebug(type: JavaExec) {
 
   jvmArgs = [
           '-Xdebug',
-          '-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005'
+          '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005'
   ]
+}
+
+tasks.withType(JavaExec).configureEach {
+  jvmArgs += '--enable-native-access=ALL-UNNAMED'
 }

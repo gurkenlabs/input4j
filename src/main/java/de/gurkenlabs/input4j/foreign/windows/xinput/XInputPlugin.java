@@ -125,23 +125,42 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
       polledData[i] = button.isPressed(state.Gamepad.wButtons) ? 1 : 0;
     }
 
-    polledData[i++] = Byte.toUnsignedInt(state.Gamepad.bLeftTrigger) / 255f;
-    polledData[i++] = Byte.toUnsignedInt(state.Gamepad.bRightTrigger) / 255f;
-    polledData[i++] = normalizeSignedShort(state.Gamepad.sThumbLX);
-    polledData[i++] = normalizeSignedShort(state.Gamepad.sThumbLY);
-    polledData[i++] = normalizeSignedShort(state.Gamepad.sThumbRX);
-    polledData[i] = normalizeSignedShort(state.Gamepad.sThumbRY);
+    polledData[i++] = normalizeTrigger(state.Gamepad.bLeftTrigger);
+    polledData[i++] = normalizeTrigger(state.Gamepad.bRightTrigger);
+    polledData[i++] = normalizeSignedShort(state.Gamepad.sThumbLX, XINPUT_GAMEPAD.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+    polledData[i++] = normalizeSignedShort(state.Gamepad.sThumbLY, XINPUT_GAMEPAD.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+    polledData[i++] = normalizeSignedShort(state.Gamepad.sThumbRX, XINPUT_GAMEPAD.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+    polledData[i] = normalizeSignedShort(state.Gamepad.sThumbRY, XINPUT_GAMEPAD.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
 
     return polledData;
+  }
+
+  /**
+   * Normalizes the trigger value to a float between 0.0 and 1.0, considering a specified threshold.
+   *
+   * @param triggerValue The raw trigger value (0 to 255).
+   * @return The normalized trigger value as a float between 0.0 and 1.0.
+   */
+  private static float normalizeTrigger(byte triggerValue) {
+    if (Byte.toUnsignedInt(triggerValue) < XINPUT_GAMEPAD.XINPUT_GAMEPAD_TRIGGER_THRESHOLD) {
+      return 0.0f;
+    }
+    return Byte.toUnsignedInt(triggerValue) / 255f;
   }
 
   /**
    * Normalizes a signed short value to a float between -1.0 and 1.0.
    *
    * @param shortValue The signed short value.
+   * @param deadzone   The deadzone values are used to filter out small movements of the thumbsticks that are within a certain threshold.
+   *                   This helps to avoid unintentional movements due to slight pressure or drift.
    * @return The normalized float value.
    */
-  private static float normalizeSignedShort(short shortValue) {
+  private static float normalizeSignedShort(short shortValue, int deadzone) {
+    if (Math.abs(shortValue) < deadzone) {
+      return 0.0f;
+    }
+
     if (shortValue == Short.MIN_VALUE) {
       return -1.0f;
     }
@@ -166,7 +185,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
    */
   @Override
   public void close() {
-    for(var device : this.devices) {
+    for (var device : this.devices) {
       device.close();
     }
     this.devices.clear();
