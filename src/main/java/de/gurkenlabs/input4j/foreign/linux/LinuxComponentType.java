@@ -89,12 +89,12 @@ public enum LinuxComponentType {
     return Arrays.stream(LinuxComponentType.values())
             .filter(type -> type.code == nativeCode && (!axis || (relative ? type.name().startsWith("REL") : type.name().startsWith("ABS"))))
             .findFirst()
-            .orElse(null);
+            .orElse(BTN_UNKNOWN);
   }
 
   public ComponentType getComponentType(int nativeCode, boolean axis, boolean relative) {
     var type = fromCode(nativeCode, axis, relative);
-    if (type == null) {
+    if (type == BTN_UNKNOWN) {
       if (!axis && nativeCode > 0 && nativeCode < 0x100) {
         // range from 1 to 255 is used for keys but overlaps with relative and absolute axes
         return ComponentType.Key;
