@@ -1,7 +1,6 @@
 package de.gurkenlabs.input4j.foreign.windows.xinput;
 
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
-import de.gurkenlabs.input4j.ComponentType;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
 import de.gurkenlabs.input4j.foreign.NativeHelper;
@@ -79,17 +78,32 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
         var device = new InputDevice(instanceName, null, this::pollXInputDevice, this::rumbleXInputDevice);
 
         // order is important here, as the order of the components is used to map the polled data
-        for (XInputButton button : XInputButton.values()) {
-          components.add(new InputComponent(device, ComponentType.Button, button.name(), false));
-        }
+        components.add(new InputComponent(device, InputComponent.XInput.DPAD_UP));
+        components.add(new InputComponent(device, InputComponent.XInput.DPAD_DOWN));
+        components.add(new InputComponent(device, InputComponent.XInput.DPAD_LEFT));
+        components.add(new InputComponent(device, InputComponent.XInput.DPAD_RIGHT));
+        components.add(new InputComponent(device, InputComponent.XInput.START));
+        components.add(new InputComponent(device, InputComponent.XInput.BACK));
+        components.add(new InputComponent(device, InputComponent.XInput.LEFT_THUMB));
+        components.add(new InputComponent(device, InputComponent.XInput.RIGHT_THUMB));
+        components.add(new InputComponent(device, InputComponent.XInput.LEFT_SHOULDER));
+        components.add(new InputComponent(device, InputComponent.XInput.RIGHT_SHOULDER));
+        components.add(new InputComponent(device, InputComponent.XInput.A));
+        components.add(new InputComponent(device, InputComponent.XInput.B));
+        components.add(new InputComponent(device, InputComponent.XInput.X));
+        components.add(new InputComponent(device, InputComponent.XInput.Y));
 
-        components.add(new InputComponent(device, ComponentType.ZAxis, "LEFT TRIGGER", false));
-        components.add(new InputComponent(device, ComponentType.ZAxis, "RIGHT TRIGGER", false));
-        components.add(new InputComponent(device, ComponentType.XAxis, "LEFT THUMB X", false));
-        components.add(new InputComponent(device, ComponentType.YAxis, "LEFT THUMB Y", false));
-        components.add(new InputComponent(device, ComponentType.XAxis, "RIGHT THUMB X", false));
-        components.add(new InputComponent(device, ComponentType.YAxis, "RIGHT THUMB Y", false));
-        device.addComponents(components);
+        components.add(new InputComponent(device, InputComponent.XInput.LEFT_TRIGGER));
+        components.add(new InputComponent(device, InputComponent.XInput.RIGHT_TRIGGER));
+        components.add(new InputComponent(device, InputComponent.XInput.LEFT_THUMB_X));
+        components.add(new InputComponent(device, InputComponent.XInput.LEFT_THUMB_Y));
+        components.add(new InputComponent(device, InputComponent.XInput.RIGHT_THUMB_X));
+        components.add(new InputComponent(device, InputComponent.XInput.RIGHT_THUMB_Y));
+
+        // Add a special DPAD axis component that combines the values of all DPAD buttons
+        // this is usally not provided by XInput but more consistent with other input libraries
+        components.add(new InputComponent(device, InputComponent.Axis.DPAD));
+        device.setComponents(components);
 
         state.Gamepad.inputDevice = device;
         devices.add(state.Gamepad);

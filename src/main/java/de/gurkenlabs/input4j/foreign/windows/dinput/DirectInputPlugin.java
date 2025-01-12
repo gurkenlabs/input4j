@@ -2,7 +2,6 @@ package de.gurkenlabs.input4j.foreign.windows.dinput;
 
 
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
-import de.gurkenlabs.input4j.ComponentType;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
 
@@ -155,6 +154,15 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
           continue;
         }
 
+        // TODO: In DirectInput, the D-Pad is reported as a single Hat Switch (angles or -1 for centered).
+        //  This requires splitting the Hat Switch into components (DPAD_UP, DPAD_DOWN, etc.) in the unified model.
+        //  We need to add 4 more button components to account for this
+        //  It seems like we get the buttons 11, 12, 13, 14 and 15 that don't provide values but are reserved for individual DPAD values
+
+        // TODO: In DirectInput, both triggers are mapped to the same Z-Axis, with LEFT_TRIGGER using the positive range (0 to 1)
+        //  and RIGHT_TRIGGER using the negative range (-1 to 0). In Linux and XInput, the triggers are separate.
+        //  We need to separate these to component into two virtual components that reflect the triggers individually
+
         // 4. enumerate the effects
         var enumEffectsResult = device.EnumEffects(enumEffectsPointer(), IDirectInputDevice8.DIEFT_ALL);
         if (enumEffectsResult != Result.DI_OK) {
@@ -198,7 +206,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
           continue;
         }
 
-        device.inputDevice.addComponents(currentComponents.values());
+        device.inputDevice.setComponents(currentComponents.values());
         device.deviceObjects = deviceObjects;
       } finally {
         this.currentDevice = null;
@@ -383,7 +391,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
   private boolean enumObjectCallback(long lpddoiSegment, long pvRef) {
     var deviceObjectInstance = DIDEVICEOBJECTINSTANCE.read(MemorySegment.ofAddress(lpddoiSegment).reinterpret(DIDEVICEOBJECTINSTANCE.$LAYOUT.byteSize(), memoryArena, null));
 
-    var name = new String(deviceObjectInstance.tszName).trim();
+    var name = deviceObjectInstance.getName();
     var deviceObjectType = DI8DEVOBJECTTYPE.from(deviceObjectInstance.guidType);
     deviceObjectInstance.objectType = deviceObjectType;
 
@@ -393,7 +401,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
       log.warning("Could not get properties of device object " + name);
     }
 
-    var component = new InputComponent(this.currentDevice.inputDevice, ComponentType.valueOf(deviceObjectType.name()), name, deviceObjectInstance.isRelative());
+    var component = new InputComponent(this.currentDevice.inputDevice, deviceObjectInstance.getIdentifier(), name, deviceObjectInstance.isRelative());
     this.currentComponents.put(deviceObjectInstance, component);
     log.log(Level.FINE, "\t\t" + deviceObjectType + " (" + name + ") - " + deviceObjectInstance.dwOfs);
     return true;

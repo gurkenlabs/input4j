@@ -78,10 +78,18 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
       for (int i = 0; i < max; i++) {
         if (LinuxEventDevice.isBitSet(components, i)) {
-          var component = new LinuxEventComponent(memoryArena, device, eventType, i);
-          inputDevice.addComponent(new InputComponent(inputDevice, component.componentType, component.linuxComponentType.getIdentifier(i), component.relative));
+          var nativeComponent = new LinuxEventComponent(memoryArena, device, eventType, i);
+          device.componentList.add(nativeComponent);
+
+          var id = nativeComponent.getIdentifier();
+          var inputComponent = new InputComponent(inputDevice, id, nativeComponent.linuxComponentType.name(), nativeComponent.relative);
+          nativeComponent.inputComponent = inputComponent;
+          inputDevice.addComponent(inputComponent);
         }
       }
+
+      // TODO: Linux evdev splits the D-Pad into ABS_HAT0X and ABS_HAT0Y for horizontal and vertical movements
+      //     We need a unified virtual DPAD component to be in line with the other input libraries
     }
   }
 
@@ -108,7 +116,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     do {
       nextInputEvent = Linux.readEvent(this.memoryArena, linuxEventDevice.fd);
       if (nextInputEvent != null) {
-        // TODO: normalize the value to a float
+        // TODO: normalize the value to a float, find the component index for the event code (this might not be in order)
         log.log(Level.INFO, "Event type: " + nextInputEvent.type + " Code: " + nextInputEvent.code + " Value: " + nextInputEvent.value);
         polledValues[i] = nextInputEvent.value;
         i++;

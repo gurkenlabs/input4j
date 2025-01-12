@@ -1,8 +1,12 @@
 package de.gurkenlabs.input4j;
 
 import java.io.Closeable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -14,7 +18,7 @@ import java.util.function.Function;
 public final class InputDevice implements Closeable {
   private final String instanceName;
   private final String productName;
-  private final Map<String, InputComponent> components = new LinkedHashMap<>();
+  private final List<InputComponent> components = new CopyOnWriteArrayList<>();
   private final Collection<InputDeviceListener> listeners = ConcurrentHashMap.newKeySet();
 
   private final Function<InputDevice, float[]> pollCallback;
@@ -57,8 +61,8 @@ public final class InputDevice implements Closeable {
    *
    * @return the collection of input components
    */
-  public Collection<InputComponent> getComponents() {
-    return components.values();
+  public List<InputComponent> getComponents() {
+    return Collections.unmodifiableList(components);
   }
 
   public Optional<InputComponent> getComponent(String name) {
@@ -66,7 +70,7 @@ public final class InputDevice implements Closeable {
       return Optional.empty();
     }
 
-    return Optional.ofNullable(components.get(name));
+    return components.stream().filter(c -> c.getId().name.equals(name)).findFirst();
   }
 
   /**
@@ -74,14 +78,13 @@ public final class InputDevice implements Closeable {
    *
    * @param components the input components to add
    */
-  public void addComponents(Collection<InputComponent> components) {
-    for (var component : components) {
-      this.components.put(component.getName(), component);
-    }
+  public void setComponents(Collection<InputComponent> components) {
+    this.components.clear();
+    this.components.addAll(components);
   }
 
   public void addComponent(InputComponent component) {
-    this.components.put(component.getName(), component);
+    this.components.add(component);
   }
 
   /**
@@ -90,13 +93,13 @@ public final class InputDevice implements Closeable {
   public void poll() {
     var polledData = this.pollCallback.apply(this);
 
-    var componentList = new ArrayList<>(components.values());
+    var componentList = this.components;
     for (var i = 0; i < polledData.length && i < componentList.size(); i++) {
       var component = componentList.get(i);
       var oldData = component.getData();
       var newData = polledData[i];
 
-      newData = Math.round(newData * 100) / 100.0f;
+      newData = Math.round(newData * 1000) / 1000.0f;
       if (oldData != newData) {
         component.setData(newData);
 

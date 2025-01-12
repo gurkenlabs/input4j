@@ -3,6 +3,8 @@ package de.gurkenlabs.input4j.foreign.linux;
 import de.gurkenlabs.input4j.InputDevice;
 
 import java.lang.foreign.Arena;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 class LinuxEventDevice {
@@ -31,8 +33,10 @@ class LinuxEventDevice {
   final int fd;
   final String name;
   final input_id id;
+  final List<LinuxEventComponent> componentList = new ArrayList<>();
 
   InputDevice inputDevice;
+
 
   public int version;
 

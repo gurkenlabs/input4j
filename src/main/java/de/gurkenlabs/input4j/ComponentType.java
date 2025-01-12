@@ -1,24 +1,13 @@
 package de.gurkenlabs.input4j;
 
 public enum ComponentType {
-  XAxis,
-  YAxis,
-  ZAxis,
-  RxAxis,
-  RyAxis,
-  RzAxis,
-  Slider,
+  Axis,
   Button,
+  DPad,
   Key,
-  POV,
   Unknown;
 
-  public boolean isAxis() {
-    return switch (this) {
-      case XAxis, YAxis, ZAxis, RxAxis, RyAxis, RzAxis -> true;
-      default -> false;
-    };
-  }
+  public boolean isAxis() { return this == Axis; }
 
   public boolean isButton() {
     return this == Button;

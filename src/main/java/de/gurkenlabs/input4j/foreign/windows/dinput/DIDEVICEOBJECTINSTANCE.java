@@ -1,5 +1,8 @@
 package de.gurkenlabs.input4j.foreign.windows.dinput;
 
+import de.gurkenlabs.input4j.ComponentType;
+import de.gurkenlabs.input4j.InputComponent;
+
 import java.lang.foreign.GroupLayout;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
@@ -140,6 +143,37 @@ final class DIDEVICEOBJECTINSTANCE {
     return data;
   }
 
+  public InputComponent.ID getIdentifier() {
+    switch (this.objectType) {
+      case XAxis:
+        return InputComponent.Axis.X;
+      case YAxis:
+        return InputComponent.Axis.Y;
+      case ZAxis:
+        return InputComponent.Axis.Z;
+      case RxAxis:
+        return InputComponent.Axis.RX;
+      case RyAxis:
+        return InputComponent.Axis.RY;
+      case RzAxis:
+        return InputComponent.Axis.RZ;
+      case Slider:
+        return InputComponent.Axis.SLIDER;
+      case POV:
+        return InputComponent.Axis.DPAD;
+      case Button:
+        var button = InputComponent.Button.get(this.getInstance());
+        if (button == null) {
+          button = new InputComponent.Button(InputComponent.ID.getNextId(), this.getName());
+        }
+        return button;
+      case Key:
+        return new InputComponent.ID(ComponentType.Key, InputComponent.ID.getNextId(), this.getName());
+      default:
+        return new InputComponent.ID(ComponentType.Unknown, InputComponent.ID.getNextId(), this.getName());
+    }
+  }
+
   boolean isAxis() {
     return (dwType & IDirectInputDevice8.DIDFT_AXIS) != 0;
   }
@@ -152,6 +186,10 @@ final class DIDEVICEOBJECTINSTANCE {
     return (dwType & IDirectInputDevice8.DIDFT_BUTTON) != 0;
   }
 
+  String getName() {
+    return new String(this.tszName).trim();
+  }
+
   /**
    * Converts the raw input value to a unified relative value.
    *
@@ -159,7 +197,7 @@ final class DIDEVICEOBJECTINSTANCE {
    * @return The unified relative value.
    */
   float convertRawInputValue(float rawValue) {
-    if(this.deadzone != 0 && Math.abs(rawValue) < this.deadzone) {
+    if (this.deadzone != 0 && Math.abs(rawValue) < this.deadzone) {
       return 0;
     }
 
@@ -173,7 +211,7 @@ final class DIDEVICEOBJECTINSTANCE {
     }
 
     // this is used to minimize input noise and static small values that are usually related to a controller deadzone
-    final float minValue = 0.01f;
+    final float minValue = 0.05f;
     return (Math.abs(convertedValue) < minValue) ? 0 : convertedValue;
   }
 }

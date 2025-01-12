@@ -278,20 +278,62 @@ public enum LinuxComponentType {
   BTN_BASE5(0x12A),
   BTN_BASE6(0x12B),
   BTN_DEAD(0x12F),
-  BTN_A(0x130),
-  BTN_B(0x131),
+  BTN_SOUTH(0x130),
+  BTN_EAST(0x131),
   BTN_C(0x132),
-  BTN_X(0x133),
-  BTN_Y(0x134),
+  BTN_NORTH(0x133),
+  BTN_WEST(0x134),
   BTN_Z(0x135),
   BTN_TL(0x136),
   BTN_TR(0x137),
   BTN_TL2(0x138),
   BTN_TR2(0x139),
   BTN_SELECT(0x13A),
+  BTN_START(0x13B),
   BTN_MODE(0x13C),
   BTN_THUMBL(0x13D),
   BTN_THUMBR(0x13E),
+  BTN_TRIGGER_HAPPY(0x2c0),
+  BTN_TRIGGER_HAPPY1(0x2c0),
+  BTN_TRIGGER_HAPPY2(0x2c1),
+  BTN_TRIGGER_HAPPY3(0x2c2),
+  BTN_TRIGGER_HAPPY4(0x2c3),
+  BTN_TRIGGER_HAPPY5(0x2c4),
+  BTN_TRIGGER_HAPPY6(0x2c5),
+  BTN_TRIGGER_HAPPY7(0x2c6),
+  BTN_TRIGGER_HAPPY8(0x2c7),
+  BTN_TRIGGER_HAPPY9(0x2c8),
+  BTN_TRIGGER_HAPPY10(0x2c9),
+  BTN_TRIGGER_HAPPY11(0x2ca),
+  BTN_TRIGGER_HAPPY12(0x2cb),
+  BTN_TRIGGER_HAPPY13(0x2cc),
+  BTN_TRIGGER_HAPPY14(0x2cd),
+  BTN_TRIGGER_HAPPY15(0x2ce),
+  BTN_TRIGGER_HAPPY16(0x2cf),
+  BTN_TRIGGER_HAPPY17(0x2d0),
+  BTN_TRIGGER_HAPPY18(0x2d1),
+  BTN_TRIGGER_HAPPY19(0x2d2),
+  BTN_TRIGGER_HAPPY20(0x2d3),
+  BTN_TRIGGER_HAPPY21(0x2d4),
+  BTN_TRIGGER_HAPPY22(0x2d5),
+  BTN_TRIGGER_HAPPY23(0x2d6),
+  BTN_TRIGGER_HAPPY24(0x2d7),
+  BTN_TRIGGER_HAPPY25(0x2d8),
+  BTN_TRIGGER_HAPPY26(0x2d9),
+  BTN_TRIGGER_HAPPY27(0x2da),
+  BTN_TRIGGER_HAPPY28(0x2db),
+  BTN_TRIGGER_HAPPY29(0x2dc),
+  BTN_TRIGGER_HAPPY30(0x2dd),
+  BTN_TRIGGER_HAPPY31(0x2de),
+  BTN_TRIGGER_HAPPY32(0x2df),
+  BTN_TRIGGER_HAPPY33(0x2e0),
+  BTN_TRIGGER_HAPPY34(0x2e1),
+  BTN_TRIGGER_HAPPY35(0x2e2),
+  BTN_TRIGGER_HAPPY36(0x2e3),
+  BTN_TRIGGER_HAPPY37(0x2e4),
+  BTN_TRIGGER_HAPPY38(0x2e5),
+  BTN_TRIGGER_HAPPY39(0x2e6),
+  BTN_TRIGGER_HAPPY40(0x2e7),
   ABS_X(0x00, true),
   ABS_Y(0x01, true),
   ABS_Z(0x02, true),
@@ -359,30 +401,16 @@ public enum LinuxComponentType {
     }else if (type.name().startsWith("BTN")) {
       return ComponentType.Button;
     } else if (type.name().startsWith("ABS_HAT")) {
-      return ComponentType.POV;
+      return ComponentType.DPad;
     }
 
     return switch (type) {
-      case ABS_X -> ComponentType.XAxis;
-      case ABS_Y -> ComponentType.YAxis;
-      case ABS_Z -> ComponentType.ZAxis;
-      case ABS_RX -> ComponentType.RxAxis;
-      case ABS_RY -> ComponentType.RyAxis;
-      case ABS_RZ -> ComponentType.RzAxis;
+      case ABS_X, ABS_RX, ABS_Y, ABS_Z, ABS_RY, ABS_RZ -> ComponentType.Axis;
       default -> ComponentType.Unknown;
     };
   }
 
   public boolean isAxis() {
     return this.name().startsWith("ABS") || this.name().startsWith("REL");
-  }
-
-  public String getIdentifier(int i) {
-    if (this == UNKNOWN) {
-      return "UNKNOWN_" + i;
-    }
-
-    // remove BTN_, ABS_, REL_ prefixes
-    return this.name().substring(4);
   }
 }
