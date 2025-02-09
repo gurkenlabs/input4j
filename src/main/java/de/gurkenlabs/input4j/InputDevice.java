@@ -23,6 +23,7 @@ public final class InputDevice implements Closeable {
 
   private final Function<InputDevice, float[]> pollCallback;
   private final BiConsumer<InputDevice, float[]> rumbleCallback;
+  private float accuracyFactor;
 
   /**
    * Creates a new instance of the InputDevice class.
@@ -30,12 +31,14 @@ public final class InputDevice implements Closeable {
    * @param instanceName the name of the instance of the input device
    * @param productName  the name of the product of the input device
    * @param pollCallback the function to be called when polling for input data from the device
+   * @param rumbleCallback the function to be called when setting rumble intensity
    */
   public InputDevice(String instanceName, String productName, Function<InputDevice, float[]> pollCallback, BiConsumer<InputDevice, float[]> rumbleCallback) {
     this.instanceName = instanceName;
     this.productName = productName;
     this.pollCallback = pollCallback;
     this.rumbleCallback = rumbleCallback;
+    this.setAccuracy(InputDevices.configure().getAccuracy());
   }
 
   /**
@@ -65,6 +68,12 @@ public final class InputDevice implements Closeable {
     return Collections.unmodifiableList(components);
   }
 
+  /**
+   * Gets an input component by its name.
+   *
+   * @param name the name of the input component
+   * @return an Optional containing the input component if found, otherwise an empty Optional
+   */
   public Optional<InputComponent> getComponent(String name) {
     if (name == null) {
       return Optional.empty();
@@ -83,8 +92,19 @@ public final class InputDevice implements Closeable {
     this.components.addAll(components);
   }
 
+  /**
+   * Adds an input component to the input device.
+   * If a component with the same ID already exists, it is replaced.
+   *
+   * @param component the input component to add
+   */
   public void addComponent(InputComponent component) {
-    this.components.add(component);
+    Optional<InputComponent> existingComponent = components.stream()
+            .filter(c -> c.getId().id == component.getId().id)
+            .findFirst();
+
+    existingComponent.ifPresent(components::remove);
+    components.add(component);
   }
 
   /**
@@ -99,7 +119,7 @@ public final class InputDevice implements Closeable {
       var oldData = component.getData();
       var newData = polledData[i];
 
-      newData = Math.round(newData * 1000) / 1000.0f;
+      newData = Math.round(newData * this.accuracyFactor) / this.accuracyFactor;
       if (oldData != newData) {
         component.setData(newData);
 
@@ -133,5 +153,13 @@ public final class InputDevice implements Closeable {
   @Override
   public void close() {
     listeners.clear();
+  }
+
+  public void setAccuracy(int decimalPlaces) {
+    if (decimalPlaces < 0) {
+      throw new IllegalArgumentException("Decimal places must be a non-negative integer.");
+    }
+
+    this.accuracyFactor = (float) Math.pow(10, Math.min(decimalPlaces, 7));
   }
 }

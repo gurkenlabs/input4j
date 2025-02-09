@@ -23,7 +23,6 @@ import static java.lang.foreign.ValueLayout.*;
 
 /**
  * TODO: Implement hot swapping controllers
- * TODO: Implement configuration for certain options without exposing internals.
  */
 public final class DirectInputPlugin extends AbstractInputDevicePlugin {
   private static final Logger log = Logger.getLogger(DirectInputPlugin.class.getName());

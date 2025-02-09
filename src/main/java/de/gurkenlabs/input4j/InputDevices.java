@@ -8,7 +8,19 @@ import java.util.logging.Logger;
  * It supports different input libraries for various platforms and allows explicit selection of the library.
  */
 public final class InputDevices {
-  static Logger log = Logger.getLogger(InputDevices.class.getName());
+  private static final Logger log = Logger.getLogger(InputDevices.class.getName());
+  private static final DefaultInputConfiguration configuration = new DefaultInputConfiguration();
+
+  /**
+   * Configures the default input settings that are applied to all input devices upon initialization.
+   * <p>
+   * Make sure to call this method before initializing the input device plugin.
+   *
+   * @return The default input configuration.
+   */
+  static DefaultInputConfiguration configure() {
+    return configuration;
+  }
 
   /**
    * Initializes the input device provider with the default platform library.
@@ -134,6 +146,93 @@ public final class InputDevices {
       }
 
       return pluginClassName;
+    }
+  }
+
+  /**
+   * Global default configuration settings for all input devices.
+   * <p>
+   * The settings provided by this class are applied to input devices upon initialization.
+   * They cannot be changed in this class at runtime. To adjust settings for individual input devices and plugins, use the
+   * correlating methods provided by the input device plugin and input device classes.
+   */
+  static final class DefaultInputConfiguration {
+    // default number of decimal places to round input data to
+    private static final int DEFAULT_ACCURACY = 3;
+
+    // default polling rate in hertz (times per second)
+    private static final int DEFAULT_POLLING_RATE = 100;
+
+    private int pollingRate;
+    private boolean pollingEnabled;
+
+    private int accuracy;
+
+    private DefaultInputConfiguration() {
+      this.pollingRate = DEFAULT_POLLING_RATE;
+      this.pollingEnabled = false;
+
+      this.accuracy = DEFAULT_ACCURACY;
+    }
+
+    /**
+     * Gets the polling rate in hertz (times per second).
+     *
+     * @return The polling rate.
+     */
+    public int getPollingRate() {
+      return pollingRate;
+    }
+
+    /**
+     * Sets the polling rate in hertz (times per second).
+     *
+     * @param pollingRate The polling rate.
+     */
+    public void setPollingRate(int pollingRate) {
+      this.pollingRate = pollingRate;
+    }
+
+    /**
+     * Gets the number of decimal places to round input data to.
+     *
+     * @return The number of decimal places.
+     */
+    public int getAccuracy() {
+      return accuracy;
+    }
+
+    /**
+     * Sets the number of decimal places to round input data to.
+     *
+     * @param accuracy The number of decimal places. Must be a non-negative integer and should not exceed 7.
+     * @throws IllegalArgumentException if the accuracy is negative.
+     */
+    public void setAccuracy(int accuracy) {
+      this.accuracy = accuracy;
+    }
+
+    /**
+     * Checks if polling is enabled.
+     *
+     * @return {@code true} if polling is enabled, {@code false} otherwise.
+     */
+    public boolean isPollingEnabled() {
+      return pollingEnabled;
+    }
+
+    /**
+     * Sets whether polling is enabled.
+     *
+     * @param pollingEnabled {@code true} to enable automatic polling at the interval defined by the polling rate,
+     *                       {@code false} to disable automatic polling and require manual polling via {@link InputDevice#poll()}.
+     *                       <p>
+     *                       The polling rate determines how frequently the input device is polled for new data when automatic polling is enabled.
+     *                       It is measured in hertz. A higher polling rate means the device is checked more frequently,
+     *                       which can lead to more responsive input handling but may also increase CPU usage.
+     */
+    public void enablePolling(boolean pollingEnabled) {
+      this.pollingEnabled = pollingEnabled;
     }
   }
 }
