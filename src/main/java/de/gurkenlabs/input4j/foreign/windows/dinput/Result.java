@@ -41,6 +41,8 @@ class Result {
    */
   static final int DIERR_OTHERAPPHASPRIO = 0x80070005;
 
+  static final int E_NOTIMPLEMENTED = 0x80004001;
+
   /**
    * Converts a DirectInput HRESULT value to its string representation.
    *
@@ -57,6 +59,7 @@ class Result {
       case DIERR_INPUTLOST -> "DIERR_INPUTLOST: " + hexResult;
       case DIERR_NOTACQUIRED -> "DIERR_NOTACQUIRED: " + hexResult;
       case DIERR_OTHERAPPHASPRIO -> "DIERR_OTHERAPPHASPRIO: " + hexResult;
+      case E_NOTIMPLEMENTED -> "E_NOTIMPLEMENTED: " + hexResult;
 
       default -> hexResult;
     };

@@ -227,12 +227,12 @@ public final class InputComponent {
   }
 
   public static class Dpad extends ID {
-    public static final int MAX_DPAD = 4;
+    public static final int MAX_DPAD = Button.MAX_BUTTON + 4;
 
     public static final Dpad UP = new Dpad(Button.MAX_BUTTON + 1, "DPAD_UP");
-    public static final Dpad RIGHT = new Dpad(Button.MAX_BUTTON + 2, "DPAD_RIGHT");
-    public static final Dpad DOWN = new Dpad(Button.MAX_BUTTON + 3, "DPAD_DOWN");
-    public static final Dpad LEFT = new Dpad(Button.MAX_BUTTON + 4, "DPAD_LEFT");
+    public static final Dpad RIGHT = new Dpad(Dpad.UP.id + 1, "DPAD_RIGHT");
+    public static final Dpad DOWN = new Dpad(Dpad.UP.id + 2, "DPAD_DOWN");
+    public static final Dpad LEFT = new Dpad(Dpad.UP.id + 3, "DPAD_LEFT");
 
     public Dpad(int id, String name) {
       super(ComponentType.Button, id, name);
@@ -240,7 +240,7 @@ public final class InputComponent {
   }
 
   public static class Axis extends ID {
-    public static final Axis X = new Axis(Dpad.LEFT.id + 1, "LEFT_AXIS_X");
+    public static final Axis X = new Axis(Dpad.MAX_DPAD + 1, "LEFT_AXIS_X");
     public static final Axis Y = new Axis(Axis.X.id + 1, "LEFT_AXIS_Y");
     public static final Axis Z = new Axis(Axis.X.id + 2, "LEFT_AXIS_Z");
     public static final Axis RX = new Axis(Axis.X.id + 3, "RIGHT_AXIS_X");

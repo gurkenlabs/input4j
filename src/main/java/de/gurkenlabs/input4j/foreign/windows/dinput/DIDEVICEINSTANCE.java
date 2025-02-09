@@ -2,8 +2,9 @@ package de.gurkenlabs.input4j.foreign.windows.dinput;
 
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.ValueLayout;
 import java.lang.invoke.VarHandle;
+
+import static java.lang.foreign.ValueLayout.*;
 
 /**
  * Describes an instance of a DirectInput device.
@@ -79,15 +80,15 @@ final class DIDEVICEINSTANCE {
   public short wUsage;
 
   static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
-          ValueLayout.JAVA_INT.withName("dwSize"),
+          JAVA_INT.withName("dwSize"),
           GUID.$LAYOUT.withName("guidInstance"),
           GUID.$LAYOUT.withName("guidProduct"),
-          ValueLayout.JAVA_INT.withName("dwDevType"),
-          MemoryLayout.sequenceLayout(MAX_STRING_LENGTH, ValueLayout.JAVA_CHAR).withName("tszInstanceName"),
-          MemoryLayout.sequenceLayout(MAX_STRING_LENGTH, ValueLayout.JAVA_CHAR).withName("tszProductName"),
+          JAVA_INT.withName("dwDevType"),
+          MemoryLayout.sequenceLayout(MAX_STRING_LENGTH, JAVA_CHAR).withName("tszInstanceName"),
+          MemoryLayout.sequenceLayout(MAX_STRING_LENGTH, JAVA_CHAR).withName("tszProductName"),
           GUID.$LAYOUT.withName("guidFFDriver"),
-          ValueLayout.JAVA_SHORT.withName("wUsagePage"),
-          ValueLayout.JAVA_SHORT.withName("wUsage")
+          JAVA_SHORT.withName("wUsagePage"),
+          JAVA_SHORT.withName("wUsage")
   ).withName("DIDEVICEINSTANCE");
 
   static final VarHandle VH_dwSize = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("dwSize"));
@@ -101,8 +102,8 @@ final class DIDEVICEINSTANCE {
     var data = new DIDEVICEINSTANCE();
     data.dwSize = (int) VH_dwSize.get(segment, 0);
     // ensure the offset of the dwSize integer before reading the guid
-    data.guidInstance = GUID.read(segment.asSlice(ValueLayout.JAVA_INT.byteSize()));
-    data.guidProduct = GUID.read(segment.asSlice(ValueLayout.JAVA_INT.byteSize() + GUID.$LAYOUT.byteSize()));
+    data.guidInstance = GUID.read(segment.asSlice(JAVA_INT.byteSize()));
+    data.guidProduct = GUID.read(segment.asSlice(JAVA_INT.byteSize() + GUID.$LAYOUT.byteSize()));
     data.dwDevType = (int) VH_dwDevType.get(segment, 0);
 
     char[] tszInstanceName = new char[MAX_STRING_LENGTH];
@@ -118,7 +119,7 @@ final class DIDEVICEINSTANCE {
     }
 
     data.tszProductName = tszProductName;
-    data.guidFFDriver = GUID.read(segment.asSlice(ValueLayout.JAVA_INT.byteSize() + GUID.$LAYOUT.byteSize() + GUID.$LAYOUT.byteSize() + ValueLayout.JAVA_INT.byteSize() + MAX_STRING_LENGTH + MAX_STRING_LENGTH));
+    data.guidFFDriver = GUID.read(segment.asSlice(JAVA_INT.byteSize() + GUID.$LAYOUT.byteSize() + GUID.$LAYOUT.byteSize() + JAVA_INT.byteSize() + MAX_STRING_LENGTH + MAX_STRING_LENGTH));
     data.wUsagePage = (short) VH_wUsagePage.get(segment, 0);
     data.wUsage = (short) VH_wUsage.get(segment, 0);
     return data;

@@ -162,11 +162,6 @@ final class IDirectInputDevice8 {
     return (int) enumObjects.invokeExact(this.vtablePointerSegment, lpCallback, MemorySegment.NULL, dwFlags);
   }
 
-  public int EnumEffects(MemorySegment lpCallback, int dwFlags) throws Throwable {
-    return (int) enumObjects.invokeExact(this.vtablePointerSegment, lpCallback, MemorySegment.NULL, dwFlags);
-  }
-
-
   /**
    * Acquires the device, which allows the application to receive input from the device.
    * This method must be called before polling or receiving input data from the device.

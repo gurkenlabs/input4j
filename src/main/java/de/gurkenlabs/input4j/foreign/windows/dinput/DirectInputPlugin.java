@@ -153,13 +153,6 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
           continue;
         }
 
-        // 4. enumerate the effects
-        var enumEffectsResult = device.EnumEffects(enumEffectsPointer(), IDirectInputDevice8.DIEFT_ALL);
-        if (enumEffectsResult != Result.DI_OK) {
-          log.log(Level.WARNING, "Could not enumerate the device instance effects for " + device.inputDevice.getInstanceName() + ": " + Result.toString(enumEffectsResult));
-          continue;
-        }
-
         // 4. prepare the device for retrieving data
         var deviceObjects = currentComponents.keySet().stream().toList();
         var dataFormat = defineDataFormat(deviceObjects, this.memoryArena);
@@ -398,22 +391,6 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
     return true;
   }
 
-  private boolean enumEffectCallback(long lpdeiSegment, long pvRef) {
-    var effectInfo = DIEFFECTINFO.read(MemorySegment.ofAddress(lpdeiSegment).reinterpret(DIEFFECTINFO.$LAYOUT.byteSize(), memoryArena, null));
-    var effectType = DIEFFECTTYPE.fromDwEffType(effectInfo.dwEffType);
-    if (effectType == DIEFFECTTYPE.DIEFT_NONE) {
-      // ignore empty effects
-      return true;
-    }
-
-    var name = new String(effectInfo.tszName).trim();
-
-    log.log(Level.FINE, "Found effect: " + name + " (Type: " + effectType + ")");
-
-    // TODO: Implement support to create effects for the device. This requires DIEFFECT and other structs.
-    return true;
-  }
-
   /**
    * Passed to native code for callback on {@link #enumDeviceCallback(long, long)}
    **/
@@ -433,15 +410,6 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
     // Create a method handle to the Java function as a callback
     MethodHandle enumObjectMethodHandle = MethodHandles.lookup()
             .bind(this, "enumObjectCallback", MethodType.methodType(boolean.class, long.class, long.class));
-
-    return Linker.nativeLinker().upcallStub(
-            enumObjectMethodHandle, FunctionDescriptor.of(JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG), this.memoryArena);
-  }
-
-  private MemorySegment enumEffectsPointer() throws Throwable {
-    // Create a method handle to the Java function as a callback
-    MethodHandle enumObjectMethodHandle = MethodHandles.lookup()
-            .bind(this, "enumEffectCallback", MethodType.methodType(boolean.class, long.class, long.class));
 
     return Linker.nativeLinker().upcallStub(
             enumObjectMethodHandle, FunctionDescriptor.of(JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG), this.memoryArena);
