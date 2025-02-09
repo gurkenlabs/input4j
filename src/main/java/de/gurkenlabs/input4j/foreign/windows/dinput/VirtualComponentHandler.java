@@ -112,9 +112,9 @@ final class VirtualComponentHandler {
   /**
    * Finds the index of the specified component in the input device.
    *
-   * @param device   the input device
-   * @param values   the array of values
-   * @param id       the component ID
+   * @param device the input device
+   * @param values the array of values
+   * @param id     the component ID
    * @return the index of the component, or -1 if not found
    */
   private static int findComponentIndex(InputDevice device, float[] values, InputComponent.ID id) {
@@ -130,7 +130,7 @@ final class VirtualComponentHandler {
   /**
    * The `DPAD_VALUE` class defines standard values for D-Pad DirectInput values.
    */
-  class DPAD_VALUE {
+  private static class DPAD_VALUE {
     public static final float UP_LEFT = 0.125f;
     public static final float UP = 0.25f;
     public static final float UP_RIGHT = 0.375f;
