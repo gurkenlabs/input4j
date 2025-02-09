@@ -91,7 +91,7 @@ final class IDirectInputDevice8 {
   List<DIDEVICEOBJECTINSTANCE> deviceObjects;
 
   final InputDevice inputDevice;
-
+  int nativeComponentCount;
   private MemorySegment vtablePointerSegment;
 
   private MethodHandle enumObjects;

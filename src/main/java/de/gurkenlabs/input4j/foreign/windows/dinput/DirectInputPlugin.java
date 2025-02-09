@@ -153,15 +153,6 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
           continue;
         }
 
-        // TODO: In DirectInput, the D-Pad is reported as a single Hat Switch (angles or -1 for centered).
-        //  This requires splitting the Hat Switch into components (DPAD_UP, DPAD_DOWN, etc.) in the unified model.
-        //  We need to add 4 more button components to account for this
-        //  It seems like we get the buttons 11, 12, 13, 14 and 15 that don't provide values but are reserved for individual DPAD values
-
-        // TODO: In DirectInput, both triggers are mapped to the same Z-Axis, with LEFT_TRIGGER using the positive range (0 to 1)
-        //  and RIGHT_TRIGGER using the negative range (-1 to 0). In Linux and XInput, the triggers are separate.
-        //  We need to separate these to component into two virtual components that reflect the triggers individually
-
         // 4. enumerate the effects
         var enumEffectsResult = device.EnumEffects(enumEffectsPointer(), IDirectInputDevice8.DIEFT_ALL);
         if (enumEffectsResult != Result.DI_OK) {
@@ -205,7 +196,8 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
           continue;
         }
 
-        device.inputDevice.setComponents(currentComponents.values());
+        device.nativeComponentCount = currentComponents.size();
+        VirtualComponentHandler.prepareVirtualComponents(device.inputDevice, currentComponents.values());
         device.deviceObjects = deviceObjects;
       } finally {
         this.currentDevice = null;
@@ -215,13 +207,14 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
   }
 
   private float[] pollDirectInputDevice(InputDevice inputDevice) {
-    var polledValues = new float[inputDevice.getComponents().size()];
     // find native DirectInputDevice and poll it
     var directInputDevice = this.devices.stream().filter(x -> x.inputDevice.equals(inputDevice)).findFirst().orElse(null);
     if (directInputDevice == null) {
       log.log(Level.WARNING, "DirectInput device not found for input device " + inputDevice.getInstanceName());
-      return polledValues;
+      return new float[0];
     }
+    var componentCount = directInputDevice.nativeComponentCount;
+    var polledValues = new float[componentCount];
 
     try {
       final int DI_NOEFFECT = 1;
@@ -242,7 +235,6 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
       }
 
       // for details on the difference of GetDeviceState and GetDeviceData read http://doc.51windows.net/Directx9_SDK/input/using/devicedata/bufferedimmediatedata.htm
-      var componentCount = inputDevice.getComponents().size();
       var deviceStateResultSegment = this.memoryArena.allocate(MemoryLayout.sequenceLayout(componentCount, JAVA_INT));
 
       var getDeviceStateResult = directInputDevice.GetDeviceState((int) (componentCount * JAVA_INT.byteSize()), deviceStateResultSegment);
@@ -258,7 +250,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
       log.log(Level.SEVERE, e.getMessage(), e);
     }
 
-    return polledValues;
+    return VirtualComponentHandler.handlePolledValues(directInputDevice.inputDevice, polledValues);
   }
 
   private static MemorySegment defineDataFormat(List<DIDEVICEOBJECTINSTANCE> deviceObjects, Arena memoryArena) {

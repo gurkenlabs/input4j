@@ -18,7 +18,9 @@ class ExamplePollAllInputDevicesManually {
   public static void main(String[] args) throws IOException {
 
     // Use the default plugin, if you want to use an explicit plugin, use getDirectXPlugin() or specify another InputLibrary explicitly
-    try (var inputDevices = getDefaultPlugin()) {
+
+    var inputDevices = getDefaultPlugin();
+    try (inputDevices) {
       while (!inputDevices.getAll().isEmpty()) {
         for (var inputDevice : inputDevices.getAll()) {
           inputDevice.poll();
