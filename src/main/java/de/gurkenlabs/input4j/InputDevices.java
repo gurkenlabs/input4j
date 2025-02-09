@@ -1,6 +1,7 @@
 package de.gurkenlabs.input4j;
 
 import java.awt.*;
+import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
@@ -18,7 +19,7 @@ public final class InputDevices {
    *
    * @return The default input configuration.
    */
-  static DefaultInputConfiguration configure() {
+  public static DefaultInputConfiguration configure() {
     return configuration;
   }
 
@@ -26,9 +27,9 @@ public final class InputDevices {
    * Initializes the input device provider with the default platform library.
    *
    * @return The initialized input device provider.
-   * @throws Exception if the input device provider cannot be initialized.
+   * @throws IOException if the input device provider cannot be initialized.
    */
-  static InputDevicePlugin init() throws Exception {
+  public static InputDevicePlugin init() throws IOException {
     return init(null, InputLibrary.PLATFORM_DEFAULT);
   }
 
@@ -37,9 +38,9 @@ public final class InputDevices {
    *
    * @param owner The owner to be passed to individual plugins, or null if running in background.
    * @return The initialized input device provider.
-   * @throws Exception if the input device provider cannot be initialized.
+   * @throws IOException if the input device provider cannot be initialized.
    */
-  static InputDevicePlugin init(Frame owner) throws Exception {
+  public static InputDevicePlugin init(Frame owner) throws IOException {
     return init(owner, InputLibrary.PLATFORM_DEFAULT);
   }
 
@@ -48,9 +49,9 @@ public final class InputDevices {
    *
    * @param library The library to be used.
    * @return The initialized input device provider.
-   * @throws Exception if the input device provider cannot be initialized.
+   * @throws IOException if the input device provider cannot be initialized.
    */
-  static InputDevicePlugin init(InputLibrary library) throws Exception {
+  public static InputDevicePlugin init(InputLibrary library) throws IOException {
     return init(null, library);
   }
 
@@ -59,14 +60,18 @@ public final class InputDevices {
    *
    * @param owner The owner to be passed to individual plugins, or null if running in background.
    * @return The initialized input device provider.
-   * @throws Exception if the input device provider cannot be initialized.
+   * @throws IOException if the input device provider cannot be initialized.
    */
-  static InputDevicePlugin init(Frame owner, InputLibrary library) throws Exception {
-    var pluginClass = Class.forName(library.getPlugin());
-    var constructor = pluginClass.getDeclaredConstructor();
-    var provider = (InputDevicePlugin) constructor.newInstance();
-    provider.internalInitDevices(owner);
-    return provider;
+  public static InputDevicePlugin init(Frame owner, InputLibrary library) throws IOException {
+    try {
+      var pluginClass = Class.forName(library.getPlugin());
+      var constructor = pluginClass.getDeclaredConstructor();
+      var provider = (InputDevicePlugin) constructor.newInstance();
+      provider.internalInitDevices(owner);
+      return provider;
+    } catch (Exception e) {
+      throw new IOException("Could not initialize input device provider: " + e.getMessage(), e);
+    }
   }
 
   /**
@@ -156,7 +161,7 @@ public final class InputDevices {
    * They cannot be changed in this class at runtime. To adjust settings for individual input devices and plugins, use the
    * correlating methods provided by the input device plugin and input device classes.
    */
-  static final class DefaultInputConfiguration {
+  public static final class DefaultInputConfiguration {
     // default number of decimal places to round input data to
     private static final int DEFAULT_ACCURACY = 3;
 

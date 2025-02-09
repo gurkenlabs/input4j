@@ -123,8 +123,9 @@ public final class InputDevice implements Closeable {
       if (oldData != newData) {
         component.setData(newData);
 
+        var inputEvent = new InputEvent(component, oldData, newData);
         for (var listener : listeners) {
-          listener.onValueChanged(component, oldData, newData);
+          listener.onValueChanged(inputEvent);
         }
       }
     }
