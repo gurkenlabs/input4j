@@ -36,7 +36,7 @@ test {
 }
 
 task remoteDebug(type: JavaExec) {
-  mainClass = 'de.gurkenlabs.input4j.Program'  // replace with your main class
+  mainClass = 'de.gurkenlabs.input4j.examples.ExamplePollAllInputDevicesManually'  // replace with your main class
   classpath = sourceSets.main.runtimeClasspath
   args = ['run']
 

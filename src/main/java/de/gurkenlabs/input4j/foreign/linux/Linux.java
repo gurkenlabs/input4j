@@ -15,6 +15,7 @@ class Linux {
   final static int ERROR = -1;
 
   final static int O_RDONLY = 0;
+  final static int O_NONBLOCK = 0x1000;
 
   // TODO: if we want to rumble, we need to open the device in read/write mode
   final static int O_RDWR = 2;
@@ -55,14 +56,14 @@ class Linux {
     strerror = downcallHandle("strerror", FunctionDescriptor.of(ADDRESS, JAVA_INT));
 
     open = downcallHandle("open", FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT), ERRNO);
-    close = downcallHandle("close", FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT), ERRNO);
+    close = downcallHandle("close", FunctionDescriptor.of(JAVA_INT, JAVA_INT), ERRNO);
     ioctl = downcallHandle("ioctl", FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), ERRNO);
     read = downcallHandle("read", FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_LONG), ERRNO);
   }
 
   static int open(Arena memoryArena, String fileName) {
     var filenameMemorySegment = memoryArena.allocateFrom(fileName);
-    return invoke(open, memoryArena, filenameMemorySegment, O_RDONLY, null);
+    return invoke(open, memoryArena, filenameMemorySegment, O_RDONLY | O_NONBLOCK, null);
   }
 
   static void close(Arena memoryArena, int fd) {
