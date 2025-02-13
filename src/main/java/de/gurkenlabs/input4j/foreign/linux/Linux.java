@@ -4,6 +4,8 @@ import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,6 +25,11 @@ class Linux {
   final static int _IOC_READ = 2;
   final static int NAME_BUFFER_SIZE = 1024;
   final static String ERRNO = "errno";
+  final static String HANDLE_STRERROR = "strerror";
+  final static String HANDLE_OPEN = "open";
+  final static String HANDLE_CLOSE = "close";
+  final static String HANDLE_IOCTL = "ioctl";
+  final static String HANDLE_READ = "read";
 
   private final static int EVIOCGVERSION = _IOR('E', 0x01, JAVA_INT.byteSize());
   private final static int EVIOCGID = _IOR('E', 0x02, input_id.$LAYOUT.byteSize());
@@ -42,37 +49,34 @@ class Linux {
   }
 
   private static final VarHandle errnoHandle;
-  private static final MethodHandle strerror;
 
-  private static final MethodHandle open;
-  private static final MethodHandle close;
-  private static final MethodHandle ioctl;
-  private static final MethodHandle read;
+  private static final MethodHandle strerror;
+  private static final Map<String, MethodHandle> handles = new HashMap<>();
 
   static {
     StructLayout capturedStateLayout = Linker.Option.captureStateLayout();
 
     errnoHandle = capturedStateLayout.varHandle(MemoryLayout.PathElement.groupElement(ERRNO));
-    strerror = downcallHandle("strerror", FunctionDescriptor.of(ADDRESS, JAVA_INT));
+    strerror = downcallHandle(HANDLE_STRERROR, FunctionDescriptor.of(ADDRESS, JAVA_INT));
 
-    open = downcallHandle("open", FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT), ERRNO);
-    close = downcallHandle("close", FunctionDescriptor.of(JAVA_INT, JAVA_INT), ERRNO);
-    ioctl = downcallHandle("ioctl", FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), ERRNO);
-    read = downcallHandle("read", FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_LONG), ERRNO);
+    handles.put(HANDLE_OPEN, downcallHandle(HANDLE_OPEN, FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT), ERRNO));
+    handles.put(HANDLE_CLOSE, downcallHandle(HANDLE_CLOSE, FunctionDescriptor.of(JAVA_INT, JAVA_INT), ERRNO));
+    handles.put(HANDLE_IOCTL, downcallHandle(HANDLE_IOCTL, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), ERRNO));
+    handles.put(HANDLE_READ, downcallHandle(HANDLE_READ, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_LONG), ERRNO));
   }
 
   static int open(Arena memoryArena, String fileName) {
     var filenameMemorySegment = memoryArena.allocateFrom(fileName);
-    return invoke(open, memoryArena, filenameMemorySegment, O_RDONLY | O_NONBLOCK, null);
+    return invoke(HANDLE_OPEN, memoryArena, filenameMemorySegment, O_RDONLY | O_NONBLOCK, null);
   }
 
   static void close(Arena memoryArena, int fd) {
-    invoke(close, memoryArena, fd, null, null);
+    invoke(HANDLE_CLOSE, memoryArena, fd, null, null);
   }
 
   static String getEventDeviceName(Arena memoryArena, int fd) {
     var nameMemorySegment = memoryArena.allocateFrom(JAVA_CHAR, new char[NAME_BUFFER_SIZE]);
-    var result = invoke(ioctl, memoryArena, fd, EVIOCGNAME, nameMemorySegment);
+    var result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGNAME, nameMemorySegment);
     if (result == ERROR) {
       log.log(Level.SEVERE, "Failed to get device name for device (" + fd + ")");
       return null;
@@ -83,7 +87,7 @@ class Linux {
 
   static int getEventDeviceVersion(Arena memoryArena, int fd) {
     var versionMemorySegment = memoryArena.allocate(JAVA_INT);
-    var result = invoke(ioctl, memoryArena, fd, EVIOCGVERSION, versionMemorySegment);
+    var result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGVERSION, versionMemorySegment);
     if (result == ERROR) {
       log.log(Level.SEVERE, "Failed to get device version for device (" + fd + ")");
       return 0;
@@ -94,7 +98,7 @@ class Linux {
 
   static input_id getEventDeviceId(Arena memoryArena, int fd) {
     var inputIdMemorySegment = memoryArena.allocate(input_id.$LAYOUT);
-    var result = invoke(ioctl, memoryArena, fd, EVIOCGID, inputIdMemorySegment);
+    var result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGID, inputIdMemorySegment);
     if (result == ERROR) {
       log.log(Level.SEVERE, "Failed to get device id for device (" + fd + ")");
       return null;
@@ -105,7 +109,7 @@ class Linux {
 
   static input_absinfo getAbsInfo(Arena memoryArena, int fd, int absAxis) {
     MemorySegment absInfoSegment = memoryArena.allocate(input_absinfo.$LAYOUT);
-    int result = invoke(ioctl, memoryArena, fd, EVIOCGABS(absAxis), absInfoSegment);
+    int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGABS(absAxis), absInfoSegment);
     if (result == ERROR) {
       log.log(Level.SEVERE, "Failed to get abs info for axis (" + absAxis + ")");
       return null;
@@ -123,7 +127,7 @@ class Linux {
 
   static int getNumEffects(Arena memoryArena, int fd) {
     MemorySegment numEffectsSegment = memoryArena.allocate(JAVA_INT);
-    int result = invoke(ioctl, memoryArena, fd, EVIOCGEFFECTS, numEffectsSegment);
+    int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGEFFECTS, numEffectsSegment);
     if (result == ERROR) {
       log.log(Level.SEVERE, "Failed to get number of device effects (" + fd + ")");
       return ERROR;
@@ -135,7 +139,7 @@ class Linux {
     var len = LinuxEventDevice.KEY_MAX / 8 + 1;
 
     MemorySegment bitsMemorySegment = memoryArena.allocate(MemoryLayout.sequenceLayout(len, JAVA_BYTE));
-    int result = invoke(ioctl, memoryArena, fd, EVIOCGKEY(len), bitsMemorySegment);
+    int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGKEY(len), bitsMemorySegment);
     if (result == ERROR) {
       log.log(Level.SEVERE, "Failed to get key states for device (" + fd + ")");
       return null;
@@ -161,7 +165,7 @@ class Linux {
     var len = LinuxEventDevice.getMaxBits(evtype) / 8 + 1;
 
     MemorySegment bitsMemorySegment = memoryArena.allocate(MemoryLayout.sequenceLayout(len, JAVA_BYTE));
-    int result = invoke(ioctl, memoryArena, fd, EVIOCGBIT(evtype, len), bitsMemorySegment);
+    int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGBIT(evtype, len), bitsMemorySegment);
     if (result == ERROR) {
       log.log(Level.SEVERE, "Failed to get key states for device (" + fd + ") and evtype " + evtype);
       return null;
@@ -177,8 +181,8 @@ class Linux {
 
   public static input_event readEvent(Arena memoryArena, int fd) {
     MemorySegment inputEventMemorySegment = memoryArena.allocate(input_event.$LAYOUT);
-    int result = invoke(read, memoryArena, fd, inputEventMemorySegment, input_event.$LAYOUT.byteSize());
-    if(result == ERROR) {
+    int result = invoke("read", memoryArena, fd, inputEventMemorySegment, input_event.$LAYOUT.byteSize());
+    if (result == ERROR) {
       log.log(Level.FINE, "No more events to read from device (" + fd + ")");
       return null;
     }
@@ -186,8 +190,14 @@ class Linux {
     return input_event.read(inputEventMemorySegment);
   }
 
-  private static int invoke(MethodHandle methodHandle, Arena memoryArena, Object arg1, Object arg2, Object arg3) {
+  private static int invoke(String handleName, Arena memoryArena, Object arg1, Object arg2, Object arg3) {
     var capturedState = memoryArena.allocate(Linker.Option.captureStateLayout());
+    var methodHandle = handles.get(handleName);
+    if (methodHandle == null) {
+      log.log(Level.SEVERE, "Could not find method handle for '" + handleName + "'");
+      return ERROR;
+    }
+
     try {
       var result = ERROR;
       if (arg1 == null) {
@@ -202,7 +212,7 @@ class Linux {
 
       if (result == ERROR) {
         var errorNo = getErrorNo(capturedState);
-        log.log(Level.SEVERE, "Could not invoke '" + methodHandle + "' - " + getErrorString(errorNo) + "(" + errorNo + ")");
+        log.log(Level.SEVERE, "Could not invoke '" + handleName + "' - " + getErrorString(errorNo) + "(" + errorNo + ")");
       }
 
       return result;
