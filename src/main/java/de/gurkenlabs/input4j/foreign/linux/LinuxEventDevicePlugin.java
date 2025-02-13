@@ -60,15 +60,15 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       }
 
       // Check for available components per event type (EV_KEY, EV_ABS, EV_REL, etc.)
-      addComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_KEY, LinuxEventDevice.KEY_MAX, "EV_KEY");
-      addComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_ABS, LinuxEventDevice.ABS_MAX, "EV_ABS");
-      addComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_REL, LinuxEventDevice.REL_MAX, "EV_REL");
+      addEventComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_KEY, LinuxEventDevice.KEY_MAX, "EV_KEY");
+      addEventComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_ABS, LinuxEventDevice.ABS_MAX, "EV_ABS");
+      addEventComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_REL, LinuxEventDevice.REL_MAX, "EV_REL");
 
       this.devices.add(device);
     }
   }
 
-  private void addComponents(Arena memoryArena, LinuxEventDevice device, InputDevice inputDevice, byte[] eventTypes, int eventType, int max, String componentType) {
+  private void addEventComponents(Arena memoryArena, LinuxEventDevice device, InputDevice inputDevice, byte[] eventTypes, int eventType, int max, String componentType) {
     if (LinuxEventDevice.isBitSet(eventTypes, eventType)) {
       byte[] components = Linux.getBits(memoryArena, eventType, device.fd);
       if (components == null) {
@@ -117,13 +117,13 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       nextInputEvent = Linux.readEvent(this.memoryArena, linuxEventDevice.fd);
       if (nextInputEvent != null) {
         // TODO: normalize the value to a float, find the component index for the event code (this might not be in order)
-        log.log(Level.INFO, "Event type: " + nextInputEvent.type + " Code: " + nextInputEvent.code + " Value: " + nextInputEvent.value);
+        //log.log(Level.INFO, "Event type: " + nextInputEvent.type + " Code: " + nextInputEvent.code + " Value: " + nextInputEvent.value);
         polledValues[i] = nextInputEvent.value;
         i++;
       }
     } while (nextInputEvent != null && i < polledValues.length);
 
-    return new float[0];
+    return polledValues;
   }
 
   /**
