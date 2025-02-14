@@ -28,6 +28,14 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   @Override
   public void internalInitDevices(Frame owner) {
     enumEventDevices();
+
+    // The joystick API (/dev/input/jsX) is considered legacy and is no longer actively developed.
+    // The evdev API (/dev/input/eventX) has largely replaced it because it is more flexible and supports additional features like force feedback.
+    // Reasons to use evdev over the joystick API:
+    // - evdev supports reconfiguration, multi-device support, and extensibility.
+    // - evdev is preferred by newer software and libraries like SDL, libevdev, and udev.
+    // - evdev supports force feedback, which is not available in the joystick API.
+    // While the joystick API will likely remain for legacy software, modern software should migrate to evdev for better compatibility and future-proofing.
   }
 
   private void enumEventDevices() {
@@ -50,8 +58,6 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       var inputDevice = new InputDevice(device.name, device.name, this::pollLinuxEventDevice, this::rumbleLinuxEventDevice);
       device.inputDevice = inputDevice;
 
-      log.log(Level.INFO, "Found input device: " + device.filename + " - " + device.name);
-
       // Check for available event types
       byte[] eventTypes = Linux.getBits(this.memoryArena, LinuxEventDevice.EV_SYN, device.fd);
       if (eventTypes == null) {
@@ -64,6 +70,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       addEventComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_ABS, LinuxEventDevice.ABS_MAX, "EV_ABS");
       addEventComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_REL, LinuxEventDevice.REL_MAX, "EV_REL");
 
+      log.log(Level.INFO, "Found input device: " + device.filename + " - " + device.name + " with " + device.componentList.size() + " components");
       this.devices.add(device);
     }
   }
