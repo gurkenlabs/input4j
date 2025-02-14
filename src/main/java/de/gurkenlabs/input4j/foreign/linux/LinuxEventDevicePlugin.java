@@ -70,6 +70,11 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       addEventComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_ABS, LinuxEventDevice.ABS_MAX, "EV_ABS");
       addEventComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_REL, LinuxEventDevice.REL_MAX, "EV_REL");
 
+      // ignore devices without components
+      if(device.componentList.isEmpty()) {
+        continue;
+      }
+
       log.log(Level.INFO, "Found input device: " + device.filename + " - " + device.name + " with " + device.componentList.size() + " components");
       this.devices.add(device);
     }
