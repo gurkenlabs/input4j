@@ -23,6 +23,7 @@ import static java.lang.foreign.ValueLayout.*;
 
 /**
  * TODO: Implement hot swapping controllers
+ * TODO: handle disconnect or permanent unavailability => retry X times => handle in hotplug thread if a device is unavailable throw it away
  */
 public final class DirectInputPlugin extends AbstractInputDevicePlugin {
   private static final Logger log = Logger.getLogger(DirectInputPlugin.class.getName());
@@ -219,9 +220,15 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
       // 2. The device is operating in 'DISCL_FOREGROUND' mode and the application loses focus, the device state is no longer accessible.
       // 3. Another application or process may have reset the device, causing DirectInput to lose the device context.
       if (pollResult == Result.DIERR_INPUTLOST || pollResult == Result.DIERR_NOTACQUIRED) {
-        // TODO: handle disconnect or permanent unavailability => retry X times => handle in hotplug thread if a device is unavailable throw it away
-        directInputDevice.Acquire();
+        var acquireResult = directInputDevice.Acquire();
+        if (acquireResult != Result.DI_OK) {
+          log.log(Level.WARNING, "Attempt to re-acquire failed for device " + directInputDevice.inputDevice.getInstanceName() + ": " + Result.toString(acquireResult));
+          return polledValues;
+        } else {
+          pollResult = directInputDevice.Poll();
+        }
       }
+
       if (pollResult != Result.DI_OK && pollResult != DI_NOEFFECT) {
         log.log(Level.WARNING, "Could not poll device " + inputDevice.getInstanceName() + ": " + Result.toString(pollResult));
         return polledValues;
