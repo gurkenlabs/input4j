@@ -174,7 +174,7 @@ public final class InputDevice implements Closeable {
    *
    * @return true if the input device has input data, false otherwise
    */
-  public boolean isHasInputData() {
+  public boolean hasInputData() {
     return this.hasInputData;
   }
 }
