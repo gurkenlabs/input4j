@@ -55,6 +55,15 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
         continue;
       }
 
+      // ignore some devices since they are not useful for input
+      if(device.name != null
+              && (device.name.toUpperCase().contains("VIDEO BUS")
+              || device.name.toUpperCase().contains("VIRTUAL")
+              || device.name.toUpperCase().contains("POWER BUTTON"))) {
+        log.log(Level.INFO, "Ignoring virtual device: " + device.name);
+        continue;
+      }
+
       var inputDevice = new InputDevice(device.name, device.name, this::pollLinuxEventDevice, this::rumbleLinuxEventDevice);
       device.inputDevice = inputDevice;
 
