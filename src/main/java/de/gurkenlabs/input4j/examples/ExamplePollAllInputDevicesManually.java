@@ -18,12 +18,15 @@ class ExamplePollAllInputDevicesManually {
   public static void main(String[] args) throws IOException {
 
     // Use the default plugin, if you want to use an explicit plugin, use getDirectXPlugin() or specify another InputLibrary explicitly
-
     var inputDevices = getDefaultPlugin();
     try (inputDevices) {
       while (!inputDevices.getAll().isEmpty()) {
         for (var inputDevice : inputDevices.getAll()) {
           inputDevice.poll();
+          if (!inputDevice.hasInputData()) {
+            continue;
+          }
+
           System.out.println(inputDevice.getInstanceName() + ":" + inputDevice.getComponents().stream().filter(x -> x.getData() != 0).toList());
 
           // Rumble the device if the X button is pressed
