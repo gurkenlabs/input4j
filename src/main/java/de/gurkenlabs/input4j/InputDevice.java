@@ -24,13 +24,14 @@ public final class InputDevice implements Closeable {
   private final Function<InputDevice, float[]> pollCallback;
   private final BiConsumer<InputDevice, float[]> rumbleCallback;
   private float accuracyFactor;
+  private boolean hasInputData;
 
   /**
    * Creates a new instance of the InputDevice class.
    *
-   * @param instanceName the name of the instance of the input device
-   * @param productName  the name of the product of the input device
-   * @param pollCallback the function to be called when polling for input data from the device
+   * @param instanceName   the name of the instance of the input device
+   * @param productName    the name of the product of the input device
+   * @param pollCallback   the function to be called when polling for input data from the device
    * @param rumbleCallback the function to be called when setting rumble intensity
    */
   public InputDevice(String instanceName, String productName, Function<InputDevice, float[]> pollCallback, BiConsumer<InputDevice, float[]> rumbleCallback) {
@@ -112,6 +113,7 @@ public final class InputDevice implements Closeable {
    */
   public void poll() {
     var polledData = this.pollCallback.apply(this);
+    var hasInputData = false;
 
     var componentList = this.components;
     for (var i = 0; i < polledData.length && i < componentList.size(); i++) {
@@ -122,6 +124,7 @@ public final class InputDevice implements Closeable {
       newData = Math.round(newData * this.accuracyFactor) / this.accuracyFactor;
       if (oldData != newData) {
         component.setData(newData);
+        hasInputData |= newData != 0;
 
         var inputEvent = new InputEvent(component, oldData, newData);
         for (var listener : listeners) {
@@ -129,6 +132,8 @@ public final class InputDevice implements Closeable {
         }
       }
     }
+
+    this.hasInputData = hasInputData;
   }
 
   /**
@@ -162,5 +167,14 @@ public final class InputDevice implements Closeable {
     }
 
     this.accuracyFactor = (float) Math.pow(10, Math.min(decimalPlaces, 7));
+  }
+
+  /**
+   * Checks if the input device has any input data.
+   *
+   * @return true if the input device has input data, false otherwise
+   */
+  public boolean isHasInputData() {
+    return this.hasInputData;
   }
 }
