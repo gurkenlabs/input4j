@@ -101,7 +101,7 @@ public final class InputDevice implements Closeable {
    */
   public void addComponent(InputComponent component) {
     Optional<InputComponent> existingComponent = components.stream()
-            .filter(c -> c.getId().id == component.getId().id)
+            .filter(c -> c.equals(component))
             .findFirst();
 
     existingComponent.ifPresent(components::remove);

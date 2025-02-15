@@ -190,13 +190,20 @@ public final class InputComponent {
       }
     }
 
+    @Override
+    public boolean equals(Object obj) {
+      if (obj instanceof InputComponent component) {
+        return component.getId().type == this.type && component.getId().id == this.id;
+      }
+      return false;
+    }
     /**
      * Gets the next unique ID value.
      *
      * @return the next unique ID value
      */
     public static int getNextId() {
-      return ids.size() + 1;
+      return ids.stream().mapToInt(id -> id.id).max().orElse(0) + 1;
     }
 
     public static ID get(int id) {
