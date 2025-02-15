@@ -15,9 +15,10 @@ import static java.lang.foreign.ValueLayout.*;
 class Linux {
   private static final Logger log = Logger.getLogger(Linux.class.getName());
   final static int ERROR = -1;
+  final static int EAGAIN = 11;
 
   final static int O_RDONLY = 0;
-  final static int O_NONBLOCK = 0x1000;
+  final static int O_NONBLOCK = 0x800;
   final static int EPOLL_CTL_ADD = 1;
   final static int EPOLL_CTL_DEL = 2;
   final static int EPOLL_CTL_MOD = 3;
@@ -313,6 +314,12 @@ class Linux {
 
       if (result == ERROR) {
         var errorNo = getErrorNo(capturedState);
+
+        // we are using non-blocking mode, so we can ignore EAGAIN because it is not an error, just a signal that we're done reading
+        if(errorNo == EAGAIN) {
+          return result;
+        }
+
         log.log(Level.SEVERE, "Could not invoke '" + handleName + "' - " + getErrorString(errorNo) + "(" + errorNo + ")");
       }
 
