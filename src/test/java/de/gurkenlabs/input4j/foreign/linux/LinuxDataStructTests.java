@@ -106,20 +106,4 @@ public class LinuxDataStructTests {
       assertEquals(inputEvent.value, inputEventFromMemory.value);
     }
   }
-
-  @Test
-  void testEpollEventReadWrite() {
-    try (var arena = Arena.ofConfined()) {
-      var segment = arena.allocate(epoll_event.$LAYOUT);
-
-      epoll_event event = new epoll_event();
-      event.events = 1234;
-      event.data_fd = 5678;
-      event.write(segment);
-
-      epoll_event readEvent = epoll_event.read(segment);
-      assertEquals(event.events, readEvent.events);
-      assertEquals(event.data_fd, readEvent.data_fd);
-    }
-  }
 }

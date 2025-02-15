@@ -22,8 +22,6 @@ class Linux {
   final static int EPOLL_CTL_ADD = 1;
   final static int EPOLL_CTL_DEL = 2;
   final static int EPOLL_CTL_MOD = 3;
-  final static int EPOLLIN = 0x001;
-  final static int EPOLL_CLOEXEC = 0x80000;
 
   // TODO: if we want to rumble, we need to open the device in read/write mode
   final static int O_RDWR = 2;
@@ -37,9 +35,6 @@ class Linux {
   final static String HANDLE_IOCTL = "ioctl";
   final static String HANDLE_READ = "read";
   final static String HANDLE_SELECT = "select";
-  final static String HANDLE_EPOLL_CREATE = "epoll_create1";
-  final static String HANDLE_EPOLL_CTL = "epoll_ctl";
-  final static String HANDLE_EPOLL_WAIT = "epoll_wait";
 
   private final static int EVIOCGVERSION = _IOR('E', 0x01, JAVA_INT.byteSize());
   private final static int EVIOCGID = _IOR('E', 0x02, input_id.$LAYOUT.byteSize());
@@ -74,30 +69,6 @@ class Linux {
     handles.put(HANDLE_IOCTL, downcallHandle(HANDLE_IOCTL, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), ERRNO));
     handles.put(HANDLE_READ, downcallHandle(HANDLE_READ, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_LONG), ERRNO));
     handles.put(HANDLE_SELECT, downcallHandle(HANDLE_SELECT, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS, JAVA_LONG), ERRNO));
-
-    handles.put(HANDLE_EPOLL_CREATE, downcallHandle(HANDLE_EPOLL_CREATE, FunctionDescriptor.of(JAVA_INT, JAVA_INT), ERRNO));
-    handles.put(HANDLE_EPOLL_CTL, downcallHandle(HANDLE_EPOLL_CTL, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), ERRNO));
-    handles.put(HANDLE_EPOLL_WAIT, downcallHandle(HANDLE_EPOLL_WAIT, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_INT, JAVA_INT), ERRNO));
-  }
-
-  static int epollCreate(Arena memoryArena) {
-    return invoke(HANDLE_EPOLL_CREATE, memoryArena, EPOLL_CLOEXEC);
-  }
-
-  static int epollCtl(Arena memoryArena, int epfd, int fd) {
-    var event = new epoll_event();
-    event.events = Linux.EPOLLIN;
-    event.data_fd = fd;
-
-    MemorySegment eventMemorySegment = memoryArena.allocate(epoll_event.$LAYOUT);
-    event.write(eventMemorySegment);
-    return invoke(HANDLE_EPOLL_CTL, memoryArena, epfd, EPOLL_CTL_ADD, fd, eventMemorySegment);
-  }
-
-  static int epollWait(Arena memoryArena, int epfd, int maxevents) {
-    MemorySegment eventsMemorySegment = memoryArena.allocate(MemoryLayout.sequenceLayout(maxevents, JAVA_INT));
-
-    return invoke(HANDLE_EPOLL_WAIT, memoryArena, epfd, eventsMemorySegment, maxevents, -1);
   }
 
   /**
@@ -212,15 +183,7 @@ class Linux {
       log.log(Level.SEVERE, "Failed to get abs info for axis (" + absAxis + ")");
       return null;
     }
-
-    var absInfo = new input_absinfo();
-    absInfo.value = (int) input_absinfo.VH_value.get(absInfoSegment, 0);
-    absInfo.minimum = (int) input_absinfo.VH_minimum.get(absInfoSegment, 0);
-    absInfo.maximum = (int) input_absinfo.VH_maximum.get(absInfoSegment, 0);
-    absInfo.fuzz = (int) input_absinfo.VH_fuzz.get(absInfoSegment, 0);
-    absInfo.flat = (int) input_absinfo.VH_flat.get(absInfoSegment, 0);
-
-    return absInfo;
+    return input_absinfo.read(absInfoSegment);
   }
 
   static int getNumEffects(Arena memoryArena, int fd) {

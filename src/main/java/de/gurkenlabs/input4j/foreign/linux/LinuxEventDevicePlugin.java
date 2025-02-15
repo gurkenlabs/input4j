@@ -51,7 +51,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
     for (var eventDeviceFile : eventDeviceFiles) {
       LinuxEventDevice device = new LinuxEventDevice(this.memoryArena, eventDeviceFile.getAbsolutePath());
-      if (device.fd == Linux.ERROR || device.epfd == Linux.ERROR) {
+      if (device.fd == Linux.ERROR) {
         log.log(Level.SEVERE, "Failed to open " + eventDeviceFile.getAbsolutePath());
         continue;
       }
@@ -163,7 +163,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
       float value = inputEvent.value;
       if (nativeComponent.nativeType == LinuxEventDevice.EV_ABS) {
-        if (inputEvent.value == nativeComponent.flat || inputEvent.value <= nativeComponent.fuzz) {
+        if (inputEvent.value == nativeComponent.flat || Math.abs(inputEvent.value) <= nativeComponent.fuzz) {
           value = 0;
         } else {
           // Ensure value is within the range [min, max]
