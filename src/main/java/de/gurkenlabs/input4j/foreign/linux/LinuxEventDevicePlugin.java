@@ -18,6 +18,15 @@ import java.util.logging.Logger;
 /**
  * The {@code LinuxEventDevicePlugin} class is responsible for managing Linux event devices.
  * It initializes and adds them to the collection of devices.
+ * <p>
+ *  The joystick API (/dev/input/jsX) is considered legacy and is no longer actively developed.
+ *  The evdev API (/dev/input/eventX) has largely replaced it because it is more flexible and supports additional features like force feedback.
+ *  Reasons to use evdev over the joystick API:
+ *  <ul>
+ *    <li>evdev is the modern Linux input API and is actively developed.</li>
+ *    <li>evdev is more flexible and supports additional features like force feedback.</li>
+ *    <li>evdev is the preferred API for newer software and libraries like SDL, libevdev, and udev.</li>
+ *  </ul>
  */
 public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   private static final Logger log = Logger.getLogger(LinuxEventDevicePlugin.class.getName());
@@ -29,14 +38,6 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   @Override
   public void internalInitDevices(Frame owner) {
     enumEventDevices();
-
-    // The joystick API (/dev/input/jsX) is considered legacy and is no longer actively developed.
-    // The evdev API (/dev/input/eventX) has largely replaced it because it is more flexible and supports additional features like force feedback.
-    // Reasons to use evdev over the joystick API:
-    // - evdev supports reconfiguration, multi-device support, and extensibility.
-    // - evdev is preferred by newer software and libraries like SDL, libevdev, and udev.
-    // - evdev supports force feedback, which is not available in the joystick API.
-    // While the joystick API will likely remain for legacy software, modern software should migrate to evdev for better compatibility and future-proofing.
   }
 
   private void enumEventDevices() {
@@ -161,22 +162,25 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
         continue;
       }
 
-      float value = inputEvent.value;
-      if (nativeComponent.nativeType == LinuxEventDevice.EV_ABS) {
-        if (inputEvent.value == nativeComponent.flat || Math.abs(inputEvent.value) <= nativeComponent.fuzz) {
-          value = 0;
-        } else {
-          // Ensure value is within the range [min, max]
-          // Then normalize the value to the range [-1, 1]
-          value = Math.max(nativeComponent.min, Math.min(nativeComponent.max, value));
-          value = (value - nativeComponent.min) / (float) (nativeComponent.max - nativeComponent.min) * 2 - 1;
-        }
-      }
-
-      linuxEventDevice.currentValues[componentIndex] = value;
+      linuxEventDevice.currentValues[componentIndex] = normalizeInputValue(inputEvent, nativeComponent);;
     }
 
     return linuxEventDevice.currentValues;
+  }
+
+  private static float normalizeInputValue(input_event inputEvent, LinuxEventComponent nativeComponent) {
+    float value = inputEvent.value;
+    if (nativeComponent.nativeType == LinuxEventDevice.EV_ABS) {
+      if (inputEvent.value == nativeComponent.flat || Math.abs(inputEvent.value) <= nativeComponent.fuzz) {
+        value = 0;
+      } else {
+        // Ensure value is within the range [min, max]
+        // Then normalize the value to the range [-1, 1]
+        value = Math.max(nativeComponent.min, Math.min(nativeComponent.max, value));
+        value = (value - nativeComponent.min) / (float) (nativeComponent.max - nativeComponent.min) * 2 - 1;
+      }
+    }
+    return value;
   }
 
   private static int getComponentIndex(input_event inputEvent, InputDevice inputDevice) {
