@@ -10,6 +10,7 @@ final class LinuxEventComponent {
   final LinuxEventDevice device;
   final LinuxComponentType linuxComponentType;
   final ComponentType componentType;
+  private final boolean axis;
   final boolean relative;
   final int min;
   final int max;
@@ -21,12 +22,13 @@ final class LinuxEventComponent {
   LinuxEventComponent(Arena memoryArena, LinuxEventDevice device, int nativeType, int nativeCode) {
     this.device = device;
     this.relative = nativeType == LinuxEventDevice.EV_REL;
+    this.axis = nativeType == LinuxEventDevice.EV_ABS;
     this.nativeCode = nativeCode;
 
     if (nativeType == LinuxEventDevice.EV_KEY) {
       this.linuxComponentType = LinuxComponentType.fromCode(nativeCode, false, false);
-    } else if (nativeType == LinuxEventDevice.EV_ABS || this.relative) {
-      this.linuxComponentType = LinuxComponentType.fromCode(nativeCode, true, nativeType == LinuxEventDevice.EV_REL);
+    } else if (this.axis || this.relative) {
+      this.linuxComponentType = LinuxComponentType.fromCode(nativeCode, true, this.relative);
     } else {
       this.linuxComponentType = LinuxComponentType.UNKNOWN;
     }
@@ -48,7 +50,7 @@ final class LinuxEventComponent {
       this.flat = 0;
     }
 
-    this.componentType = linuxComponentType.getComponentType(nativeCode, linuxComponentType.isAxis(), this.relative);
+    this.componentType = linuxComponentType.getComponentType(nativeCode, this.axis, this.relative);
   }
 
   boolean isRelative() {
