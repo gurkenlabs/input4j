@@ -154,6 +154,7 @@ public final class InputComponent {
    */
   public static class ID {
     public final int id;
+    public int nativeId;
     public String name;
     public ComponentType type;
 

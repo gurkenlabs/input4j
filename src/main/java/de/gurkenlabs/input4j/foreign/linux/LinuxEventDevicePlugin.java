@@ -139,7 +139,14 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       if (inputEvent != null) {
         // log.log(Level.INFO, "Key " + inputEvent.code + " " + (inputEvent.value != 0 ? "pressed" : "released"));
         // TODO: normalize the value to a float, find the component index for the event code (this might not be in order)
-        polledValues[i] = inputEvent.value;
+
+        for (int j = 0; j < inputDevice.getComponents().size(); j++) {
+          var component = inputDevice.getComponents().get(j);
+          if (component.getId().nativeId == inputEvent.code) {
+            polledValues[j] = inputEvent.value;
+            break;
+          }
+        }
       }
     }
 
