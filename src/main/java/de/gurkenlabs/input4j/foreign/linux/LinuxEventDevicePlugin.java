@@ -171,7 +171,8 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   private static float normalizeInputValue(input_event inputEvent, LinuxEventComponent nativeComponent) {
     float value = inputEvent.value;
     if (nativeComponent.nativeType == LinuxEventDevice.EV_ABS) {
-      if (inputEvent.value == nativeComponent.flat || Math.abs(inputEvent.value) <= nativeComponent.fuzz) {
+      int midpoint = Math.round((nativeComponent.min + nativeComponent.max) / 2.0f);
+      if (inputEvent.value == nativeComponent.flat || Math.abs(inputEvent.value - midpoint) <= nativeComponent.fuzz) {
         value = 0;
       } else {
         // Ensure value is within the range [min, max]
