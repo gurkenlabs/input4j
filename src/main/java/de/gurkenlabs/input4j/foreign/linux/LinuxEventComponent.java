@@ -33,7 +33,7 @@ final class LinuxEventComponent {
 
     if (nativeType == LinuxEventDevice.EV_ABS) {
       input_absinfo absInfo = Linux.getAbsInfo(memoryArena, device.fd, nativeCode);
-      if(absInfo == null) {
+      if (absInfo == null) {
         this.min = Integer.MIN_VALUE;
         this.max = Integer.MAX_VALUE;
         this.flat = 0;
@@ -80,42 +80,39 @@ final class LinuxEventComponent {
   }
 
   public InputComponent.ID getIdentifier() {
-    InputComponent.ID id = switch (linuxComponentType) {
-      case BTN_SOUTH -> InputComponent.XInput.A;
-      case BTN_EAST -> InputComponent.XInput.B;
-      case BTN_NORTH -> InputComponent.XInput.X;
-      case BTN_WEST -> InputComponent.XInput.Y;
-      case BTN_TL -> InputComponent.XInput.LEFT_SHOULDER;
-      case BTN_TR -> InputComponent.XInput.RIGHT_SHOULDER;
-      case BTN_SELECT -> InputComponent.XInput.BACK;
-      case BTN_START -> InputComponent.XInput.START;
-      case BTN_MODE -> InputComponent.Button.get(10);
-      case BTN_THUMBL -> InputComponent.XInput.LEFT_THUMB;
-      case BTN_THUMBR -> InputComponent.XInput.RIGHT_THUMB;
-      case BTN_TRIGGER_HAPPY1 -> InputComponent.XInput.DPAD_LEFT;
-      case BTN_TRIGGER_HAPPY2 -> InputComponent.XInput.DPAD_RIGHT;
-      case BTN_TRIGGER_HAPPY3 -> InputComponent.XInput.DPAD_UP;
-      case BTN_TRIGGER_HAPPY4 -> InputComponent.XInput.DPAD_DOWN;
-      case ABS_X -> InputComponent.XInput.LEFT_THUMB_X;
-      case ABS_Y -> InputComponent.XInput.LEFT_THUMB_Y;
-      case ABS_Z -> InputComponent.XInput.LEFT_TRIGGER;
-      case ABS_RX -> InputComponent.XInput.RIGHT_THUMB_X;
-      case ABS_RY -> InputComponent.XInput.RIGHT_THUMB_Y;
-      case ABS_RZ -> InputComponent.XInput.RIGHT_TRIGGER;
-      case ABS_HAT0X -> new InputComponent.Axis(InputComponent.ID.getNextId(), "DPAD_LEFT_RIGHT");
-      case ABS_HAT0Y -> new InputComponent.Axis(InputComponent.ID.getNextId(), "DPAD_UP_DOWN");
+    return switch (linuxComponentType) {
+      case BTN_SOUTH -> new InputComponent.ID(InputComponent.XInput.A, this.nativeCode);
+      case BTN_EAST -> new InputComponent.ID(InputComponent.XInput.B, this.nativeCode);
+      case BTN_NORTH -> new InputComponent.ID(InputComponent.XInput.X, this.nativeCode);
+      case BTN_WEST -> new InputComponent.ID(InputComponent.XInput.Y, this.nativeCode);
+      case BTN_TL -> new InputComponent.ID(InputComponent.XInput.LEFT_SHOULDER, this.nativeCode);
+      case BTN_TR -> new InputComponent.ID(InputComponent.XInput.RIGHT_SHOULDER, this.nativeCode);
+      case BTN_SELECT -> new InputComponent.ID(InputComponent.XInput.BACK, this.nativeCode);
+      case BTN_START -> new InputComponent.ID(InputComponent.XInput.START, this.nativeCode);
+      case BTN_MODE -> new InputComponent.ID(InputComponent.Button.get(10), this.nativeCode);
+      case BTN_THUMBL -> new InputComponent.ID(InputComponent.XInput.LEFT_THUMB, this.nativeCode);
+      case BTN_THUMBR -> new InputComponent.ID(InputComponent.XInput.RIGHT_THUMB, this.nativeCode);
+      case BTN_TRIGGER_HAPPY1 -> new InputComponent.ID(InputComponent.XInput.DPAD_LEFT, this.nativeCode);
+      case BTN_TRIGGER_HAPPY2 -> new InputComponent.ID(InputComponent.XInput.DPAD_RIGHT, this.nativeCode);
+      case BTN_TRIGGER_HAPPY3 -> new InputComponent.ID(InputComponent.XInput.DPAD_UP, this.nativeCode);
+      case BTN_TRIGGER_HAPPY4 -> new InputComponent.ID(InputComponent.XInput.DPAD_DOWN, this.nativeCode);
+      case ABS_X -> new InputComponent.ID(InputComponent.XInput.LEFT_THUMB_X, this.nativeCode);
+      case ABS_Y -> new InputComponent.ID(InputComponent.XInput.LEFT_THUMB_Y, this.nativeCode);
+      case ABS_Z -> new InputComponent.ID(InputComponent.XInput.LEFT_TRIGGER, this.nativeCode);
+      case ABS_RX -> new InputComponent.ID(InputComponent.XInput.RIGHT_THUMB_X, this.nativeCode);
+      case ABS_RY -> new InputComponent.ID(InputComponent.XInput.RIGHT_THUMB_Y, this.nativeCode);
+      case ABS_RZ -> new InputComponent.ID(InputComponent.XInput.RIGHT_TRIGGER, this.nativeCode);
+      case ABS_HAT0X -> new InputComponent.Axis(InputComponent.ID.getNextId(), "DPAD_LEFT_RIGHT", this.nativeCode);
+      case ABS_HAT0Y -> new InputComponent.Axis(InputComponent.ID.getNextId(), "DPAD_UP_DOWN", this.nativeCode);
       default -> {
         var name = this.linuxComponentType.name();
         yield switch (this.componentType) {
-          case Axis -> new InputComponent.Axis(InputComponent.ID.getNextId(), name);
-          case Button -> new InputComponent.Button(InputComponent.ID.getNextId(), name);
-          case Key -> new InputComponent.ID(ComponentType.Key, InputComponent.ID.getNextId(), name);
-          default -> new InputComponent.ID(ComponentType.Unknown, InputComponent.ID.getNextId(), name);
+          case Axis -> new InputComponent.Axis(InputComponent.ID.getNextId(), name, this.nativeCode);
+          case Button -> new InputComponent.Button(InputComponent.ID.getNextId(), name, this.nativeCode);
+          case Key -> new InputComponent.ID(ComponentType.Key, InputComponent.ID.getNextId(), name, this.nativeCode);
+          default -> new InputComponent.ID(ComponentType.Unknown, InputComponent.ID.getNextId(), name, this.nativeCode);
         };
       }
     };
-
-    id.nativeId = this.nativeCode;
-    return id;
   }
 }

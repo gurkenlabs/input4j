@@ -154,9 +154,9 @@ public final class InputComponent {
    */
   public static class ID {
     public final int id;
-    public int nativeId;
+    public final int nativeId;
+    public final ComponentType type;
     public String name;
-    public ComponentType type;
 
     private static final List<ID> ids = new CopyOnWriteArrayList<>();
 
@@ -166,24 +166,34 @@ public final class InputComponent {
      * @param otherId the ID to remap
      */
     public ID(ID otherId) {
-      this(otherId.type, otherId.id, otherId.name);
+      this(otherId.type, otherId.id, otherId.name, 0);
     }
 
+    public ID(ID otherId, int nativeId) {
+      this(otherId.type, otherId.id, otherId.name, nativeId);
+    }
+
+    public ID(ID otherId, String name) {
+      this(otherId.type, otherId.id, name, 0);
+    }
     /**
      * If you want to make this ID available with a different name, you can use this constructor.
      *
      * @param otherId the ID to remap
      * @param name    the name of the new ID
      */
-    public ID(ID otherId, String name) {
-      this(otherId.type, otherId.id, name);
+    public ID(ID otherId, String name, int nativeId) {
+      this(otherId.type, otherId.id, name, nativeId);
     }
 
     public ID(ComponentType type, int id, String name) {
+      this(type, id, name, 0);
+    }
+    public ID(ComponentType type, int id, String name, int nativeId) {
       this.type = type;
       this.id = id;
       this.name = name;
-
+      this.nativeId = nativeId;
       // exclude remapped IDs, only add the original ID
       if (ids.stream().noneMatch(i -> i.id == this.id)) {
         ids.add(this);
@@ -230,7 +240,11 @@ public final class InputComponent {
     }
 
     public Button(int id, String name) {
-      super(ComponentType.Button, id, name);
+      super(ComponentType.Button, id, name, 0);
+    }
+
+    public Button(int id, String name, int nativeId) {
+      super(ComponentType.Button, id, name, nativeId);
     }
   }
 
@@ -243,7 +257,7 @@ public final class InputComponent {
     public static final Dpad LEFT = new Dpad(Dpad.UP.id + 3, "DPAD_LEFT");
 
     public Dpad(int id, String name) {
-      super(ComponentType.Button, id, name);
+      super(ComponentType.Button, id, name, 0);
     }
   }
 
@@ -258,11 +272,19 @@ public final class InputComponent {
     public static final Axis DPAD = new Axis(ComponentType.DPad, Axis.X.id + 7, "DPAD_AXIS");
 
     public Axis(int id, String name) {
-      super(ComponentType.Axis, id, name);
+      this(ComponentType.Axis, id, name, 0);
+    }
+
+    public Axis(int id, String name, int nativeId) {
+      super(ComponentType.Axis, id, name, nativeId);
     }
 
     public Axis(ComponentType type, int id, String name) {
-      super(type, id, name);
+      this(type, id, name, 0);
+    }
+
+    public Axis(ComponentType type, int id, String name, int nativeId) {
+      super(type, id, name, nativeId);
     }
   }
 
