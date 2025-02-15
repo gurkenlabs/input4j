@@ -38,7 +38,7 @@ class LinuxEventDevice {
   final List<LinuxEventComponent> componentList = new ArrayList<>();
 
   InputDevice inputDevice;
-
+  float[] currentValues;
 
   public int version;
 
@@ -87,5 +87,14 @@ class LinuxEventDevice {
     }
 
     Linux.close(memoryArena, this.fd);
+  }
+
+  public LinuxEventComponent getNativeComponent(input_event inputEvent) {
+    for (var component : this.componentList) {
+      if (component.nativeType == inputEvent.type && component.nativeCode == inputEvent.code) {
+        return component;
+      }
+    }
+    return null;
   }
 }

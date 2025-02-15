@@ -127,13 +127,18 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
    * </p>
    */
   private float[] pollLinuxEventDevice(InputDevice inputDevice) {
-    var polledValues = new float[inputDevice.getComponents().size()];
+    var emptyValues = new float[inputDevice.getComponents().size()];
 
     // find native LinuxEventDevice and poll it
     var linuxEventDevice = this.devices.stream().filter(x -> x.inputDevice.equals(inputDevice)).findFirst().orElse(null);
     if (linuxEventDevice == null) {
       log.log(Level.WARNING, "LinuxEventDevice not found for input device " + inputDevice.getInstanceName());
-      return polledValues;
+      return emptyValues;
+    }
+
+    // use the last polled values since we need to keep the state of the buttons and axes until they are released
+    if (linuxEventDevice.currentValues == null) {
+      linuxEventDevice.currentValues = emptyValues;
     }
 
     input_event inputEvent;
@@ -144,24 +149,41 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
         continue;
       }
 
+      var nativeComponent = linuxEventDevice.getNativeComponent(inputEvent);
+      if (nativeComponent == null) {
+        log.log(Level.SEVERE, "Failed to find component for " + inputEvent.type + " " + inputEvent.code);
+        continue;
+      }
+
       var componentIndex = getComponentIndex(inputEvent, inputDevice);
       if (componentIndex == Linux.ERROR) {
         log.log(Level.SEVERE, "Failed to find component for " + inputEvent.type + " " + inputEvent.code);
         continue;
       }
 
-      // TODO: normalize the values
-      polledValues[componentIndex] = inputEvent.value;
+      float value = inputEvent.value;
+      if (nativeComponent.nativeType == LinuxEventDevice.EV_ABS) {
+        if (inputEvent.value == nativeComponent.flat || inputEvent.value <= nativeComponent.fuzz) {
+          value = 0;
+        } else {
+          // Ensure value is within the range [min, max]
+          // Then normalize the value to the range [-1, 1]
+          value = Math.max(nativeComponent.min, Math.min(nativeComponent.max, value));
+          value = (value - nativeComponent.min) / (float) (nativeComponent.max - nativeComponent.min) * 2 - 1;
+        }
+      }
+
+      linuxEventDevice.currentValues[componentIndex] = value;
     }
 
-    return polledValues;
+    return linuxEventDevice.currentValues;
   }
 
   private static int getComponentIndex(input_event inputEvent, InputDevice inputDevice) {
     for (int j = 0; j < inputDevice.getComponents().size(); j++) {
       var component = inputDevice.getComponents().get(j);
 
-      if(component.getType() != ComponentType.Unknown) {
+      if (component.getType() != ComponentType.Unknown) {
         switch (inputEvent.type) {
           case LinuxEventDevice.EV_KEY:
             if (component.getType() != ComponentType.Button && component.getType() != ComponentType.DPad) {
