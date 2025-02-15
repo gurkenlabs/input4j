@@ -5,6 +5,7 @@ import de.gurkenlabs.input4j.InputDevice;
 import java.lang.foreign.Arena;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class LinuxEventDevice {
@@ -33,6 +34,7 @@ class LinuxEventDevice {
   final int fd;
   final String name;
   final input_id id;
+  final int epfd;
   final List<LinuxEventComponent> componentList = new ArrayList<>();
 
   InputDevice inputDevice;
@@ -48,10 +50,19 @@ class LinuxEventDevice {
       this.name = null;
       this.id = null;
       this.version = 0;
+      this.epfd = 0;
     } else {
       this.name = Linux.getEventDeviceName(memoryArena, this.fd);
       this.id = Linux.getEventDeviceId(memoryArena, this.fd);
       this.version = Linux.getEventDeviceVersion(memoryArena, this.fd);
+
+      var epfd = Linux.epollCreate(memoryArena);
+      if (Linux.epollCtl(memoryArena, epfd, this.fd) == Linux.ERROR) {
+        log.log(Level.SEVERE, "Failed to add device to epoll");
+        this.epfd = Linux.ERROR;
+      } else {
+        this.epfd = epfd;
+      }
     }
   }
 

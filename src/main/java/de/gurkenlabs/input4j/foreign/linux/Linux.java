@@ -18,6 +18,11 @@ class Linux {
 
   final static int O_RDONLY = 0;
   final static int O_NONBLOCK = 0x1000;
+  final static int EPOLL_CTL_ADD = 1;
+  final static int EPOLL_CTL_DEL = 2;
+  final static int EPOLL_CTL_MOD = 3;
+  final static int EPOLLIN = 0x001;
+  final static int EPOLL_CLOEXEC = 0x02000000;
 
   // TODO: if we want to rumble, we need to open the device in read/write mode
   final static int O_RDWR = 2;
@@ -30,6 +35,10 @@ class Linux {
   final static String HANDLE_CLOSE = "close";
   final static String HANDLE_IOCTL = "ioctl";
   final static String HANDLE_READ = "read";
+  final static String HANDLE_SELECT = "select";
+  final static String HANDLE_EPOLL_CREATE = "epoll_create1";
+  final static String HANDLE_EPOLL_CTL = "epoll_ctl";
+  final static String HANDLE_EPOLL_WAIT = "epoll_wait";
 
   private final static int EVIOCGVERSION = _IOR('E', 0x01, JAVA_INT.byteSize());
   private final static int EVIOCGID = _IOR('E', 0x02, input_id.$LAYOUT.byteSize());
@@ -63,17 +72,91 @@ class Linux {
     handles.put(HANDLE_CLOSE, downcallHandle(HANDLE_CLOSE, FunctionDescriptor.of(JAVA_INT, JAVA_INT), ERRNO));
     handles.put(HANDLE_IOCTL, downcallHandle(HANDLE_IOCTL, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), ERRNO));
     handles.put(HANDLE_READ, downcallHandle(HANDLE_READ, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_LONG), ERRNO));
+    handles.put(HANDLE_SELECT, downcallHandle(HANDLE_SELECT, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS, JAVA_LONG), ERRNO));
+
+    handles.put(HANDLE_EPOLL_CREATE, downcallHandle(HANDLE_EPOLL_CREATE, FunctionDescriptor.of(JAVA_INT, JAVA_INT), ERRNO));
+    handles.put(HANDLE_EPOLL_CTL, downcallHandle(HANDLE_EPOLL_CTL, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), ERRNO));
+    handles.put(HANDLE_EPOLL_WAIT, downcallHandle(HANDLE_EPOLL_WAIT, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_INT, JAVA_INT), ERRNO));
   }
 
+  static int epollCreate(Arena memoryArena) {
+    return invoke(HANDLE_EPOLL_CREATE, memoryArena, EPOLL_CLOEXEC);
+  }
+
+  static int epollCtl(Arena memoryArena, int epfd, int fd) {
+    var event = new epoll_event();
+    event.events = Linux.EPOLLIN;
+    event.data_fd = fd;
+
+    MemorySegment eventMemorySegment = memoryArena.allocate(epoll_event.$LAYOUT);
+    event.write(eventMemorySegment);
+    return invoke(HANDLE_EPOLL_CTL, memoryArena, epfd, EPOLL_CTL_ADD, fd, eventMemorySegment);
+  }
+
+  static int epollWait(Arena memoryArena, int epfd, int maxevents) {
+    MemorySegment eventsMemorySegment = memoryArena.allocate(MemoryLayout.sequenceLayout(maxevents, JAVA_INT));
+
+    return invoke(HANDLE_EPOLL_WAIT, memoryArena, epfd, eventsMemorySegment, maxevents, -1);
+  }
+
+  /**
+   * Open a file descriptor for the given file name.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fileName    the file name to open
+   * @return the file descriptor or -1 if an error occurred
+   */
   static int open(Arena memoryArena, String fileName) {
     var filenameMemorySegment = memoryArena.allocateFrom(fileName);
     return invoke(HANDLE_OPEN, memoryArena, filenameMemorySegment, O_RDONLY | O_NONBLOCK, null);
   }
 
+  /**
+   * Close the file descriptor.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor to close
+   */
   static void close(Arena memoryArena, int fd) {
     invoke(HANDLE_CLOSE, memoryArena, fd, null, null);
   }
 
+  static int select(Arena memoryArena, int fd, long timeout) {
+
+    var timevalMemorySegment = memoryArena.allocate(timeval.$LAYOUT);
+    new timeval().write(timevalMemorySegment);
+
+    var fdSegment = memoryArena.allocate(JAVA_INT);
+    fdSegment.set(JAVA_INT, 0, fd);
+
+    return invoke(HANDLE_SELECT, memoryArena, fd + 1, fdSegment, null, null, timevalMemorySegment);
+  }
+
+  /**
+   * Read an input event from the device.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @return the input event or null if no more events are available
+   */
+  public static input_event read(Arena memoryArena, int fd) {
+    MemorySegment inputEventMemorySegment = memoryArena.allocate(input_event.$LAYOUT);
+    int result = invoke("read", memoryArena, fd, inputEventMemorySegment, input_event.$LAYOUT.byteSize());
+    if (result == ERROR) {
+      log.log(Level.FINE, "No more events to read from device (" + fd + ")");
+      return null;
+    }
+
+    return input_event.read(inputEventMemorySegment);
+  }
+
+  /**
+   * Get the name of the event device.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @return the name of the event device or null if an error occurred
+   */
   static String getEventDeviceName(Arena memoryArena, int fd) {
     var nameMemorySegment = memoryArena.allocateFrom(JAVA_CHAR, new char[NAME_BUFFER_SIZE]);
     var result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGNAME, nameMemorySegment);
@@ -85,6 +168,13 @@ class Linux {
     return nameMemorySegment.getString(0);
   }
 
+  /**
+   * Get the version of the event device.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @return the version of the event device or 0 if an error occurred
+   */
   static int getEventDeviceVersion(Arena memoryArena, int fd) {
     var versionMemorySegment = memoryArena.allocate(JAVA_INT);
     var result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGVERSION, versionMemorySegment);
@@ -96,6 +186,13 @@ class Linux {
     return versionMemorySegment.get(JAVA_INT, 0);
   }
 
+  /**
+   * Get the id of the event device.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @return the id of the event device or null if an error occurred
+   */
   static input_id getEventDeviceId(Arena memoryArena, int fd) {
     var inputIdMemorySegment = memoryArena.allocate(input_id.$LAYOUT);
     var result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGID, inputIdMemorySegment);
@@ -161,6 +258,17 @@ class Linux {
     return keyStates;
   }
 
+  /**
+   * Get the bits for the given event type.
+   * <p>
+   * The bits are used to determine which event types are supported by the device.
+   * The bits are stored in a byte array where each bit represents an event type.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param evtype      the event type
+   * @param fd          the file descriptor of the event device
+   * @return the bits for the given event type or null if an error occurred
+   */
   static byte[] getBits(Arena memoryArena, int evtype, int fd) {
     var len = LinuxEventDevice.getMaxBits(evtype) / 8 + 1;
 
@@ -179,18 +287,7 @@ class Linux {
     return bits;
   }
 
-  public static input_event readEvent(Arena memoryArena, int fd) {
-    MemorySegment inputEventMemorySegment = memoryArena.allocate(input_event.$LAYOUT);
-    int result = invoke("read", memoryArena, fd, inputEventMemorySegment, input_event.$LAYOUT.byteSize());
-    if (result == ERROR) {
-      log.log(Level.FINE, "No more events to read from device (" + fd + ")");
-      return null;
-    }
-
-    return input_event.read(inputEventMemorySegment);
-  }
-
-  private static int invoke(String handleName, Arena memoryArena, Object arg1, Object arg2, Object arg3) {
+  private static int invoke(String handleName, Arena memoryArena, Object... args) {
     var capturedState = memoryArena.allocate(Linker.Option.captureStateLayout());
     var methodHandle = handles.get(handleName);
     if (methodHandle == null) {
@@ -200,14 +297,18 @@ class Linux {
 
     try {
       var result = ERROR;
-      if (arg1 == null) {
+      if (args == null || args.length == 0) {
         result = (int) methodHandle.invoke(capturedState);
-      } else if (arg2 == null) {
-        result = (int) methodHandle.invoke(capturedState, arg1);
-      } else if (arg3 == null) {
-        result = (int) methodHandle.invoke(capturedState, arg1, arg2);
-      } else {
-        result = (int) methodHandle.invoke(capturedState, arg1, arg2, arg3);
+      } else if (args.length == 1) {
+        result = (int) methodHandle.invoke(capturedState, args[0]);
+      } else if (args.length == 2) {
+        result = (int) methodHandle.invoke(capturedState, args[0], args[1]);
+      } else if (args.length == 3) {
+        result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2]);
+      } else if (args.length == 4) {
+        result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3]);
+      } else if (args.length == 5) {
+        result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3], args[4]);
       }
 
       if (result == ERROR) {

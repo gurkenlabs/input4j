@@ -50,17 +50,17 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
     for (var eventDeviceFile : eventDeviceFiles) {
       LinuxEventDevice device = new LinuxEventDevice(this.memoryArena, eventDeviceFile.getAbsolutePath());
-      if (device.fd == Linux.ERROR) {
+      if (device.fd == Linux.ERROR || device.epfd == Linux.ERROR) {
         log.log(Level.SEVERE, "Failed to open " + eventDeviceFile.getAbsolutePath());
         continue;
       }
 
       // ignore some devices since they are not useful for input
-      if(device.name != null
+      if (device.name != null
               && (device.name.toUpperCase().contains("VIDEO BUS")
               || device.name.toUpperCase().contains("VIRTUAL")
               || device.name.toUpperCase().contains("POWER BUTTON"))) {
-        log.log(Level.INFO, "Ignoring virtual device: " + device.name);
+        log.log(Level.FINE, "Ignoring virtual device: " + device.name);
         continue;
       }
 
@@ -80,7 +80,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       addEventComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_REL, LinuxEventDevice.REL_MAX, "EV_REL");
 
       // ignore devices without components
-      if(device.componentList.isEmpty()) {
+      if (device.componentList.isEmpty()) {
         continue;
       }
 
@@ -117,6 +117,8 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   private float[] pollLinuxEventDevice(InputDevice inputDevice) {
     var polledValues = new float[inputDevice.getComponents().size()];
 
+    // Rewrite this to use epoll_wait instead of polling each device
+
     // find native LinuxEventDevice and poll it
     var linuxEventDevice = this.devices.stream().filter(x -> x.inputDevice.equals(inputDevice)).findFirst().orElse(null);
     if (linuxEventDevice == null) {
@@ -124,8 +126,10 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       return polledValues;
     }
 
+
     // TODO: assign the button states from this?
     //  Not sure if this is only necessary for keyboard input and how this overlaps with the input events
+    // if a button is pressed, the keyState array will have a true value at the index of the key code
     var keyState = Linux.getKeyStates(this.memoryArena, linuxEventDevice.fd);
     for (var key : keyState) {
       if (key) {
@@ -135,7 +139,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     input_event nextInputEvent;
     int i = 0;
     do {
-      nextInputEvent = Linux.readEvent(this.memoryArena, linuxEventDevice.fd);
+      nextInputEvent = Linux.read(this.memoryArena, linuxEventDevice.fd);
       if (nextInputEvent != null) {
         // TODO: normalize the value to a float, find the component index for the event code (this might not be in order)
         //log.log(Level.INFO, "Event type: " + nextInputEvent.type + " Code: " + nextInputEvent.code + " Value: " + nextInputEvent.value);
