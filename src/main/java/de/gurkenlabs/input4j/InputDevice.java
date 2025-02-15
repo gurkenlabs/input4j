@@ -122,9 +122,10 @@ public final class InputDevice implements Closeable {
       var newData = polledData[i];
 
       newData = Math.round(newData * this.accuracyFactor) / this.accuracyFactor;
+      hasInputData |= newData != 0;
       if (oldData != newData) {
+        hasInputData = true;
         component.setData(newData);
-        hasInputData |= newData != 0;
 
         var inputEvent = new InputEvent(component, oldData, newData);
         for (var listener : listeners) {
