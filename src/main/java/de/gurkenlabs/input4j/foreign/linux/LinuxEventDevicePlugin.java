@@ -117,6 +117,15 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     }
   }
 
+  /**
+   * Processes input events, excluding EV_MSC and EV_SYN events.
+   * <p>
+   * EV_MSC events provide extra device-specific information (e.g., scan codes) and
+   * EV_SYN events mark the end of an event batch for synchronization. Although these
+   * events are necessary for the low-level input system, they are not needed for the
+   * core event handling logic in this method.
+   * </p>
+   */
   private float[] pollLinuxEventDevice(InputDevice inputDevice) {
     var polledValues = new float[inputDevice.getComponents().size()];
 
@@ -127,33 +136,54 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       return polledValues;
     }
 
-    int numEvents = Linux.epollWait(this.memoryArena, linuxEventDevice.epfd, linuxEventDevice.componentList.size());
-    if (numEvents == 0) {
-      return polledValues;
-    } else if (numEvents == Linux.ERROR) {
-      log.log(Level.SEVERE, "epoll_wait failed for " + linuxEventDevice.filename);
-      return polledValues;
-    }
-
     input_event inputEvent;
     while ((inputEvent = Linux.read(this.memoryArena, linuxEventDevice.fd)) != null) {
-      if(inputEvent.type == LinuxEventDevice.EV_KEY) {
-        for (int j = 0; j < inputDevice.getComponents().size(); j++) {
-          var component = inputDevice.getComponents().get(j);
-          if (component.getId().nativeId == inputEvent.code) {
-            // log.log(Level.INFO, "Key " + inputEvent.code + " " + (inputEvent.value != 0 ? "pressed" : "released"));
-            // TODO: normalize the value to a float
-            polledValues[j] = inputEvent.value;
-            break;
-          }
-        }
-      } else if(inputEvent.type == LinuxEventDevice.EV_ABS) {
-
+      if (inputEvent.type == LinuxEventDevice.EV_SYN
+              || inputEvent.type == LinuxEventDevice.EV_MSC
+              || inputEvent.type == LinuxEventDevice.EV_REL) {
+        continue;
       }
+
+      var componentIndex = getComponentIndex(inputEvent, inputDevice);
+      if (componentIndex == Linux.ERROR) {
+        log.log(Level.SEVERE, "Failed to find component for " + inputEvent.type + " " + inputEvent.code);
+        continue;
+      }
+
+      // TODO: normalize the values
+      polledValues[componentIndex] = inputEvent.value;
     }
 
     return polledValues;
   }
+
+  private static int getComponentIndex(input_event inputEvent, InputDevice inputDevice) {
+    for (int j = 0; j < inputDevice.getComponents().size(); j++) {
+      var component = inputDevice.getComponents().get(j);
+
+      if(component.getType() != ComponentType.Unknown) {
+        switch (inputEvent.type) {
+          case LinuxEventDevice.EV_KEY:
+            if (component.getType() != ComponentType.Button && component.getType() != ComponentType.DPad) {
+              continue;
+            }
+            break;
+          case LinuxEventDevice.EV_ABS:
+            if (component.getType() != ComponentType.Axis) {
+              continue;
+            }
+            break;
+        }
+      }
+
+      if (component.getId().nativeId == inputEvent.code) {
+        return j;
+      }
+    }
+
+    return Linux.ERROR;
+  }
+
 
   /**
    * TODO: Support for rumble and force feedback. ioctl(fd, EVIOCSFF, &effect) and requires ff_effect struct.
