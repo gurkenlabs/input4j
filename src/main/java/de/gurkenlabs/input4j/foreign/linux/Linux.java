@@ -108,7 +108,7 @@ class Linux {
    */
   static int open(Arena memoryArena, String fileName) {
     var filenameMemorySegment = memoryArena.allocateFrom(fileName);
-    return invoke(HANDLE_OPEN, memoryArena, filenameMemorySegment, O_RDONLY | O_NONBLOCK, null);
+    return invoke(HANDLE_OPEN, memoryArena, filenameMemorySegment, O_RDONLY | O_NONBLOCK);
   }
 
   /**
@@ -118,7 +118,7 @@ class Linux {
    * @param fd          the file descriptor to close
    */
   static void close(Arena memoryArena, int fd) {
-    invoke(HANDLE_CLOSE, memoryArena, fd, null, null);
+    invoke(HANDLE_CLOSE, memoryArena, fd);
   }
 
   static int select(Arena memoryArena, int fd, long timeout) {
