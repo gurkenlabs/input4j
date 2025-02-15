@@ -126,27 +126,22 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       return polledValues;
     }
 
+    int numEvents = Linux.epollWait(this.memoryArena, linuxEventDevice.epfd, linuxEventDevice.componentList.size());
+    if (numEvents == 0) {
+      return polledValues;
+    } else if (numEvents == Linux.ERROR) {
+      log.log(Level.SEVERE, "epoll_wait failed for " + linuxEventDevice.filename);
+      return polledValues;
+    }
 
-    // TODO: assign the button states from this?
-    //  Not sure if this is only necessary for keyboard input and how this overlaps with the input events
-    // if a button is pressed, the keyState array will have a true value at the index of the key code
-    var keyState = Linux.getKeyStates(this.memoryArena, linuxEventDevice.fd);
-    for (var key : keyState) {
-      if (key) {
-        log.log(Level.WARNING, "Key is pressed");
+    for(int i = 0; i < numEvents; i++) {
+      var inputEvent = Linux.read(this.memoryArena, linuxEventDevice.fd);
+      if (inputEvent != null) {
+        // log.log(Level.INFO, "Key " + inputEvent.code + " " + (inputEvent.value != 0 ? "pressed" : "released"));
+        // TODO: normalize the value to a float, find the component index for the event code (this might not be in order)
+        polledValues[i] = inputEvent.value;
       }
     }
-    input_event nextInputEvent;
-    int i = 0;
-    do {
-      nextInputEvent = Linux.read(this.memoryArena, linuxEventDevice.fd);
-      if (nextInputEvent != null) {
-        // TODO: normalize the value to a float, find the component index for the event code (this might not be in order)
-        //log.log(Level.INFO, "Event type: " + nextInputEvent.type + " Code: " + nextInputEvent.code + " Value: " + nextInputEvent.value);
-        polledValues[i] = nextInputEvent.value;
-        i++;
-      }
-    } while (nextInputEvent != null && i < polledValues.length);
 
     return polledValues;
   }

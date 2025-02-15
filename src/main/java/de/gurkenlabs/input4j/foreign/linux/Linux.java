@@ -22,7 +22,7 @@ class Linux {
   final static int EPOLL_CTL_DEL = 2;
   final static int EPOLL_CTL_MOD = 3;
   final static int EPOLLIN = 0x001;
-  final static int EPOLL_CLOEXEC = 0x02000000;
+  final static int EPOLL_CLOEXEC = 0x80000;
 
   // TODO: if we want to rumble, we need to open the device in read/write mode
   final static int O_RDWR = 2;
