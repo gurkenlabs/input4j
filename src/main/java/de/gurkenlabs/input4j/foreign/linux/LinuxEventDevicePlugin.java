@@ -1,6 +1,7 @@
 package de.gurkenlabs.input4j.foreign.linux;
 
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
+import de.gurkenlabs.input4j.ComponentType;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
 
@@ -59,7 +60,9 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       if (device.name != null
               && (device.name.toUpperCase().contains("VIDEO BUS")
               || device.name.toUpperCase().contains("VIRTUAL")
-              || device.name.toUpperCase().contains("POWER BUTTON"))) {
+              || device.name.toUpperCase().contains("POWER BUTTON")
+              || device.name.toUpperCase().contains("HDA INTEL")
+              || device.name.toUpperCase().contains("HDMI"))) {
         log.log(Level.FINE, "Ignoring virtual device: " + device.name);
         continue;
       }
@@ -77,10 +80,10 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       // Check for available components per event type (EV_KEY, EV_ABS, EV_REL, etc.)
       addEventComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_KEY, LinuxEventDevice.KEY_MAX, "EV_KEY");
       addEventComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_ABS, LinuxEventDevice.ABS_MAX, "EV_ABS");
-      addEventComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_REL, LinuxEventDevice.REL_MAX, "EV_REL");
 
       // ignore devices without components
-      if (device.componentList.isEmpty()) {
+      // also ignore devices that have no buttons, axis or dpad (this should also exclude keyboards)
+      if (device.componentList.isEmpty() || device.componentList.stream().noneMatch(x -> x.componentType == ComponentType.Button || x.componentType == ComponentType.Axis || x.componentType == ComponentType.DPad)) {
         continue;
       }
 
@@ -117,8 +120,6 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   private float[] pollLinuxEventDevice(InputDevice inputDevice) {
     var polledValues = new float[inputDevice.getComponents().size()];
 
-    // Rewrite this to use epoll_wait instead of polling each device
-
     // find native LinuxEventDevice and poll it
     var linuxEventDevice = this.devices.stream().filter(x -> x.inputDevice.equals(inputDevice)).findFirst().orElse(null);
     if (linuxEventDevice == null) {
@@ -134,19 +135,20 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       return polledValues;
     }
 
-    for(int i = 0; i < numEvents; i++) {
-      var inputEvent = Linux.read(this.memoryArena, linuxEventDevice.fd);
-      if (inputEvent != null) {
-        // log.log(Level.INFO, "Key " + inputEvent.code + " " + (inputEvent.value != 0 ? "pressed" : "released"));
-        // TODO: normalize the value to a float, find the component index for the event code (this might not be in order)
-
+    input_event inputEvent;
+    while ((inputEvent = Linux.read(this.memoryArena, linuxEventDevice.fd)) != null) {
+      if(inputEvent.type == LinuxEventDevice.EV_KEY) {
         for (int j = 0; j < inputDevice.getComponents().size(); j++) {
           var component = inputDevice.getComponents().get(j);
           if (component.getId().nativeId == inputEvent.code) {
+            // log.log(Level.INFO, "Key " + inputEvent.code + " " + (inputEvent.value != 0 ? "pressed" : "released"));
+            // TODO: normalize the value to a float
             polledValues[j] = inputEvent.value;
             break;
           }
         }
+      } else if(inputEvent.type == LinuxEventDevice.EV_ABS) {
+
       }
     }
 
