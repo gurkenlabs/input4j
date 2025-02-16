@@ -86,9 +86,9 @@ final class LinuxVirtualComponentHandler {
   }
 
   private static class DPAD_VALUE {
-    public static final float UP = 1f;
-    public static final float DOWN = -1f;
-    public static final float LEFT = 1f;
-    public static final float RIGHT = -1f;
+    public static final float UP = -1f;
+    public static final float DOWN = 1f;
+    public static final float LEFT = -1f;
+    public static final float RIGHT = 1f;
   }
 }

@@ -249,8 +249,8 @@ public final class InputComponent {
 
     @Override
     public boolean equals(Object obj) {
-      if (obj instanceof InputComponent component) {
-        return component.getId().type == this.type && component.getId().id == this.id;
+      if (obj instanceof ID identifier) {
+        return identifier.type == this.type && identifier.id == this.id;
       }
       return false;
     }
