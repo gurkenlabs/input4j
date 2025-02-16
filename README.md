@@ -3,6 +3,8 @@
 
 **Input4j** is a cutting-edge, pure Java input library leveraging the **Foreign Function & Memory API** (FFM API), offering cross-platform support, high performance, flexible input handling, and future-proofing without the need for additional native artifacts, making it the **best choice for Java developers**.
 
+Join the revolution in Java input handling with Input4j and experience unparalleled performance and ease of use!
+
 ## 🚀 Key Features
 - **Cross-Platform Input handling**: Fully compatible with Windows, Linux, and OSX (in progress).
 - **Performance**: Optimized for high performance with minimal overhead.
@@ -46,16 +48,28 @@ try (var inputDevices = InputDevices.init()) {
 }
 ```
 
-## 📦 Supported input APIs
- * **Windows**: DirectInput ✅
- * **Windows**: XInput ✅
- * **Linux**: Linux Input (evdev) ✅
- * **OSX**: IOKIT 🚧
- * **OSX**: Game Controller ❌
+## 🔌 Technical Details
 
-> ⚠ Requires **Java 22** or greater
->
-> The FFM API has been finalized with ([JEP 454](https://openjdk.org/jeps/454)) with **Java 22**.
+### Platform-Specific Input APIs
+- **DirectInput (Windows) ✅**
+    - Full implementation using `dinput.h`
+    - Supports legacy and modern input devices
 
-Join the revolution in Java input handling with Input4j and experience unparalleled performance and ease of use!
+- **XInput (Windows) ✅**
+    - Modern gamepad support via `xinput.h`
+    - Xbox controller compatibility
 
+- **evdev (Linux) ✅**
+    - Event interface via `/dev/input`
+    - Raw input device access
+
+- **IOKit (macOS) 🚧**
+    - HID device enumeration
+    - Framework: IOKit.framework
+
+- **Game Controller (macOS) 🚧**
+    - Planned implementation
+    - Framework: GameController.framework
+
+### System Requirements
+- Java Runtime: 22+
