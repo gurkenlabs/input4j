@@ -103,7 +103,19 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
       for (int i = 0; i < max; i++) {
         if (LinuxEventDevice.isBitSet(components, i)) {
-          var nativeComponent = new LinuxEventComponent(memoryArena, device, eventType, i);
+          LinuxEventComponent nativeComponent;
+          if (eventType == LinuxEventDevice.EV_ABS) {
+            // Get the absolute axis information if available (contains min, max, flat, fuzz, etc.)
+            input_absinfo absInfo = Linux.getAbsInfo(memoryArena, device.fd, i);
+            if (absInfo == null) {
+              nativeComponent = new LinuxEventComponent(eventType, i);
+            } else {
+              nativeComponent = new LinuxEventComponent(eventType, i, absInfo);
+            }
+          } else {
+            nativeComponent = new LinuxEventComponent(eventType, i);
+          }
+
           device.componentList.add(nativeComponent);
 
           var id = nativeComponent.getIdentifier();
@@ -156,7 +168,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
         continue;
       }
 
-      var componentIndex = getComponentIndex(inputEvent, inputDevice);
+      var componentIndex = getComponentIndexByNativeId(inputEvent, inputDevice);
       if (componentIndex == Linux.ERROR) {
         log.log(Level.SEVERE, "Failed to find component for " + inputEvent.type + " " + inputEvent.code);
         continue;
@@ -168,7 +180,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     return linuxEventDevice.currentValues;
   }
 
-  private static float normalizeInputValue(input_event inputEvent, LinuxEventComponent nativeComponent) {
+  static float normalizeInputValue(input_event inputEvent, LinuxEventComponent nativeComponent) {
     float value = inputEvent.value;
     if (nativeComponent.nativeType == LinuxEventDevice.EV_ABS) {
       int midpoint = Math.round((nativeComponent.min + nativeComponent.max) / 2.0f);
@@ -184,7 +196,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     return value;
   }
 
-  private static int getComponentIndex(input_event inputEvent, InputDevice inputDevice) {
+  static int getComponentIndexByNativeId(input_event inputEvent, InputDevice inputDevice) {
     for (int j = 0; j < inputDevice.getComponents().size(); j++) {
       var component = inputDevice.getComponents().get(j);
 

@@ -4,13 +4,10 @@ package de.gurkenlabs.input4j.foreign.linux;
 import de.gurkenlabs.input4j.ComponentType;
 import de.gurkenlabs.input4j.InputComponent;
 
-import java.lang.foreign.Arena;
-
 final class LinuxEventComponent {
-  final LinuxEventDevice device;
   final LinuxComponentType linuxComponentType;
   final ComponentType componentType;
-  private final boolean axis;
+  final boolean axis;
   final boolean relative;
   final int min;
   final int max;
@@ -21,42 +18,43 @@ final class LinuxEventComponent {
 
   InputComponent inputComponent;
 
-  LinuxEventComponent(Arena memoryArena, LinuxEventDevice device, int nativeType, int nativeCode) {
-    this.device = device;
-    this.relative = nativeType == LinuxEventDevice.EV_REL;
-    this.axis = nativeType == LinuxEventDevice.EV_ABS;
+  LinuxEventComponent(LinuxComponentType linuxComponentType, boolean axis, boolean relative, int nativeType, int nativeCode) {
+    this(linuxComponentType, axis, relative, nativeType, nativeCode, Integer.MIN_VALUE, Integer.MAX_VALUE, 0, 0);
+  }
+
+  LinuxEventComponent(LinuxComponentType linuxComponentType, boolean axis, boolean relative, int nativeType, int nativeCode, int min, int max, int flat, int fuzz) {
+    this.linuxComponentType = linuxComponentType;
+    this.axis = axis;
+    this.relative = relative;
+    this.componentType = linuxComponentType.getComponentType(nativeCode, this.axis, this.relative);
+
     this.nativeType = nativeType;
     this.nativeCode = nativeCode;
 
-    if (nativeType == LinuxEventDevice.EV_KEY) {
-      this.linuxComponentType = LinuxComponentType.fromCode(nativeCode, false, false);
-    } else if (this.axis || this.relative) {
-      this.linuxComponentType = LinuxComponentType.fromCode(nativeCode, true, this.relative);
-    } else {
-      this.linuxComponentType = LinuxComponentType.UNKNOWN;
-    }
+    this.min = min;
+    this.max = max;
+    this.flat = flat;
+    this.fuzz = fuzz;
+  }
 
-    if (nativeType == LinuxEventDevice.EV_ABS) {
-      input_absinfo absInfo = Linux.getAbsInfo(memoryArena, device.fd, nativeCode);
-      if (absInfo == null) {
-        this.min = Integer.MIN_VALUE;
-        this.max = Integer.MAX_VALUE;
-        this.flat = 0;
-        this.fuzz = 0;
-      } else {
-        this.min = absInfo.minimum;
-        this.max = absInfo.maximum;
-        this.flat = absInfo.flat;
-        this.fuzz = absInfo.fuzz;
-      }
-    } else {
-      this.min = Integer.MIN_VALUE;
-      this.max = Integer.MAX_VALUE;
-      this.flat = 0;
-      this.fuzz = 0;
-    }
+  LinuxEventComponent(int nativeType, int nativeCode) {
+    this(LinuxComponentType.fromCode(nativeCode, nativeType == LinuxEventDevice.EV_ABS, nativeType == LinuxEventDevice.EV_REL),
+            nativeType == LinuxEventDevice.EV_ABS,
+            nativeType == LinuxEventDevice.EV_REL,
+            nativeType,
+            nativeCode);
+  }
 
-    this.componentType = linuxComponentType.getComponentType(nativeCode, this.axis, this.relative);
+  LinuxEventComponent(int nativeType, int nativeCode, input_absinfo absInfo) {
+    this(LinuxComponentType.fromCode(nativeCode, nativeType == LinuxEventDevice.EV_ABS, nativeType == LinuxEventDevice.EV_REL),
+            nativeType == LinuxEventDevice.EV_ABS,
+            nativeType == LinuxEventDevice.EV_REL,
+            nativeType,
+            nativeCode,
+            absInfo.minimum,
+            absInfo.maximum,
+            absInfo.flat,
+            absInfo.fuzz);
   }
 
   @Override

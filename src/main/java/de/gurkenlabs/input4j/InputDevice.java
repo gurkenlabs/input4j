@@ -84,6 +84,20 @@ public final class InputDevice implements Closeable {
   }
 
   /**
+   * Gets an input component by its ID.
+   *
+   * @param id the ID of the input component
+   * @return an Optional containing the input component if found, otherwise an empty Optional
+   */
+  public Optional<InputComponent> getComponent(InputComponent.ID id) {
+    if (id == null) {
+      return Optional.empty();
+    }
+
+    return components.stream().filter(c -> c.getId().equals(id)).findFirst();
+  }
+
+  /**
    * Adds a collection of input components to the input device.
    *
    * @param components the input components to add
