@@ -1,21 +1,28 @@
-# Input4j 
+# 🎮 Input4j - The pure Java input library
 
-**Input4j** is a free and pure Java input library based on the **Foreign Function & Memory API** (FFM API). 
-This library doesn't have any additional native artifacts and directly interoperates with 
-platform native libraries to access input devices.
 
-> ⚠ Minimum required Java version: **Java 22**
-> 
-> The FFM API has been finalized with ([JEP 454](https://openjdk.org/jeps/454)) with **Java 22**.
+**Input4j** is a cutting-edge, pure Java input library leveraging the **Foreign Function & Memory API** (FFM API), offering cross-platform support, high performance, flexible input handling, and future-proofing without the need for additional native artifacts, making it the **best choice for Java developers**.
 
-## 🎮 Main Features
-- **Cross-platform support**: Works on Windows, Linux, and OSX (in progress).
-- **No additional native artifacts**: Directly interoperates with platform native libraries.
-- **Polling and event-based input**: Supports both polling and event-based input mechanisms.
-- **Extensible**: Easily extendable to support new input devices and platforms.
+## 🚀 Key Features
+- **Cross-Platform Input handling**: Fully compatible with Windows, Linux, and OSX (in progress).
+- **Performance**: Optimized for high performance with minimal overhead.
+- **Flexible Input Handling**: Supports both polling and event-based input mechanisms.
+- **Simplicity**: Easy to integrate and use with straightforward APIs.
+- **Future-Proof**: Built on the latest Java technologies, ensuring long-term support and compatibility.
 
-## ⚙️ Installation
-To use Input4j in your project, add the following dependency to your `build.gradle` file:
+### 🆚 Advantages over traditional java input libraries
+Input4j offers several advantages over traditional libraries like JInput by leveraging the new Foreign Function & Memory API (FFM API) instead of using Java Native Interface (JNI).
+It is a more modern and efficient JNI alternative and an easy way to interact with native input libraries, providing the following benefits:
+
+- No Native Artifacts: Direct interaction with native libraries without the need for additional native artifacts simplifies the build and deployment process.
+- Performance: The FFM API reduces the overhead associated with native calls, resulting in better performance.
+- Safety: Safer memory management and access patterns reduce the risk of memory leaks and buffer overflows.
+- Ease of Use: A more straightforward and modern API makes it easier to write and maintain code.
+- Future-Proof: Built on the latest Java technologies, ensuring long-term support and compatibility with future Java versions.
+
+
+## 📦️ Installation
+Add the following dependency to your `build.gradle` file to start using Input4j:
 
 ```groovy
 dependencies {
@@ -23,12 +30,11 @@ dependencies {
 }
 ```
 
-## 💻 Code examples
+## 💻 Quick start guide
 
 ```java
 try (var inputDevices = InputDevices.init()) {
   while (!inputDevices.getAll().isEmpty()) {
-    
     // iterate all available input devices and poll their data every second
     for (var inputDevice : inputDevices.getAll()) {
       inputDevice.poll();
@@ -43,7 +49,13 @@ try (var inputDevices = InputDevices.init()) {
 ## 📦 Supported input APIs
  * **Windows**: DirectInput ✅
  * **Windows**: XInput ✅
- * **Linux**: Linux Input (evdev) 🚧
- * **OSX**: IOKIT ❌
+ * **Linux**: Linux Input (evdev) ✅
+ * **OSX**: IOKIT 🚧
  * **OSX**: Game Controller ❌
+
+> ⚠ Requires **Java 22** or greater
+>
+> The FFM API has been finalized with ([JEP 454](https://openjdk.org/jeps/454)) with **Java 22**.
+
+Join the revolution in Java input handling with Input4j and experience unparalleled performance and ease of use!
 
