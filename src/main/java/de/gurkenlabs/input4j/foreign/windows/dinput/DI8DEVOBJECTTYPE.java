@@ -47,7 +47,6 @@ enum DI8DEVOBJECTTYPE {
     return typeGuid;
   }
 
-
   public ComponentType getComponentType() {
     switch (this) {
       case XAxis, YAxis, ZAxis, RxAxis, RyAxis, RzAxis, Slider, POV -> {

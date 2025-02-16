@@ -33,7 +33,6 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
   private final Arena memoryArena = Arena.ofConfined();
   private final Collection<LinuxEventDevice> devices = ConcurrentHashMap.newKeySet();
-  private volatile boolean stop = false;
 
   @Override
   public void internalInitDevices(Frame owner) {
@@ -42,7 +41,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
   private void enumEventDevices() {
     final File dev = new File("/dev/input");
-    File[] eventDeviceFiles = dev.listFiles((File dir, String name) -> name.startsWith("event"));
+    File[] eventDeviceFiles = dev.listFiles((File _, String name) -> name.startsWith("event"));
     if (eventDeviceFiles == null) {
       log.log(Level.SEVERE, "No event devices found");
       return;
@@ -172,7 +171,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
         continue;
       }
 
-      linuxEventDevice.currentValues[componentIndex] = normalizeInputValue(inputEvent, nativeComponent);;
+      linuxEventDevice.currentValues[componentIndex] = normalizeInputValue(inputEvent, nativeComponent);
     }
 
     return LinuxVirtualComponentHandler.handlePolledValues(inputDevice, linuxEventDevice.currentValues);
@@ -254,7 +253,6 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
   @Override
   public void close() {
-    stop = true;
     for (LinuxEventDevice device : devices) {
       device.close(this.memoryArena);
     }
