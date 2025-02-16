@@ -106,4 +106,20 @@ public class LinuxDataStructTests {
       assertEquals(inputEvent.value, inputEventFromMemory.value);
     }
   }
+
+  @Test
+  public void testTimeval() {
+    try (var memorySession = Arena.ofConfined()) {
+      var t = new timeval();
+      t.tv_sec = 123456789L;
+      t.tv_usec = 987654321L;
+
+      var segment = memorySession.allocate(timeval.$LAYOUT);
+      t.write(segment);
+
+      var timevalFromMemory = timeval.read(segment);
+      assertEquals(t.tv_sec, timevalFromMemory.tv_sec);
+      assertEquals(t.tv_usec, timevalFromMemory.tv_usec);
+    }
+  }
 }

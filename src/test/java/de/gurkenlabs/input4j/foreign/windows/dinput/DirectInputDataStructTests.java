@@ -152,4 +152,52 @@ class DirectInputDataStructTests {
       assertEquals(diPropHeader.dwHow, testDIPropHeader.dwHow);
     }
   }
+
+  @Test
+  void testDIPROPDWORD() {
+    var dipropDWORD = new DIPROPDWORD();
+    dipropDWORD.diph = new DIPROPHEADER();
+    dipropDWORD.diph.dwSize = 20;
+    dipropDWORD.diph.dwHeaderSize = 16;
+    dipropDWORD.diph.dwObj = 1;
+    dipropDWORD.diph.dwHow = 2;
+    dipropDWORD.dwData = 12345;
+
+    try (var memorySession = Arena.ofConfined()) {
+      var segment = memorySession.allocate(DIPROPDWORD.$LAYOUT);
+      dipropDWORD.write(segment);
+
+      var testDIPROPDWORD = DIPROPDWORD.read(segment);
+      assertEquals(dipropDWORD.diph.dwSize, testDIPROPDWORD.diph.dwSize);
+      assertEquals(dipropDWORD.diph.dwHeaderSize, testDIPROPDWORD.diph.dwHeaderSize);
+      assertEquals(dipropDWORD.diph.dwObj, testDIPROPDWORD.diph.dwObj);
+      assertEquals(dipropDWORD.diph.dwHow, testDIPROPDWORD.diph.dwHow);
+      assertEquals(dipropDWORD.dwData, testDIPROPDWORD.dwData);
+    }
+  }
+
+  @Test
+  void testDIPROPRANGE() {
+    var diPropRange = new DIPROPRANGE();
+    diPropRange.diph = new DIPROPHEADER();
+    diPropRange.diph.dwSize = 28;
+    diPropRange.diph.dwHeaderSize = 16;
+    diPropRange.diph.dwObj = 1;
+    diPropRange.diph.dwHow = 2;
+    diPropRange.lMin = -1000;
+    diPropRange.lMax = 1000;
+
+    try (var memorySession = Arena.ofConfined()) {
+      var segment = memorySession.allocate(DIPROPRANGE.$LAYOUT);
+      diPropRange.write(segment);
+
+      var testDIPropRange = DIPROPRANGE.read(segment);
+      assertEquals(diPropRange.diph.dwSize, testDIPropRange.diph.dwSize);
+      assertEquals(diPropRange.diph.dwHeaderSize, testDIPropRange.diph.dwHeaderSize);
+      assertEquals(diPropRange.diph.dwObj, testDIPropRange.diph.dwObj);
+      assertEquals(diPropRange.diph.dwHow, testDIPropRange.diph.dwHow);
+      assertEquals(diPropRange.lMin, testDIPropRange.lMin);
+      assertEquals(diPropRange.lMax, testDIPropRange.lMax);
+    }
+  }
 }
