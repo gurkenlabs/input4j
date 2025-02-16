@@ -5,6 +5,9 @@ import de.gurkenlabs.input4j.ComponentType;
 import de.gurkenlabs.input4j.InputComponent;
 
 final class LinuxEventComponent {
+  final static String ID_DPAD_LEFT_RIGHT = "DPAD_LEFT_RIGHT";
+  final static String ID_DPAD_UP_DOWN = "DPAD_UP_DOWN";
+
   final LinuxComponentType linuxComponentType;
   final ComponentType componentType;
   final boolean axis;
@@ -116,8 +119,8 @@ final class LinuxEventComponent {
       case ABS_RX -> new InputComponent.ID(InputComponent.XInput.RIGHT_THUMB_X, this.nativeCode);
       case ABS_RY -> new InputComponent.ID(InputComponent.XInput.RIGHT_THUMB_Y, this.nativeCode);
       case ABS_RZ -> new InputComponent.ID(InputComponent.XInput.RIGHT_TRIGGER, this.nativeCode);
-      case ABS_HAT0X -> new InputComponent.Axis(InputComponent.ID.getNextId(), "DPAD_LEFT_RIGHT", this.nativeCode);
-      case ABS_HAT0Y -> new InputComponent.Axis(InputComponent.ID.getNextId(), "DPAD_UP_DOWN", this.nativeCode);
+      case ABS_HAT0X -> new InputComponent.Axis(InputComponent.ID.getNextId(), ID_DPAD_LEFT_RIGHT, this.nativeCode);
+      case ABS_HAT0Y -> new InputComponent.Axis(InputComponent.ID.getNextId(), ID_DPAD_UP_DOWN, this.nativeCode);
       default -> {
         var name = this.linuxComponentType.name();
         yield switch (this.componentType) {
