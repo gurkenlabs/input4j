@@ -93,18 +93,7 @@ class Linux {
     invoke(HANDLE_CLOSE, memoryArena, fd);
   }
 
-  static int select(Arena memoryArena, int fd, long timeout) {
-
-    var timevalMemorySegment = memoryArena.allocate(timeval.$LAYOUT);
-    new timeval().write(timevalMemorySegment);
-
-    var fdSegment = memoryArena.allocate(JAVA_INT);
-    fdSegment.set(JAVA_INT, 0, fd);
-
-    return invoke(HANDLE_SELECT, memoryArena, fd + 1, fdSegment, null, null, timevalMemorySegment);
-  }
-
-  /**
+ /**
    * Read an input event from the device.
    *
    * @param memoryArena the memory arena to allocate memory from
@@ -194,32 +183,6 @@ class Linux {
       return ERROR;
     }
     return numEffectsSegment.get(JAVA_INT, 0);
-  }
-
-  static boolean[] getKeyStates(Arena memoryArena, int fd) {
-    var len = LinuxEventDevice.KEY_MAX / 8 + 1;
-
-    MemorySegment bitsMemorySegment = memoryArena.allocate(MemoryLayout.sequenceLayout(len, JAVA_BYTE));
-    int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGKEY(len), bitsMemorySegment);
-    if (result == ERROR) {
-      log.log(Level.SEVERE, "Failed to get key states for device (" + fd + ")");
-      return null;
-    }
-
-    byte[] bits = new byte[len];
-    for (int i = 0; i < len; i++) {
-      bits[i] = bitsMemorySegment.get(JAVA_BYTE, i);
-    }
-
-    boolean[] keyStates = new boolean[LinuxEventDevice.KEY_MAX];
-
-    for (int i = 0; i < keyStates.length; i++) {
-      if (LinuxEventDevice.isBitSet(bits, i)) {
-        keyStates[i] = true;
-      }
-    }
-
-    return keyStates;
   }
 
   /**
