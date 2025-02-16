@@ -53,11 +53,8 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
     System.loadLibrary("Kernel32");
     System.loadLibrary("dinput8");
 
-    getModuleHandle = downcallHandle("GetModuleHandleW",
-            FunctionDescriptor.of(ADDRESS, ADDRESS));
-
-    directInput8Create = downcallHandle("DirectInput8Create",
-            FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
+    getModuleHandle = downcallHandle("GetModuleHandleW", FunctionDescriptor.of(ADDRESS, ADDRESS));
+    directInput8Create = downcallHandle("DirectInput8Create", FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
   }
 
   @Override

@@ -177,7 +177,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
    * @param triggerValue The raw trigger value (0 to 255).
    * @return The normalized trigger value as a float between 0.0 and 1.0.
    */
-  private static float normalizeTrigger(byte triggerValue) {
+  static float normalizeTrigger(byte triggerValue) {
     if (Byte.toUnsignedInt(triggerValue) < XINPUT_GAMEPAD.XINPUT_GAMEPAD_TRIGGER_THRESHOLD) {
       return 0.0f;
     }
@@ -192,7 +192,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
    *                   This helps to avoid unintentional movements due to slight pressure or drift.
    * @return The normalized float value.
    */
-  private static float normalizeSignedShort(short shortValue, int deadzone) {
+  static float normalizeSignedShort(short shortValue, int deadzone) {
     if (Math.abs(shortValue) < deadzone) {
       return 0.0f;
     }

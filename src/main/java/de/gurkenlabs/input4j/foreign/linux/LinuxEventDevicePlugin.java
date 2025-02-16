@@ -180,6 +180,13 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     return linuxEventDevice.currentValues;
   }
 
+  /**
+   * Normalize the input value to the range [-1, 1] for axes.
+   * <p>
+   * The value is normalized to the range [-1, 1] for axes.
+   * The value is 0 or 1 for buttons and non-axis D-Pad components.
+   * </p>
+   */
   static float normalizeInputValue(input_event inputEvent, LinuxEventComponent nativeComponent) {
     float value = inputEvent.value;
     if (nativeComponent.nativeType == LinuxEventDevice.EV_ABS) {
@@ -193,9 +200,21 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
         value = (value - nativeComponent.min) / (float) (nativeComponent.max - nativeComponent.min) * 2 - 1;
       }
     }
+
+    if(nativeComponent.nativeType == LinuxEventDevice.EV_KEY) {
+      value = value == 0 ? 0 : 1;
+    }
+
     return value;
   }
 
+  /**
+   * Get the component index by the native ID.
+   * <p>
+   * The native ID is the code of the input event.
+   * </p>
+   * @return the index of the component in the input device or <c>Linux.ERROR</c> if the component is not found
+   */
   static int getComponentIndexByNativeId(input_event inputEvent, InputDevice inputDevice) {
     for (int j = 0; j < inputDevice.getComponents().size(); j++) {
       var component = inputDevice.getComponents().get(j);
