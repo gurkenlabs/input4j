@@ -401,7 +401,7 @@ public enum LinuxComponentType {
     }else if (type.name().startsWith("BTN")) {
       return ComponentType.Button;
     } else if (type.name().startsWith("ABS_HAT")) {
-      return ComponentType.DPad;
+      return ComponentType.Axis;
     }
 
     return switch (type) {

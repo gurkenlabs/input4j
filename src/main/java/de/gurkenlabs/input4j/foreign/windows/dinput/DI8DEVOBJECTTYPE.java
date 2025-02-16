@@ -50,16 +50,12 @@ enum DI8DEVOBJECTTYPE {
 
   public ComponentType getComponentType() {
     switch (this) {
-      case XAxis, YAxis, ZAxis, RxAxis, RyAxis, RzAxis, Slider -> {
+      case XAxis, YAxis, ZAxis, RxAxis, RyAxis, RzAxis, Slider, POV -> {
         return ComponentType.Axis;
       }
 
       case Button -> {
         return ComponentType.Button;
-      }
-
-      case POV -> {
-        return ComponentType.DPad;
       }
 
       case Key -> {

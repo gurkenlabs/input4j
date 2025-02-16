@@ -84,7 +84,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
       // ignore devices without components
       // also ignore devices that have no buttons, axis or dpad (this should also exclude keyboards)
-      if (device.componentList.isEmpty() || device.componentList.stream().noneMatch(x -> x.componentType == ComponentType.Button || x.componentType == ComponentType.Axis || x.componentType == ComponentType.DPad)) {
+      if (device.componentList.isEmpty() || device.componentList.stream().noneMatch(x -> x.componentType == ComponentType.Button || x.componentType == ComponentType.Axis)) {
         continue;
       }
 
@@ -220,7 +220,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       if (component.getType() != ComponentType.Unknown) {
         switch (inputEvent.type) {
           case LinuxEventDevice.EV_KEY:
-            if (component.getType() != ComponentType.Button && component.getType() != ComponentType.DPad) {
+            if (component.getType() != ComponentType.Button) {
               continue;
             }
             break;

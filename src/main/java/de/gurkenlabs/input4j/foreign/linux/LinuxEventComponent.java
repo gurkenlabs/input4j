@@ -106,7 +106,7 @@ final class LinuxEventComponent {
       case BTN_TR -> new InputComponent.ID(InputComponent.XInput.RIGHT_SHOULDER, this.nativeCode);
       case BTN_SELECT -> new InputComponent.ID(InputComponent.XInput.BACK, this.nativeCode);
       case BTN_START -> new InputComponent.ID(InputComponent.XInput.START, this.nativeCode);
-      case BTN_MODE -> new InputComponent.ID(InputComponent.Button.get(10), this.nativeCode);
+      case BTN_MODE -> new InputComponent.ID(InputComponent.BUTTON_10, this.nativeCode);
       case BTN_THUMBL -> new InputComponent.ID(InputComponent.XInput.LEFT_THUMB, this.nativeCode);
       case BTN_THUMBR -> new InputComponent.ID(InputComponent.XInput.RIGHT_THUMB, this.nativeCode);
       case BTN_TRIGGER_HAPPY1 -> new InputComponent.ID(InputComponent.XInput.DPAD_LEFT, this.nativeCode);
@@ -119,13 +119,13 @@ final class LinuxEventComponent {
       case ABS_RX -> new InputComponent.ID(InputComponent.XInput.RIGHT_THUMB_X, this.nativeCode);
       case ABS_RY -> new InputComponent.ID(InputComponent.XInput.RIGHT_THUMB_Y, this.nativeCode);
       case ABS_RZ -> new InputComponent.ID(InputComponent.XInput.RIGHT_TRIGGER, this.nativeCode);
-      case ABS_HAT0X -> new InputComponent.Axis(InputComponent.ID.getNextId(), ID_DPAD_LEFT_RIGHT, this.nativeCode);
-      case ABS_HAT0Y -> new InputComponent.Axis(InputComponent.ID.getNextId(), ID_DPAD_UP_DOWN, this.nativeCode);
+      case ABS_HAT0X -> new InputComponent.ID(ComponentType.Axis, InputComponent.ID.getNextId(), ID_DPAD_LEFT_RIGHT, this.nativeCode);
+      case ABS_HAT0Y -> new InputComponent.ID(ComponentType.Axis, InputComponent.ID.getNextId(), ID_DPAD_UP_DOWN, this.nativeCode);
       default -> {
         var name = this.linuxComponentType.name();
         yield switch (this.componentType) {
-          case Axis -> new InputComponent.Axis(InputComponent.ID.getNextId(), name, this.nativeCode);
-          case Button -> new InputComponent.Button(InputComponent.ID.getNextId(), name, this.nativeCode);
+          case Axis -> new InputComponent.ID(ComponentType.Axis, InputComponent.ID.getNextId(), name, this.nativeCode);
+          case Button -> new InputComponent.ID(ComponentType.Button, InputComponent.ID.getNextId(), name, this.nativeCode);
           case Key -> new InputComponent.ID(ComponentType.Key, InputComponent.ID.getNextId(), name, this.nativeCode);
           default -> new InputComponent.ID(ComponentType.Unknown, InputComponent.ID.getNextId(), name, this.nativeCode);
         };

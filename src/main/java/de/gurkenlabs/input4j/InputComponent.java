@@ -9,6 +9,51 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * The input data for the component is set by the associated {@link InputDevice} when polling.
  */
 public final class InputComponent {
+  public static final ID BUTTON_0 = new ID(ComponentType.Button, 0, "BUTTON_0", 0);
+  public static final ID BUTTON_1 = new ID(ComponentType.Button, BUTTON_0.id + 1, "BUTTON_1", 0);
+  public static final ID BUTTON_2 = new ID(ComponentType.Button, BUTTON_0.id + 2, "BUTTON_2", 0);
+  public static final ID BUTTON_3 = new ID(ComponentType.Button, BUTTON_0.id + 3, "BUTTON_3", 0);
+  public static final ID BUTTON_4 = new ID(ComponentType.Button, BUTTON_0.id + 4, "BUTTON_4", 0);
+  public static final ID BUTTON_5 = new ID(ComponentType.Button, BUTTON_0.id + 5, "BUTTON_5", 0);
+  public static final ID BUTTON_6 = new ID(ComponentType.Button, BUTTON_0.id + 6, "BUTTON_6", 0);
+  public static final ID BUTTON_7 = new ID(ComponentType.Button, BUTTON_0.id + 7, "BUTTON_7", 0);
+  public static final ID BUTTON_8 = new ID(ComponentType.Button, BUTTON_0.id + 8, "BUTTON_8", 0);
+  public static final ID BUTTON_9 = new ID(ComponentType.Button, BUTTON_0.id + 9, "BUTTON_9", 0);
+  public static final ID BUTTON_10 = new ID(ComponentType.Button, BUTTON_0.id + 10, "BUTTON_10", 0);
+  public static final ID BUTTON_11 = new ID(ComponentType.Button, BUTTON_0.id + 11, "BUTTON_11", 0);
+  public static final ID BUTTON_12 = new ID(ComponentType.Button, BUTTON_0.id + 12, "BUTTON_12", 0);
+  public static final ID BUTTON_13 = new ID(ComponentType.Button, BUTTON_0.id + 13, "BUTTON_13", 0);
+  public static final ID BUTTON_14 = new ID(ComponentType.Button, BUTTON_0.id + 14, "BUTTON_14", 0);
+  public static final ID BUTTON_15 = new ID(ComponentType.Button, BUTTON_0.id + 15, "BUTTON_15", 0);
+  public static final ID BUTTON_16 = new ID(ComponentType.Button, BUTTON_0.id + 16, "BUTTON_16", 0);
+  public static final ID BUTTON_17 = new ID(ComponentType.Button, BUTTON_0.id + 17, "BUTTON_17", 0);
+  public static final ID BUTTON_18 = new ID(ComponentType.Button, BUTTON_0.id + 18, "BUTTON_18", 0);
+  public static final ID BUTTON_19 = new ID(ComponentType.Button, BUTTON_0.id + 19, "BUTTON_19", 0);
+  public static final ID BUTTON_20 = new ID(ComponentType.Button, BUTTON_0.id + 20, "BUTTON_20", 0);
+  public static final ID BUTTON_21 = new ID(ComponentType.Button, BUTTON_0.id + 21, "BUTTON_21", 0);
+  public static final ID BUTTON_22 = new ID(ComponentType.Button, BUTTON_0.id + 22, "BUTTON_22", 0);
+  public static final ID BUTTON_23 = new ID(ComponentType.Button, BUTTON_0.id + 23, "BUTTON_23", 0);
+  public static final ID BUTTON_24 = new ID(ComponentType.Button, BUTTON_0.id + 24, "BUTTON_24", 0);
+  public static final ID BUTTON_25 = new ID(ComponentType.Button, BUTTON_0.id + 25, "BUTTON_25", 0);
+  public static final ID BUTTON_26 = new ID(ComponentType.Button, BUTTON_0.id + 26, "BUTTON_26", 0);
+  public static final ID BUTTON_27 = new ID(ComponentType.Button, BUTTON_0.id + 27, "BUTTON_27", 0);
+  public static final ID BUTTON_28 = new ID(ComponentType.Button, BUTTON_0.id + 28, "BUTTON_28", 0);
+  public static final ID BUTTON_29 = new ID(ComponentType.Button, BUTTON_0.id + 29, "BUTTON_29", 0);
+  public static final ID BUTTON_30 = new ID(ComponentType.Button, BUTTON_0.id + 30, "BUTTON_30", 0);
+  public static final ID BUTTON_31 = new ID(ComponentType.Button, BUTTON_0.id + 31, "BUTTON_31", 0);
+  public static final ID DPAD_UP = new ID(ComponentType.Button, BUTTON_31.id + 1, "DPAD_UP", 0);
+  public static final ID DPAD_RIGHT = new ID(ComponentType.Button, DPAD_UP.id + 1, "DPAD_RIGHT", 0);
+  public static final ID DPAD_DOWN = new ID(ComponentType.Button, DPAD_UP.id + 2, "DPAD_DOWN", 0);
+  public static final ID DPAD_LEFT = new ID(ComponentType.Button, DPAD_UP.id + 3, "DPAD_LEFT", 0);
+  public static final ID AXIS_X = new ID(ComponentType.Axis, DPAD_LEFT.id + 1, "LEFT_AXIS_X", 0);
+  public static final ID AXIS_Y = new ID(ComponentType.Axis, AXIS_X.id + 1, "LEFT_AXIS_Y", 0);
+  public static final ID AXIS_Z = new ID(ComponentType.Axis, AXIS_X.id + 2, "LEFT_AXIS_Z", 0);
+  public static final ID AXIS_RX = new ID(ComponentType.Axis, AXIS_X.id + 3, "RIGHT_AXIS_X", 0);
+  public static final ID AXIS_RY = new ID(ComponentType.Axis, AXIS_X.id + 4, "RIGHT_AXIS_Y", 0);
+  public static final ID AXIS_RZ = new ID(ComponentType.Axis, AXIS_X.id + 5, "RIGHT_AXIS_Z", 0);
+  public static final ID AXIS_SLIDER = new ID(ComponentType.Axis, AXIS_X.id + 6, "SLIDER", 0);
+  public static final ID AXIS_DPAD = new ID(ComponentType.Axis, AXIS_X.id + 7, "DPAD_AXIS", 0);
+
   private final InputDevice device;
   private final ID id;
 
@@ -176,6 +221,7 @@ public final class InputComponent {
     public ID(ID otherId, String name) {
       this(otherId.type, otherId.id, name, 0);
     }
+
     /**
      * If you want to make this ID available with a different name, you can use this constructor.
      *
@@ -189,6 +235,7 @@ public final class InputComponent {
     public ID(ComponentType type, int id, String name) {
       this(type, id, name, 0);
     }
+
     public ID(ComponentType type, int id, String name, int nativeId) {
       this.type = type;
       this.id = id;
@@ -207,6 +254,7 @@ public final class InputComponent {
       }
       return false;
     }
+
     /**
      * Gets the next unique ID value.
      *
@@ -220,96 +268,37 @@ public final class InputComponent {
       return ids.stream().filter(i -> i.id == id).findFirst().orElse(null);
     }
 
+    public static ID getButton(int id) {
+      return ids.stream().filter(i -> i.type == ComponentType.Button && i.id == id).findFirst().orElse(null);
+    }
+
     public static ID get(String name) {
       return ids.stream().filter(i -> i.name.equals(name)).findFirst().orElse(null);
     }
   }
 
-  public static class Button extends ID {
-    public static final int MAX_BUTTON = 32;
-    private static final List<Button> buttons = new CopyOnWriteArrayList<>();
-
-    static {
-      for (int i = 0; i < MAX_BUTTON; i++) {
-        buttons.add(new Button(i, "BUTTON_" + i));
-      }
-    }
-
-    public static Button get(int id) {
-      return buttons.stream().filter(b -> b.id == id).findFirst().orElse(null);
-    }
-
-    public Button(int id, String name) {
-      super(ComponentType.Button, id, name, 0);
-    }
-
-    public Button(int id, String name, int nativeId) {
-      super(ComponentType.Button, id, name, nativeId);
-    }
-  }
-
-  public static class Dpad extends ID {
-    public static final int MAX_DPAD = Button.MAX_BUTTON + 4;
-
-    public static final Dpad UP = new Dpad(Button.MAX_BUTTON + 1, "DPAD_UP");
-    public static final Dpad RIGHT = new Dpad(Dpad.UP.id + 1, "DPAD_RIGHT");
-    public static final Dpad DOWN = new Dpad(Dpad.UP.id + 2, "DPAD_DOWN");
-    public static final Dpad LEFT = new Dpad(Dpad.UP.id + 3, "DPAD_LEFT");
-
-    public Dpad(int id, String name) {
-      super(ComponentType.Button, id, name, 0);
-    }
-  }
-
-  public static class Axis extends ID {
-    public static final Axis X = new Axis(Dpad.MAX_DPAD + 1, "LEFT_AXIS_X");
-    public static final Axis Y = new Axis(Axis.X.id + 1, "LEFT_AXIS_Y");
-    public static final Axis Z = new Axis(Axis.X.id + 2, "LEFT_AXIS_Z");
-    public static final Axis RX = new Axis(Axis.X.id + 3, "RIGHT_AXIS_X");
-    public static final Axis RY = new Axis(Axis.X.id + 4, "RIGHT_AXIS_Y");
-    public static final Axis RZ = new Axis(Axis.X.id + 5, "RIGHT_AXIS_Z");
-    public static final Axis SLIDER = new Axis(Axis.X.id + 6, "SLIDER");
-    public static final Axis DPAD = new Axis(ComponentType.DPad, Axis.X.id + 7, "DPAD_AXIS");
-
-    public Axis(int id, String name) {
-      this(ComponentType.Axis, id, name, 0);
-    }
-
-    public Axis(int id, String name, int nativeId) {
-      super(ComponentType.Axis, id, name, nativeId);
-    }
-
-    public Axis(ComponentType type, int id, String name) {
-      this(type, id, name, 0);
-    }
-
-    public Axis(ComponentType type, int id, String name, int nativeId) {
-      super(type, id, name, nativeId);
-    }
-  }
-
   public static class XInput extends ID {
-    public static final XInput A = new XInput(Button.get(0), "A");
-    public static final XInput B = new XInput(Button.get(1), "B");
-    public static final XInput X = new XInput(Button.get(2), "X");
-    public static final XInput Y = new XInput(Button.get(3), "Y");
-    public static final XInput LEFT_SHOULDER = new XInput(Button.get(4), "LEFT_SHOULDER");
-    public static final XInput RIGHT_SHOULDER = new XInput(Button.get(5), "RIGHT_SHOULDER");
-    public static final XInput BACK = new XInput(Button.get(6), "BACK");
-    public static final XInput START = new XInput(Button.get(7), "START");
-    public static final XInput LEFT_THUMB = new XInput(Button.get(8), "LEFT_THUMB");
-    public static final XInput RIGHT_THUMB = new XInput(Button.get(9), "RIGHT_THUMB");
-    public static final XInput DPAD_UP = new XInput(Dpad.UP);
-    public static final XInput DPAD_DOWN = new XInput(Dpad.DOWN);
-    public static final XInput DPAD_LEFT = new XInput(Dpad.LEFT);
-    public static final XInput DPAD_RIGHT = new XInput(Dpad.RIGHT);
-    public static final XInput LEFT_THUMB_X = new XInput(Axis.X, "LEFT_THUMB_X");
-    public static final XInput LEFT_THUMB_Y = new XInput(Axis.Y, "LEFT_THUMB_Y");
-    public static final XInput RIGHT_THUMB_X = new XInput(Axis.RX, "RIGHT_THUMB_X");
-    public static final XInput RIGHT_THUMB_Y = new XInput(Axis.RY, "RIGHT_THUMB_Y");
-    public static final XInput LEFT_TRIGGER = new XInput(Axis.Z, "LEFT_TRIGGER");
-    public static final XInput RIGHT_TRIGGER = new XInput(Axis.RZ, "RIGHT_TRIGGER");
-    public static final XInput DPAD = new XInput(Axis.DPAD);
+    public static final XInput A = new XInput(InputComponent.BUTTON_0, "A");
+    public static final XInput B = new XInput(InputComponent.BUTTON_1, "B");
+    public static final XInput X = new XInput(InputComponent.BUTTON_2, "X");
+    public static final XInput Y = new XInput(InputComponent.BUTTON_3, "Y");
+    public static final XInput LEFT_SHOULDER = new XInput(InputComponent.BUTTON_4, "LEFT_SHOULDER");
+    public static final XInput RIGHT_SHOULDER = new XInput(InputComponent.BUTTON_5, "RIGHT_SHOULDER");
+    public static final XInput BACK = new XInput(InputComponent.BUTTON_6, "BACK");
+    public static final XInput START = new XInput(InputComponent.BUTTON_7, "START");
+    public static final XInput LEFT_THUMB = new XInput(InputComponent.BUTTON_8, "LEFT_THUMB");
+    public static final XInput RIGHT_THUMB = new XInput(InputComponent.BUTTON_9, "RIGHT_THUMB");
+    public static final XInput DPAD_UP = new XInput(InputComponent.DPAD_UP);
+    public static final XInput DPAD_DOWN = new XInput(InputComponent.DPAD_DOWN);
+    public static final XInput DPAD_LEFT = new XInput(InputComponent.DPAD_LEFT);
+    public static final XInput DPAD_RIGHT = new XInput(InputComponent.DPAD_RIGHT);
+    public static final XInput LEFT_THUMB_X = new XInput(InputComponent.AXIS_X, "LEFT_THUMB_X");
+    public static final XInput LEFT_THUMB_Y = new XInput(InputComponent.AXIS_Y, "LEFT_THUMB_Y");
+    public static final XInput RIGHT_THUMB_X = new XInput(InputComponent.AXIS_RX, "RIGHT_THUMB_X");
+    public static final XInput RIGHT_THUMB_Y = new XInput(InputComponent.AXIS_RY, "RIGHT_THUMB_Y");
+    public static final XInput LEFT_TRIGGER = new XInput(InputComponent.AXIS_Z, "LEFT_TRIGGER");
+    public static final XInput RIGHT_TRIGGER = new XInput(InputComponent.AXIS_RZ, "RIGHT_TRIGGER");
+    public static final XInput DPAD = new XInput(InputComponent.AXIS_DPAD);
 
     private XInput(ID otherId, String name) {
       super(otherId, name);
@@ -321,31 +310,31 @@ public final class InputComponent {
   }
 
   public static class DualShock4 extends ID {
-    public static final DualShock4 SQUARE = new DualShock4(Button.get(0), "SQUARE");
-    public static final DualShock4 CROSS = new DualShock4(Button.get(1), "CROSS");
-    public static final DualShock4 CIRCLE = new DualShock4(Button.get(2), "CIRCLE");
-    public static final DualShock4 TRIANGLE = new DualShock4(Button.get(3), "TRIANGLE");
-    public static final DualShock4 L1 = new DualShock4(Button.get(4), "L1");
-    public static final DualShock4 R1 = new DualShock4(Button.get(5), "R1");
-    public static final DualShock4 L2 = new DualShock4(Button.get(6), "L2");
-    public static final DualShock4 R2 = new DualShock4(Button.get(7), "R2");
-    public static final DualShock4 SHARE = new DualShock4(Button.get(8), "SHARE");
-    public static final DualShock4 OPTIONS = new DualShock4(Button.get(9), "OPTIONS");
-    public static final DualShock4 LEFT_THUMB_PRESS = new DualShock4(Button.get(10), "LEFT_THUMB_PRESS");
-    public static final DualShock4 RIGHT_THUMB_PRESS = new DualShock4(Button.get(10), "RIGHT_THUMB_PRESS");
-    public static final DualShock4 PS = new DualShock4(Button.get(12), "PS");
-    public static final DualShock4 TOUCHPAD = new DualShock4(Button.get(13), "TOUCHPAD");
-    public static final DualShock4 DPAD_UP = new DualShock4(Dpad.UP);
-    public static final DualShock4 DPAD_DOWN = new DualShock4(Dpad.DOWN);
-    public static final DualShock4 DPAD_LEFT = new DualShock4(Dpad.LEFT);
-    public static final DualShock4 DPAD_RIGHT = new DualShock4(Dpad.RIGHT);
-    public static final DualShock4 DPAD = new DualShock4(Axis.DPAD);
-    public static final DualShock4 LEFT_THUMB_X = new DualShock4(Axis.X, "LEFT_THUMB_X");
-    public static final DualShock4 LEFT_THUMB_Y = new DualShock4(Axis.Y, "LEFT_THUMB_Y");
-    public static final DualShock4 RIGHT_THUMB_X = new DualShock4(Axis.Z, "RIGHT_THUMB_X"); // this is actually the Z axis on the DS4
-    public static final DualShock4 RIGHT_THUMB_Y = new DualShock4(Axis.RZ, "RIGHT_THUMB_Y"); // this is actually the RZ axis on the DS4
-    public static final DualShock4 LEFT_TRIGGER = new DualShock4(Axis.RX, "LEFT_TRIGGER");
-    public static final DualShock4 RIGHT_TRIGGER = new DualShock4(Axis.RY, "RIGHT_TRIGGER");
+    public static final DualShock4 SQUARE = new DualShock4(InputComponent.BUTTON_0, "SQUARE");
+    public static final DualShock4 CROSS = new DualShock4(InputComponent.BUTTON_1, "CROSS");
+    public static final DualShock4 CIRCLE = new DualShock4(InputComponent.BUTTON_2, "CIRCLE");
+    public static final DualShock4 TRIANGLE = new DualShock4(InputComponent.BUTTON_3, "TRIANGLE");
+    public static final DualShock4 L1 = new DualShock4(InputComponent.BUTTON_4, "L1");
+    public static final DualShock4 R1 = new DualShock4(InputComponent.BUTTON_5, "R1");
+    public static final DualShock4 L2 = new DualShock4(InputComponent.BUTTON_6, "L2");
+    public static final DualShock4 R2 = new DualShock4(InputComponent.BUTTON_7, "R2");
+    public static final DualShock4 SHARE = new DualShock4(InputComponent.BUTTON_8, "SHARE");
+    public static final DualShock4 OPTIONS = new DualShock4(InputComponent.BUTTON_9, "OPTIONS");
+    public static final DualShock4 LEFT_THUMB_PRESS = new DualShock4(InputComponent.BUTTON_10, "LEFT_THUMB_PRESS");
+    public static final DualShock4 RIGHT_THUMB_PRESS = new DualShock4(InputComponent.BUTTON_11, "RIGHT_THUMB_PRESS");
+    public static final DualShock4 PS = new DualShock4(InputComponent.BUTTON_12, "PS");
+    public static final DualShock4 TOUCHPAD = new DualShock4(InputComponent.BUTTON_13, "TOUCHPAD");
+    public static final DualShock4 DPAD_UP = new DualShock4(InputComponent.DPAD_UP);
+    public static final DualShock4 DPAD_DOWN = new DualShock4(InputComponent.DPAD_DOWN);
+    public static final DualShock4 DPAD_LEFT = new DualShock4(InputComponent.DPAD_LEFT);
+    public static final DualShock4 DPAD_RIGHT = new DualShock4(InputComponent.DPAD_RIGHT);
+    public static final DualShock4 DPAD = new DualShock4(InputComponent.AXIS_DPAD);
+    public static final DualShock4 LEFT_THUMB_X = new DualShock4(InputComponent.AXIS_X, "LEFT_THUMB_X");
+    public static final DualShock4 LEFT_THUMB_Y = new DualShock4(InputComponent.AXIS_Y, "LEFT_THUMB_Y");
+    public static final DualShock4 RIGHT_THUMB_X = new DualShock4(InputComponent.AXIS_Z, "RIGHT_THUMB_X"); // this is actually the Z axis on the DS4
+    public static final DualShock4 RIGHT_THUMB_Y = new DualShock4(InputComponent.AXIS_RZ, "RIGHT_THUMB_Y"); // this is actually the RZ axis on the DS4
+    public static final DualShock4 LEFT_TRIGGER = new DualShock4(InputComponent.AXIS_RX, "LEFT_TRIGGER");
+    public static final DualShock4 RIGHT_TRIGGER = new DualShock4(InputComponent.AXIS_RY, "RIGHT_TRIGGER");
 
     private DualShock4(ID otherId, String name) {
       super(otherId, name);

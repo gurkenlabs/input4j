@@ -85,8 +85,8 @@ public class LinuxEventDevicePluginTests {
   void testGetComponentIndexByNativeId() {
     // Create a mock InputDevice with components
     InputDevice inputDevice = new InputDevice("Test Device", "Test Device", null, null);
-    InputComponent buttonComponent = new InputComponent(inputDevice, new InputComponent.ID(InputComponent.Button.get(1), 123), "Button1", false);
-    InputComponent axisComponent = new InputComponent(inputDevice, new InputComponent.ID(InputComponent.Axis.X, 456), "Axis1", false);
+    InputComponent buttonComponent = new InputComponent(inputDevice, new InputComponent.ID(InputComponent.BUTTON_1, 123), "Button1", false);
+    InputComponent axisComponent = new InputComponent(inputDevice, new InputComponent.ID(InputComponent.AXIS_X, 456), "Axis1", false);
     inputDevice.addComponent(buttonComponent);
     inputDevice.addComponent(axisComponent);
 

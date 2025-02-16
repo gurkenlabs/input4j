@@ -3,7 +3,6 @@ package de.gurkenlabs.input4j;
 public enum ComponentType {
   Axis,
   Button,
-  DPad,
   Key,
   Unknown;
 

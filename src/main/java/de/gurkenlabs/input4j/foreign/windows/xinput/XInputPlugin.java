@@ -100,9 +100,6 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
         components.add(new InputComponent(device, InputComponent.XInput.RIGHT_THUMB_X));
         components.add(new InputComponent(device, InputComponent.XInput.RIGHT_THUMB_Y));
 
-        // Add a special DPAD axis component that combines the values of all DPAD buttons
-        // this is usally not provided by XInput but more consistent with other input libraries
-        components.add(new InputComponent(device, InputComponent.Axis.DPAD));
         device.setComponents(components);
 
         state.Gamepad.inputDevice = device;

@@ -146,25 +146,25 @@ final class DIDEVICEOBJECTINSTANCE {
   public InputComponent.ID getIdentifier() {
     switch (this.objectType) {
       case XAxis:
-        return InputComponent.Axis.X;
+        return InputComponent.AXIS_X;
       case YAxis:
-        return InputComponent.Axis.Y;
+        return InputComponent.AXIS_Y;
       case ZAxis:
-        return InputComponent.Axis.Z;
+        return InputComponent.AXIS_Z;
       case RxAxis:
-        return InputComponent.Axis.RX;
+        return InputComponent.AXIS_RX;
       case RyAxis:
-        return InputComponent.Axis.RY;
+        return InputComponent.AXIS_RY;
       case RzAxis:
-        return InputComponent.Axis.RZ;
+        return InputComponent.AXIS_RZ;
       case Slider:
-        return InputComponent.Axis.SLIDER;
+        return InputComponent.AXIS_SLIDER;
       case POV:
-        return InputComponent.Axis.DPAD;
+        return InputComponent.AXIS_DPAD;
       case Button:
-        var button = InputComponent.Button.get(this.getInstance());
+        var button = InputComponent.ID.getButton(this.getInstance());
         if (button == null) {
-          button = new InputComponent.Button(InputComponent.ID.getNextId(), this.getName());
+          button = new InputComponent.ID(ComponentType.Button, InputComponent.ID.getNextId(), this.getName());
         }
         return button;
       case Key:
