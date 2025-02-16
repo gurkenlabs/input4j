@@ -11,8 +11,8 @@ import java.util.Collection;
  * for input devices, particularly for DirectInput devices. It prepares virtual components
  * and handles polled values for these components.
  */
-final class VirtualComponentHandler {
-  private VirtualComponentHandler() {
+final class DirectInputVirtualComponentHandler {
+  private DirectInputVirtualComponentHandler() {
   }
 
   /**
@@ -54,11 +54,11 @@ final class VirtualComponentHandler {
    */
   static float[] handlePolledValues(final InputDevice device, final float[] nativeValues) {
     var allValues = new float[device.getComponents().size()];
-    var dpadUpIndex = findComponentIndex(device, allValues, InputComponent.Dpad.UP);
-    var dpadDownIndex = findComponentIndex(device, allValues, InputComponent.Dpad.DOWN);
-    var dpadLeftIndex = findComponentIndex(device, allValues, InputComponent.Dpad.LEFT);
-    var dpadRightIndex = findComponentIndex(device, allValues, InputComponent.Dpad.RIGHT);
-    var rzAxisIndex = findComponentIndex(device, allValues, InputComponent.Axis.RZ);
+    var dpadUpIndex = device.getComponentIndex(InputComponent.Dpad.UP);
+    var dpadDownIndex = device.getComponentIndex(InputComponent.Dpad.DOWN);
+    var dpadLeftIndex = device.getComponentIndex(InputComponent.Dpad.LEFT);
+    var dpadRightIndex = device.getComponentIndex(InputComponent.Dpad.RIGHT);
+    var rzAxisIndex = device.getComponentIndex(InputComponent.Axis.RZ);
 
     for (int i = 0; i < nativeValues.length && i < device.getComponents().size(); i++) {
       var value = nativeValues[i];
@@ -107,24 +107,6 @@ final class VirtualComponentHandler {
     }
 
     return allValues;
-  }
-
-  /**
-   * Finds the index of the specified component in the input device.
-   *
-   * @param device the input device
-   * @param values the array of values
-   * @param id     the component ID
-   * @return the index of the component, or -1 if not found
-   */
-  private static int findComponentIndex(InputDevice device, float[] values, InputComponent.ID id) {
-    for (int i = 0; i < device.getComponents().size() && i < values.length; i++) {
-      if (device.getComponents().get(i).getId().equals(id)) {
-        return i;
-      }
-    }
-
-    return -1;
   }
 
   /**

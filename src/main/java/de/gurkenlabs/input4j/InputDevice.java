@@ -98,6 +98,22 @@ public final class InputDevice implements Closeable {
   }
 
   /**
+   * Finds the index of the specified component in the input device.
+   *
+   * @param id the component ID
+   * @return the index of the component, or -1 if not found
+   */
+  public int getComponentIndex(InputComponent.ID id) {
+    for (int i = 0; i < this.components.size(); i++) {
+      if (this.components.get(i).getId().equals(id)) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
+  /**
    * Adds a collection of input components to the input device.
    *
    * @param components the input components to add

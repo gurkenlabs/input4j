@@ -188,7 +188,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
         }
 
         device.nativeComponentCount = currentComponents.size();
-        VirtualComponentHandler.prepareVirtualComponents(device.inputDevice, currentComponents.values());
+        DirectInputVirtualComponentHandler.prepareVirtualComponents(device.inputDevice, currentComponents.values());
         device.deviceObjects = deviceObjects;
       } finally {
         this.currentDevice = null;
@@ -247,7 +247,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
       log.log(Level.SEVERE, e.getMessage(), e);
     }
 
-    return VirtualComponentHandler.handlePolledValues(directInputDevice.inputDevice, polledValues);
+    return DirectInputVirtualComponentHandler.handlePolledValues(directInputDevice.inputDevice, polledValues);
   }
 
   private static MemorySegment defineDataFormat(List<DIDEVICEOBJECTINSTANCE> deviceObjects, Arena memoryArena) {

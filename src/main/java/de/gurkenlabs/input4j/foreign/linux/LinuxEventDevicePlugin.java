@@ -88,6 +88,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
         continue;
       }
 
+      LinuxVirtualComponentHandler.prepareVirtualComponents(device.inputDevice, inputDevice.getComponents());
       log.log(Level.INFO, "Found input device: " + device.filename + " - " + device.name + " with " + device.componentList.size() + " components");
       this.devices.add(device);
     }
@@ -124,9 +125,6 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
           inputDevice.addComponent(inputComponent);
         }
       }
-
-      // TODO: Linux evdev splits the D-Pad into ABS_HAT0X and ABS_HAT0Y for horizontal and vertical movements
-      //     We need a unified virtual DPAD component to be in line with the other input libraries
     }
   }
 
@@ -177,7 +175,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       linuxEventDevice.currentValues[componentIndex] = normalizeInputValue(inputEvent, nativeComponent);;
     }
 
-    return linuxEventDevice.currentValues;
+    return LinuxVirtualComponentHandler.handlePolledValues(inputDevice, linuxEventDevice.currentValues);
   }
 
   /**
