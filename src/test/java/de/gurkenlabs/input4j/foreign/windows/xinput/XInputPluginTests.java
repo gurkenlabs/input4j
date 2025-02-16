@@ -1,11 +1,14 @@
 package de.gurkenlabs.input4j.foreign.windows.xinput;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class XInputPluginTests {
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void testNormalizeTrigger() {
     // Test case 1: Value below threshold
     assertEquals(0.0f, XInputPlugin.normalizeTrigger((byte) 10), 0.01);
@@ -21,6 +24,7 @@ public class XInputPluginTests {
   }
 
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void testNormalizeSignedShort() {
     // Test case 1: Value within deadzone
     assertEquals(0.0f, XInputPlugin.normalizeSignedShort((short) 500, 1000), 0.01);
