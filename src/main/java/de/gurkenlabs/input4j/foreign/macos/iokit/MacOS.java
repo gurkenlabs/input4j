@@ -89,6 +89,16 @@ public class MacOS {
           (byte) 0x42, (byte) 0x6F
   });
 
+  static final MemorySegment kIOHIDDeviceInterfaceID = MemorySegment.ofArray(new byte[]{
+          (byte) 0x9A, (byte) 0x40, (byte) 0x4D, (byte) 0x7E,
+          (byte) 0x9C, (byte) 0x7B,
+          (byte) 0x11, (byte) 0xD4,
+          (byte) 0x91, (byte) 0x4B,
+          (byte) 0x00, (byte) 0x50,
+          (byte) 0xE4, (byte) 0xC6,
+          (byte) 0x42, (byte) 0x6F
+  });
+
   static {
     System.loadLibrary("CoreFoundation");
     System.loadLibrary("IOKit");

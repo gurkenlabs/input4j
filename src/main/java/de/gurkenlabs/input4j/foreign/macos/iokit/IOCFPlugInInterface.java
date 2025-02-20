@@ -52,7 +52,7 @@ class IOCFPlugInInterface {
     return pluginInterface;
   }
 
-  public int queryInterface(MemorySegment iid, MemorySegment ppv) throws Throwable {
+  public int QueryInterface(MemorySegment iid, MemorySegment ppv) throws Throwable {
     return (int) queryInterface.invokeExact(thisPointer, iid, ppv);
   }
 

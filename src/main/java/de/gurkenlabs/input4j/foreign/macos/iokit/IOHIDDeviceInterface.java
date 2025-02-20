@@ -12,8 +12,11 @@ import static java.lang.foreign.ValueLayout.*;
 
 class IOHIDDeviceInterface {
   private MemorySegment thisPointer;
-  public short version;
-  public short revision;
+  short version;
+  short revision;
+
+  MemorySegment hidDevice;
+
   private MethodHandle release;
   private MethodHandle open;
   private MethodHandle close;
