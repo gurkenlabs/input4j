@@ -18,13 +18,9 @@ class Linux {
   final static int EAGAIN = 11;
 
   final static int O_RDONLY = 0;
-  final static int O_NONBLOCK = 0x800;
-  final static int EPOLL_CTL_ADD = 1;
-  final static int EPOLL_CTL_DEL = 2;
-  final static int EPOLL_CTL_MOD = 3;
-
   // TODO: if we want to rumble, we need to open the device in read/write mode
   final static int O_RDWR = 2;
+  final static int O_NONBLOCK = 0x800;
 
   final static int _IOC_READ = 2;
   final static int NAME_BUFFER_SIZE = 1024;
@@ -54,7 +50,6 @@ class Linux {
   }
 
   private static final VarHandle errnoHandle;
-
   private static final MethodHandle strerror;
   private static final Map<String, MethodHandle> handles = new HashMap<>();
 
