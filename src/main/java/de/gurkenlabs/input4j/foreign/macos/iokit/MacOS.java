@@ -100,8 +100,8 @@ public class MacOS {
   });
 
   static {
-    System.loadLibrary("CoreFoundation");
-    System.loadLibrary("IOKit");
+    System.load("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation");
+    System.load("/System/Library/Frameworks/IOKit.framework/IOKit");
 
     CFRelease = downcallHandle("CFRelease", FunctionDescriptor.ofVoid(ADDRESS));
 
@@ -126,9 +126,9 @@ public class MacOS {
     IOServiceMatching = downcallHandle("IOServiceMatching", FunctionDescriptor.of(ADDRESS, ADDRESS));
     IOServiceGetMatchingServices = downcallHandle("IOServiceGetMatchingServices", FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
     IORegistryEntryCreateCFProperties = downcallHandle("IORegistryEntryCreateCFProperties", FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS, JAVA_INT));
-    IOIteratorNext = downcallHandle("IOIteratorNext", FunctionDescriptor.of(ADDRESS, ADDRESS));
-    IOCreatePlugInInterfaceForService = downcallHandle("IOCreatePlugInInterfaceForService", FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS, ADDRESS, ADDRESS));
-    IOObjectRelease = downcallHandle("IOObjectRelease", FunctionDescriptor.of(JAVA_INT, ADDRESS));
+    IOIteratorNext = downcallHandle("IOIteratorNext", FunctionDescriptor.of(JAVA_LONG, JAVA_LONG));
+    IOCreatePlugInInterfaceForService = downcallHandle("IOCreatePlugInInterfaceForService", FunctionDescriptor.of(JAVA_INT, JAVA_LONG, ADDRESS, ADDRESS, ADDRESS, ADDRESS));
+    IOObjectRelease = downcallHandle("IOObjectRelease", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
   }
 
   /**
@@ -362,9 +362,9 @@ public class MacOS {
    * @param iterator The I/O Registry iterator
    * @return The next object in the iterator, or NULL if there are no more objects
    */
-  public static MemorySegment IOIteratorNext(MemorySegment iterator) {
+  public static long IOIteratorNext(long iterator) {
     try {
-      return (MemorySegment) IOIteratorNext.invoke(iterator);
+      return (long) IOIteratorNext.invoke(iterator);
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
@@ -378,7 +378,7 @@ public class MacOS {
    * @param score        Address to store the scoring result (can be NULL)
    * @return IOReturn status code
    */
-  public static int IOCreatePlugInInterfaceForService(MemorySegment service, MemorySegment theInterface, MemorySegment score) {
+  public static int IOCreatePlugInInterfaceForService(long service, MemorySegment theInterface, MemorySegment score) {
     try {
       return (int) IOCreatePlugInInterfaceForService.invoke(
               service,
@@ -397,7 +397,7 @@ public class MacOS {
    * @param object The IOKit object to release
    * @return IOReturn status code
    */
-  public static int IOObjectRelease(MemorySegment object) {
+  public static int IOObjectRelease(long object) {
     try {
       return (int) IOObjectRelease.invoke(object);
     } catch (Throwable t) {
