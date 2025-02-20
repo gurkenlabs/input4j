@@ -1,4 +1,4 @@
-package de.gurkenlabs.input4j.foreign.macos;
+package de.gurkenlabs.input4j.foreign.macos.iokit;
 
 /**
  * The `IOReturn` class defines constants for various IOKit return codes.

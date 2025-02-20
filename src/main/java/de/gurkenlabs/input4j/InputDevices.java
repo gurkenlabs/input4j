@@ -121,7 +121,7 @@ public final class InputDevices {
         case WIN_DIRECTINPUT -> "de.gurkenlabs.input4j.foreign.windows.dinput.DirectInputPlugin";
         case WIN_XINPUT -> "de.gurkenlabs.input4j.foreign.windows.xinput.XInputPlugin";
         case LINUX_INPUT -> "de.gurkenlabs.input4j.foreign.linux.LinuxEventDevicePlugin";
-        case MACOS_IOKIT -> "de.gurkenlabs.input4j.foreign.macos.IOKitPlugin";
+        case MACOS_IOKIT -> "de.gurkenlabs.input4j.foreign.macos.iokit.IOKitPlugin";
       };
     }
 

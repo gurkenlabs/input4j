@@ -1,4 +1,4 @@
-package de.gurkenlabs.input4j.foreign.macos;
+package de.gurkenlabs.input4j.foreign.macos.iokit;
 
 import jdk.jfr.MemoryAddress;
 

@@ -1,4 +1,4 @@
-package de.gurkenlabs.input4j.foreign.macos;
+package de.gurkenlabs.input4j.foreign.macos.iokit;
 
 import java.lang.foreign.GroupLayout;
 import java.lang.foreign.MemoryLayout;

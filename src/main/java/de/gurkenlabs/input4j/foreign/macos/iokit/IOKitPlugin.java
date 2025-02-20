@@ -1,4 +1,4 @@
-package de.gurkenlabs.input4j.foreign.macos;
+package de.gurkenlabs.input4j.foreign.macos.iokit;
 
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
 import de.gurkenlabs.input4j.InputDevice;
