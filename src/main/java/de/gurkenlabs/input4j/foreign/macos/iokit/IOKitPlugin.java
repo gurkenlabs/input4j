@@ -20,21 +20,12 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
   @Override
   public void internalInitDevices(Frame owner) {
-    var hidMatchingDirectory = MacOS.IOServiceMatching(this.memoryArena);
-    var devices = MacOS.getIOHIDDevices(memoryArena);
-    var ioiterator = this.memoryArena.allocate(JAVA_LONG);
-    var ioMatchingServiceReturn = MacOS.IOServiceGetMatchingServices(hidMatchingDirectory, ioiterator);
-    if (ioMatchingServiceReturn != IOReturn.kIOReturnSuccess || ioiterator.equals(MemorySegment.NULL)) {
-      log.log(Level.SEVERE, "Failed to create HID iterator: " + IOReturn.toString(ioMatchingServiceReturn));
-      return;
-    }
-
-    long hidDevice;
-    while ((hidDevice = MacOS.IOIteratorNext(ioiterator.address())) != 0) {
+    var devices = MacOS.getSupportedHIDDevices(memoryArena);
+    for (var device : devices) {
       try {
         var pluginInterfaceSegment = this.memoryArena.allocate(IOCFPlugInInterface.$LAYOUT);
         var scoreSegment = this.memoryArena.allocate(JAVA_LONG);
-        var pluginInterfaceReturn = MacOS.IOCreatePlugInInterfaceForService(hidDevice, pluginInterfaceSegment, scoreSegment);
+        var pluginInterfaceReturn = MacOS.IOCreatePlugInInterfaceForService(device.deviceAddress, pluginInterfaceSegment, scoreSegment);
         if (pluginInterfaceReturn != IOReturn.kIOReturnSuccess) {
           log.log(Level.SEVERE, "Failed to create plugin interface: " + IOReturn.toString(pluginInterfaceReturn));
           continue;
@@ -51,12 +42,9 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
         pluginInterface.release();
 
-        var deviceInterface = IOHIDDeviceInterface.read(deviceInterfaceSegment);
-        deviceInterface.hidDevice = hidDevice;
+        device.deviceInterface = IOHIDDeviceInterface.read(deviceInterfaceSegment);
       } catch (Throwable e) {
-        log.log(Level.SEVERE, "Failed to query HID device interface: " + e.getMessage());
-        MacOS.IOObjectRelease(hidDevice);
-        continue;
+        log.log(Level.SEVERE, "Failed to initialize HID device: " + e.getMessage());
       }
     }
   }

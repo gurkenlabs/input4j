@@ -15,8 +15,6 @@ class IOHIDDeviceInterface {
   short version;
   short revision;
 
-  long hidDevice;
-
   private MethodHandle release;
   private MethodHandle open;
   private MethodHandle close;

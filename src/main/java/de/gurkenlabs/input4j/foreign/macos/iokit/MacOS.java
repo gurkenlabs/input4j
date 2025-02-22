@@ -202,7 +202,7 @@ public class MacOS {
    *
    * @param object The CoreFoundation object to release
    */
-  public static void CFRelease(MemorySegment object) {
+  static void CFRelease(MemorySegment object) {
     try {
       CFRelease.invoke(object);
     } catch (Throwable t) {
@@ -216,7 +216,7 @@ public class MacOS {
    * @param obj The CoreFoundation object
    * @return The type ID of the object
    */
-  public static int CFGetTypeID(MemorySegment obj) {
+  static int CFGetTypeID(MemorySegment obj) {
     try {
       return (int) CFGetTypeID.invoke(obj);
     } catch (Throwable t) {
@@ -229,7 +229,7 @@ public class MacOS {
    *
    * @return The type ID for CFArray
    */
-  public static long CFArrayGetTypeID() {
+  static long CFArrayGetTypeID() {
     try {
       return (long) CFArrayGetTypeID.invoke();
     } catch (Throwable t) {
@@ -242,7 +242,7 @@ public class MacOS {
    *
    * @return The type ID for CFDictionary
    */
-  public static long CFDictionaryGetTypeID() {
+  static long CFDictionaryGetTypeID() {
     try {
       return (long) CFDictionaryGetTypeID.invoke();
     } catch (Throwable t) {
@@ -255,7 +255,7 @@ public class MacOS {
    *
    * @return The type ID for CFString
    */
-  public static long CFStringGetTypeID() {
+  static long CFStringGetTypeID() {
     try {
       return (long) CFStringGetTypeID.invoke();
     } catch (Throwable t) {
@@ -268,7 +268,7 @@ public class MacOS {
    *
    * @return The type ID for CFNumber
    */
-  public static long CFNumberGetTypeID() {
+  static long CFNumberGetTypeID() {
     try {
       return (long) CFNumberGetTypeID.invoke();
     } catch (Throwable t) {
@@ -282,7 +282,7 @@ public class MacOS {
    * @param number The CFNumber object
    * @return The CFNumberType value indicating the type
    */
-  public static int CFNumberGetType(MemorySegment number) {
+  static int CFNumberGetType(MemorySegment number) {
     try {
       return (int) CFNumberGetType.invoke(number);
     } catch (Throwable t) {
@@ -296,7 +296,7 @@ public class MacOS {
    * @param array The CFArray object
    * @return The number of values in the array
    */
-  public static int CFArrayGetCount(MemorySegment array) {
+  static int CFArrayGetCount(MemorySegment array) {
     try {
       return (int) CFArrayGetCount.invoke(array);
     } catch (Throwable t) {
@@ -312,7 +312,7 @@ public class MacOS {
    * @param callback The callback function to apply
    * @param context  User-defined context data (can be null)
    */
-  public static void CFArrayApplyFunction(MemorySegment array, MemorySegment range,
+  static void CFArrayApplyFunction(MemorySegment array, MemorySegment range,
                                           MemorySegment callback, MemorySegment context) {
     try {
       CFArrayApplyFunction.invoke(array, range, callback, context);
@@ -328,7 +328,7 @@ public class MacOS {
    * @param callback   The callback function to apply
    * @param context    User-defined context data (can be NULL)
    */
-  public static void CFDictionaryApplyFunction(MemorySegment dictionary, MemorySegment callback, MemorySegment context) {
+  static void CFDictionaryApplyFunction(MemorySegment dictionary, MemorySegment callback, MemorySegment context) {
     try {
       CFDictionaryApplyFunction.invoke(dictionary, callback, context);
     } catch (Throwable t) {
@@ -336,7 +336,7 @@ public class MacOS {
     }
   }
 
-  public static String toString(Arena memoryArena, MemoryAddress cfString) {
+  static String toString(Arena memoryArena, MemoryAddress cfString) {
     try {
       int unicodeLength = (int) CFStringGetLength.invoke(cfString);
       int utf8Length = (int) CFStringGetMaximumSizeForEncoding.invoke(unicodeLength, kCFStringEncodingUTF8);
@@ -359,7 +359,7 @@ public class MacOS {
    *
    * @return A CFMutableDictionaryRef containing the matching criteria
    */
-  public static MemorySegment IOServiceMatching(Arena memoryArena) {
+  static MemorySegment IOServiceMatching(Arena memoryArena) {
     try {
       var nameSegment = memoryArena.allocateFrom(kIOHIDDeviceKey);
       return (MemorySegment) IOServiceMatching.invoke(nameSegment);
@@ -375,7 +375,7 @@ public class MacOS {
    * @param iterator Address to store the created iterator
    * @return IOReturn status code
    */
-  public static int IOServiceGetMatchingServices(MemorySegment matching, MemorySegment iterator) {
+  static int IOServiceGetMatchingServices(MemorySegment matching, MemorySegment iterator) {
     try {
       return (int) IOServiceGetMatchingServices.invoke(
               MemorySegment.NULL,  // masterPort, NULL = default
@@ -386,9 +386,11 @@ public class MacOS {
     }
   }
 
-  public static IOHIDDevice[] getIOHIDDevices(Arena memoryArena) {
+  static IOHIDDevice[] getSupportedHIDDevices(Arena memoryArena) {
+    var hidManager = MemorySegment.NULL;
+    var deviceSet = MemorySegment.NULL;
     try {
-      var hidManager = (MemorySegment) IOHIDManagerCreate.invoke(MemorySegment.NULL, 0x00);
+      hidManager = (MemorySegment) IOHIDManagerCreate.invoke(MemorySegment.NULL, 0x00);
 
       var openResult = (int) IOHIDManagerOpen.invoke(hidManager, 0);
       if (openResult != IOReturn.kIOReturnSuccess) {
@@ -397,9 +399,9 @@ public class MacOS {
 
       IOHIDManagerSetDeviceMatching.invoke(hidManager, MemorySegment.NULL);
 
-      var deviceSet = (MemorySegment) IOHIDManagerCopyDevices.invoke(hidManager);
+      deviceSet = (MemorySegment) IOHIDManagerCopyDevices.invoke(hidManager);
       var count = (int) CFSetGetCount.invoke(deviceSet);
-      System.out.println("Found " + count + " devices");
+      System.out.println("Found a total" + count + " HID devices");
       if (deviceSet.equals(MemorySegment.NULL)) {
         throw new RuntimeException("Failed to copy devices from HID manager");
       }
@@ -420,12 +422,25 @@ public class MacOS {
         device.manufacturer = getStringProperty(memoryArena, kIOHIDManufacturerKey, device);
         device.transport = getStringProperty(memoryArena, kIOHIDTransportKey, device);
 
+        if (!device.isSupportedHIDDevice()) {
+          continue;
+        }
+
         System.out.println("Device " + i + ": " + device);
         hidDevices[i] = device;
       }
-        return hidDevices;
+
+      return hidDevices;
     } catch (Throwable t) {
       throw new RuntimeException(t);
+    } finally {
+      if (!hidManager.equals(MemorySegment.NULL)) {
+        IOObjectRelease(hidManager.address());
+      }
+
+      if (!deviceSet.equals(MemorySegment.NULL)) {
+        IOObjectRelease(deviceSet.address());
+      }
     }
   }
 
