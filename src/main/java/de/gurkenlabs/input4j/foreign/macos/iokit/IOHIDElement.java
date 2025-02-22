@@ -58,7 +58,7 @@ class IOHIDElement {
   }
 
   public InputComponent.ID getIdentifier() {
-    return switch (this.usage) {
+    return switch (this.getUsage()) {
       case BUTTON_1 -> InputComponent.BUTTON_1;
       case BUTTON_2 -> InputComponent.BUTTON_2;
       case BUTTON_3 -> InputComponent.BUTTON_3;

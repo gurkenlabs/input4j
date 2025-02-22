@@ -60,7 +60,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
       var valueSegment = this.memoryArena.allocate(JAVA_INT);
       var getValueResult = MacOS.IOHIDDeviceGetValue(ioHIDDevice, element, valueSegment);
       if (getValueResult != IOReturn.kIOReturnSuccess) {
-        log.log(Level.WARNING, "Failed to get value for element " + element.getName() + " with error " + IOReturn.toString(getValueResult));
+        log.log(Level.WARNING, "Failed to get value for element " + element + " with error " + IOReturn.toString(getValueResult));
         continue;
       }
 
