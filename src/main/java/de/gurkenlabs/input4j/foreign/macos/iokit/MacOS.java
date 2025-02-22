@@ -6,7 +6,6 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
@@ -387,9 +386,8 @@ public class MacOS {
     }
   }
 
-  public static void IOHIDManagerOpen(Arena memoryArena) {
+  public static IOHIDDevice[] getIOHIDDevices(Arena memoryArena) {
     try {
-
       var hidManager = (MemorySegment) IOHIDManagerCreate.invoke(MemorySegment.NULL, 0x00);
 
       var openResult = (int) IOHIDManagerOpen.invoke(hidManager, 0);
@@ -407,105 +405,62 @@ public class MacOS {
       }
 
       var devices = memoryArena.allocate(JAVA_LONG, count);
-
       CFSetGetValues.invoke(deviceSet, devices);
+
+      var hidDevices = new IOHIDDevice[count];
       for (int i = 0; i < count; i++) {
         var device = new IOHIDDevice();
         device.deviceAddress = devices.get(JAVA_LONG, i * JAVA_LONG.byteSize());
-        System.out.println("Device " + i + ": " + device.deviceAddress);
 
-        // Get Vendor ID
-        var vendorKey = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(kIOHIDVendorIDKey), kCFStringEncodingUTF8);
-        try {
-          var vendorIDRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, vendorKey);
-          if (!vendorIDRef.equals(MemorySegment.NULL)) {
-            var vendorIdSegment = memoryArena.allocate(JAVA_INT);
-            if ((boolean) CFNumberGetValue.invoke(vendorIDRef, kCFNumberIntType, vendorIdSegment)) {
-              device.vendorId = vendorIdSegment.get(JAVA_INT, 0);
-              System.out.println("  Vendor ID: " + device.vendorId);
-            }
-          }
-        } finally {
-          CFRelease.invoke(vendorKey);
-        }
+        device.vendorId = getIntProperty(memoryArena, kIOHIDVendorIDKey, device);
+        device.productId = getIntProperty(memoryArena, kIOHIDProductIDKey, device);
+        device.usage = getIntProperty(memoryArena, kIOHIDPrimaryUsageKey, device);
+        device.productName = getStringProperty(memoryArena, kIOHIDProductKey, device);
+        device.manufacturer = getStringProperty(memoryArena, kIOHIDManufacturerKey, device);
+        device.transport = getStringProperty(memoryArena, kIOHIDTransportKey, device);
 
-        // Get Product ID
-        var productIdKey = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(kIOHIDProductIDKey), kCFStringEncodingUTF8);
-        try {
-          var productIdRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, productIdKey);
-          if (!productIdRef.equals(MemorySegment.NULL)) {
-            var productIdSegment = memoryArena.allocate(JAVA_INT);
-            if ((boolean) CFNumberGetValue.invoke(productIdRef, kCFNumberIntType, productIdSegment)) {
-              device.productId = productIdSegment.get(JAVA_INT, 0);
-              System.out.println("  Product ID: " + device.productId);
-            }
-          }
-        } finally {
-          CFRelease.invoke(productIdKey);
-        }
-
-        // Get Usage
-        var usageKey = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(kIOHIDPrimaryUsageKey), kCFStringEncodingUTF8);
-        try {
-          var usageRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, usageKey);
-          if (!usageRef.equals(MemorySegment.NULL)) {
-            var usageSegment = memoryArena.allocate(JAVA_INT);
-            if ((boolean) CFNumberGetValue.invoke(usageRef, kCFNumberIntType, usageSegment)) {
-              device.usage = usageSegment.get(JAVA_INT, 0);
-              System.out.println("  Usage: " + device.usage);
-            }
-          }
-        } finally {
-          CFRelease.invoke(productIdKey);
-        }
-
-        // Get Product Name
-        var productKey = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(kIOHIDProductKey), kCFStringEncodingUTF8);
-        try {
-          var productRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, productKey);
-          if (!productRef.equals(MemorySegment.NULL)) {
-            var productSegment = memoryArena.allocate(JAVA_CHAR, 256);
-            if ((boolean) CFStringGetCString.invoke(productRef, productSegment, 256, kCFStringEncodingUTF8) && productSegment != MemorySegment.NULL) {
-              device.productName = productSegment.reinterpret(256).getString(0, StandardCharsets.UTF_8);
-              System.out.println("  Product: " + device.productName);
-            }
-          }
-        } finally {
-          CFRelease.invoke(productKey);
-        }
-
-        var manufacturerKey = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(kIOHIDManufacturerKey), kCFStringEncodingUTF8);
-        try {
-          var manufacturerRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, manufacturerKey);
-          if (!manufacturerRef.equals(MemorySegment.NULL)) {
-            var manufacturerSegment = memoryArena.allocate(JAVA_CHAR, 256);
-            if ((boolean) CFStringGetCString.invoke(manufacturerRef, manufacturerSegment, 256, kCFStringEncodingUTF8) && manufacturerSegment != MemorySegment.NULL) {
-              device.manufacturer = manufacturerSegment.reinterpret(256).getString(0, StandardCharsets.UTF_8);
-              System.out.println("  Manufacturer: " + device.manufacturer);
-            }
-          }
-        } finally {
-          CFRelease.invoke(productKey);
-        }
-
-        var transportKey = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(kIOHIDTransportKey), kCFStringEncodingUTF8);
-        try {
-          var transportRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, transportKey);
-          if (!transportRef.equals(MemorySegment.NULL)) {
-            var transportSegment = memoryArena.allocate(JAVA_CHAR, 256);
-            if ((boolean) CFStringGetCString.invoke(transportRef, transportSegment, 256, kCFStringEncodingUTF8) && transportSegment != MemorySegment.NULL) {
-              device.transport = transportSegment.reinterpret(256).getString(0, StandardCharsets.UTF_8);
-              System.out.println("  Transport: " + device.transport);
-            }
-          }
-        } finally {
-          CFRelease.invoke(productKey);
-        }
+        System.out.println("Device " + i + ": " + device);
+        hidDevices[i] = device;
       }
-
+        return hidDevices;
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
+  }
+
+  private static int getIntProperty(Arena memoryArena, String propertyKey, IOHIDDevice device) throws Throwable {
+    var propertyKeyString = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(propertyKey), kCFStringEncodingUTF8);
+    try {
+      var propertyRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, propertyKeyString);
+      if (!propertyRef.equals(MemorySegment.NULL)) {
+        var propertyValue = memoryArena.allocate(JAVA_INT);
+        if ((boolean) CFNumberGetValue.invoke(propertyRef, kCFNumberIntType, propertyValue)) {
+          return propertyValue.get(JAVA_INT, 0);
+        }
+      }
+    } finally {
+      CFRelease.invoke(propertyKeyString);
+    }
+
+    return 0;
+  }
+
+  private static String getStringProperty(Arena memoryArena, String propertyKey, IOHIDDevice device) throws Throwable {
+    final int MAX_STRING_LENGTH = 256;
+    var propertyKeyString = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(propertyKey), kCFStringEncodingUTF8);
+    try {
+      var propertyRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, propertyKeyString);
+      if (!propertyRef.equals(MemorySegment.NULL)) {
+        var propertyValue = memoryArena.allocate(JAVA_CHAR, MAX_STRING_LENGTH);
+        if ((boolean) CFStringGetCString.invoke(propertyRef, propertyValue, MAX_STRING_LENGTH, kCFStringEncodingUTF8) && propertyValue != MemorySegment.NULL) {
+          return propertyValue.reinterpret(MAX_STRING_LENGTH).getString(0, StandardCharsets.UTF_8);
+        }
+      }
+    } finally {
+      CFRelease.invoke(propertyKeyString);
+    }
+
+    return null;
   }
 
   /**

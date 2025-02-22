@@ -3,7 +3,6 @@ package de.gurkenlabs.input4j.foreign.macos.iokit;
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
 import de.gurkenlabs.input4j.InputDevice;
 
-import javax.crypto.Mac;
 import java.awt.*;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -22,7 +21,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
   @Override
   public void internalInitDevices(Frame owner) {
     var hidMatchingDirectory = MacOS.IOServiceMatching(this.memoryArena);
-    MacOS.IOHIDManagerOpen(memoryArena);
+    var devices = MacOS.getIOHIDDevices(memoryArena);
     var ioiterator = this.memoryArena.allocate(JAVA_LONG);
     var ioMatchingServiceReturn = MacOS.IOServiceGetMatchingServices(hidMatchingDirectory, ioiterator);
     if (ioMatchingServiceReturn != IOReturn.kIOReturnSuccess || ioiterator.equals(MemorySegment.NULL)) {

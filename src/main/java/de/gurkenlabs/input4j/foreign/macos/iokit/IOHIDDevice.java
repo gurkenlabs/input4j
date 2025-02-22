@@ -1,7 +1,5 @@
 package de.gurkenlabs.input4j.foreign.macos.iokit;
 
-import java.lang.foreign.MemorySegment;
-
 public class IOHIDDevice {
     long deviceAddress;
     int vendorId;
@@ -10,4 +8,17 @@ public class IOHIDDevice {
     String manufacturer;
     String transport;
     int usage;
+
+    @Override
+    public String toString() {
+        return "IOHIDDevice{" +
+                "deviceAddress=" + deviceAddress +
+                ", vendorId=" + vendorId +
+                ", productId=" + productId +
+                ", productName='" + productName + '\'' +
+                ", manufacturer='" + manufacturer + '\'' +
+                ", transport='" + transport + '\'' +
+                ", usage=" + usage +
+                '}';
+    }
 }
