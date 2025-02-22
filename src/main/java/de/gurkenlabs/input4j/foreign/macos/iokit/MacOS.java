@@ -7,6 +7,8 @@ import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
 import static java.lang.foreign.ValueLayout.*;
@@ -386,7 +388,7 @@ public class MacOS {
     }
   }
 
-  static IOHIDDevice[] getSupportedHIDDevices(Arena memoryArena) {
+  static Collection<IOHIDDevice> getSupportedHIDDevices(Arena memoryArena) {
     var hidManager = MemorySegment.NULL;
     var deviceSet = MemorySegment.NULL;
     try {
@@ -409,7 +411,7 @@ public class MacOS {
       var devices = memoryArena.allocate(JAVA_LONG, count);
       CFSetGetValues.invoke(deviceSet, devices);
 
-      var hidDevices = new IOHIDDevice[count];
+      var hidDevices = new ArrayList<IOHIDDevice>();
       for (int i = 0; i < count; i++) {
         var device = new IOHIDDevice();
         device.deviceAddress = devices.get(JAVA_LONG, i * JAVA_LONG.byteSize());
@@ -427,7 +429,7 @@ public class MacOS {
         }
 
         System.out.println("Device " + i + ": " + device);
-        hidDevices[i] = device;
+        hidDevices.add(device);
       }
 
       return hidDevices;
