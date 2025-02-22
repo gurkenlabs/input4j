@@ -11,8 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static java.lang.foreign.ValueLayout.JAVA_INT;
-
 public class IOKitPlugin extends AbstractInputDevicePlugin {
   private static final Logger log = Logger.getLogger(IOKitPlugin.class.getName());
 
@@ -57,14 +55,14 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
         continue;
       }
 
-      var valueSegment = this.memoryArena.allocate(JAVA_INT);
-      var getValueResult = MacOS.IOHIDDeviceGetValue(ioHIDDevice, element, valueSegment);
+      var ioHIDValueRef = this.memoryArena.allocate(IOHIDValueRef.$LAYOUT);
+      var getValueResult = MacOS.IOHIDDeviceGetValue(ioHIDDevice, element, ioHIDValueRef);
       if (getValueResult != IOReturn.kIOReturnSuccess) {
         log.log(Level.WARNING, "Failed to get value for element " + element + " with error " + IOReturn.toString(getValueResult));
         continue;
       }
 
-      var value = MacOS.IOHIDValueGetIntegerValue(valueSegment);
+      var value = MacOS.IOHIDValueGetIntegerValue(ioHIDValueRef);
 
       values[i] = value;
     }
