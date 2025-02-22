@@ -125,6 +125,10 @@ public class MacOS {
   private static final MethodHandle IOHIDElementGetType;
   private static final MethodHandle IOHIDElementGetLogicalMin;
   private static final MethodHandle IOHIDElementGetLogicalMax;
+  private static final MethodHandle IOHIDElementGetPhysicalMin;
+  private static final MethodHandle IOHIDElementGetPhysicalMax;
+  private static final MethodHandle IOHIDElementGetUnit;
+  private static final MethodHandle IOHIDElementGetUnitExponent;
 
   /**
    * Key for matching HID devices in the IOKit registry.
@@ -216,6 +220,10 @@ public class MacOS {
     IOHIDElementGetType = downcallHandle("IOHIDElementGetType", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetLogicalMin = downcallHandle("IOHIDElementGetLogicalMin", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetLogicalMax = downcallHandle("IOHIDElementGetLogicalMax", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
+    IOHIDElementGetPhysicalMin = downcallHandle("IOHIDElementGetPhysicalMin", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
+    IOHIDElementGetPhysicalMax = downcallHandle("IOHIDElementGetPhysicalMax", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
+    IOHIDElementGetUnit = downcallHandle("IOHIDElementGetUnit", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
+    IOHIDElementGetUnitExponent = downcallHandle("IOHIDElementGetUnitExponent", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
   }
 
   /**
@@ -469,11 +477,15 @@ public class MacOS {
               }
             }
 
-            element.type = IOHIDElementType.fromValue((int)IOHIDElementGetType.invoke(element.address));
-            element.usage = (int)IOHIDElementGetUsage.invoke(element.address);
-            element.usagePage = (int)IOHIDElementGetUsagePage.invoke(element.address);
-            element.min = (int)IOHIDElementGetLogicalMin.invoke(element.address);
-            element.max = (int)IOHIDElementGetLogicalMax.invoke(element.address);
+            element.type = IOHIDElementType.fromValue((int) IOHIDElementGetType.invoke(element.address));
+            element.usagePage = IOHIDElementUsagePage.fromValue((int) IOHIDElementGetUsagePage.invoke(element.address));
+            element.usage = IOHIDElementUsage.fromValue((int) IOHIDElementGetUsage.invoke(element.address));
+            element.min = (int) IOHIDElementGetLogicalMin.invoke(element.address);
+            element.max = (int) IOHIDElementGetLogicalMax.invoke(element.address);
+            element.physicalMin = (int) IOHIDElementGetPhysicalMin.invoke(element.address);
+            element.physicalMax = (int) IOHIDElementGetPhysicalMax.invoke(element.address);
+            element.unit = (int) IOHIDElementGetUnit.invoke(element.address);
+            element.unitExponent = (int) IOHIDElementGetUnitExponent.invoke(element.address);
             device.addElement(element);
             System.out.println("Element " + j + ": " + element);
           }
