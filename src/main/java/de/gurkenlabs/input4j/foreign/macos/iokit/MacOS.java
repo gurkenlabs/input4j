@@ -461,16 +461,19 @@ public class MacOS {
             var element = new IOHIDElement();
             element.address = elementAddress.address();
 
-            var elementNameSegment = (MemorySegment) IOHIDElementGetName.invoke(element);
-            if (!elementNameSegment.equals(MemorySegment.NULL)) {
-              element.name = elementNameSegment.getString(0, StandardCharsets.UTF_8);
+            var elementNameRef = (MemorySegment) IOHIDElementGetName.invoke(element.address);
+            if (!elementNameRef.equals(MemorySegment.NULL)) {
+              var elementNameSegment = memoryArena.allocate(JAVA_CHAR, 256);
+              if ((boolean) CFStringGetCString.invoke(elementNameRef, elementNameSegment, 256, kCFStringEncodingUTF8) && elementNameSegment != MemorySegment.NULL) {
+                element.name = elementNameSegment.reinterpret(256).getString(0, StandardCharsets.UTF_8);
+              }
             }
 
-            element.type = (int)IOHIDElementGetType.invoke(element);
-            element.usage = (int)IOHIDElementGetUsage.invoke(element);
-            element.usagePage = (int)IOHIDElementGetUsagePage.invoke(element);
-            element.min = (int)IOHIDElementGetLogicalMin.invoke(element);
-            element.max = (int)IOHIDElementGetLogicalMax.invoke(element);
+            element.type = IOHIDElementType.fromValue((int)IOHIDElementGetType.invoke(element.address));
+            element.usage = (int)IOHIDElementGetUsage.invoke(element.address);
+            element.usagePage = (int)IOHIDElementGetUsagePage.invoke(element.address);
+            element.min = (int)IOHIDElementGetLogicalMin.invoke(element.address);
+            element.max = (int)IOHIDElementGetLogicalMax.invoke(element.address);
             device.addElement(element);
             System.out.println("Element " + j + ": " + element);
           }
