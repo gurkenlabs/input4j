@@ -15,6 +15,7 @@ class IOHIDElement {
   int physicalMax;
   int unit;
   int unitExponent;
+  int reportSize;
 
   int currentValue;
 

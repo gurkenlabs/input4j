@@ -131,6 +131,8 @@ public class MacOS {
   private static final MethodHandle IOHIDElementGetPhysicalMax;
   private static final MethodHandle IOHIDElementGetUnit;
   private static final MethodHandle IOHIDElementGetUnitExponent;
+  private static final MethodHandle IOHIDElementGetReportSize;
+
 
   /**
    * Key for matching HID devices in the IOKit registry.
@@ -228,6 +230,7 @@ public class MacOS {
     IOHIDElementGetPhysicalMax = downcallHandle("IOHIDElementGetPhysicalMax", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetUnit = downcallHandle("IOHIDElementGetUnit", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetUnitExponent = downcallHandle("IOHIDElementGetUnitExponent", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
+    IOHIDElementGetReportSize = downcallHandle("IOHIDElementGetReportSize", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
   }
 
   static int IOHIDDeviceGetValue(IOHIDDevice device, IOHIDElement element, MemorySegment value) {
@@ -506,6 +509,7 @@ public class MacOS {
             element.physicalMax = (int) IOHIDElementGetPhysicalMax.invoke(element.address);
             element.unit = (int) IOHIDElementGetUnit.invoke(element.address);
             element.unitExponent = (int) IOHIDElementGetUnitExponent.invoke(element.address);
+            element.reportSize = (int) IOHIDElementGetReportSize.invoke(element.address);
             device.addElement(element);
             System.out.println("Element " + j + ": " + element);
           }
