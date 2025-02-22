@@ -1,5 +1,7 @@
 package de.gurkenlabs.input4j.foreign.macos.iokit;
 
+import de.gurkenlabs.input4j.InputDevice;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,7 +17,7 @@ class IOHIDDevice {
   int usage;
   int usagePage;
 
-  IOHIDDeviceInterface deviceInterface;
+  InputDevice inputDevice;
 
   List<IOHIDElement> getElements() {
     return Collections.unmodifiableList(elements);
@@ -31,8 +33,7 @@ class IOHIDDevice {
 
   @Override
   public String toString() {
-    return "address: " + address +
-            ", product: '" + productName + "' (" + String.format("0X%02X", productId) + ")" +
+    return ", product: '" + productName + "' (" + String.format("0X%02X", productId) + ")" +
             ", vendor: '" + manufacturer + "' (" + String.format("0X%02X", vendorId) + ")" +
             ", transport: '" + transport + '\'' +
             ", usage: " + String.format("0X%02X", usage) + " (page: " + String.format("0X%02X", usagePage) + ")";

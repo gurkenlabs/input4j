@@ -117,7 +117,9 @@ public class MacOS {
   private static final MethodHandle IOHIDManagerCopyDevices;
   private static final MethodHandle IOHIDManagerSetDeviceMatching;
   private static final MethodHandle IOHIDDeviceGetProperty;
+  private static final MethodHandle IOHIDDeviceGetValue;
   private static final MethodHandle IOHIDDeviceCopyMatchingElements;
+  private static final MethodHandle IOHIDValueGetIntegerValue;
 
   private static final MethodHandle IOHIDElementGetName;
   private static final MethodHandle IOHIDElementGetUsage;
@@ -213,6 +215,8 @@ public class MacOS {
     IOHIDManagerSetDeviceMatching = downcallHandle("IOHIDManagerSetDeviceMatching", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS));
     IOHIDDeviceGetProperty = downcallHandle("IOHIDDeviceGetProperty", FunctionDescriptor.of(ADDRESS, JAVA_LONG, ADDRESS));
     IOHIDDeviceCopyMatchingElements = downcallHandle("IOHIDDeviceCopyMatchingElements", FunctionDescriptor.of(ADDRESS, JAVA_LONG, ADDRESS, JAVA_INT));
+    IOHIDDeviceGetValue = downcallHandle("IOHIDDeviceGetValue", FunctionDescriptor.of(JAVA_INT, JAVA_LONG, JAVA_LONG, ADDRESS));
+    IOHIDValueGetIntegerValue = downcallHandle("IOHIDValueGetIntegerValue", FunctionDescriptor.of(JAVA_INT, ADDRESS));
 
     IOHIDElementGetName = downcallHandle("IOHIDElementGetName", FunctionDescriptor.of(ADDRESS, JAVA_LONG));
     IOHIDElementGetUsage = downcallHandle("IOHIDElementGetUsage", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
@@ -224,6 +228,22 @@ public class MacOS {
     IOHIDElementGetPhysicalMax = downcallHandle("IOHIDElementGetPhysicalMax", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetUnit = downcallHandle("IOHIDElementGetUnit", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetUnitExponent = downcallHandle("IOHIDElementGetUnitExponent", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
+  }
+
+  static int IOHIDDeviceGetValue(IOHIDDevice device, IOHIDElement element, MemorySegment value) {
+    try {
+      return (int) IOHIDDeviceGetValue.invoke(device.address, element.address, value);
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  static int IOHIDValueGetIntegerValue(MemorySegment value) {
+    try {
+      return (int) IOHIDValueGetIntegerValue.invoke(value);
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
   }
 
   /**

@@ -1,61 +1,86 @@
 package de.gurkenlabs.input4j.foreign.macos.iokit;
 
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
+import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
 
 import java.awt.*;
 import java.lang.foreign.Arena;
-import java.lang.foreign.MemorySegment;
 import java.util.Collection;
-import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static java.lang.foreign.ValueLayout.JAVA_LONG;
+import static java.lang.foreign.ValueLayout.JAVA_INT;
 
 public class IOKitPlugin extends AbstractInputDevicePlugin {
   private static final Logger log = Logger.getLogger(IOKitPlugin.class.getName());
 
   private final Arena memoryArena = Arena.ofConfined();
+  private final Collection<IOHIDDevice> devices = ConcurrentHashMap.newKeySet();
 
   @Override
   public void internalInitDevices(Frame owner) {
-    var devices = MacOS.getSupportedHIDDevices(memoryArena);
-    for (var device : devices) {
-      try {
-        var pluginInterfaceSegment = this.memoryArena.allocate(IOCFPlugInInterface.$LAYOUT);
-        var scoreSegment = this.memoryArena.allocate(JAVA_LONG);
-        var pluginInterfaceReturn = MacOS.IOCreatePlugInInterfaceForService(device.address, pluginInterfaceSegment, scoreSegment);
-        if (pluginInterfaceReturn != IOReturn.kIOReturnSuccess) {
-          log.log(Level.SEVERE, "Failed to create plugin interface: " + IOReturn.toString(pluginInterfaceReturn));
+    var ioHIDDevices = MacOS.getSupportedHIDDevices(memoryArena);
+
+    for (var ioHIDDevice : ioHIDDevices) {
+      var inputDevice = new InputDevice(ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", this::pollIOHIDDevice, null);
+      ioHIDDevice.inputDevice = inputDevice;
+
+      for (var element : ioHIDDevice.getElements()) {
+        if (element.getUsage() == IOHIDElementUsage.UNDEFINED) {
           continue;
         }
 
-        var pluginInterface = IOCFPlugInInterface.read(pluginInterfaceSegment);
-        var deviceInterfaceSegment = this.memoryArena.allocate(IOHIDDeviceInterface.$LAYOUT);
-
-        var pluginReturn = pluginInterface.QueryInterface(MacOS.kIOHIDDeviceInterfaceID, deviceInterfaceSegment);
-        if (pluginReturn != IOReturn.kIOReturnSuccess || deviceInterfaceSegment.equals(MemorySegment.NULL)) {
-          log.log(Level.SEVERE, "Failed to query HID device interface: " + IOReturn.toString(pluginReturn));
-          continue;
-        }
-
-        pluginInterface.release();
-
-        device.deviceInterface = IOHIDDeviceInterface.read(deviceInterfaceSegment);
-      } catch (Throwable e) {
-        log.log(Level.SEVERE, "Failed to initialize HID device: " + e.getMessage());
+        var component = new InputComponent(inputDevice, element.getIdentifier(), element.getName());
+        inputDevice.addComponent(component);
       }
+      devices.add(ioHIDDevice);
     }
+  }
+
+  private float[] pollIOHIDDevice(InputDevice inputDevice) {
+    var values = new float[inputDevice.getComponents().size()];
+
+    // find native IOHIDDevice and poll elements
+    var ioHIDDevice = this.devices.stream().filter(x -> x.inputDevice.equals(inputDevice)).findFirst().orElse(null);
+    if (ioHIDDevice == null) {
+      log.log(Level.WARNING, "IOHIDDevice not found for input device " + inputDevice.getInstanceName());
+      return values;
+    }
+
+    for (int i = 0; i < inputDevice.getComponents().size(); i++) {
+      var component = inputDevice.getComponents().get(i);
+      var element = ioHIDDevice.getElements().stream().filter(x -> x.getIdentifier() == component.getId()).findFirst().orElse(null);
+      if (element == null) {
+        log.log(Level.WARNING, "IOHIDElement not found for component " + component.getId());
+        continue;
+      }
+
+      var valueSegment = this.memoryArena.allocate(JAVA_INT);
+      var getValueResult = MacOS.IOHIDDeviceGetValue(ioHIDDevice, element, valueSegment);
+      if (getValueResult != IOReturn.kIOReturnSuccess) {
+        log.log(Level.WARNING, "Failed to get value for element " + element.getName() + " with error " + IOReturn.toString(getValueResult));
+        continue;
+      }
+
+      var value = MacOS.IOHIDValueGetIntegerValue(valueSegment);
+
+      values[i] = value;
+    }
+
+    return values;
   }
 
   @Override
   public Collection<InputDevice> getAll() {
-    return List.of();
+    return this.devices.stream().map(x -> x.inputDevice).toList();
   }
 
   @Override
   public void close() {
     memoryArena.close();
+
+    // TODO: Clean up devices and elements
   }
 }
