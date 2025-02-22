@@ -3,6 +3,7 @@ package de.gurkenlabs.input4j.foreign.macos.iokit;
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
 import de.gurkenlabs.input4j.InputDevice;
 
+import javax.crypto.Mac;
 import java.awt.*;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -21,15 +22,16 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
   @Override
   public void internalInitDevices(Frame owner) {
     var hidMatchingDirectory = MacOS.IOServiceMatching(this.memoryArena);
+    MacOS.IOHIDManagerOpen(memoryArena);
     var ioiterator = this.memoryArena.allocate(JAVA_LONG);
     var ioMatchingServiceReturn = MacOS.IOServiceGetMatchingServices(hidMatchingDirectory, ioiterator);
-    if (ioMatchingServiceReturn != IOReturn.kIOReturnSuccess || ioiterator == MemorySegment.NULL) {
+    if (ioMatchingServiceReturn != IOReturn.kIOReturnSuccess || ioiterator.equals(MemorySegment.NULL)) {
       log.log(Level.SEVERE, "Failed to create HID iterator: " + IOReturn.toString(ioMatchingServiceReturn));
       return;
     }
 
-    MemorySegment hidDevice;
-    while ((hidDevice = MacOS.IOIteratorNext(ioiterator)) != MemorySegment.NULL) {
+    long hidDevice;
+    while ((hidDevice = MacOS.IOIteratorNext(ioiterator.address())) != 0) {
       try {
         var pluginInterfaceSegment = this.memoryArena.allocate(IOCFPlugInInterface.$LAYOUT);
         var scoreSegment = this.memoryArena.allocate(JAVA_LONG);
@@ -43,7 +45,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
         var deviceInterfaceSegment = this.memoryArena.allocate(IOHIDDeviceInterface.$LAYOUT);
 
         var pluginReturn = pluginInterface.QueryInterface(MacOS.kIOHIDDeviceInterfaceID, deviceInterfaceSegment);
-        if (pluginReturn != IOReturn.kIOReturnSuccess || deviceInterfaceSegment == MemorySegment.NULL) {
+        if (pluginReturn != IOReturn.kIOReturnSuccess || deviceInterfaceSegment.equals(MemorySegment.NULL)) {
           log.log(Level.SEVERE, "Failed to query HID device interface: " + IOReturn.toString(pluginReturn));
           continue;
         }

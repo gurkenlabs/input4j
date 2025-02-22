@@ -6,6 +6,7 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
@@ -29,7 +30,55 @@ public class MacOS {
   public static final int kCFNumberDoubleType = 13;
   public static final int kCFNumberCFIndexType = 14;
 
+  private final static String kIOHIDTransportKey = "Transport";
+  private final static String kIOHIDVendorIDKey = "VendorID";
+  private final static String kIOHIDVendorIDSourceKey = "VendorIDSource";
+  private final static String kIOHIDProductIDKey = "ProductID";
+  private final static String kIOHIDVersionNumberKey = "VersionNumber";
+  private final static String kIOHIDManufacturerKey = "Manufacturer";
+  private final static String kIOHIDProductKey = "Product";
+  private final static String kIOHIDSerialNumberKey = "SerialNumber";
+  private final static String kIOHIDCountryCodeKey = "CountryCode";
+  private final static String kIOHIDLocationIDKey = "LocationID";
+  private final static String kIOHIDDeviceUsageKey = "DeviceUsage";
+  private final static String kIOHIDDeviceUsagePageKey = "DeviceUsagePage";
+  private final static String kIOHIDDeviceUsagePairsKey = "DeviceUsagePairs";
+  private final static String kIOHIDPrimaryUsageKey = "PrimaryUsage";
+  private final static String kIOHIDPrimaryUsagePageKey = "PrimaryUsagePage";
+  private final static String kIOHIDMaxInputReportSizeKey = "MaxInputReportSize";
+  private final static String kIOHIDMaxOutputReportSizeKey = "MaxOutputReportSize";
+  private final static String kIOHIDMaxFeatureReportSizeKey = "MaxFeatureReportSize";
+
+  private final static String kIOHIDElementKey = "Elements";
+
+  private final static String kIOHIDElementCookieKey = "ElementCookie";
+  private final static String kIOHIDElementTypeKey = "Type";
+  private final static String kIOHIDElementCollectionTypeKey = "CollectionType";
+  private final static String kIOHIDElementUsageKey = "Usage";
+  private final static String kIOHIDElementUsagePageKey = "UsagePage";
+  private final static String kIOHIDElementMinKey = "Min";
+  private final static String kIOHIDElementMaxKey = "Max";
+  private final static String kIOHIDElementScaledMinKey = "ScaledMin";
+  private final static String kIOHIDElementScaledMaxKey = "ScaledMax";
+  private final static String kIOHIDElementSizeKey = "Size";
+  private final static String kIOHIDElementReportSizeKey = "ReportSize";
+  private final static String kIOHIDElementReportCountKey = "ReportCount";
+  private final static String kIOHIDElementReportIDKey = "ReportID";
+  private final static String kIOHIDElementIsArrayKey = "IsArray";
+  private final static String kIOHIDElementIsRelativeKey = "IsRelative";
+  private final static String kIOHIDElementIsWrappingKey = "IsWrapping";
+  private final static String kIOHIDElementIsNonLinearKey = "IsNonLinear";
+  private final static String kIOHIDElementHasPreferredStateKey = "HasPreferredState";
+  private final static String kIOHIDElementHasNullStateKey = "HasNullState";
+  private final static String kIOHIDElementUnitKey = "Unit";
+  private final static String kIOHIDElementUnitExponentKey = "UnitExponent";
+  private final static String kIOHIDElementNameKey = "Name";
+  private final static String kIOHIDElementValueLocationKey = "ValueLocation";
+  private final static String kIOHIDElementDuplicateIndexKey = "DuplicateIndex";
+  private final static String kIOHIDElementParentCollectionKey = "ParentCollection";
+
   private static final MethodHandle CFRelease;
+  private static final MethodHandle CFStringCreateWithCString;
 
   private static final MethodHandle CFGetTypeID;
   private static final MethodHandle CFArrayGetTypeID;
@@ -45,6 +94,9 @@ public class MacOS {
   private static final MethodHandle CFDictionaryGetKeysAndValues;
   private static final MethodHandle CFDictionaryApplyFunction;
 
+  private static final MethodHandle CFSetGetCount;
+  private static final MethodHandle CFSetGetValues;
+
   private static final MethodHandle CFStringGetCString;
   private static final MethodHandle CFStringGetLength;
   private static final MethodHandle CFStringGetMaximumSizeForEncoding;
@@ -57,6 +109,12 @@ public class MacOS {
   private static final MethodHandle IOIteratorNext;
   private static final MethodHandle IOCreatePlugInInterfaceForService;
   private static final MethodHandle IOObjectRelease;
+
+  private static final MethodHandle IOHIDManagerCreate;
+  private static final MethodHandle IOHIDManagerOpen;
+  private static final MethodHandle IOHIDManagerCopyDevices;
+  private static final MethodHandle IOHIDManagerSetDeviceMatching;
+  private static final MethodHandle IOHIDDeviceGetProperty;
 
   /**
    * Key for matching HID devices in the IOKit registry.
@@ -104,6 +162,7 @@ public class MacOS {
     System.load("/System/Library/Frameworks/IOKit.framework/IOKit");
 
     CFRelease = downcallHandle("CFRelease", FunctionDescriptor.ofVoid(ADDRESS));
+    CFStringCreateWithCString = downcallHandle("CFStringCreateWithCString", FunctionDescriptor.of(ADDRESS, ADDRESS, ADDRESS, JAVA_INT));
 
     CFGetTypeID = downcallHandle("CFGetTypeID", FunctionDescriptor.of(JAVA_INT, ADDRESS));
     CFArrayGetTypeID = downcallHandle("CFArrayGetTypeID", FunctionDescriptor.of(JAVA_LONG));
@@ -118,6 +177,8 @@ public class MacOS {
     CFDictionaryGetCount = downcallHandle("CFDictionaryGetCount", FunctionDescriptor.of(JAVA_INT, ADDRESS));
     CFDictionaryGetKeysAndValues = downcallHandle("CFDictionaryGetKeysAndValues", FunctionDescriptor.of(ADDRESS, ADDRESS, ADDRESS));
     CFDictionaryApplyFunction = downcallHandle("CFDictionaryApplyFunction", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS, ADDRESS));
+    CFSetGetCount = downcallHandle("CFSetGetCount", FunctionDescriptor.of(JAVA_INT, ADDRESS));
+    CFSetGetValues = downcallHandle("CFSetGetValues", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS));
 
     CFStringGetLength = downcallHandle("CFStringGetLength", FunctionDescriptor.of(JAVA_INT, ADDRESS));
     CFStringGetMaximumSizeForEncoding = downcallHandle("CFStringGetMaximumSizeForEncoding", FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT));
@@ -129,6 +190,12 @@ public class MacOS {
     IOIteratorNext = downcallHandle("IOIteratorNext", FunctionDescriptor.of(JAVA_LONG, JAVA_LONG));
     IOCreatePlugInInterfaceForService = downcallHandle("IOCreatePlugInInterfaceForService", FunctionDescriptor.of(JAVA_INT, JAVA_LONG, ADDRESS, ADDRESS, ADDRESS, ADDRESS));
     IOObjectRelease = downcallHandle("IOObjectRelease", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
+
+    IOHIDManagerCreate = downcallHandle("IOHIDManagerCreate", FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_INT));
+    IOHIDManagerOpen = downcallHandle("IOHIDManagerOpen", FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT));
+    IOHIDManagerCopyDevices = downcallHandle("IOHIDManagerCopyDevices", FunctionDescriptor.of(ADDRESS, ADDRESS));
+    IOHIDManagerSetDeviceMatching = downcallHandle("IOHIDManagerSetDeviceMatching", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS));
+    IOHIDDeviceGetProperty = downcallHandle("IOHIDDeviceGetProperty", FunctionDescriptor.of(ADDRESS, JAVA_LONG, ADDRESS));
   }
 
   /**
@@ -225,22 +292,6 @@ public class MacOS {
   }
 
   /**
-   * Gets the value from a CFNumber object.
-   *
-   * @param number The CFNumber object
-   * @param theType The type of number to retrieve
-   * @param valuePtr Pointer to the memory where the value will be stored
-   * @return true if successful, false otherwise
-   */
-  public static boolean CFNumberGetValue(MemorySegment number, int theType, MemorySegment valuePtr) {
-    try {
-      return (boolean) CFNumberGetValue.invoke(number, theType, valuePtr);
-    } catch (Throwable t) {
-      throw new RuntimeException(t);
-    }
-  }
-
-  /**
    * Returns the number of values in a CFArray.
    *
    * @param array The CFArray object
@@ -257,10 +308,10 @@ public class MacOS {
   /**
    * Applies a callback function to each element in a CFArray.
    *
-   * @param array The CFArray object
-   * @param range The range of elements to process (can be null for all elements)
+   * @param array    The CFArray object
+   * @param range    The range of elements to process (can be null for all elements)
    * @param callback The callback function to apply
-   * @param context User-defined context data (can be null)
+   * @param context  User-defined context data (can be null)
    */
   public static void CFArrayApplyFunction(MemorySegment array, MemorySegment range,
                                           MemorySegment callback, MemorySegment context) {
@@ -275,8 +326,8 @@ public class MacOS {
    * Applies a callback function to each key-value pair in a dictionary.
    *
    * @param dictionary The dictionary to iterate over
-   * @param callback The callback function to apply
-   * @param context User-defined context data (can be NULL)
+   * @param callback   The callback function to apply
+   * @param context    User-defined context data (can be NULL)
    */
   public static void CFDictionaryApplyFunction(MemorySegment dictionary, MemorySegment callback, MemorySegment context) {
     try {
@@ -331,6 +382,127 @@ public class MacOS {
               MemorySegment.NULL,  // masterPort, NULL = default
               matching,
               iterator);
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  public static void IOHIDManagerOpen(Arena memoryArena) {
+    try {
+
+      var hidManager = (MemorySegment) IOHIDManagerCreate.invoke(MemorySegment.NULL, 0x00);
+
+      var openResult = (int) IOHIDManagerOpen.invoke(hidManager, 0);
+      if (openResult != IOReturn.kIOReturnSuccess) {
+        throw new RuntimeException("Failed to open HID manager: " + openResult);
+      }
+
+      IOHIDManagerSetDeviceMatching.invoke(hidManager, MemorySegment.NULL);
+
+      var deviceSet = (MemorySegment) IOHIDManagerCopyDevices.invoke(hidManager);
+      var count = (int) CFSetGetCount.invoke(deviceSet);
+      System.out.println("Found " + count + " devices");
+      if (deviceSet.equals(MemorySegment.NULL)) {
+        throw new RuntimeException("Failed to copy devices from HID manager");
+      }
+
+      var devices = memoryArena.allocate(JAVA_LONG, count);
+
+      CFSetGetValues.invoke(deviceSet, devices);
+      for (int i = 0; i < count; i++) {
+        var device = new IOHIDDevice();
+        device.deviceAddress = devices.get(JAVA_LONG, i * JAVA_LONG.byteSize());
+        System.out.println("Device " + i + ": " + device.deviceAddress);
+
+        // Get Vendor ID
+        var vendorKey = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(kIOHIDVendorIDKey), kCFStringEncodingUTF8);
+        try {
+          var vendorIDRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, vendorKey);
+          if (!vendorIDRef.equals(MemorySegment.NULL)) {
+            var vendorIdSegment = memoryArena.allocate(JAVA_INT);
+            if ((boolean) CFNumberGetValue.invoke(vendorIDRef, kCFNumberIntType, vendorIdSegment)) {
+              device.vendorId = vendorIdSegment.get(JAVA_INT, 0);
+              System.out.println("  Vendor ID: " + device.vendorId);
+            }
+          }
+        } finally {
+          CFRelease.invoke(vendorKey);
+        }
+
+        // Get Product ID
+        var productIdKey = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(kIOHIDProductIDKey), kCFStringEncodingUTF8);
+        try {
+          var productIdRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, productIdKey);
+          if (!productIdRef.equals(MemorySegment.NULL)) {
+            var productIdSegment = memoryArena.allocate(JAVA_INT);
+            if ((boolean) CFNumberGetValue.invoke(productIdRef, kCFNumberIntType, productIdSegment)) {
+              device.productId = productIdSegment.get(JAVA_INT, 0);
+              System.out.println("  Product ID: " + device.productId);
+            }
+          }
+        } finally {
+          CFRelease.invoke(productIdKey);
+        }
+
+        // Get Usage
+        var usageKey = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(kIOHIDPrimaryUsageKey), kCFStringEncodingUTF8);
+        try {
+          var usageRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, usageKey);
+          if (!usageRef.equals(MemorySegment.NULL)) {
+            var usageSegment = memoryArena.allocate(JAVA_INT);
+            if ((boolean) CFNumberGetValue.invoke(usageRef, kCFNumberIntType, usageSegment)) {
+              device.usage = usageSegment.get(JAVA_INT, 0);
+              System.out.println("  Usage: " + device.usage);
+            }
+          }
+        } finally {
+          CFRelease.invoke(productIdKey);
+        }
+
+        // Get Product Name
+        var productKey = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(kIOHIDProductKey), kCFStringEncodingUTF8);
+        try {
+          var productRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, productKey);
+          if (!productRef.equals(MemorySegment.NULL)) {
+            var productSegment = memoryArena.allocate(JAVA_CHAR, 256);
+            if ((boolean) CFStringGetCString.invoke(productRef, productSegment, 256, kCFStringEncodingUTF8) && productSegment != MemorySegment.NULL) {
+              device.productName = productSegment.reinterpret(256).getString(0, StandardCharsets.UTF_8);
+              System.out.println("  Product: " + device.productName);
+            }
+          }
+        } finally {
+          CFRelease.invoke(productKey);
+        }
+
+        var manufacturerKey = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(kIOHIDManufacturerKey), kCFStringEncodingUTF8);
+        try {
+          var manufacturerRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, manufacturerKey);
+          if (!manufacturerRef.equals(MemorySegment.NULL)) {
+            var manufacturerSegment = memoryArena.allocate(JAVA_CHAR, 256);
+            if ((boolean) CFStringGetCString.invoke(manufacturerRef, manufacturerSegment, 256, kCFStringEncodingUTF8) && manufacturerSegment != MemorySegment.NULL) {
+              device.manufacturer = manufacturerSegment.reinterpret(256).getString(0, StandardCharsets.UTF_8);
+              System.out.println("  Manufacturer: " + device.manufacturer);
+            }
+          }
+        } finally {
+          CFRelease.invoke(productKey);
+        }
+
+        var transportKey = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(kIOHIDTransportKey), kCFStringEncodingUTF8);
+        try {
+          var transportRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, transportKey);
+          if (!transportRef.equals(MemorySegment.NULL)) {
+            var transportSegment = memoryArena.allocate(JAVA_CHAR, 256);
+            if ((boolean) CFStringGetCString.invoke(transportRef, transportSegment, 256, kCFStringEncodingUTF8) && transportSegment != MemorySegment.NULL) {
+              device.transport = transportSegment.reinterpret(256).getString(0, StandardCharsets.UTF_8);
+              System.out.println("  Transport: " + device.transport);
+            }
+          }
+        } finally {
+          CFRelease.invoke(productKey);
+        }
+      }
+
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
