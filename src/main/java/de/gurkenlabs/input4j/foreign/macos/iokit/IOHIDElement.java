@@ -18,8 +18,8 @@ class IOHIDElement {
       return this.name;
     }
 
-    if (this.usage != null && this.usage != IOHIDElementUsage.UNDEFINED) {
-      return this.usage.toString();
+    if (this.getUsage() != null && this.getUsage() != IOHIDElementUsage.UNDEFINED) {
+      return this.getUsage().toString();
     }
 
     return "";
