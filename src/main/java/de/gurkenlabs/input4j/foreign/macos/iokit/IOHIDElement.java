@@ -25,14 +25,20 @@ class IOHIDElement {
     return "";
   }
 
+  IOHIDElementUsage getUsage() {
+    if (this.type != IOHIDElementType.BUTTON && this.usage.getUsage() < IOHIDElementUsage.BUTTON_32.getUsage()) {
+      return IOHIDElementUsage.UNDEFINED;
+    }
+    return this.usage;
+  }
+
   @Override
   public String toString() {
     return "address: " + address +
-            ", name: '" + getName() + (this.usage != IOHIDElementUsage.UNDEFINED ? " (" + usage + ")" : "") +
+            ", name: '" + getName() + "'" +
+            ", usage: " + getUsage() +
+            ", type: " + type + " (" + usagePage + ")" +
             ", min: '" + min +
-            ", max: '" + max +
-            ", usage: " + usage +
-            ", type: " + type + " (" + usagePage + ")";
-
+            ", max: '" + max;
   }
 }
