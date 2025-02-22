@@ -6,6 +6,7 @@ import de.gurkenlabs.input4j.InputDevice;
 
 import java.awt.*;
 import java.lang.foreign.Arena;
+import java.lang.foreign.MemorySegment;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -59,6 +60,12 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
       var getValueResult = MacOS.IOHIDDeviceGetValue(ioHIDDevice, element, ioHIDValueRef);
       if (getValueResult != IOReturn.kIOReturnSuccess) {
         log.log(Level.WARNING, "Failed to get value for element " + element + " with error " + IOReturn.toString(getValueResult));
+        continue;
+      }
+
+      var elementFromValueRef = MacOS.IOHIDValueGetElement(ioHIDValueRef);
+      if (elementFromValueRef.equals(MemorySegment.NULL) && elementFromValueRef.address() != element.address) {
+        log.log(Level.WARNING, "Element mismatch for value " + element + " != " + elementFromValueRef);
         continue;
       }
 
