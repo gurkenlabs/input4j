@@ -415,6 +415,7 @@ public class MacOS {
         device.vendorId = getIntProperty(memoryArena, kIOHIDVendorIDKey, device);
         device.productId = getIntProperty(memoryArena, kIOHIDProductIDKey, device);
         device.usage = getIntProperty(memoryArena, kIOHIDPrimaryUsageKey, device);
+        device.usagePage = getIntProperty(memoryArena, kIOHIDPrimaryUsagePageKey, device);
         device.productName = getStringProperty(memoryArena, kIOHIDProductKey, device);
         device.manufacturer = getStringProperty(memoryArena, kIOHIDManufacturerKey, device);
         device.transport = getStringProperty(memoryArena, kIOHIDTransportKey, device);
