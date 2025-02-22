@@ -18,16 +18,21 @@ class IOHIDElement {
       return this.name;
     }
 
-    return usage.toString();
+    if (this.usage != null && this.usage != IOHIDElementUsage.UNDEFINED) {
+      return this.usage.toString();
+    }
+
+    return "";
   }
 
   @Override
   public String toString() {
     return "address: " + address +
-            ", name: '" + getName() +
+            ", name: '" + getName() + (this.usage != IOHIDElementUsage.UNDEFINED ? " (" + usage + ")" : "") +
             ", min: '" + min +
             ", max: '" + max +
-            ", type: " + type +
-            ", usage: " + usage + " (" + usagePage + ")";
+            ", usage: " + usage +
+            ", type: " + type + " (" + usagePage + ")";
+
   }
 }

@@ -1,7 +1,7 @@
 package de.gurkenlabs.input4j.foreign.macos.iokit;
 
 public enum IOHIDElementType {
-  UNKNOWN(0),
+  UNDEFINED(0),
   MISC(1),
   BUTTON(2),
   AXIS(3),
@@ -26,6 +26,6 @@ public enum IOHIDElementType {
         return type;
       }
     }
-    return UNKNOWN;
+    return UNDEFINED;
   }
 }
