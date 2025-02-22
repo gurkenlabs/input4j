@@ -20,6 +20,7 @@ class IOCFPlugInInterface {
   static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
           JAVA_SHORT.withName("version"),
           JAVA_SHORT.withName("revision"),
+          MemoryLayout.paddingLayout(4),
           ADDRESS.withName("_reserved"),
           ADDRESS.withName("QueryInterface"),
           ADDRESS.withName("AddRef"),

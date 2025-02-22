@@ -1,7 +1,12 @@
 package de.gurkenlabs.input4j.foreign.macos.iokit;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 class IOHIDDevice {
-  long deviceAddress;
+  private final List<IOHIDElement> elements = new ArrayList<>();
+  long address;
   int vendorId;
   int productId;
   String productName;
@@ -12,17 +17,25 @@ class IOHIDDevice {
 
   IOHIDDeviceInterface deviceInterface;
 
-  @Override
-  public String toString() {
-    return "address: " + deviceAddress +
-            ", product: '" + productName + "' (" + String.format("0X%02X", productId) + ")" +
-            ", vendor: '" + manufacturer + "' (" + String.format("0X%02X", vendorId) + ")" +
-            ", transport: '" + transport + '\'' +
-            ", usage: " + String.format("0X%02X", usage) + " (page: " + String.format("0X%02X", usagePage) + ")";
+  List<IOHIDElement> getElements() {
+    return Collections.unmodifiableList(elements);
+  }
+
+  void addElement(IOHIDElement element) {
+    elements.add(element);
   }
 
   boolean isSupportedHIDDevice() {
     return IOHIDDeviceType.GAMEPAD.isType(this.usagePage, this.usage) || IOHIDDeviceType.JOYSTICK.isType(this.usagePage, this.usage);
+  }
+
+  @Override
+  public String toString() {
+    return "address: " + address +
+            ", product: '" + productName + "' (" + String.format("0X%02X", productId) + ")" +
+            ", vendor: '" + manufacturer + "' (" + String.format("0X%02X", vendorId) + ")" +
+            ", transport: '" + transport + '\'' +
+            ", usage: " + String.format("0X%02X", usage) + " (page: " + String.format("0X%02X", usagePage) + ")";
   }
 
   private enum IOHIDDeviceType {

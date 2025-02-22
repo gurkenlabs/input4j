@@ -90,6 +90,7 @@ public class MacOS {
   private static final MethodHandle CFNumberGetValue;
   private static final MethodHandle CFArrayGetCount;
   private static final MethodHandle CFArrayApplyFunction;
+  private static final MethodHandle CFArrayGetValueAtIndex;
 
   private static final MethodHandle CFDictionaryGetCount;
   private static final MethodHandle CFDictionaryGetKeysAndValues;
@@ -116,6 +117,14 @@ public class MacOS {
   private static final MethodHandle IOHIDManagerCopyDevices;
   private static final MethodHandle IOHIDManagerSetDeviceMatching;
   private static final MethodHandle IOHIDDeviceGetProperty;
+  private static final MethodHandle IOHIDDeviceCopyMatchingElements;
+
+  private static final MethodHandle IOHIDElementGetName;
+  private static final MethodHandle IOHIDElementGetUsage;
+  private static final MethodHandle IOHIDElementGetUsagePage;
+  private static final MethodHandle IOHIDElementGetType;
+  private static final MethodHandle IOHIDElementGetLogicalMin;
+  private static final MethodHandle IOHIDElementGetLogicalMax;
 
   /**
    * Key for matching HID devices in the IOKit registry.
@@ -167,6 +176,7 @@ public class MacOS {
 
     CFGetTypeID = downcallHandle("CFGetTypeID", FunctionDescriptor.of(JAVA_INT, ADDRESS));
     CFArrayGetTypeID = downcallHandle("CFArrayGetTypeID", FunctionDescriptor.of(JAVA_LONG));
+
     CFDictionaryGetTypeID = downcallHandle("CFDictionaryGetTypeID", FunctionDescriptor.of(JAVA_LONG));
     CFStringGetTypeID = downcallHandle("CFStringGetTypeID", FunctionDescriptor.of(JAVA_LONG));
     CFNumberGetTypeID = downcallHandle("CFNumberGetTypeID", FunctionDescriptor.of(JAVA_LONG));
@@ -174,6 +184,7 @@ public class MacOS {
     CFNumberGetValue = downcallHandle("CFNumberGetValue", FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, JAVA_INT, ADDRESS));
     CFArrayGetCount = downcallHandle("CFArrayGetCount", FunctionDescriptor.of(JAVA_INT, ADDRESS));
     CFArrayApplyFunction = downcallHandle("CFArrayApplyFunction", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS, ADDRESS, ADDRESS));
+    CFArrayGetValueAtIndex = downcallHandle("CFArrayGetValueAtIndex", FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_INT));
 
     CFDictionaryGetCount = downcallHandle("CFDictionaryGetCount", FunctionDescriptor.of(JAVA_INT, ADDRESS));
     CFDictionaryGetKeysAndValues = downcallHandle("CFDictionaryGetKeysAndValues", FunctionDescriptor.of(ADDRESS, ADDRESS, ADDRESS));
@@ -197,6 +208,14 @@ public class MacOS {
     IOHIDManagerCopyDevices = downcallHandle("IOHIDManagerCopyDevices", FunctionDescriptor.of(ADDRESS, ADDRESS));
     IOHIDManagerSetDeviceMatching = downcallHandle("IOHIDManagerSetDeviceMatching", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS));
     IOHIDDeviceGetProperty = downcallHandle("IOHIDDeviceGetProperty", FunctionDescriptor.of(ADDRESS, JAVA_LONG, ADDRESS));
+    IOHIDDeviceCopyMatchingElements = downcallHandle("IOHIDDeviceCopyMatchingElements", FunctionDescriptor.of(ADDRESS, JAVA_LONG, ADDRESS, JAVA_INT));
+
+    IOHIDElementGetName = downcallHandle("IOHIDElementGetName", FunctionDescriptor.of(ADDRESS, JAVA_LONG));
+    IOHIDElementGetUsage = downcallHandle("IOHIDElementGetUsage", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
+    IOHIDElementGetUsagePage = downcallHandle("IOHIDElementGetUsagePage", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
+    IOHIDElementGetType = downcallHandle("IOHIDElementGetType", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
+    IOHIDElementGetLogicalMin = downcallHandle("IOHIDElementGetLogicalMin", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
+    IOHIDElementGetLogicalMax = downcallHandle("IOHIDElementGetLogicalMax", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
   }
 
   /**
@@ -315,7 +334,7 @@ public class MacOS {
    * @param context  User-defined context data (can be null)
    */
   static void CFArrayApplyFunction(MemorySegment array, MemorySegment range,
-                                          MemorySegment callback, MemorySegment context) {
+                                   MemorySegment callback, MemorySegment context) {
     try {
       CFArrayApplyFunction.invoke(array, range, callback, context);
     } catch (Throwable t) {
@@ -414,7 +433,7 @@ public class MacOS {
       var hidDevices = new ArrayList<IOHIDDevice>();
       for (int i = 0; i < count; i++) {
         var device = new IOHIDDevice();
-        device.deviceAddress = devices.get(JAVA_LONG, i * JAVA_LONG.byteSize());
+        device.address = devices.get(JAVA_LONG, i * JAVA_LONG.byteSize());
 
         device.vendorId = getIntProperty(memoryArena, kIOHIDVendorIDKey, device);
         device.productId = getIntProperty(memoryArena, kIOHIDProductIDKey, device);
@@ -429,6 +448,33 @@ public class MacOS {
         }
 
         System.out.println("Device " + i + ": " + device);
+
+        var elements = (MemorySegment) IOHIDDeviceCopyMatchingElements.invoke(device.address, MemorySegment.NULL, 0);
+        if (!elements.equals(MemorySegment.NULL)) {
+          var elementCount = CFArrayGetCount(elements);
+          for (int j = 0; j < elementCount; j++) {
+            var elementAddress = (MemorySegment) CFArrayGetValueAtIndex.invoke(elements, j);
+            if (elementAddress.equals(MemorySegment.NULL)) {
+              continue;
+            }
+
+            var element = new IOHIDElement();
+            element.address = elementAddress.address();
+
+            var elementNameSegment = (MemorySegment) IOHIDElementGetName.invoke(element);
+            if (!elementNameSegment.equals(MemorySegment.NULL)) {
+              element.name = elementNameSegment.getString(0, StandardCharsets.UTF_8);
+            }
+
+            element.type = (int)IOHIDElementGetType.invoke(element);
+            element.usage = (int)IOHIDElementGetUsage.invoke(element);
+            element.usagePage = (int)IOHIDElementGetUsagePage.invoke(element);
+            element.min = (int)IOHIDElementGetLogicalMin.invoke(element);
+            element.max = (int)IOHIDElementGetLogicalMax.invoke(element);
+            device.addElement(element);
+            System.out.println("Element " + j + ": " + element);
+          }
+        }
         hidDevices.add(device);
       }
 
@@ -449,7 +495,7 @@ public class MacOS {
   private static int getIntProperty(Arena memoryArena, String propertyKey, IOHIDDevice device) throws Throwable {
     var propertyKeyString = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(propertyKey), kCFStringEncodingUTF8);
     try {
-      var propertyRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, propertyKeyString);
+      var propertyRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.address, propertyKeyString);
       if (!propertyRef.equals(MemorySegment.NULL)) {
         var propertyValue = memoryArena.allocate(JAVA_INT);
         if ((boolean) CFNumberGetValue.invoke(propertyRef, kCFNumberIntType, propertyValue)) {
@@ -467,7 +513,7 @@ public class MacOS {
     final int MAX_STRING_LENGTH = 256;
     var propertyKeyString = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(propertyKey), kCFStringEncodingUTF8);
     try {
-      var propertyRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.deviceAddress, propertyKeyString);
+      var propertyRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.address, propertyKeyString);
       if (!propertyRef.equals(MemorySegment.NULL)) {
         var propertyValue = memoryArena.allocate(JAVA_CHAR, MAX_STRING_LENGTH);
         if ((boolean) CFStringGetCString.invoke(propertyRef, propertyValue, MAX_STRING_LENGTH, kCFStringEncodingUTF8) && propertyValue != MemorySegment.NULL) {

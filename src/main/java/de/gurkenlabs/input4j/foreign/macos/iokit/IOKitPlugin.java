@@ -25,7 +25,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
       try {
         var pluginInterfaceSegment = this.memoryArena.allocate(IOCFPlugInInterface.$LAYOUT);
         var scoreSegment = this.memoryArena.allocate(JAVA_LONG);
-        var pluginInterfaceReturn = MacOS.IOCreatePlugInInterfaceForService(device.deviceAddress, pluginInterfaceSegment, scoreSegment);
+        var pluginInterfaceReturn = MacOS.IOCreatePlugInInterfaceForService(device.address, pluginInterfaceSegment, scoreSegment);
         if (pluginInterfaceReturn != IOReturn.kIOReturnSuccess) {
           log.log(Level.SEVERE, "Failed to create plugin interface: " + IOReturn.toString(pluginInterfaceReturn));
           continue;
