@@ -105,10 +105,10 @@ public final class InputDevices {
     LINUX_INPUT,
 
     /**
-     * The GameController library for macOS.
+     * The IOKIT library for macOS.
      * This library provides support for game controllers on macOS.
      */
-    OSX_GAMECONTROLLER;
+    MACOS_IOKIT;
 
     /**
      * Gets the plugin class name for the specified library.
@@ -121,7 +121,7 @@ public final class InputDevices {
         case WIN_DIRECTINPUT -> "de.gurkenlabs.input4j.foreign.windows.dinput.DirectInputPlugin";
         case WIN_XINPUT -> "de.gurkenlabs.input4j.foreign.windows.xinput.XInputPlugin";
         case LINUX_INPUT -> "de.gurkenlabs.input4j.foreign.linux.LinuxEventDevicePlugin";
-        case OSX_GAMECONTROLLER -> "de.gurkenlabs.input4j.foreign.osx.gc.GameControllerPlugin";
+        case MACOS_IOKIT -> "de.gurkenlabs.input4j.foreign.macos.iokit.IOKitPlugin";
       };
     }
 
@@ -143,7 +143,7 @@ public final class InputDevices {
       } else if (osName.contains("linux")) {
         pluginClassName = InputLibrary.LINUX_INPUT.getPlugin();
       } else if (osName.contains("mac os")) {
-        // TODO: Implement mac support
+        pluginClassName = InputLibrary.MACOS_IOKIT.getPlugin();
       }
 
       if (pluginClassName == null) {

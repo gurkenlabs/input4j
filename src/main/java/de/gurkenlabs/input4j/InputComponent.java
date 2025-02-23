@@ -79,7 +79,6 @@ public final class InputComponent {
 
   public InputComponent(InputDevice device, ID id, String originalName) {
     this(device, id, originalName, false);
-
   }
 
   /**
@@ -253,6 +252,11 @@ public final class InputComponent {
         return identifier.type == this.type && identifier.id == this.id;
       }
       return false;
+    }
+
+    @Override
+    public String toString() {
+      return this.name;
     }
 
     /**

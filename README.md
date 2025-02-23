@@ -51,25 +51,19 @@ try (var inputDevices = InputDevices.init()) {
 ## 🔌 Technical Details
 
 ### Platform-Specific Input APIs
-- **DirectInput (Windows) ✅**
+- **Windows: DirectInput  ✅**
     - Full implementation using `dinput.h`
     - Supports legacy and modern input devices
 
-- **XInput (Windows) ✅**
+- **Windows: XInput ✅**
     - Modern gamepad support via `xinput.h`
     - Xbox controller compatibility
 
-- **evdev (Linux) ✅**
+- **Linux: evdev ✅**
     - Event interface via `/dev/input`
-    - Raw input device access
 
-- **IOKit (macOS) 🚧**
-    - HID device enumeration
-    - Framework: IOKit.framework
-
-- **Game Controller (macOS) 🚧**
-    - Planned implementation
-    - Framework: GameController.framework
+- **macOS: IOKit ✅**
+    - HID device provisioning via `IOHIDManager`
 
 ### System Requirements
 - Java Runtime: 22+
