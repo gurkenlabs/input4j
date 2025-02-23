@@ -2,11 +2,8 @@ package de.gurkenlabs.input4j.foreign.macos.iokit;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,40 +13,15 @@ import static java.lang.foreign.ValueLayout.*;
 
 public class MacOS {
   static final int kCFStringEncodingUTF8 = 0x08000100;
-  // CFNumber types
-  public static final int kCFNumberSInt8Type = 1;
-  public static final int kCFNumberSInt16Type = 2;
-  public static final int kCFNumberSInt32Type = 3;
-  public static final int kCFNumberSInt64Type = 4;
-  public static final int kCFNumberFloat32Type = 5;
-  public static final int kCFNumberFloat64Type = 6;
-  public static final int kCFNumberCharType = 7;
-  public static final int kCFNumberShortType = 8;
   public static final int kCFNumberIntType = 9;
-  public static final int kCFNumberLongType = 10;
-  public static final int kCFNumberLongLongType = 11;
-  public static final int kCFNumberFloatType = 12;
-  public static final int kCFNumberDoubleType = 13;
-  public static final int kCFNumberCFIndexType = 14;
 
   private final static String kIOHIDTransportKey = "Transport";
   private final static String kIOHIDVendorIDKey = "VendorID";
-  private final static String kIOHIDVendorIDSourceKey = "VendorIDSource";
   private final static String kIOHIDProductIDKey = "ProductID";
-  private final static String kIOHIDVersionNumberKey = "VersionNumber";
   private final static String kIOHIDManufacturerKey = "Manufacturer";
   private final static String kIOHIDProductKey = "Product";
-  private final static String kIOHIDSerialNumberKey = "SerialNumber";
-  private final static String kIOHIDCountryCodeKey = "CountryCode";
-  private final static String kIOHIDLocationIDKey = "LocationID";
-  private final static String kIOHIDDeviceUsageKey = "DeviceUsage";
-  private final static String kIOHIDDeviceUsagePageKey = "DeviceUsagePage";
-  private final static String kIOHIDDeviceUsagePairsKey = "DeviceUsagePairs";
   private final static String kIOHIDPrimaryUsageKey = "PrimaryUsage";
   private final static String kIOHIDPrimaryUsagePageKey = "PrimaryUsagePage";
-  private final static String kIOHIDMaxInputReportSizeKey = "MaxInputReportSize";
-  private final static String kIOHIDMaxOutputReportSizeKey = "MaxOutputReportSize";
-  private final static String kIOHIDMaxFeatureReportSizeKey = "MaxFeatureReportSize";
 
   private final static String kCFRunLoopDefaultMode = "kCFRunLoopDefaultMode";
 
@@ -58,14 +30,12 @@ public class MacOS {
   private static final MethodHandle CFNumberGetValue;
   private static final MethodHandle CFArrayGetCount;
   private static final MethodHandle CFArrayGetValueAtIndex;
-  private static final MethodHandle CFUUIDGetConstantUUIDWithBytes;
   private static final MethodHandle CFSetGetCount;
   private static final MethodHandle CFSetGetValues;
   private static final MethodHandle CFStringGetCString;
   private static final MethodHandle CFRunLoopGetCurrent;
   private static final MethodHandle CFRunLoopRun;
 
-  private static final MethodHandle IOCreatePlugInInterfaceForService;
   private static final MethodHandle IOObjectRelease;
 
   private static final MethodHandle IOHIDManagerCreate;
@@ -75,7 +45,6 @@ public class MacOS {
   private static final MethodHandle IOHIDManagerRegisterInputValueCallback;
   private static final MethodHandle IOHIDManagerScheduleWithRunLoop;
 
-  private static final MethodHandle IOHIDDeviceGetService;
   private static final MethodHandle IOHIDDeviceGetProperty;
   private static final MethodHandle IOHIDDeviceGetValue;
   private static final MethodHandle IOHIDDeviceCopyMatchingElements;
@@ -96,11 +65,6 @@ public class MacOS {
   private static final MethodHandle IOHIDElementGetUnitExponent;
   private static final MethodHandle IOHIDElementGetReportSize;
 
-  /**
-   * Key for matching HID devices in the IOKit registry.
-   */
-  private static final String kIOHIDDeviceKey = "IOHIDDevice";
-
   static {
     System.load("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation");
     System.load("/System/Library/Frameworks/IOKit.framework/IOKit");
@@ -110,18 +74,12 @@ public class MacOS {
     CFNumberGetValue = downcallHandle("CFNumberGetValue", FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, JAVA_INT, ADDRESS));
     CFArrayGetCount = downcallHandle("CFArrayGetCount", FunctionDescriptor.of(JAVA_INT, ADDRESS));
     CFArrayGetValueAtIndex = downcallHandle("CFArrayGetValueAtIndex", FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_INT));
-    CFUUIDGetConstantUUIDWithBytes = downcallHandle("CFUUIDGetConstantUUIDWithBytes", FunctionDescriptor.of(ADDRESS, ADDRESS,
-            JAVA_BYTE, JAVA_BYTE, JAVA_BYTE, JAVA_BYTE,
-            JAVA_BYTE, JAVA_BYTE, JAVA_BYTE, JAVA_BYTE,
-            JAVA_BYTE, JAVA_BYTE, JAVA_BYTE, JAVA_BYTE,
-            JAVA_BYTE, JAVA_BYTE, JAVA_BYTE, JAVA_BYTE));
     CFSetGetCount = downcallHandle("CFSetGetCount", FunctionDescriptor.of(JAVA_INT, ADDRESS));
     CFSetGetValues = downcallHandle("CFSetGetValues", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS));
     CFStringGetCString = downcallHandle("CFStringGetCString", FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, ADDRESS, JAVA_INT, JAVA_INT));
     CFRunLoopGetCurrent = downcallHandle("CFRunLoopGetCurrent", FunctionDescriptor.of(ADDRESS));
     CFRunLoopRun = downcallHandle("CFRunLoopRun", FunctionDescriptor.ofVoid());
 
-    IOCreatePlugInInterfaceForService = downcallHandle("IOCreatePlugInInterfaceForService", FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS, ADDRESS));
     IOObjectRelease = downcallHandle("IOObjectRelease", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
 
     IOHIDManagerCreate = downcallHandle("IOHIDManagerCreate", FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_INT));
@@ -131,7 +89,6 @@ public class MacOS {
     IOHIDManagerRegisterInputValueCallback = downcallHandle("IOHIDManagerRegisterInputValueCallback", FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
     IOHIDManagerScheduleWithRunLoop = downcallHandle("IOHIDManagerScheduleWithRunLoop", FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
 
-    IOHIDDeviceGetService = downcallHandle("IOHIDDeviceGetService", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDDeviceGetProperty = downcallHandle("IOHIDDeviceGetProperty", FunctionDescriptor.of(ADDRESS, JAVA_LONG, ADDRESS));
     IOHIDDeviceCopyMatchingElements = downcallHandle("IOHIDDeviceCopyMatchingElements", FunctionDescriptor.of(ADDRESS, JAVA_LONG, ADDRESS, JAVA_INT));
     IOHIDDeviceGetValue = downcallHandle("IOHIDDeviceGetValue", FunctionDescriptor.of(JAVA_INT, JAVA_LONG, JAVA_LONG, ADDRESS));
@@ -151,22 +108,6 @@ public class MacOS {
     IOHIDElementGetUnit = downcallHandle("IOHIDElementGetUnit", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetUnitExponent = downcallHandle("IOHIDElementGetUnitExponent", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetReportSize = downcallHandle("IOHIDElementGetReportSize", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
-  }
-
-  public static void hidInputValueCallback(MemorySegment context, int result, MemorySegment sender, MemorySegment ioHIDValueRef) {
-    var element = IOHIDValueGetElement(ioHIDValueRef);
-    var value = IOHIDValueGetIntegerValue(ioHIDValueRef);
-    var timestamp = IOHIDValueGetTimeStamp(ioHIDValueRef);
-    System.out.println("Element: " + element.address() + ", Value: " + value + ", Timestamp: " + timestamp);
-  }
-
-  private static MemorySegment hidInputValueCallbackPointer(Arena memoryArena) throws Throwable {
-    // Create a method handle to the Java function as a callback
-    MethodHandle enumDeviceMethodHandle = MethodHandles.lookup()
-            .findStatic(MacOS.class, "hidInputValueCallback", MethodType.methodType(void.class, MemorySegment.class, int.class, MemorySegment.class, MemorySegment.class));
-
-    return Linker.nativeLinker().upcallStub(
-            enumDeviceMethodHandle, FunctionDescriptor.ofVoid(ADDRESS, JAVA_INT, ADDRESS, ADDRESS), memoryArena);
   }
 
   static int IOHIDDeviceGetValue(IOHIDDevice device, IOHIDElement element, MemorySegment value) {
@@ -201,44 +142,6 @@ public class MacOS {
     }
   }
 
-  static int IOHIDDeviceGetService(IOHIDDevice device) {
-    try {
-      return (int) IOHIDDeviceGetService.invoke(device.address);
-    } catch (Throwable t) {
-      throw new RuntimeException(t);
-    }
-  }
-
-  static MemorySegment getIOHIDDeviceUserClientTypeID() {
-    try {
-      // 6C29DD01-7C99-11D6-9D86-0003933E3E3E
-      return (MemorySegment) CFUUIDGetConstantUUIDWithBytes.invoke(
-              MemorySegment.NULL,
-              (byte) 0x6C, (byte) 0x29, (byte) 0xDD, (byte) 0x01,
-              (byte) 0x7C, (byte) 0x99, (byte) 0x11, (byte) 0xD6,
-              (byte) 0x9D, (byte) 0x86, (byte) 0x00, (byte) 0x03,
-              (byte) 0x93, (byte) 0x3E, (byte) 0x3E, (byte) 0x3E
-      );
-    } catch (Throwable t) {
-      throw new RuntimeException(t);
-    }
-  }
-
-  static MemorySegment getIOCFPlugInInterfaceID() {
-    try {
-      // C2264A11-3B06-11D4-BD62-000502C34D39
-      return (MemorySegment) CFUUIDGetConstantUUIDWithBytes.invoke(
-              MemorySegment.NULL,
-              (byte) 0xC2, (byte) 0x26, (byte) 0x4A, (byte) 0x11,
-              (byte) 0x3B, (byte) 0x06, (byte) 0x11, (byte) 0xD4,
-              (byte) 0xBD, (byte) 0x62, (byte) 0x00, (byte) 0x05,
-              (byte) 0x02, (byte) 0xC3, (byte) 0x4D, (byte) 0x39
-      );
-    } catch (Throwable t) {
-      throw new RuntimeException(t);
-    }
-  }
-
   /**
    * Returns the number of values in a CFArray.
    *
@@ -253,11 +156,9 @@ public class MacOS {
     }
   }
 
-  static Collection<IOHIDDevice> getSupportedHIDDevices(Arena memoryArena) {
-    var hidManager = MemorySegment.NULL;
-    var deviceSet = MemorySegment.NULL;
+  static MemorySegment initHIDManager(MemorySegment hidInputValueCallbackPointer) {
     try {
-      hidManager = (MemorySegment) IOHIDManagerCreate.invoke(MemorySegment.NULL, 0x00);
+      var hidManager = (MemorySegment) IOHIDManagerCreate.invoke(MemorySegment.NULL, 0x00);
 
       var openResult = (int) IOHIDManagerOpen.invoke(hidManager, 0);
       if (openResult != IOReturn.kIOReturnSuccess) {
@@ -265,9 +166,15 @@ public class MacOS {
       }
 
       IOHIDManagerSetDeviceMatching.invoke(hidManager, MemorySegment.NULL);
+      IOHIDManagerRegisterInputValueCallback.invoke(hidManager, hidInputValueCallbackPointer, MemorySegment.NULL);
+      return hidManager;
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
 
-      IOHIDManagerRegisterInputValueCallback.invoke(hidManager, hidInputValueCallbackPointer(memoryArena), MemorySegment.NULL);
-
+  static void runEventLoop(Arena memoryArena, MemorySegment hidManager) {
+    try {
       var kCFRunLoopDefaultModeString = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(kCFRunLoopDefaultMode), kCFStringEncodingUTF8);
       try {
         IOHIDManagerScheduleWithRunLoop.invoke(hidManager, CFRunLoopGetCurrent.invoke(), kCFRunLoopDefaultModeString);
@@ -275,9 +182,19 @@ public class MacOS {
         CFRelease.invoke(kCFRunLoopDefaultModeString);
       }
 
+      // TODO: This works. But this also means that this needs to be a background thread to ensure that it is not blocking the main library
+      CFRunLoopRun.invoke();
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  static Collection<IOHIDDevice> getSupportedHIDDevices(Arena memoryArena, MemorySegment hidManager) {
+    var deviceSet = MemorySegment.NULL;
+    try {
       deviceSet = (MemorySegment) IOHIDManagerCopyDevices.invoke(hidManager);
       var count = (int) CFSetGetCount.invoke(deviceSet);
-      System.out.println("Found a total" + count + " HID devices");
+      System.out.println("Found a total " + count + " HID devices");
       if (deviceSet.equals(MemorySegment.NULL)) {
         throw new RuntimeException("Failed to copy devices from HID manager");
       }
@@ -341,18 +258,11 @@ public class MacOS {
         hidDevices.add(device);
       }
 
-      // TODO: This works. But this also means that this needs to be a background thread to ensure that it is not blocking the main library
-      CFRunLoopRun.invoke();
       return hidDevices;
     } catch (Throwable t) {
       throw new RuntimeException(t);
     } finally {
       // TODO: don't release too early otherwise we cannot use the devices later. But still release at some point
-      // use IOHIDManagerClose instead of manually releasing the object
-      if (!hidManager.equals(MemorySegment.NULL)) {
-        // IOObjectRelease(hidManager.address());
-      }
-
       if (!deviceSet.equals(MemorySegment.NULL)) {
         // IOObjectRelease(deviceSet.address());
       }
@@ -392,27 +302,6 @@ public class MacOS {
     }
 
     return null;
-  }
-
-  /**
-   * Creates a plug-in interface for an IOKit service.
-   *
-   * @param service      The IOKit service to create the interface for
-   * @param theInterface Address to store the created interface
-   * @param score        Address to store the scoring result (can be NULL)
-   * @return IOReturn status code
-   */
-  public static int IOCreatePlugInInterfaceForService(Arena memorySegment, int service, MemorySegment theInterface, MemorySegment score) {
-    try {
-      return (int) IOCreatePlugInInterfaceForService.invoke(
-              service,
-              getIOHIDDeviceUserClientTypeID(),
-              getIOCFPlugInInterfaceID(),
-              theInterface,
-              score);
-    } catch (Throwable t) {
-      throw new RuntimeException(t);
-    }
   }
 
   /**

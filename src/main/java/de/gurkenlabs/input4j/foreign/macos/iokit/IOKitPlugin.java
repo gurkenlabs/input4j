@@ -6,12 +6,18 @@ import de.gurkenlabs.input4j.InputDevice;
 
 import java.awt.*;
 import java.lang.foreign.Arena;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static java.lang.foreign.ValueLayout.JAVA_LONG;
+import static java.lang.foreign.ValueLayout.*;
 
 public class IOKitPlugin extends AbstractInputDevicePlugin {
   private static final Logger log = Logger.getLogger(IOKitPlugin.class.getName());
@@ -21,21 +27,35 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
   @Override
   public void internalInitDevices(Frame owner) {
-    var ioHIDDevices = MacOS.getSupportedHIDDevices(memoryArena);
+    try {
+      var ioHIDManager = MacOS.initHIDManager(hidInputValueCallbackPointer(memoryArena));
+      var ioHIDDevices = MacOS.getSupportedHIDDevices(memoryArena, ioHIDManager);
 
-    for (var ioHIDDevice : ioHIDDevices) {
-      var inputDevice = new InputDevice(ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", this::pollIOHIDDevice, null);
-      ioHIDDevice.inputDevice = inputDevice;
+      for (var ioHIDDevice : ioHIDDevices) {
+        var inputDevice = new InputDevice(ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", this::pollIOHIDDevice, null);
+        ioHIDDevice.inputDevice = inputDevice;
 
-      for (var element : ioHIDDevice.getElements()) {
-        if (element.getUsage() == IOHIDElementUsage.UNDEFINED) {
-          continue;
+        for (var element : ioHIDDevice.getElements()) {
+          if (element.getUsage() == IOHIDElementUsage.UNDEFINED) {
+            continue;
+          }
+
+          var component = new InputComponent(inputDevice, element.getIdentifier(), element.getName());
+          inputDevice.addComponent(component);
         }
-
-        var component = new InputComponent(inputDevice, element.getIdentifier(), element.getName());
-        inputDevice.addComponent(component);
+        devices.add(ioHIDDevice);
       }
-      devices.add(ioHIDDevice);
+
+      // Start the event loop in a separate thread
+      new Thread(() -> {
+        try {
+          MacOS.runEventLoop(memoryArena, ioHIDManager);
+        } catch (Throwable t) {
+          log.log(Level.SEVERE, "Failed to run event loop", t);
+        }
+      }).start();
+    } catch (Throwable e) {
+      log.log(Level.SEVERE, "Failed to initialize IOKit devices", e);
     }
   }
 
@@ -63,9 +83,6 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
         log.log(Level.WARNING, "Failed to get value for element " + element + " with error " + IOReturn.toString(getValueResult));
         continue;
       }
-
-
-
 
       // TODO: creating a service plugin interface for this service type is not supported
       //      var io_service_t = MacOS.IOHIDDeviceGetService(ioHIDDevice);
@@ -98,5 +115,22 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     memoryArena.close();
 
     // TODO: Clean up devices and elements
+    //   use IOHIDManagerClose instead of manually releasing the object
+  }
+
+  public void hidInputValueCallback(MemorySegment context, int result, MemorySegment sender, MemorySegment ioHIDValueRef) {
+    var element = MacOS.IOHIDValueGetElement(ioHIDValueRef);
+    var value = MacOS.IOHIDValueGetIntegerValue(ioHIDValueRef);
+    var timestamp = MacOS.IOHIDValueGetTimeStamp(ioHIDValueRef);
+    System.out.println("Element: " + element.address() + ", Value: " + value + ", Timestamp: " + timestamp);
+  }
+
+  private MemorySegment hidInputValueCallbackPointer(Arena memoryArena) throws Throwable {
+    // Create a method handle to the Java function as a callback
+    MethodHandle enumDeviceMethodHandle = MethodHandles.lookup()
+            .bind(this, "hidInputValueCallback", MethodType.methodType(void.class, MemorySegment.class, int.class, MemorySegment.class, MemorySegment.class));
+
+    return Linker.nativeLinker().upcallStub(
+            enumDeviceMethodHandle, FunctionDescriptor.ofVoid(ADDRESS, JAVA_INT, ADDRESS, ADDRESS), memoryArena);
   }
 }
