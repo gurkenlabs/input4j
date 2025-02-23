@@ -33,10 +33,12 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     eventLoopThread = new Thread(() -> {
       MemorySegment ioHIDManager = MemorySegment.NULL;
       try (Arena memoryArena = Arena.ofConfined()) {
+        log.log(Level.FINE, "Initializing HID manager...");
         ioHIDManager = MacOS.initHIDManager(hidInputValueCallbackPointer(memoryArena));
         var ioHIDDevices = MacOS.getSupportedHIDDevices(memoryArena, ioHIDManager);
 
         for (var ioHIDDevice : ioHIDDevices) {
+          log.log(Level.FINE, "Found HID device: " + ioHIDDevice.productName);
           var inputDevice = new InputDevice(ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", this::pollIOHIDDevice, null);
           ioHIDDevice.inputDevice = inputDevice;
 
@@ -55,6 +57,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
         devicesInitialized = true;
         if (!devices.isEmpty()) {
+          log.log(Level.FINE, "Starting event loop for HID manager");
           // Start the event loop in a separate thread
           MacOS.runEventLoop(memoryArena, ioHIDManager);
         }
@@ -79,12 +82,20 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
         Thread.sleep(100);
         waited += 100;
       } catch (InterruptedException e) {
+        log.log(Level.SEVERE, "Initialization interrupted", e);
         throw new RuntimeException(e);
       }
+    }
+
+    if (devicesInitialized) {
+      log.log(Level.FINE, "Devices initialized successfully");
+    } else {
+      log.log(Level.WARNING, "Device initialization timed out");
     }
   }
 
   private float[] pollIOHIDDevice(InputDevice inputDevice) {
+    log.log(Level.FINE, "Polling IOHIDDevice for input device: " + inputDevice.getInstanceName());
     var values = new float[inputDevice.getComponents().size()];
 
     // find native IOHIDDevice and poll elements
@@ -98,11 +109,12 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
       var component = inputDevice.getComponents().get(i);
       var element = ioHIDDevice.getElements().stream().filter(x -> x.getIdentifier() == component.getId()).findFirst().orElse(null);
       if (element == null) {
+        log.log(Level.FINE, "Native element not found for component ID: " + component.getId());
         continue;
       }
 
       var elementValue = element.currentValue;
-
+      log.log(Level.FINEST, "Element value for component ID " + component.getId() + ": " + elementValue);
       var value = normalizeInputValue(elementValue, element, component.isAxis());
       values[i] = value;
     }
