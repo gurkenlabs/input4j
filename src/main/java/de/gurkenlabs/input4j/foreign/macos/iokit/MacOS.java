@@ -145,7 +145,7 @@ public class MacOS {
   // Initialize UUID for HID Device User Client type
   // Corresponds to the constant kIOHIDDeviceUserClientTypeID from <IOKit/hid/IOHIDLib.h>
   // The bytes are arranged in UUID format: FA12FA38-6F1A-11D5-9F32-0005029B4E69.
-  private static final MemorySegment kIOHIDDeviceUserClientTypeID = MemorySegment.ofArray(new byte[]{
+  private static final byte[] kIOHIDDeviceUserClientTypeID = new byte[]{
           (byte) 0xFA, (byte) 0x12, (byte) 0xFA, (byte) 0x38,
           (byte) 0x6F, (byte) 0x1A,
           (byte) 0x11, (byte) 0xD5,
@@ -153,12 +153,12 @@ public class MacOS {
           (byte) 0x00, (byte) 0x05,
           (byte) 0x02, (byte) 0x9B,
           (byte) 0x4E, (byte) 0x69
-  });
+  };
 
   // Initialize UUID for CF Plugin Interface
   // Corresponds to the constant kIOCFPlugInInterfaceID from <IOKit/IOKitLib.h>
   // The bytes are arranged in UUID format: C244E858-109C-11D4-91D4-0050E4C6426F.
-  private static final MemorySegment kIOCFPlugInInterfaceID = MemorySegment.ofArray(new byte[]{
+  private static final byte[] kIOCFPlugInInterfaceID = new byte[]{
           (byte) 0xC2, (byte) 0x44, (byte) 0xE8, (byte) 0x58,
           (byte) 0x10, (byte) 0x9C,
           (byte) 0x11, (byte) 0xD4,
@@ -166,9 +166,9 @@ public class MacOS {
           (byte) 0x00, (byte) 0x50,
           (byte) 0xE4, (byte) 0xC6,
           (byte) 0x42, (byte) 0x6F
-  });
+  };
 
-  static final MemorySegment kIOHIDDeviceInterfaceID = MemorySegment.ofArray(new byte[]{
+  static final byte[] kIOHIDDeviceInterfaceID = new byte[]{
           (byte) 0x9A, (byte) 0x40, (byte) 0x4D, (byte) 0x7E,
           (byte) 0x9C, (byte) 0x7B,
           (byte) 0x11, (byte) 0xD4,
@@ -176,7 +176,7 @@ public class MacOS {
           (byte) 0x00, (byte) 0x50,
           (byte) 0xE4, (byte) 0xC6,
           (byte) 0x42, (byte) 0x6F
-  });
+  };
 
   static {
     System.load("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation");
@@ -638,12 +638,12 @@ public class MacOS {
    * @param score        Address to store the scoring result (can be NULL)
    * @return IOReturn status code
    */
-  public static int IOCreatePlugInInterfaceForService(long service, MemorySegment theInterface, MemorySegment score) {
+  public static int IOCreatePlugInInterfaceForService(Arena memorySegment, long service, MemorySegment theInterface, MemorySegment score) {
     try {
       return (int) IOCreatePlugInInterfaceForService.invoke(
               service,
-              kIOHIDDeviceUserClientTypeID,
-              kIOCFPlugInInterfaceID,
+              memorySegment.allocateFrom(JAVA_BYTE, kIOHIDDeviceUserClientTypeID),
+              memorySegment.allocateFrom(JAVA_BYTE, kIOCFPlugInInterfaceID),
               theInterface,
               score);
     } catch (Throwable t) {

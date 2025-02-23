@@ -69,7 +69,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
       var pluginInterface = this.memoryArena.allocate(JAVA_LONG);
       var score = this.memoryArena.allocate(JAVA_INT);
 
-      var createInterfaceResult = MacOS.IOCreatePlugInInterfaceForService(io_service_t, pluginInterface, score);
+      var createInterfaceResult = MacOS.IOCreatePlugInInterfaceForService(memoryArena, io_service_t, pluginInterface, score);
       if(createInterfaceResult != IOReturn.kIOReturnSuccess) {
         log.log(Level.WARNING, "Failed to create plugin interface for service " + io_service_t + " with error " + IOReturn.toString(createInterfaceResult));
         continue;
