@@ -17,46 +17,45 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static java.lang.foreign.ValueLayout.*;
+import static java.lang.foreign.ValueLayout.ADDRESS;
+import static java.lang.foreign.ValueLayout.JAVA_INT;
 
 public class IOKitPlugin extends AbstractInputDevicePlugin {
   private static final Logger log = Logger.getLogger(IOKitPlugin.class.getName());
 
-  private final Arena memoryArena = Arena.ofConfined();
   private final Collection<IOHIDDevice> devices = ConcurrentHashMap.newKeySet();
 
   @Override
   public void internalInitDevices(Frame owner) {
-    try {
-      var ioHIDManager = MacOS.initHIDManager(hidInputValueCallbackPointer(memoryArena));
-      var ioHIDDevices = MacOS.getSupportedHIDDevices(memoryArena, ioHIDManager);
+    new Thread(() -> {
+      final Arena memoryArena = Arena.ofConfined();
+      try {
+        var ioHIDManager = MacOS.initHIDManager(hidInputValueCallbackPointer(memoryArena));
+        var ioHIDDevices = MacOS.getSupportedHIDDevices(memoryArena, ioHIDManager);
 
-      for (var ioHIDDevice : ioHIDDevices) {
-        var inputDevice = new InputDevice(ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", this::pollIOHIDDevice, null);
-        ioHIDDevice.inputDevice = inputDevice;
+        for (var ioHIDDevice : ioHIDDevices) {
+          var inputDevice = new InputDevice(ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", this::pollIOHIDDevice, null);
+          ioHIDDevice.inputDevice = inputDevice;
 
-        for (var element : ioHIDDevice.getElements()) {
-          if (element.getUsage() == IOHIDElementUsage.UNDEFINED) {
-            continue;
+          for (var element : ioHIDDevice.getElements()) {
+            if (element.getUsage() == IOHIDElementUsage.UNDEFINED) {
+              continue;
+            }
+
+            var component = new InputComponent(inputDevice, element.getIdentifier(), element.getName());
+            inputDevice.addComponent(component);
           }
-
-          var component = new InputComponent(inputDevice, element.getIdentifier(), element.getName());
-          inputDevice.addComponent(component);
+          devices.add(ioHIDDevice);
         }
-        devices.add(ioHIDDevice);
+
+        // Start the event loop in a separate thread
+        MacOS.runEventLoop(memoryArena, ioHIDManager);
+      } catch (Throwable e) {
+        log.log(Level.SEVERE, "Failed to initialize IOKit devices", e);
+      } finally {
+        memoryArena.close();
       }
-
-      // Start the event loop in a separate thread
-      new Thread(() -> {
-        try {
-          MacOS.runEventLoop(memoryArena, ioHIDManager);
-        } catch (Throwable t) {
-          log.log(Level.SEVERE, "Failed to run event loop", t);
-        }
-      }).start();
-    } catch (Throwable e) {
-      log.log(Level.SEVERE, "Failed to initialize IOKit devices", e);
-    }
+    }).start();
   }
 
   private float[] pollIOHIDDevice(InputDevice inputDevice) {
@@ -74,13 +73,6 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
       var element = ioHIDDevice.getElements().stream().filter(x -> x.getIdentifier() == component.getId()).findFirst().orElse(null);
       if (element == null) {
         log.log(Level.WARNING, "IOHIDElement not found for component " + component.getId());
-        continue;
-      }
-
-      var ioHIDValueRefSegment = this.memoryArena.allocate(JAVA_LONG);
-      var getValueResult = MacOS.IOHIDDeviceGetValue(ioHIDDevice, element, ioHIDValueRefSegment);
-      if (getValueResult != IOReturn.kIOReturnSuccess) {
-        log.log(Level.WARNING, "Failed to get value for element " + element + " with error " + IOReturn.toString(getValueResult));
         continue;
       }
 
@@ -112,8 +104,6 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
   @Override
   public void close() {
-    memoryArena.close();
-
     // TODO: Clean up devices and elements
     //   use IOHIDManagerClose instead of manually releasing the object
   }
