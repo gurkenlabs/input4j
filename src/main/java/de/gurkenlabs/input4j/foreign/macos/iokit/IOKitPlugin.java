@@ -20,6 +20,21 @@ import java.util.logging.Logger;
 import static java.lang.foreign.ValueLayout.ADDRESS;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 
+/**
+ * Plugin for managing IOHID devices on macOS.
+ * This class handles the initialization, polling, and closing of IOHID devices.
+ *
+ * <p>IOHID (Input/Output Human Interface Device) is a framework in macOS that provides
+ * support for communication with human interface devices such as keyboards, mice, game controllers,
+ * and other input devices. This plugin leverages the IOHID framework to manage these devices.</p>
+ *
+ * <p>The class performs the following key functions:</p>
+ * <ul>
+ *   <li><b>Initialization:</b> Initializes the HID manager and retrieves the list of supported HID devices.</li>
+ *   <li><b>Polling:</b> Polls the HID devices to read their current state and input values.</li>
+ *   <li><b>Closing:</b> Properly closes the HID manager and releases resources when the plugin is no longer needed.</li>
+ * </ul>
+ */
 public class IOKitPlugin extends AbstractInputDevicePlugin {
   private static final Logger log = Logger.getLogger(IOKitPlugin.class.getName());
 
