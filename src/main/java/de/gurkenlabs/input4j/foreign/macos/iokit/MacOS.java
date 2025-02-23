@@ -51,6 +51,8 @@ public class MacOS {
   private final static String kIOHIDMaxOutputReportSizeKey = "MaxOutputReportSize";
   private final static String kIOHIDMaxFeatureReportSizeKey = "MaxFeatureReportSize";
 
+  private final static String kCFRunLoopDefaultMode = "kCFRunLoopDefaultMode";
+
   private static final MethodHandle CFRelease;
   private static final MethodHandle CFStringCreateWithCString;
   private static final MethodHandle CFNumberGetValue;
@@ -60,6 +62,8 @@ public class MacOS {
   private static final MethodHandle CFSetGetCount;
   private static final MethodHandle CFSetGetValues;
   private static final MethodHandle CFStringGetCString;
+  private static final MethodHandle CFRunLoopGetCurrent;
+  private static final MethodHandle CFRunLoopRun;
 
   private static final MethodHandle IOCreatePlugInInterfaceForService;
   private static final MethodHandle IOObjectRelease;
@@ -69,6 +73,7 @@ public class MacOS {
   private static final MethodHandle IOHIDManagerCopyDevices;
   private static final MethodHandle IOHIDManagerSetDeviceMatching;
   private static final MethodHandle IOHIDManagerRegisterInputValueCallback;
+  private static final MethodHandle IOHIDManagerScheduleWithRunLoop;
 
   private static final MethodHandle IOHIDDeviceGetService;
   private static final MethodHandle IOHIDDeviceGetProperty;
@@ -110,10 +115,12 @@ public class MacOS {
             JAVA_BYTE, JAVA_BYTE, JAVA_BYTE, JAVA_BYTE,
             JAVA_BYTE, JAVA_BYTE, JAVA_BYTE, JAVA_BYTE,
             JAVA_BYTE, JAVA_BYTE, JAVA_BYTE, JAVA_BYTE));
-
     CFSetGetCount = downcallHandle("CFSetGetCount", FunctionDescriptor.of(JAVA_INT, ADDRESS));
     CFSetGetValues = downcallHandle("CFSetGetValues", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS));
     CFStringGetCString = downcallHandle("CFStringGetCString", FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, ADDRESS, JAVA_INT, JAVA_INT));
+    CFRunLoopGetCurrent = downcallHandle("CFRunLoopGetCurrent", FunctionDescriptor.of(ADDRESS));
+    CFRunLoopRun = downcallHandle("CFRunLoopRun", FunctionDescriptor.ofVoid());
+
     IOCreatePlugInInterfaceForService = downcallHandle("IOCreatePlugInInterfaceForService", FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS, ADDRESS));
     IOObjectRelease = downcallHandle("IOObjectRelease", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
 
@@ -122,6 +129,7 @@ public class MacOS {
     IOHIDManagerCopyDevices = downcallHandle("IOHIDManagerCopyDevices", FunctionDescriptor.of(ADDRESS, ADDRESS));
     IOHIDManagerSetDeviceMatching = downcallHandle("IOHIDManagerSetDeviceMatching", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS));
     IOHIDManagerRegisterInputValueCallback = downcallHandle("IOHIDManagerRegisterInputValueCallback", FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
+    IOHIDManagerScheduleWithRunLoop = downcallHandle("IOHIDManagerScheduleWithRunLoop", FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
 
     IOHIDDeviceGetService = downcallHandle("IOHIDDeviceGetService", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDDeviceGetProperty = downcallHandle("IOHIDDeviceGetProperty", FunctionDescriptor.of(ADDRESS, JAVA_LONG, ADDRESS));
@@ -257,6 +265,13 @@ public class MacOS {
 
       IOHIDManagerRegisterInputValueCallback.invoke(hidManager, hidInputValueCallbackPointer(memoryArena), MemorySegment.NULL);
 
+      var kCFRunLoopDefaultModeString = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(kCFRunLoopDefaultMode), kCFStringEncodingUTF8);
+      try {
+        IOHIDManagerScheduleWithRunLoop.invoke(hidManager, CFRunLoopGetCurrent.invoke(), kCFRunLoopDefaultModeString);
+      } finally {
+        CFRelease.invoke(kCFRunLoopDefaultModeString);
+      }
+
       deviceSet = (MemorySegment) IOHIDManagerCopyDevices.invoke(hidManager);
       var count = (int) CFSetGetCount.invoke(deviceSet);
       System.out.println("Found a total" + count + " HID devices");
@@ -322,7 +337,7 @@ public class MacOS {
         }
         hidDevices.add(device);
       }
-
+      CFRunLoopRun.invoke();
       return hidDevices;
     } catch (Throwable t) {
       throw new RuntimeException(t);
@@ -330,11 +345,11 @@ public class MacOS {
       // TODO: don't release too early otherwise we cannot use the devices later. But still release at some point
       // use IOHIDManagerClose instead of manually releasing the object
       if (!hidManager.equals(MemorySegment.NULL)) {
-       // IOObjectRelease(hidManager.address());
+        // IOObjectRelease(hidManager.address());
       }
 
       if (!deviceSet.equals(MemorySegment.NULL)) {
-       // IOObjectRelease(deviceSet.address());
+        // IOObjectRelease(deviceSet.address());
       }
     }
   }
