@@ -95,7 +95,7 @@ public class MacOS {
 
     IOHIDValueGetIntegerValue = downcallHandle("IOHIDValueGetIntegerValue", FunctionDescriptor.of(JAVA_INT, ADDRESS));
     IOHIDValueGetElement = downcallHandle("IOHIDValueGetElement", FunctionDescriptor.of(ADDRESS, ADDRESS));
-    IOHIDValueGetTimeStamp = downcallHandle("IOHIDValueGetTimeStamp", FunctionDescriptor.of(ADDRESS, ADDRESS));
+    IOHIDValueGetTimeStamp = downcallHandle("IOHIDValueGetTimeStamp", FunctionDescriptor.of(JAVA_LONG, ADDRESS));
 
     IOHIDElementGetName = downcallHandle("IOHIDElementGetName", FunctionDescriptor.of(ADDRESS, JAVA_LONG));
     IOHIDElementGetUsage = downcallHandle("IOHIDElementGetUsage", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
