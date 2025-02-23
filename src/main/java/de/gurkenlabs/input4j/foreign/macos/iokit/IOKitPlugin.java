@@ -72,6 +72,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
     eventLoopThread.start();
 
+    // Wait for devices to be initialized or timeout after 3 seconds to prevent blocking the main thread
     int waited = 0;
     while (waited < 3000 && !devicesInitialized) {
       try {

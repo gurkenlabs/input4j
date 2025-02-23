@@ -1,5 +1,20 @@
 package de.gurkenlabs.input4j.foreign.macos.iokit;
 
+/**
+ * Enum representing the different usage pages of IOHID elements.
+ *
+ * <p>Usage pages are used to group related usages together. Each usage page defines a set of usages
+ * that are relevant to a particular category of devices or controls. For example, the GENERIC_DESKTOP
+ * usage page includes usages for common input controls like joysticks, gamepads, and keyboards.</p>
+ *
+ * <p>Each usage page is identified by a unique integer value. The usages within a usage page are
+ * also identified by unique integer values, and these values are used to identify the type of data
+ * that an IOHID element represents.</p>
+ *
+ * <p>The {@link IOHIDElementUsage} enum defines the specific usages within these usage pages. For example,
+ * the GENERIC_DESKTOP usage page includes usages like X, Y, Z, RX, RY, and RZ, which represent the
+ * different axes of a joystick or gamepad.</p>
+ */
 enum IOHIDElementUsagePage {
   UNDEFINED(0x00),
   GENERIC_DESKTOP(0x01),

@@ -3,18 +3,81 @@ package de.gurkenlabs.input4j.foreign.macos.iokit;
 import de.gurkenlabs.input4j.ComponentType;
 import de.gurkenlabs.input4j.InputComponent;
 
+/**
+ * Represents an IOHIDElement, which is a control element of an IOHIDDevice on macOS.
+ * This class encapsulates the properties and values of an HID element.
+ */
 class IOHIDElement {
+  /**
+   * The memory address of the HID element.
+   * Corresponds to the `IOHIDElementRef` in native C.
+   */
   long address;
+
+  /**
+   * The name of the HID element.
+   * Corresponds to the `kIOHIDElementNameKey` in native C.
+   */
   String name;
+
+  /**
+   * The type of the HID element.
+   * Corresponds to the `kIOHIDElementTypeKey` in native C.
+   */
   IOHIDElementType type;
+
+  /**
+   * The usage of the HID element, which defines the element's specific function.
+   * Corresponds to the `kIOHIDElementUsageKey` in native C.
+   */
   IOHIDElementUsage usage;
+
+  /**
+   * The usage page of the HID element, which groups related usages together.
+   * Corresponds to the `kIOHIDElementUsagePageKey` in native C.
+   */
   IOHIDElementUsagePage usagePage;
+
+  /**
+   * The minimum value that the HID element can report.
+   * Corresponds to the `kIOHIDElementMinKey` in native C.
+   */
   int min;
+
+  /**
+   * The maximum value that the HID element can report.
+   * Corresponds to the `kIOHIDElementMaxKey` in native C.
+   */
   int max;
+
+  /**
+   * The physical minimum value that the HID element can report.
+   * Corresponds to the `kIOHIDElementPhysicalMinKey` in native C.
+   */
   int physicalMin;
+
+  /**
+   * The physical maximum value that the HID element can report.
+   * Corresponds to the `kIOHIDElementPhysicalMaxKey` in native C.
+   */
   int physicalMax;
+
+  /**
+   * The unit of measurement for the HID element's value.
+   * Corresponds to the `kIOHIDElementUnitKey` in native C.
+   */
   int unit;
+
+  /**
+   * The unit exponent for the HID element's value.
+   * Corresponds to the `kIOHIDElementUnitExponentKey` in native C.
+   */
   int unitExponent;
+
+  /**
+   * The size of the report for the HID element.
+   * Corresponds to the `kIOHIDElementReportSizeKey` in native C.
+   */
   int reportSize;
 
   int currentValue;
@@ -31,6 +94,12 @@ class IOHIDElement {
     return "";
   }
 
+  /**
+   * Returns the usage of the HID element.
+   * If the element is not a button and the usage is less than 32, returns `IOHIDElementUsage.UNDEFINED`.
+   *
+   * @return the usage of the HID element
+   */
   IOHIDElementUsage getUsage() {
     if (this.type != IOHIDElementType.BUTTON && this.usage.getUsage() < IOHIDElementUsage.BUTTON_32.getUsage()) {
       return IOHIDElementUsage.UNDEFINED;
@@ -47,6 +116,11 @@ class IOHIDElement {
             ", max: '" + max;
   }
 
+  /**
+   * Returns the component type of the HID element.
+   *
+   * @return the component type of the HID element
+   */
   public ComponentType getComponentType() {
     return switch (this.getUsage()) {
       case BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8, BUTTON_9, BUTTON_10,
@@ -58,6 +132,11 @@ class IOHIDElement {
     };
   }
 
+  /**
+   * Returns the identifier of the HID element.
+   *
+   * @return the identifier of the HID element
+   */
   public InputComponent.ID getIdentifier() {
     return switch (this.getUsage()) {
       case BUTTON_1 -> InputComponent.BUTTON_1;

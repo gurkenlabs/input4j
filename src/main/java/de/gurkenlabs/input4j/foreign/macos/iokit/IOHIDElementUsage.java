@@ -1,5 +1,12 @@
 package de.gurkenlabs.input4j.foreign.macos.iokit;
 
+/**
+ * Enum representing the different usages of IOHID elements.
+ *
+ * <p>These values are used to identify the type of data that an IOHID element represents.
+ * For example, a button element would have a usage of BUTTON_1, BUTTON_2, etc.,
+ * while an axis element would have a usage of X, Y, Z, etc.</p>
+ */
 enum IOHIDElementUsage {
   UNDEFINED(0x00),
   BUTTON_1(0x01),
@@ -77,10 +84,21 @@ enum IOHIDElementUsage {
     this.usage = usage;
   }
 
+  /**
+   * Gets the integer value associated with the element usage.
+   *
+   * @return the integer value of the element usage.
+   */
   int getUsage() {
     return usage;
   }
 
+  /**
+   * Returns the IOHIDElementUsage corresponding to the given integer value.
+   *
+   * @param value the integer value.
+   * @return the corresponding IOHIDElementUsage, or UNDEFINED if no match is found.
+   */
   static IOHIDElementUsage fromValue(int value) {
     for (IOHIDElementUsage usage : values()) {
       if (usage.getUsage() == value) {
