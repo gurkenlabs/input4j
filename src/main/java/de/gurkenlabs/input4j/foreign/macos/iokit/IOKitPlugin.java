@@ -48,6 +48,8 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
             var component = new InputComponent(inputDevice, element.getIdentifier(), element.getName());
             inputDevice.addComponent(component);
           }
+
+          IOKitVirtualComponentHandler.prepareVirtualComponents(inputDevice, inputDevice.getComponents());
           devices.add(ioHIDDevice);
         }
 
@@ -105,7 +107,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
       values[i] = value;
     }
 
-    return values;
+    return IOKitVirtualComponentHandler.handlePolledValues(inputDevice, values);
   }
 
   static float normalizeInputValue(int elementValue, IOHIDElement element, boolean isAxis) {
