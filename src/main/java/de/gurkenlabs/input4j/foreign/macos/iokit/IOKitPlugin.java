@@ -6,7 +6,6 @@ import de.gurkenlabs.input4j.InputDevice;
 
 import java.awt.*;
 import java.lang.foreign.Arena;
-import java.lang.foreign.MemorySegment;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -56,20 +55,20 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
         continue;
       }
 
-      var ioHIDValueRef = this.memoryArena.allocate(IOHIDValueRef.$LAYOUT);
-      var getValueResult = MacOS.IOHIDDeviceGetValue(ioHIDDevice, element, ioHIDValueRef);
+      var ioHIDValueRefSegment = this.memoryArena.allocate(IOHIDValueRef.$LAYOUT);
+      var getValueResult = MacOS.IOHIDDeviceGetValue(ioHIDDevice, element, ioHIDValueRefSegment);
       if (getValueResult != IOReturn.kIOReturnSuccess) {
         log.log(Level.WARNING, "Failed to get value for element " + element + " with error " + IOReturn.toString(getValueResult));
         continue;
       }
 
-      var elementFromValueRef = MacOS.IOHIDValueGetElement(ioHIDValueRef);
-      if (elementFromValueRef.equals(MemorySegment.NULL) && elementFromValueRef.address() != element.address) {
-        log.log(Level.WARNING, "Element mismatch for value " + element + " != " + elementFromValueRef);
-        continue;
-      }
+      var ioHIDValueRef = IOHIDValueRef.read(ioHIDValueRefSegment);
 
-      var value = MacOS.IOHIDValueGetIntegerValue(ioHIDValueRef);
+      var timestamp = MacOS.IOHIDValueGetTimeStamp(ioHIDValueRefSegment);
+      // TODO: This throws.
+      // Do I need to iterate the elements every time upon polling and cannot hold the addresses?
+      // Another approach: Use the event based API instead of polling that provides the IOHIDValueRef directly
+      var value = ioHIDValueRef.integerValue;
 
       values[i] = value;
     }
