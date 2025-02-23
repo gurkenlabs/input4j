@@ -110,9 +110,9 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
   static float normalizeInputValue(int elementValue, IOHIDElement element, boolean isAxis) {
     float value = elementValue;
-    if (isAxis) {
+    if (isAxis && element.usage != IOHIDElementUsage.HAT_SWITCH) {
       int midpoint = Math.round(element.min + element.max / 2.0f);
-      if (Math.abs(elementValue - midpoint) <= 2) {
+      if (value == 0 || Math.abs(elementValue - midpoint) <= 2) {
         value = 0;
       } else {
         // Ensure value is within the range [min, max]
