@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static java.lang.foreign.ValueLayout.JAVA_INT;
 import static java.lang.foreign.ValueLayout.JAVA_LONG;
 
 public class IOKitPlugin extends AbstractInputDevicePlugin {
@@ -65,16 +64,18 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
         continue;
       }
 
-      var io_service_t = MacOS.IOHIDDeviceGetService(ioHIDDevice);
-      var pluginInterface = this.memoryArena.allocate(JAVA_LONG);
-      var score = this.memoryArena.allocate(JAVA_INT);
 
-      var serviceClass = MacOS.IORegistryEntryGetClass(memoryArena, io_service_t);
-      var createInterfaceResult = MacOS.IOCreatePlugInInterfaceForService(memoryArena, io_service_t, pluginInterface, score);
-      if(createInterfaceResult != IOReturn.kIOReturnSuccess) {
-        log.log(Level.WARNING, "Failed to create plugin interface for service " + io_service_t + " with error " + IOReturn.toString(createInterfaceResult));
-        continue;
-      }
+
+
+      // TODO: creating a service plugin interface for this service type is not supported
+      //      var io_service_t = MacOS.IOHIDDeviceGetService(ioHIDDevice);
+      //      var pluginInterface = this.memoryArena.allocate(JAVA_LONG);
+      //      var score = this.memoryArena.allocate(JAVA_INT);
+      // var createInterfaceResult = MacOS.IOCreatePlugInInterfaceForService(memoryArena, io_service_t, pluginInterface, score);
+      // if(createInterfaceResult != IOReturn.kIOReturnSuccess) {
+      //  log.log(Level.WARNING, "Failed to create plugin interface for service " + io_service_t + " with error " + IOReturn.toString(createInterfaceResult));
+      //  continue;
+      //}
 
       // TODO: This throws.
       // Do I need to iterate the elements every time upon polling and cannot hold the addresses?
