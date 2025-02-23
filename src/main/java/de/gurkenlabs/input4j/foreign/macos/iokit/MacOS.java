@@ -95,6 +95,7 @@ public class MacOS {
   private static final MethodHandle CFDictionaryGetCount;
   private static final MethodHandle CFDictionaryGetKeysAndValues;
   private static final MethodHandle CFDictionaryApplyFunction;
+  private static final MethodHandle CFUUIDGetConstantUUIDWithBytes;
 
   private static final MethodHandle CFSetGetCount;
   private static final MethodHandle CFSetGetValues;
@@ -200,6 +201,12 @@ public class MacOS {
     CFDictionaryGetCount = downcallHandle("CFDictionaryGetCount", FunctionDescriptor.of(JAVA_INT, ADDRESS));
     CFDictionaryGetKeysAndValues = downcallHandle("CFDictionaryGetKeysAndValues", FunctionDescriptor.of(ADDRESS, ADDRESS, ADDRESS));
     CFDictionaryApplyFunction = downcallHandle("CFDictionaryApplyFunction", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS, ADDRESS));
+    CFUUIDGetConstantUUIDWithBytes = downcallHandle("CFUUIDGetConstantUUIDWithBytes", FunctionDescriptor.of(ADDRESS, ADDRESS,
+            JAVA_BYTE, JAVA_BYTE, JAVA_BYTE, JAVA_BYTE,
+            JAVA_BYTE, JAVA_BYTE, JAVA_BYTE, JAVA_BYTE,
+            JAVA_BYTE, JAVA_BYTE, JAVA_BYTE, JAVA_BYTE,
+            JAVA_BYTE, JAVA_BYTE, JAVA_BYTE, JAVA_BYTE));
+
     CFSetGetCount = downcallHandle("CFSetGetCount", FunctionDescriptor.of(JAVA_INT, ADDRESS));
     CFSetGetValues = downcallHandle("CFSetGetValues", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS));
 
@@ -274,6 +281,36 @@ public class MacOS {
   static int IOHIDDeviceGetService(IOHIDDevice device) {
     try {
       return (int) IOHIDDeviceGetService.invoke(device.address);
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  static MemorySegment getIOHIDDeviceUserClientTypeID() {
+    try {
+      // 6C29DD01-7C99-11D6-9D86-0003933E3E3E
+      return (MemorySegment) CFUUIDGetConstantUUIDWithBytes.invoke(
+              MemorySegment.NULL,
+              (byte) 0x6C, (byte) 0x29, (byte) 0xDD, (byte) 0x01,
+              (byte) 0x7C, (byte) 0x99, (byte) 0x11, (byte) 0xD6,
+              (byte) 0x9D, (byte) 0x86, (byte) 0x00, (byte) 0x03,
+              (byte) 0x93, (byte) 0x3E, (byte) 0x3E, (byte) 0x3E
+      );
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  static MemorySegment getIOCFPlugInInterfaceID() {
+    try {
+      // C2264A11-3B06-11D4-BD62-000502C34D39
+      return (MemorySegment) CFUUIDGetConstantUUIDWithBytes.invoke(
+              MemorySegment.NULL,
+              (byte) 0xC2, (byte) 0x26, (byte) 0x4A, (byte) 0x11,
+              (byte) 0x3B, (byte) 0x06, (byte) 0x11, (byte) 0xD4,
+              (byte) 0xBD, (byte) 0x62, (byte) 0x00, (byte) 0x05,
+              (byte) 0x02, (byte) 0xC3, (byte) 0x4D, (byte) 0x39
+      );
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
@@ -642,8 +679,8 @@ public class MacOS {
     try {
       return (int) IOCreatePlugInInterfaceForService.invoke(
               service,
-              memorySegment.allocateFrom(JAVA_BYTE, kIOHIDDeviceUserClientTypeID),
-              memorySegment.allocateFrom(JAVA_BYTE, kIOCFPlugInInterfaceID),
+              getIOHIDDeviceUserClientTypeID(),
+              getIOCFPlugInInterfaceID(),
               theInterface,
               score);
     } catch (Throwable t) {
