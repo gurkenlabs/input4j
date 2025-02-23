@@ -1,6 +1,6 @@
 package de.gurkenlabs.input4j.foreign.macos.iokit;
 
-public enum IOHIDElementUsage {
+enum IOHIDElementUsage {
   UNDEFINED(0x00),
   BUTTON_1(0x01),
   BUTTON_2(0x02),
@@ -77,11 +77,11 @@ public enum IOHIDElementUsage {
     this.usage = usage;
   }
 
-  public int getUsage() {
+  int getUsage() {
     return usage;
   }
 
-  public static IOHIDElementUsage fromValue(int value) {
+  static IOHIDElementUsage fromValue(int value) {
     for (IOHIDElementUsage usage : values()) {
       if (usage.getUsage() == value) {
         return usage;

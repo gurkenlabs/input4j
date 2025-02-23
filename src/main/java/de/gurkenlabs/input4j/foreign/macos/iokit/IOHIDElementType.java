@@ -1,6 +1,6 @@
 package de.gurkenlabs.input4j.foreign.macos.iokit;
 
-public enum IOHIDElementType {
+enum IOHIDElementType {
   UNDEFINED(0),
   MISC(1),
   BUTTON(2),
@@ -16,11 +16,11 @@ public enum IOHIDElementType {
     this.value = value;
   }
 
-  public int getValue() {
+  int getValue() {
     return value;
   }
 
-  public static IOHIDElementType fromValue(int value) {
+  static IOHIDElementType fromValue(int value) {
     for (IOHIDElementType type : IOHIDElementType.values()) {
       if (type.value == value) {
         return type;

@@ -1,6 +1,6 @@
 package de.gurkenlabs.input4j.foreign.macos.iokit;
 
-public enum IOHIDElementUsagePage {
+enum IOHIDElementUsagePage {
   UNDEFINED(0x00),
   GENERIC_DESKTOP(0x01),
   SIMULATION(0x02),
@@ -18,7 +18,7 @@ public enum IOHIDElementUsagePage {
     this.value = value;
   }
 
-  public static IOHIDElementUsagePage fromValue(int value) {
+  static IOHIDElementUsagePage fromValue(int value) {
     for (IOHIDElementUsagePage page : IOHIDElementUsagePage.values()) {
       if (page.value == value) {
         return page;
