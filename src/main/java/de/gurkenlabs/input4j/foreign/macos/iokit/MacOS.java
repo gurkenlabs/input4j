@@ -154,7 +154,10 @@ public class MacOS {
   }
 
   public static void hidInputValueCallback(MemorySegment context, int result, MemorySegment sender, MemorySegment ioHIDValueRef) {
-    System.out.println("hidInputValueCallback");
+    var element = IOHIDValueGetElement(ioHIDValueRef);
+    var value = IOHIDValueGetIntegerValue(ioHIDValueRef);
+    var timestamp = IOHIDValueGetTimeStamp(ioHIDValueRef);
+    System.out.println("Element: " + element.address() + ", Value: " + value + ", Timestamp: " + timestamp);
   }
 
   private static MemorySegment hidInputValueCallbackPointer(Arena memoryArena) throws Throwable {
@@ -337,6 +340,8 @@ public class MacOS {
         }
         hidDevices.add(device);
       }
+
+      // TODO: This works. But this also means that this needs to be a background thread to ensure that it is not blocking the main library
       CFRunLoopRun.invoke();
       return hidDevices;
     } catch (Throwable t) {
