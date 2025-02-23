@@ -211,14 +211,14 @@ public class MacOS {
     IOServiceGetMatchingServices = downcallHandle("IOServiceGetMatchingServices", FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
     IORegistryEntryCreateCFProperties = downcallHandle("IORegistryEntryCreateCFProperties", FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS, JAVA_INT));
     IOIteratorNext = downcallHandle("IOIteratorNext", FunctionDescriptor.of(JAVA_LONG, JAVA_LONG));
-    IOCreatePlugInInterfaceForService = downcallHandle("IOCreatePlugInInterfaceForService", FunctionDescriptor.of(JAVA_INT, JAVA_LONG, ADDRESS, ADDRESS, ADDRESS, ADDRESS));
+    IOCreatePlugInInterfaceForService = downcallHandle("IOCreatePlugInInterfaceForService", FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS, ADDRESS));
     IOObjectRelease = downcallHandle("IOObjectRelease", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
 
     IOHIDManagerCreate = downcallHandle("IOHIDManagerCreate", FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_INT));
     IOHIDManagerOpen = downcallHandle("IOHIDManagerOpen", FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT));
     IOHIDManagerCopyDevices = downcallHandle("IOHIDManagerCopyDevices", FunctionDescriptor.of(ADDRESS, ADDRESS));
     IOHIDManagerSetDeviceMatching = downcallHandle("IOHIDManagerSetDeviceMatching", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS));
-    IOHIDDeviceGetService = downcallHandle("IOHIDDeviceGetService", FunctionDescriptor.of(JAVA_LONG, JAVA_LONG));
+    IOHIDDeviceGetService = downcallHandle("IOHIDDeviceGetService", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDDeviceGetProperty = downcallHandle("IOHIDDeviceGetProperty", FunctionDescriptor.of(ADDRESS, JAVA_LONG, ADDRESS));
     IOHIDDeviceCopyMatchingElements = downcallHandle("IOHIDDeviceCopyMatchingElements", FunctionDescriptor.of(ADDRESS, JAVA_LONG, ADDRESS, JAVA_INT));
     IOHIDDeviceGetValue = downcallHandle("IOHIDDeviceGetValue", FunctionDescriptor.of(JAVA_INT, JAVA_LONG, JAVA_LONG, ADDRESS));
@@ -271,9 +271,9 @@ public class MacOS {
     }
   }
 
-  static long IOHIDDeviceGetService(IOHIDDevice device) {
+  static int IOHIDDeviceGetService(IOHIDDevice device) {
     try {
-      return (long) IOHIDDeviceGetService.invoke(device.address);
+      return (int) IOHIDDeviceGetService.invoke(device.address);
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
@@ -638,7 +638,7 @@ public class MacOS {
    * @param score        Address to store the scoring result (can be NULL)
    * @return IOReturn status code
    */
-  public static int IOCreatePlugInInterfaceForService(Arena memorySegment, long service, MemorySegment theInterface, MemorySegment score) {
+  public static int IOCreatePlugInInterfaceForService(Arena memorySegment, int service, MemorySegment theInterface, MemorySegment score) {
     try {
       return (int) IOCreatePlugInInterfaceForService.invoke(
               service,
