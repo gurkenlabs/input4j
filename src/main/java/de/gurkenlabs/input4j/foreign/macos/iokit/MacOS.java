@@ -109,6 +109,7 @@ public class MacOS {
   private static final MethodHandle IOServiceGetMatchingServices;
 
   private static final MethodHandle IORegistryEntryCreateCFProperties;
+  private static final MethodHandle IORegistryEntryGetClass;
   private static final MethodHandle IOIteratorNext;
   private static final MethodHandle IOCreatePlugInInterfaceForService;
   private static final MethodHandle IOObjectRelease;
@@ -142,42 +143,6 @@ public class MacOS {
    * Key for matching HID devices in the IOKit registry.
    */
   private static final String kIOHIDDeviceKey = "IOHIDDevice";
-
-  // Initialize UUID for HID Device User Client type
-  // Corresponds to the constant kIOHIDDeviceUserClientTypeID from <IOKit/hid/IOHIDLib.h>
-  // The bytes are arranged in UUID format: FA12FA38-6F1A-11D5-9F32-0005029B4E69.
-  private static final byte[] kIOHIDDeviceUserClientTypeID = new byte[]{
-          (byte) 0xFA, (byte) 0x12, (byte) 0xFA, (byte) 0x38,
-          (byte) 0x6F, (byte) 0x1A,
-          (byte) 0x11, (byte) 0xD5,
-          (byte) 0x9F, (byte) 0x32,
-          (byte) 0x00, (byte) 0x05,
-          (byte) 0x02, (byte) 0x9B,
-          (byte) 0x4E, (byte) 0x69
-  };
-
-  // Initialize UUID for CF Plugin Interface
-  // Corresponds to the constant kIOCFPlugInInterfaceID from <IOKit/IOKitLib.h>
-  // The bytes are arranged in UUID format: C244E858-109C-11D4-91D4-0050E4C6426F.
-  private static final byte[] kIOCFPlugInInterfaceID = new byte[]{
-          (byte) 0xC2, (byte) 0x44, (byte) 0xE8, (byte) 0x58,
-          (byte) 0x10, (byte) 0x9C,
-          (byte) 0x11, (byte) 0xD4,
-          (byte) 0x91, (byte) 0xD4,
-          (byte) 0x00, (byte) 0x50,
-          (byte) 0xE4, (byte) 0xC6,
-          (byte) 0x42, (byte) 0x6F
-  };
-
-  static final byte[] kIOHIDDeviceInterfaceID = new byte[]{
-          (byte) 0x9A, (byte) 0x40, (byte) 0x4D, (byte) 0x7E,
-          (byte) 0x9C, (byte) 0x7B,
-          (byte) 0x11, (byte) 0xD4,
-          (byte) 0x91, (byte) 0x4B,
-          (byte) 0x00, (byte) 0x50,
-          (byte) 0xE4, (byte) 0xC6,
-          (byte) 0x42, (byte) 0x6F
-  };
 
   static {
     System.load("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation");
@@ -217,6 +182,7 @@ public class MacOS {
     IOServiceMatching = downcallHandle("IOServiceMatching", FunctionDescriptor.of(ADDRESS, ADDRESS));
     IOServiceGetMatchingServices = downcallHandle("IOServiceGetMatchingServices", FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS));
     IORegistryEntryCreateCFProperties = downcallHandle("IORegistryEntryCreateCFProperties", FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS, JAVA_INT));
+    IORegistryEntryGetClass = downcallHandle("IORegistryEntryGetClass", FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS));
     IOIteratorNext = downcallHandle("IOIteratorNext", FunctionDescriptor.of(JAVA_LONG, JAVA_LONG));
     IOCreatePlugInInterfaceForService = downcallHandle("IOCreatePlugInInterfaceForService", FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS, ADDRESS));
     IOObjectRelease = downcallHandle("IOObjectRelease", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
@@ -281,6 +247,20 @@ public class MacOS {
   static int IOHIDDeviceGetService(IOHIDDevice device) {
     try {
       return (int) IOHIDDeviceGetService.invoke(device.address);
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  static String IORegistryEntryGetClass(Arena memoryArena, int service) {
+    try {
+      var classNameSegment = memoryArena.allocate(128);
+      var result = (int) IORegistryEntryGetClass.invoke(service, classNameSegment);
+      if(result != IOReturn.kIOReturnSuccess) {
+        return null;
+      }
+
+      return classNameSegment.getString(0, StandardCharsets.UTF_8);
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
@@ -588,12 +568,13 @@ public class MacOS {
     } catch (Throwable t) {
       throw new RuntimeException(t);
     } finally {
+      // TODO: don't release too early otherwise we cannot use the devices later. But still release at some point
       if (!hidManager.equals(MemorySegment.NULL)) {
-        IOObjectRelease(hidManager.address());
+       // IOObjectRelease(hidManager.address());
       }
 
       if (!deviceSet.equals(MemorySegment.NULL)) {
-        IOObjectRelease(deviceSet.address());
+       // IOObjectRelease(deviceSet.address());
       }
     }
   }
