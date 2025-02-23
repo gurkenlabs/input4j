@@ -26,6 +26,8 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
   private final Collection<IOHIDDevice> devices = ConcurrentHashMap.newKeySet();
   private Thread eventLoopThread;
 
+  private boolean devicesInitialized;
+
   @Override
   public void internalInitDevices(Frame owner) {
     eventLoopThread = new Thread(() -> {
@@ -49,8 +51,11 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
           devices.add(ioHIDDevice);
         }
 
-        // Start the event loop in a separate thread
-        MacOS.runEventLoop(memoryArena, ioHIDManager);
+        devicesInitialized = true;
+        if(!devices.isEmpty()) {
+          // Start the event loop in a separate thread
+          MacOS.runEventLoop(memoryArena, ioHIDManager);
+        }
       } catch (Throwable e) {
         log.log(Level.SEVERE, "Failed to initialize IOKit devices", e);
       } finally {
@@ -64,6 +69,16 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     });
 
     eventLoopThread.start();
+
+    int waited = 0;
+    while(waited < 3000 && !devicesInitialized ) {
+        try {
+            Thread.sleep(100);
+            waited += 100;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
   }
 
   private float[] pollIOHIDDevice(InputDevice inputDevice) {
