@@ -116,6 +116,7 @@ public class MacOS {
   private static final MethodHandle IOHIDManagerOpen;
   private static final MethodHandle IOHIDManagerCopyDevices;
   private static final MethodHandle IOHIDManagerSetDeviceMatching;
+  private static final MethodHandle IOHIDDeviceGetService;
   private static final MethodHandle IOHIDDeviceGetProperty;
   private static final MethodHandle IOHIDDeviceGetValue;
   private static final MethodHandle IOHIDDeviceCopyMatchingElements;
@@ -217,6 +218,7 @@ public class MacOS {
     IOHIDManagerOpen = downcallHandle("IOHIDManagerOpen", FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT));
     IOHIDManagerCopyDevices = downcallHandle("IOHIDManagerCopyDevices", FunctionDescriptor.of(ADDRESS, ADDRESS));
     IOHIDManagerSetDeviceMatching = downcallHandle("IOHIDManagerSetDeviceMatching", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS));
+    IOHIDDeviceGetService = downcallHandle("IOHIDDeviceGetService", FunctionDescriptor.of(JAVA_LONG, JAVA_LONG));
     IOHIDDeviceGetProperty = downcallHandle("IOHIDDeviceGetProperty", FunctionDescriptor.of(ADDRESS, JAVA_LONG, ADDRESS));
     IOHIDDeviceCopyMatchingElements = downcallHandle("IOHIDDeviceCopyMatchingElements", FunctionDescriptor.of(ADDRESS, JAVA_LONG, ADDRESS, JAVA_INT));
     IOHIDDeviceGetValue = downcallHandle("IOHIDDeviceGetValue", FunctionDescriptor.of(JAVA_INT, JAVA_LONG, JAVA_LONG, ADDRESS));
@@ -264,6 +266,14 @@ public class MacOS {
   static long IOHIDValueGetTimeStamp(MemorySegment value) {
     try {
       return (long) IOHIDValueGetTimeStamp.invoke(value);
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  static long IOHIDDeviceGetService(IOHIDDevice device) {
+    try {
+      return (long) IOHIDDeviceGetService.invoke(device.address);
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }

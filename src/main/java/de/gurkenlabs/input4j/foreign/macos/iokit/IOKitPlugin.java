@@ -11,6 +11,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static java.lang.foreign.ValueLayout.JAVA_INT;
+import static java.lang.foreign.ValueLayout.JAVA_LONG;
+
 public class IOKitPlugin extends AbstractInputDevicePlugin {
   private static final Logger log = Logger.getLogger(IOKitPlugin.class.getName());
 
@@ -55,22 +58,29 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
         continue;
       }
 
-      var ioHIDValueRefSegment = this.memoryArena.allocate(IOHIDValueRef.$LAYOUT);
+      var ioHIDValueRefSegment = this.memoryArena.allocate(JAVA_LONG);
       var getValueResult = MacOS.IOHIDDeviceGetValue(ioHIDDevice, element, ioHIDValueRefSegment);
       if (getValueResult != IOReturn.kIOReturnSuccess) {
         log.log(Level.WARNING, "Failed to get value for element " + element + " with error " + IOReturn.toString(getValueResult));
         continue;
       }
 
-      var ioHIDValueRef = IOHIDValueRef.read(ioHIDValueRefSegment);
+      var io_service_t = MacOS.IOHIDDeviceGetService(ioHIDDevice);
+      var pluginInterface = this.memoryArena.allocate(JAVA_LONG);
+      var score = this.memoryArena.allocate(JAVA_INT);
 
-      var timestamp = MacOS.IOHIDValueGetTimeStamp(ioHIDValueRefSegment);
+      var createInterfaceResult = MacOS.IOCreatePlugInInterfaceForService(io_service_t, pluginInterface, score);
+      if(createInterfaceResult != IOReturn.kIOReturnSuccess) {
+        log.log(Level.WARNING, "Failed to create plugin interface for service " + io_service_t + " with error " + IOReturn.toString(createInterfaceResult));
+        continue;
+      }
+
       // TODO: This throws.
       // Do I need to iterate the elements every time upon polling and cannot hold the addresses?
       // Another approach: Use the event based API instead of polling that provides the IOHIDValueRef directly
-      var value = ioHIDValueRef.integerValue;
-
-      values[i] = value;
+      // var value = ioHIDValueRef.integerValue;
+      // var timestamp = MacOS.IOHIDValueGetTimeStamp(ioHIDValueRefSegment);
+      values[i] = 0;
     }
 
     return values;
