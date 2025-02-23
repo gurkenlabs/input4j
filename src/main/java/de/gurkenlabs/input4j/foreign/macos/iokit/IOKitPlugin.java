@@ -101,16 +101,16 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
       var elementValue = element.currentValue;
 
-      var value = normalizeInputValue(elementValue, element);
+      var value = normalizeInputValue(elementValue, element, component.isAxis());
       values[i] = value;
     }
 
     return values;
   }
 
-  static float normalizeInputValue(int elementValue, IOHIDElement element) {
+  static float normalizeInputValue(int elementValue, IOHIDElement element, boolean isAxis) {
     float value = elementValue;
-    if (element.type == IOHIDElementType.AXIS) {
+    if (isAxis) {
       int midpoint = Math.round(element.min + element.max / 2.0f);
       if (Math.abs(elementValue - midpoint) <= 2) {
         value = 0;
