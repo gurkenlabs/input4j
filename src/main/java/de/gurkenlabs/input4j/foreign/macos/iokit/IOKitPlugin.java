@@ -97,7 +97,6 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
       var component = inputDevice.getComponents().get(i);
       var element = ioHIDDevice.getElements().stream().filter(x -> x.getIdentifier() == component.getId()).findFirst().orElse(null);
       if (element == null) {
-        log.log(Level.WARNING, "IOHIDElement not found for component " + component.getId());
         continue;
       }
 
