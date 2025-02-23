@@ -52,7 +52,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
         }
 
         devicesInitialized = true;
-        if(!devices.isEmpty()) {
+        if (!devices.isEmpty()) {
           // Start the event loop in a separate thread
           MacOS.runEventLoop(memoryArena, ioHIDManager);
         }
@@ -71,13 +71,13 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     eventLoopThread.start();
 
     int waited = 0;
-    while(waited < 3000 && !devicesInitialized ) {
-        try {
-            Thread.sleep(100);
-            waited += 100;
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+    while (waited < 3000 && !devicesInitialized) {
+      try {
+        Thread.sleep(100);
+        waited += 100;
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 
@@ -100,7 +100,6 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
       }
 
       var elementValue = element.currentValue;
-      element.currentValue = 0;
 
       var value = normalizeInputValue(elementValue, element);
       values[i] = value;
@@ -157,7 +156,6 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     }
 
     ioHIDElement.currentValue = value;
-    System.out.println(ioHIDElement + ": " + value + ", Timestamp: " + timestamp);
   }
 
   private MemorySegment hidInputValueCallbackPointer(Arena memoryArena) throws Throwable {
