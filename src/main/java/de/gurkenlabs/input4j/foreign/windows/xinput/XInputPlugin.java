@@ -14,15 +14,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * The {@code XInputPlugin} class is responsible for managing XInput devices.
  * It initializes, polls, and handles rumble functionality for XInput devices.
  */
 public final class XInputPlugin extends AbstractInputDevicePlugin {
-  private static final Logger log = Logger.getLogger(XInputPlugin.class.getName());
-
   private static final MethodHandle xInputGetState;
   private static final MethodHandle xInputSetState;
   private static final MethodHandle xInputGetCapabilities;
@@ -104,7 +101,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
 
         state.Gamepad.inputDevice = device;
         devices.add(state.Gamepad);
-        log.log(Level.INFO, "Found XInput device: " + i);
+        log.log(Level.FINE, "Found XInput device: " + i);
       }
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);

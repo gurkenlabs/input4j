@@ -15,7 +15,6 @@ import java.lang.invoke.MethodType;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static java.lang.foreign.ValueLayout.ADDRESS;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
@@ -36,8 +35,6 @@ import static java.lang.foreign.ValueLayout.JAVA_INT;
  * </ul>
  */
 public class IOKitPlugin extends AbstractInputDevicePlugin {
-  private static final Logger log = Logger.getLogger(IOKitPlugin.class.getName());
-
   private final Collection<IOHIDDevice> devices = ConcurrentHashMap.newKeySet();
   private Thread eventLoopThread;
 

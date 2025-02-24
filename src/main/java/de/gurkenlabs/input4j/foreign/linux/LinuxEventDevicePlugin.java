@@ -13,7 +13,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * The {@code LinuxEventDevicePlugin} class is responsible for managing Linux event devices.
@@ -29,8 +28,6 @@ import java.util.logging.Logger;
  *  </ul>
  */
 public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
-  private static final Logger log = Logger.getLogger(LinuxEventDevicePlugin.class.getName());
-
   private final Arena memoryArena = Arena.ofConfined();
   private final Collection<LinuxEventDevice> devices = ConcurrentHashMap.newKeySet();
 

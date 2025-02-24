@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
 import static java.lang.foreign.ValueLayout.*;
@@ -26,8 +25,6 @@ import static java.lang.foreign.ValueLayout.*;
  * TODO: handle disconnect or permanent unavailability => retry X times => handle in hotplug thread if a device is unavailable throw it away
  */
 public final class DirectInputPlugin extends AbstractInputDevicePlugin {
-  private static final Logger log = Logger.getLogger(DirectInputPlugin.class.getName());
-
   static final int DI8DEVCLASS_GAMECTRL = 4;
 
   static final int DIRECTINPUT_VERSION = 0x0800;
