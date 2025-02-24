@@ -12,8 +12,22 @@ import java.util.function.Function;
 
 /**
  * Represents an input device.
- * An input device is a physical device that can provide input to a computer system,
- * such as a keyboard, mouse, or game controller.
+ * An input device is a physical device that can provide input to a computer system.
+ * It is composed of a collection of input components, such as buttons, axes, and other controls.
+ * <p>
+ * The input device can be polled for input data, which is then used to update the associated input components.
+ * The input device can also be used to set rumble (vibration) intensity.
+ * <br>
+ * The input device can have multiple listeners that are notified when the value of an input component changes.
+ * The listeners should implement the {@link InputDeviceListener} interface.
+ * <br>
+ * The input device should be closed to release any resources it holds.
+ * </p>
+ *
+ * @see InputComponent
+ * @see InputDeviceListener
+ * @see InputEvent
+ * @see Closeable
  */
 public final class InputDevice implements Closeable {
   private final String instanceName;

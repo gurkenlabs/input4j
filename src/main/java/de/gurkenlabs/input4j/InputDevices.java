@@ -56,15 +56,49 @@ public final class InputDevices {
   }
 
   /**
+   * Initializes the input device provider with the specified input plugin class.
+   *
+   * @param inputPluginClass The input plugin class to be used.
+   * @return The initialized input device provider.
+   * @throws IOException if the input device provider cannot be initialized.
+   */
+  public static InputDevicePlugin init(String inputPluginClass) throws IOException {
+    return init(null, inputPluginClass);
+  }
+
+  /**
    * Initializes the input device provider based on the detected operating system.
    *
-   * @param owner The owner to be passed to individual plugins, or null if running in background.
+   * @param owner   The owner to be passed to individual plugins, or null if running in background.
+   * @param library The input library to be used.
    * @return The initialized input device provider.
    * @throws IOException if the input device provider cannot be initialized.
    */
   public static InputDevicePlugin init(Frame owner, InputLibrary library) throws IOException {
+    return init(owner, library.getPlugin());
+  }
+
+  /**
+   * Initializes the input device provider based on the detected operating system.
+   *
+   * @param owner            The owner to be passed to individual plugins, or null if running in background.
+   * @param inputPluginClass The input plugin class to be used. If null, the default platform library is used.
+   *                         The plugin class must be a fully qualified class name of a class that implements the {@link InputDevicePlugin} interface.
+   *                         <p>
+   *                         This can be used to explicitly select a custom input library implementation.
+   *                         If the class is not found or cannot be instantiated, an {@link IOException} is thrown.
+   *                         The class must have a public no-argument constructor.
+   *                         </p>
+   * @return The initialized input device provider.
+   * @throws IOException if the input device provider cannot be initialized.
+   */
+  public static InputDevicePlugin init(Frame owner, String inputPluginClass) throws IOException {
     try {
-      var pluginClass = Class.forName(library.getPlugin());
+      if (inputPluginClass == null) {
+        inputPluginClass = InputLibrary.PLATFORM_DEFAULT.getPlugin();
+      }
+
+      var pluginClass = Class.forName(inputPluginClass);
       var constructor = pluginClass.getDeclaredConstructor();
       var provider = (InputDevicePlugin) constructor.newInstance();
       provider.internalInitDevices(owner);
