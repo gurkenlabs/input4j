@@ -25,6 +25,8 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
   private static final MethodHandle xInputSetState;
   private static final MethodHandle xInputGetCapabilities;
 
+  private final Arena memoryArena = Arena.ofConfined();
+
   private final Collection<XINPUT_GAMEPAD> devices = ConcurrentHashMap.newKeySet();
 
   static {
@@ -221,11 +223,12 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
     }
 
     this.devices.clear();
+    this.memoryArena.close();
   }
 
-  public static XINPUT_CAPABILITIES getCapabilities(int userIndex) {
-    try (var memorySession = Arena.ofConfined()) {
-      var capabilitiesSegment = memorySession.allocate(XINPUT_CAPABILITIES.$LAYOUT);
+  private XINPUT_CAPABILITIES getCapabilities(int userIndex) {
+    try {
+      var capabilitiesSegment = this.memoryArena.allocate(XINPUT_CAPABILITIES.$LAYOUT);
 
       int result = (int) xInputGetCapabilities.invoke(userIndex, 0, capabilitiesSegment);
       if (result == Result.ERROR_SUCCESS) {
@@ -249,8 +252,8 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
    * @return The state of the XInput device, or {@code null} if the device is not connected.
    */
   private XINPUT_STATE getState(int userIndex) {
-    try (var memorySession = Arena.ofConfined()) {
-      var segment = memorySession.allocate(XINPUT_STATE.$LAYOUT);
+    try  {
+      var segment = this.memoryArena.allocate(XINPUT_STATE.$LAYOUT);
 
       int result = (int) xInputGetState.invoke(userIndex, segment);
       if (result == Result.ERROR_SUCCESS) {
@@ -275,12 +278,12 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
    * @param wRightMotorSpeed The speed of the right motor.
    */
   private void setVibration(int userIndex, short wLeftMotorSpeed, short wRightMotorSpeed) {
-    try (var memorySession = Arena.ofConfined()) {
+    try {
       var vibration = new XINPUT_VIBRATION();
       vibration.wLeftMotorSpeed = wLeftMotorSpeed;
       vibration.wRightMotorSpeed = wRightMotorSpeed;
 
-      var segment = memorySession.allocate(XINPUT_VIBRATION.$LAYOUT);
+      var segment = this.memoryArena.allocate(XINPUT_VIBRATION.$LAYOUT);
       vibration.write(segment);
       int result = (int) xInputSetState.invoke(userIndex, segment);
       if (result != Result.ERROR_SUCCESS) {

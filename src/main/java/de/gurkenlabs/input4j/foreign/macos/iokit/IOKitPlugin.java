@@ -165,6 +165,8 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     if (eventLoopThread != null) {
       eventLoopThread.interrupt();
     }
+
+    this.devices.clear();
   }
 
   /**

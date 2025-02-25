@@ -253,6 +253,8 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     for (LinuxEventDevice device : devices) {
       device.close(this.memoryArena);
     }
+
+    this.devices.clear();
     memoryArena.close();
   }
 }
