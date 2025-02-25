@@ -1,7 +1,5 @@
 package de.gurkenlabs.input4j.foreign.windows.dinput;
 
-import de.gurkenlabs.input4j.ComponentType;
-
 import java.util.Arrays;
 
 /**
@@ -45,24 +43,6 @@ enum DI8DEVOBJECTTYPE {
    */
   public GUID getTypeGuid() {
     return typeGuid;
-  }
-
-  public ComponentType getComponentType() {
-    switch (this) {
-      case XAxis, YAxis, ZAxis, RxAxis, RyAxis, RzAxis, Slider, POV -> {
-        return ComponentType.AXIS;
-      }
-
-      case Button -> {
-        return ComponentType.BUTTON;
-      }
-
-      case Key -> {
-        return ComponentType.KEY;
-      }
-    }
-
-    return ComponentType.UNKNOWN;
   }
 
   /**

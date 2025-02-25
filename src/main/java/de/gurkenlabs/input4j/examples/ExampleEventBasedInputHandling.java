@@ -6,6 +6,7 @@ public class ExampleEventBasedInputHandling {
   public static void main(String[] args) throws IOException {
 
     /*
+    TODO: Implement the following example code snippet:
     try (var devices = InputDevices.init()) {
       devices.getAll().forEach(device -> {
         device..onButtonPressed("X", () -> {

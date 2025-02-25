@@ -119,22 +119,6 @@ class IOHIDElement {
   }
 
   /**
-   * Returns the component type of the HID element.
-   *
-   * @return the component type of the HID element
-   */
-  public ComponentType getComponentType() {
-    return switch (this.getUsage()) {
-      case BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8, BUTTON_9, BUTTON_10,
-           BUTTON_11, BUTTON_12, BUTTON_13, BUTTON_14, BUTTON_15, BUTTON_16, BUTTON_17, BUTTON_18, BUTTON_19, BUTTON_20,
-           BUTTON_21, BUTTON_22, BUTTON_23, BUTTON_24, BUTTON_25, BUTTON_26, BUTTON_27, BUTTON_28, BUTTON_29, BUTTON_30,
-           BUTTON_31, BUTTON_32 -> ComponentType.BUTTON;
-      case X, Y, Z, RX, RY, RZ, SLIDER, DIAL, WHEEL, HAT_SWITCH -> ComponentType.AXIS;
-      default -> ComponentType.UNKNOWN;
-    };
-  }
-
-  /**
    * Returns the identifier of the HID element.
    *
    * @return the identifier of the HID element
