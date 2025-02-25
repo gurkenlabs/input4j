@@ -85,7 +85,16 @@ class XInputDataStructTests {
     capabilities.SubType = 2;
     capabilities.Flags = 3;
     capabilities.Gamepad = new XINPUT_GAMEPAD();
+    capabilities.Gamepad.wButtons = 1;
+    capabilities.Gamepad.bLeftTrigger = 2;
+    capabilities.Gamepad.bRightTrigger = 3;
+    capabilities.Gamepad.sThumbLX = 4;
+    capabilities.Gamepad.sThumbLY = 5;
+    capabilities.Gamepad.sThumbRX = 6;
+    capabilities.Gamepad.sThumbRY = 7;
     capabilities.Vibration = new XINPUT_VIBRATION();
+    capabilities.Vibration.wLeftMotorSpeed = 100;
+    capabilities.Vibration.wRightMotorSpeed = 200;
 
     try (var memorySession = Arena.ofConfined()) {
       var segment = memorySession.allocate(XINPUT_CAPABILITIES.$LAYOUT);
@@ -95,7 +104,15 @@ class XInputDataStructTests {
       assertEquals(capabilities.Type, testCapabilities.Type);
       assertEquals(capabilities.SubType, testCapabilities.SubType);
       assertEquals(capabilities.Flags, testCapabilities.Flags);
-      // Add more assertions for Gamepad and Vibration if needed
+      assertEquals(capabilities.Gamepad.wButtons, testCapabilities.Gamepad.wButtons);
+      assertEquals(capabilities.Gamepad.bLeftTrigger, testCapabilities.Gamepad.bLeftTrigger);
+      assertEquals(capabilities.Gamepad.bRightTrigger, testCapabilities.Gamepad.bRightTrigger);
+      assertEquals(capabilities.Gamepad.sThumbLX, testCapabilities.Gamepad.sThumbLX);
+      assertEquals(capabilities.Gamepad.sThumbLY, testCapabilities.Gamepad.sThumbLY);
+      assertEquals(capabilities.Gamepad.sThumbRX, testCapabilities.Gamepad.sThumbRX);
+      assertEquals(capabilities.Gamepad.sThumbRY, testCapabilities.Gamepad.sThumbRY);
+      assertEquals(capabilities.Vibration.wLeftMotorSpeed, testCapabilities.Vibration.wLeftMotorSpeed);
+      assertEquals(capabilities.Vibration.wRightMotorSpeed, testCapabilities.Vibration.wRightMotorSpeed);
     }
   }
 }

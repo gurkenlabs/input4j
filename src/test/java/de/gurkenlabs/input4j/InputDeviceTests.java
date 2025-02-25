@@ -13,15 +13,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class InputDeviceTests {
   private InputDevice inputDevice;
-  private List<InputComponent> components;
-  private Function<InputDevice, float[]> pollCallback;
-  private BiConsumer<InputDevice, float[]> rumbleCallback;
 
   @BeforeEach
   public void setUp() {
-    components = new CopyOnWriteArrayList<>();
-    pollCallback = device -> new float[]{0.12345f};
-    rumbleCallback = (device, intensity) -> {};
+    List<InputComponent> components = new CopyOnWriteArrayList<>();
+    Function<InputDevice, float[]> pollCallback = _ -> new float[]{0.12345f};
+    BiConsumer<InputDevice, float[]> rumbleCallback = (_, _) -> {
+    };
 
     inputDevice = new InputDevice("TestInstance", "TestProduct", pollCallback, rumbleCallback);
     inputDevice.setComponents(components);
@@ -47,7 +45,7 @@ public class InputDeviceTests {
     InputComponent component = new InputComponent(inputDevice, new InputComponent.ID(ComponentType.BUTTON, 1, "BUTTON_1"));
     inputDevice.addComponent(component);
     assertEquals(1, inputDevice.getComponents().size());
-    assertEquals(component, inputDevice.getComponents().get(0));
+    assertEquals(component, inputDevice.getComponents().getFirst());
   }
 
   @Test

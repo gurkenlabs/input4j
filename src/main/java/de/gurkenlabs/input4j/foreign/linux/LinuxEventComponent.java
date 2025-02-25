@@ -94,10 +94,6 @@ final class LinuxEventComponent {
     }
   }
 
-  float getDeadZone() {
-    return flat / (2f * (max - min));
-  }
-
   public InputComponent.ID getIdentifier() {
     return switch (linuxComponentType) {
       case BTN_SOUTH -> new InputComponent.ID(XInput.A, this.nativeCode);
