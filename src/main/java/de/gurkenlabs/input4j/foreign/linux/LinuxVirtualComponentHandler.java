@@ -2,6 +2,7 @@ package de.gurkenlabs.input4j.foreign.linux;
 
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
+import de.gurkenlabs.input4j.components.Button;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,13 +24,13 @@ final class LinuxVirtualComponentHandler {
     // in Linux, the D-Pad is mapped to two buttons for LEFT/RIGHT and UP/DOWN respectively.
     // We need separate button components that reflect the D-Pad directions individually
     if (components.stream().anyMatch(x -> x.getId().name.equals(LinuxEventComponent.ID_DPAD_UP_DOWN))) {
-      allComponents.add(new InputComponent(device, InputComponent.DPAD_UP));
-      allComponents.add(new InputComponent(device, InputComponent.DPAD_DOWN));
+      allComponents.add(new InputComponent(device, Button.DPAD_UP));
+      allComponents.add(new InputComponent(device, Button.DPAD_DOWN));
     }
 
     if (components.stream().anyMatch(x -> x.getId().name.equals(LinuxEventComponent.ID_DPAD_LEFT_RIGHT))) {
-      allComponents.add(new InputComponent(device, InputComponent.DPAD_LEFT));
-      allComponents.add(new InputComponent(device, InputComponent.DPAD_RIGHT));
+      allComponents.add(new InputComponent(device, Button.DPAD_LEFT));
+      allComponents.add(new InputComponent(device, Button.DPAD_RIGHT));
     }
 
     device.setComponents(allComponents);
@@ -37,10 +38,10 @@ final class LinuxVirtualComponentHandler {
 
   static float[] handlePolledValues(final InputDevice device, final float[] nativeValues) {
     var allValues = new float[device.getComponents().size()];
-    var dpadUpIndex = device.getComponentIndex(InputComponent.DPAD_UP);
-    var dpadDownIndex = device.getComponentIndex(InputComponent.DPAD_DOWN);
-    var dpadLeftIndex = device.getComponentIndex(InputComponent.DPAD_LEFT);
-    var dpadRightIndex = device.getComponentIndex(InputComponent.DPAD_RIGHT);
+    var dpadUpIndex = device.getComponentIndex(Button.DPAD_UP);
+    var dpadDownIndex = device.getComponentIndex(Button.DPAD_DOWN);
+    var dpadLeftIndex = device.getComponentIndex(Button.DPAD_LEFT);
+    var dpadRightIndex = device.getComponentIndex(Button.DPAD_RIGHT);
 
     for (int i = 0; i < nativeValues.length && i < device.getComponents().size(); i++) {
       var value = nativeValues[i];

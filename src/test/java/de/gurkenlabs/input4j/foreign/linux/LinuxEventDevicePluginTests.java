@@ -3,6 +3,8 @@ package de.gurkenlabs.input4j.foreign.linux;
 import de.gurkenlabs.input4j.ComponentType;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
+import de.gurkenlabs.input4j.components.Axis;
+import de.gurkenlabs.input4j.components.Button;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -85,8 +87,8 @@ public class LinuxEventDevicePluginTests {
   void testGetComponentIndexByNativeId() {
     // Create a mock InputDevice with components
     InputDevice inputDevice = new InputDevice("Test Device", "Test Device", null, null);
-    InputComponent buttonComponent = new InputComponent(inputDevice, new InputComponent.ID(InputComponent.BUTTON_1, 123), "Button1", false);
-    InputComponent axisComponent = new InputComponent(inputDevice, new InputComponent.ID(InputComponent.AXIS_X, 456), "Axis1", false);
+    InputComponent buttonComponent = new InputComponent(inputDevice, new InputComponent.ID(Button.BUTTON_1, 123), "Button1", false);
+    InputComponent axisComponent = new InputComponent(inputDevice, new InputComponent.ID(Axis.AXIS_X, 456), "Axis1", false);
     inputDevice.addComponent(buttonComponent);
     inputDevice.addComponent(axisComponent);
 
@@ -116,7 +118,7 @@ public class LinuxEventDevicePluginTests {
     assertEquals(Linux.ERROR, index);
 
     // Test case 5: Unknown component type
-    InputComponent unknownComponent = new InputComponent(inputDevice, new InputComponent.ID(ComponentType.Unknown, 1111, "Unknown"), "Unknown", false);
+    InputComponent unknownComponent = new InputComponent(inputDevice, new InputComponent.ID(ComponentType.UNKNOWN, 1111, "Unknown"), "Unknown", false);
     inputDevice.addComponent(unknownComponent);
     event.type = LinuxEventDevice.EV_KEY;
     event.code = 4;

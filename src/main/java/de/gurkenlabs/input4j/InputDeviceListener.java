@@ -14,7 +14,7 @@ public interface InputDeviceListener extends EventListener {
   /**
    * Invoked when the value of an `InputComponent` changes.
    *
-   * @param inputEvent the `InputEvent` that contains the `InputComponent` that changed and its old and new values
+   * @param inputValueChangedEvent the `InputEvent` that contains the `InputComponent` that changed and its old and new values
    */
-  void onValueChanged(InputEvent inputEvent);
+  void onValueChanged(InputComponent.InputValueChangedEvent inputValueChangedEvent);
 }

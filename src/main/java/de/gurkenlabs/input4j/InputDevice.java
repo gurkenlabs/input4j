@@ -26,7 +26,7 @@ import java.util.function.Function;
  *
  * @see InputComponent
  * @see InputDeviceListener
- * @see InputEvent
+ * @see de.gurkenlabs.input4j.InputComponent.InputValueChangedEvent
  * @see Closeable
  */
 public final class InputDevice implements Closeable {
@@ -171,7 +171,7 @@ public final class InputDevice implements Closeable {
         hasInputData = true;
         component.setData(newData);
 
-        var inputEvent = new InputEvent(component, oldData, newData);
+        var inputEvent = new InputComponent.InputValueChangedEvent(component, oldData, newData);
         for (var listener : listeners) {
           listener.onValueChanged(inputEvent);
         }

@@ -393,20 +393,20 @@ public enum LinuxComponentType {
   public ComponentType getComponentType(int nativeCode, boolean axis, boolean relative) {
     var type = fromCode(nativeCode, axis, relative);
     if (type == UNKNOWN) {
-      return ComponentType.Unknown;
+      return ComponentType.UNKNOWN;
     }
 
     if (type.name().startsWith("KEY")) {
-      return ComponentType.Key;
+      return ComponentType.KEY;
     }else if (type.name().startsWith("BTN")) {
-      return ComponentType.Button;
+      return ComponentType.BUTTON;
     } else if (type.name().startsWith("ABS_HAT")) {
-      return ComponentType.Axis;
+      return ComponentType.AXIS;
     }
 
     return switch (type) {
-      case ABS_X, ABS_RX, ABS_Y, ABS_Z, ABS_RY, ABS_RZ -> ComponentType.Axis;
-      default -> ComponentType.Unknown;
+      case ABS_X, ABS_RX, ABS_Y, ABS_Z, ABS_RY, ABS_RZ -> ComponentType.AXIS;
+      default -> ComponentType.UNKNOWN;
     };
   }
 

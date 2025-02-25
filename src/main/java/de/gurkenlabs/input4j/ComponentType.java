@@ -8,17 +8,17 @@ package de.gurkenlabs.input4j;
  * </p>
  */
 public enum ComponentType {
-  Axis,
-  Button,
-  Key,
-  Unknown;
+  AXIS,
+  BUTTON,
+  KEY,
+  UNKNOWN;
 
   /**
    * Checks if the component type is an axis.
    *
    * @return true if the component type is Axis, false otherwise.
    */
-  public boolean isAxis() { return this == Axis; }
+  public boolean isAxis() { return this == AXIS; }
 
   /**
    * Checks if the component type is a button.
@@ -26,6 +26,6 @@ public enum ComponentType {
    * @return true if the component type is Button, false otherwise.
    */
   public boolean isButton() {
-    return this == Button;
+    return this == BUTTON;
   }
 }

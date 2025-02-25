@@ -2,6 +2,8 @@ package de.gurkenlabs.input4j.foreign.macos.iokit;
 
 import de.gurkenlabs.input4j.ComponentType;
 import de.gurkenlabs.input4j.InputComponent;
+import de.gurkenlabs.input4j.components.Axis;
+import de.gurkenlabs.input4j.components.Button;
 
 /**
  * Represents an IOHIDElement, which is a control element of an IOHIDDevice on macOS.
@@ -126,9 +128,9 @@ class IOHIDElement {
       case BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8, BUTTON_9, BUTTON_10,
            BUTTON_11, BUTTON_12, BUTTON_13, BUTTON_14, BUTTON_15, BUTTON_16, BUTTON_17, BUTTON_18, BUTTON_19, BUTTON_20,
            BUTTON_21, BUTTON_22, BUTTON_23, BUTTON_24, BUTTON_25, BUTTON_26, BUTTON_27, BUTTON_28, BUTTON_29, BUTTON_30,
-           BUTTON_31, BUTTON_32 -> ComponentType.Button;
-      case X, Y, Z, RX, RY, RZ, SLIDER, DIAL, WHEEL, HAT_SWITCH -> ComponentType.Axis;
-      default -> ComponentType.Unknown;
+           BUTTON_31, BUTTON_32 -> ComponentType.BUTTON;
+      case X, Y, Z, RX, RY, RZ, SLIDER, DIAL, WHEEL, HAT_SWITCH -> ComponentType.AXIS;
+      default -> ComponentType.UNKNOWN;
     };
   }
 
@@ -139,46 +141,46 @@ class IOHIDElement {
    */
   public InputComponent.ID getIdentifier() {
     return switch (this.getUsage()) {
-      case BUTTON_1 -> InputComponent.BUTTON_1;
-      case BUTTON_2 -> InputComponent.BUTTON_2;
-      case BUTTON_3 -> InputComponent.BUTTON_3;
-      case BUTTON_4 -> InputComponent.BUTTON_4;
-      case BUTTON_5 -> InputComponent.BUTTON_5;
-      case BUTTON_6 -> InputComponent.BUTTON_6;
-      case BUTTON_7 -> InputComponent.BUTTON_7;
-      case BUTTON_8 -> InputComponent.BUTTON_8;
-      case BUTTON_9 -> InputComponent.BUTTON_9;
-      case BUTTON_10 -> InputComponent.BUTTON_10;
-      case BUTTON_11 -> InputComponent.BUTTON_11;
-      case BUTTON_12 -> InputComponent.BUTTON_12;
-      case BUTTON_13 -> InputComponent.BUTTON_13;
-      case BUTTON_14 -> InputComponent.BUTTON_14;
-      case BUTTON_15 -> InputComponent.BUTTON_15;
-      case BUTTON_16 -> InputComponent.BUTTON_16;
-      case BUTTON_17 -> InputComponent.BUTTON_17;
-      case BUTTON_18 -> InputComponent.BUTTON_18;
-      case BUTTON_19 -> InputComponent.BUTTON_19;
-      case BUTTON_20 -> InputComponent.BUTTON_20;
-      case BUTTON_21 -> InputComponent.BUTTON_21;
-      case BUTTON_22 -> InputComponent.BUTTON_22;
-      case BUTTON_23 -> InputComponent.BUTTON_23;
-      case BUTTON_24 -> InputComponent.BUTTON_24;
-      case BUTTON_25 -> InputComponent.BUTTON_25;
-      case BUTTON_26 -> InputComponent.BUTTON_26;
-      case BUTTON_27 -> InputComponent.BUTTON_27;
-      case BUTTON_28 -> InputComponent.BUTTON_28;
-      case BUTTON_29 -> InputComponent.BUTTON_29;
-      case BUTTON_30 -> InputComponent.BUTTON_30;
-      case BUTTON_31 -> InputComponent.BUTTON_31;
-      case X -> InputComponent.AXIS_X;
-      case Y -> InputComponent.AXIS_Y;
-      case Z -> InputComponent.AXIS_Z;
-      case RX -> InputComponent.AXIS_RX;
-      case RY -> InputComponent.AXIS_RY;
-      case RZ -> InputComponent.AXIS_RZ;
-      case SLIDER -> InputComponent.AXIS_SLIDER;
-      case HAT_SWITCH -> InputComponent.AXIS_DPAD;
-      default -> new InputComponent.ID(ComponentType.Unknown, InputComponent.ID.getNextId(), this.usage.name());
+      case BUTTON_1 -> Button.BUTTON_1;
+      case BUTTON_2 -> Button.BUTTON_2;
+      case BUTTON_3 -> Button.BUTTON_3;
+      case BUTTON_4 -> Button.BUTTON_4;
+      case BUTTON_5 -> Button.BUTTON_5;
+      case BUTTON_6 -> Button.BUTTON_6;
+      case BUTTON_7 -> Button.BUTTON_7;
+      case BUTTON_8 -> Button.BUTTON_8;
+      case BUTTON_9 -> Button.BUTTON_9;
+      case BUTTON_10 -> Button.BUTTON_10;
+      case BUTTON_11 -> Button.BUTTON_11;
+      case BUTTON_12 -> Button.BUTTON_12;
+      case BUTTON_13 -> Button.BUTTON_13;
+      case BUTTON_14 -> Button.BUTTON_14;
+      case BUTTON_15 -> Button.BUTTON_15;
+      case BUTTON_16 -> Button.BUTTON_16;
+      case BUTTON_17 -> Button.BUTTON_17;
+      case BUTTON_18 -> Button.BUTTON_18;
+      case BUTTON_19 -> Button.BUTTON_19;
+      case BUTTON_20 -> Button.BUTTON_20;
+      case BUTTON_21 -> Button.BUTTON_21;
+      case BUTTON_22 -> Button.BUTTON_22;
+      case BUTTON_23 -> Button.BUTTON_23;
+      case BUTTON_24 -> Button.BUTTON_24;
+      case BUTTON_25 -> Button.BUTTON_25;
+      case BUTTON_26 -> Button.BUTTON_26;
+      case BUTTON_27 -> Button.BUTTON_27;
+      case BUTTON_28 -> Button.BUTTON_28;
+      case BUTTON_29 -> Button.BUTTON_29;
+      case BUTTON_30 -> Button.BUTTON_30;
+      case BUTTON_31 -> Button.BUTTON_31;
+      case X -> Axis.AXIS_X;
+      case Y -> Axis.AXIS_Y;
+      case Z -> Axis.AXIS_Z;
+      case RX -> Axis.AXIS_RX;
+      case RY -> Axis.AXIS_RY;
+      case RZ -> Axis.AXIS_RZ;
+      case SLIDER -> Axis.AXIS_SLIDER;
+      case HAT_SWITCH -> Axis.AXIS_DPAD;
+      default -> new InputComponent.ID(ComponentType.UNKNOWN, InputComponent.ID.getNextId(), this.usage.name());
     };
   }
 

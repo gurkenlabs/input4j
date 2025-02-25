@@ -2,6 +2,8 @@ package de.gurkenlabs.input4j.foreign.windows.dinput;
 
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
+import de.gurkenlabs.input4j.components.Axis;
+import de.gurkenlabs.input4j.components.Button;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,21 +26,21 @@ final class DirectInputVirtualComponentHandler {
    */
   static void prepareVirtualComponents(final InputDevice device, final Collection<InputComponent> components) {
     var allComponents = new ArrayList<>(components);
-    if (components.stream().anyMatch(x -> x.getId().equals(InputComponent.AXIS_DPAD))) {
+    if (components.stream().anyMatch(x -> x.getId().equals(Axis.AXIS_DPAD))) {
       // In DirectInput, the D-Pad is reported as a single Hat Switch (angles or -1 for centered).
       // This requires splitting the Hat Switch into components (DPAD_UP, DPAD_DOWN, etc.) in the unified model of the input4J library.
       // We need to add 4 more button components to account for this
-      allComponents.add(new InputComponent(device, InputComponent.DPAD_UP));
-      allComponents.add(new InputComponent(device, InputComponent.DPAD_DOWN));
-      allComponents.add(new InputComponent(device, InputComponent.DPAD_LEFT));
-      allComponents.add(new InputComponent(device, InputComponent.DPAD_RIGHT));
+      allComponents.add(new InputComponent(device, Button.DPAD_UP));
+      allComponents.add(new InputComponent(device, Button.DPAD_DOWN));
+      allComponents.add(new InputComponent(device, Button.DPAD_LEFT));
+      allComponents.add(new InputComponent(device, Button.DPAD_RIGHT));
     }
 
-    if (components.stream().anyMatch(x -> x.getId().equals(InputComponent.AXIS_Z))) {
+    if (components.stream().anyMatch(x -> x.getId().equals(Axis.AXIS_Z))) {
       // In DirectInput, both triggers are mapped to the same (left) Z-Axis, with LEFT_TRIGGER using the positive range (0 to 1)
       // and RIGHT_TRIGGER using the negative range (-1 to 0). In Linux and XInput, the triggers are separate and have their own axis and same value range.
       // We need to separate this component into two virtual components that reflect the triggers individually
-      allComponents.add(new InputComponent(device, InputComponent.AXIS_RZ));
+      allComponents.add(new InputComponent(device, Axis.AXIS_RZ));
     }
 
     device.setComponents(allComponents);
@@ -54,11 +56,11 @@ final class DirectInputVirtualComponentHandler {
    */
   static float[] handlePolledValues(final InputDevice device, final float[] nativeValues) {
     var allValues = new float[device.getComponents().size()];
-    var dpadUpIndex = device.getComponentIndex(InputComponent.DPAD_UP);
-    var dpadDownIndex = device.getComponentIndex(InputComponent.DPAD_DOWN);
-    var dpadLeftIndex = device.getComponentIndex(InputComponent.DPAD_LEFT);
-    var dpadRightIndex = device.getComponentIndex(InputComponent.DPAD_RIGHT);
-    var rzAxisIndex = device.getComponentIndex(InputComponent.AXIS_RZ);
+    var dpadUpIndex = device.getComponentIndex(Button.DPAD_UP);
+    var dpadDownIndex = device.getComponentIndex(Button.DPAD_DOWN);
+    var dpadLeftIndex = device.getComponentIndex(Button.DPAD_LEFT);
+    var dpadRightIndex = device.getComponentIndex(Button.DPAD_RIGHT);
+    var rzAxisIndex = device.getComponentIndex(Axis.AXIS_RZ);
 
     for (int i = 0; i < nativeValues.length && i < device.getComponents().size(); i++) {
       var value = nativeValues[i];
@@ -73,13 +75,13 @@ final class DirectInputVirtualComponentHandler {
         continue;
       }
 
-      if (component.getId().equals(InputComponent.AXIS_Z) && value < 0) {
+      if (component.getId().equals(Axis.AXIS_Z) && value < 0) {
         allValues[i] = 0;
         if (rzAxisIndex != -1) allValues[rzAxisIndex] = Math.abs(value);
         continue;
       }
 
-      if (component.getId().equals(InputComponent.AXIS_DPAD)) {
+      if (component.getId().equals(Axis.AXIS_DPAD)) {
         allValues[i] = 0;
 
         if (value == DPAD_VALUE.UP) {

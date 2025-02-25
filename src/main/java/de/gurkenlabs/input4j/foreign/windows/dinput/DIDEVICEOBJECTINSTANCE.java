@@ -2,6 +2,7 @@ package de.gurkenlabs.input4j.foreign.windows.dinput;
 
 import de.gurkenlabs.input4j.ComponentType;
 import de.gurkenlabs.input4j.InputComponent;
+import de.gurkenlabs.input4j.components.Axis;
 
 import java.lang.foreign.GroupLayout;
 import java.lang.foreign.MemoryLayout;
@@ -146,31 +147,31 @@ final class DIDEVICEOBJECTINSTANCE {
   public InputComponent.ID getIdentifier() {
     switch (this.objectType) {
       case XAxis:
-        return InputComponent.AXIS_X;
+        return Axis.AXIS_X;
       case YAxis:
-        return InputComponent.AXIS_Y;
+        return Axis.AXIS_Y;
       case ZAxis:
-        return InputComponent.AXIS_Z;
+        return Axis.AXIS_Z;
       case RxAxis:
-        return InputComponent.AXIS_RX;
+        return Axis.AXIS_RX;
       case RyAxis:
-        return InputComponent.AXIS_RY;
+        return Axis.AXIS_RY;
       case RzAxis:
-        return InputComponent.AXIS_RZ;
+        return Axis.AXIS_RZ;
       case Slider:
-        return InputComponent.AXIS_SLIDER;
+        return Axis.AXIS_SLIDER;
       case POV:
-        return InputComponent.AXIS_DPAD;
+        return Axis.AXIS_DPAD;
       case Button:
         var button = InputComponent.ID.getButton(this.getInstance());
         if (button == null) {
-          button = new InputComponent.ID(ComponentType.Button, InputComponent.ID.getNextId(), this.getName());
+          button = new InputComponent.ID(ComponentType.BUTTON, InputComponent.ID.getNextId(), this.getName());
         }
         return button;
       case Key:
-        return new InputComponent.ID(ComponentType.Key, InputComponent.ID.getNextId(), this.getName());
+        return new InputComponent.ID(ComponentType.KEY, InputComponent.ID.getNextId(), this.getName());
       default:
-        return new InputComponent.ID(ComponentType.Unknown, InputComponent.ID.getNextId(), this.getName());
+        return new InputComponent.ID(ComponentType.UNKNOWN, InputComponent.ID.getNextId(), this.getName());
     }
   }
 

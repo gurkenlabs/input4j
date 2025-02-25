@@ -3,6 +3,8 @@ package de.gurkenlabs.input4j.foreign.macos.iokit;
 
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
+import de.gurkenlabs.input4j.components.Axis;
+import de.gurkenlabs.input4j.components.Button;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,11 +25,11 @@ public class IOKitVirtualComponentHandler {
     var allComponents = new ArrayList<>(components);
 
     // Add D-Pad components if necessary
-    if (components.stream().anyMatch(x -> x.getId().equals(InputComponent.AXIS_DPAD))) {
-      allComponents.add(new InputComponent(device, InputComponent.DPAD_UP));
-      allComponents.add(new InputComponent(device, InputComponent.DPAD_DOWN));
-      allComponents.add(new InputComponent(device, InputComponent.DPAD_LEFT));
-      allComponents.add(new InputComponent(device, InputComponent.DPAD_RIGHT));
+    if (components.stream().anyMatch(x -> x.getId().equals(Axis.AXIS_DPAD))) {
+      allComponents.add(new InputComponent(device, Button.DPAD_UP));
+      allComponents.add(new InputComponent(device, Button.DPAD_DOWN));
+      allComponents.add(new InputComponent(device, Button.DPAD_LEFT));
+      allComponents.add(new InputComponent(device, Button.DPAD_RIGHT));
     }
 
     device.setComponents(allComponents);
@@ -35,10 +37,10 @@ public class IOKitVirtualComponentHandler {
 
   static float[] handlePolledValues(final InputDevice device, final float[] nativeValues) {
     var allValues = new float[device.getComponents().size()];
-    var dpadUpIndex = device.getComponentIndex(InputComponent.DPAD_UP);
-    var dpadDownIndex = device.getComponentIndex(InputComponent.DPAD_DOWN);
-    var dpadLeftIndex = device.getComponentIndex(InputComponent.DPAD_LEFT);
-    var dpadRightIndex = device.getComponentIndex(InputComponent.DPAD_RIGHT);
+    var dpadUpIndex = device.getComponentIndex(Button.DPAD_UP);
+    var dpadDownIndex = device.getComponentIndex(Button.DPAD_DOWN);
+    var dpadLeftIndex = device.getComponentIndex(Button.DPAD_LEFT);
+    var dpadRightIndex = device.getComponentIndex(Button.DPAD_RIGHT);
 
     for (int i = 0; i < nativeValues.length && i < device.getComponents().size(); i++) {
       var value = nativeValues[i];
@@ -53,7 +55,7 @@ public class IOKitVirtualComponentHandler {
         continue;
       }
 
-      if (component.getId().equals(InputComponent.AXIS_DPAD)) {
+      if (component.getId().equals(Axis.AXIS_DPAD)) {
         allValues[i] = 0;
 
         if (value == DPAD_VALUE.UP) {

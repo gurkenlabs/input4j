@@ -16,8 +16,8 @@ Join the revolution in Java input handling with Input4j and experience unparalle
 Input4j offers several advantages over traditional libraries like JInput by leveraging the new Foreign Function & Memory API (FFM API) instead of using Java Native Interface (JNI).
 It is a more modern and efficient JNI alternative and an easy way to interact with native input libraries, providing the following benefits:
 
-- No Native Artifacts: Direct interaction with native libraries without the need for additional native artifacts simplifies the build and deployment process.
-- Performance: The FFM API reduces the overhead associated with native calls, resulting in better performance.
+- No Native Artifacts & No Dependencies: Direct interaction with native libraries without the need for additional native artifacts simplifies the build and deployment process.
+- Performance: Based on the FFM API, this library reduces the overhead associated with native calls, resulting in significantly faster performance then Java JNI.
 - Safety: Safer memory management and access patterns reduce the risk of memory leaks and buffer overflows.
 - Ease of Use: A more straightforward and modern API makes it easier to write and maintain code.
 - Future-Proof: Built on the latest Java technologies, ensuring long-term support and compatibility with future Java versions.

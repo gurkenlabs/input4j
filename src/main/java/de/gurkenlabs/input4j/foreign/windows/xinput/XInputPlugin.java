@@ -3,6 +3,7 @@ package de.gurkenlabs.input4j.foreign.windows.xinput;
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
+import de.gurkenlabs.input4j.components.XInput;
 import de.gurkenlabs.input4j.foreign.NativeHelper;
 
 import java.awt.*;
@@ -75,27 +76,27 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
         var device = new InputDevice(instanceName, null, this::pollXInputDevice, this::rumbleXInputDevice);
 
         // order is important here, as the order of the components is used to map the polled data
-        components.add(new InputComponent(device, InputComponent.XInput.DPAD_UP));
-        components.add(new InputComponent(device, InputComponent.XInput.DPAD_DOWN));
-        components.add(new InputComponent(device, InputComponent.XInput.DPAD_LEFT));
-        components.add(new InputComponent(device, InputComponent.XInput.DPAD_RIGHT));
-        components.add(new InputComponent(device, InputComponent.XInput.START));
-        components.add(new InputComponent(device, InputComponent.XInput.BACK));
-        components.add(new InputComponent(device, InputComponent.XInput.LEFT_THUMB));
-        components.add(new InputComponent(device, InputComponent.XInput.RIGHT_THUMB));
-        components.add(new InputComponent(device, InputComponent.XInput.LEFT_SHOULDER));
-        components.add(new InputComponent(device, InputComponent.XInput.RIGHT_SHOULDER));
-        components.add(new InputComponent(device, InputComponent.XInput.A));
-        components.add(new InputComponent(device, InputComponent.XInput.B));
-        components.add(new InputComponent(device, InputComponent.XInput.X));
-        components.add(new InputComponent(device, InputComponent.XInput.Y));
+        components.add(new InputComponent(device, XInput.DPAD_UP));
+        components.add(new InputComponent(device, XInput.DPAD_DOWN));
+        components.add(new InputComponent(device, XInput.DPAD_LEFT));
+        components.add(new InputComponent(device, XInput.DPAD_RIGHT));
+        components.add(new InputComponent(device, XInput.START));
+        components.add(new InputComponent(device, XInput.BACK));
+        components.add(new InputComponent(device, XInput.LEFT_THUMB));
+        components.add(new InputComponent(device, XInput.RIGHT_THUMB));
+        components.add(new InputComponent(device, XInput.LEFT_SHOULDER));
+        components.add(new InputComponent(device, XInput.RIGHT_SHOULDER));
+        components.add(new InputComponent(device, XInput.A));
+        components.add(new InputComponent(device, XInput.B));
+        components.add(new InputComponent(device, XInput.X));
+        components.add(new InputComponent(device, XInput.Y));
 
-        components.add(new InputComponent(device, InputComponent.XInput.LEFT_TRIGGER));
-        components.add(new InputComponent(device, InputComponent.XInput.RIGHT_TRIGGER));
-        components.add(new InputComponent(device, InputComponent.XInput.LEFT_THUMB_X));
-        components.add(new InputComponent(device, InputComponent.XInput.LEFT_THUMB_Y));
-        components.add(new InputComponent(device, InputComponent.XInput.RIGHT_THUMB_X));
-        components.add(new InputComponent(device, InputComponent.XInput.RIGHT_THUMB_Y));
+        components.add(new InputComponent(device, XInput.LEFT_TRIGGER));
+        components.add(new InputComponent(device, XInput.RIGHT_TRIGGER));
+        components.add(new InputComponent(device, XInput.LEFT_THUMB_X));
+        components.add(new InputComponent(device, XInput.LEFT_THUMB_Y));
+        components.add(new InputComponent(device, XInput.RIGHT_THUMB_X));
+        components.add(new InputComponent(device, XInput.RIGHT_THUMB_Y));
 
         device.setComponents(components);
 
