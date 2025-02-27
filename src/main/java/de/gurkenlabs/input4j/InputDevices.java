@@ -13,6 +13,12 @@ public final class InputDevices {
   private static final DefaultInputConfiguration configuration = new DefaultInputConfiguration();
 
   /**
+   * This class should not be instantiated.
+   */
+  private InputDevices() {
+  }
+
+  /**
    * Configures the default input settings that are applied to all input devices upon initialization.
    * <p>
    * Make sure to call this method before initializing the input device plugin.

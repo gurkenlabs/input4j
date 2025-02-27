@@ -1,7 +1,7 @@
 package de.gurkenlabs.input4j.foreign.linux;
 
 import de.gurkenlabs.input4j.InputComponent;
-import de.gurkenlabs.input4j.components.XInput;
+import de.gurkenlabs.input4j.components.Button;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -60,7 +60,7 @@ public class LinuxEventComponentTests {
   public void testGetIdentifier() {
     LinuxEventComponent component = new LinuxEventComponent(LinuxComponentType.BTN_SOUTH, false, false, 1, 2);
     InputComponent.ID id = component.getIdentifier();
-    assertEquals(XInput.A, id);
+    assertEquals(Button.BUTTON_0, id);
     assertEquals(2, id.nativeId);
   }
 }
