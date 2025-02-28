@@ -1,13 +1,11 @@
 package de.gurkenlabs.input4j;
 
 import java.io.Closeable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -34,6 +32,9 @@ public final class InputDevice implements Closeable {
   private final String productName;
   private final List<InputComponent> components = new CopyOnWriteArrayList<>();
   private final Collection<InputDeviceListener> listeners = ConcurrentHashMap.newKeySet();
+  private final Map<InputComponent.ID, Collection<Runnable>> buttonPressedListeners = new ConcurrentHashMap<>();
+  private final Map<InputComponent.ID, Collection<Runnable>> buttonReleasedListeners = new ConcurrentHashMap<>();
+  private final Map<InputComponent.ID, Collection<Consumer<Float>>> axisChangedListeners = new ConcurrentHashMap<>();
 
   private final Function<InputDevice, float[]> pollCallback;
   private final BiConsumer<InputDevice, float[]> rumbleCallback;
@@ -145,8 +146,8 @@ public final class InputDevice implements Closeable {
    */
   public void addComponent(InputComponent component) {
     Optional<InputComponent> existingComponent = components.stream()
-            .filter(c -> c.equals(component))
-            .findFirst();
+      .filter(c -> c.equals(component))
+      .findFirst();
 
     existingComponent.ifPresent(components::remove);
     components.add(component);
@@ -174,6 +175,25 @@ public final class InputDevice implements Closeable {
         var inputEvent = new InputComponent.InputValueChangedEvent(component, oldData, newData);
         for (var listener : listeners) {
           listener.onValueChanged(inputEvent);
+        }
+
+        if (component.isButton()) {
+          var id = component.getId();
+          if (newData == 1 && buttonPressedListeners.containsKey(id)) {
+            for (var listener : buttonPressedListeners.get(id)) {
+              listener.run();
+            }
+          } else if (newData == 0 && buttonReleasedListeners.containsKey(id)) {
+            for (var listener : buttonReleasedListeners.get(id)) {
+              listener.run();
+            }
+          }
+        }
+
+        if (component.isAxis() && axisChangedListeners.containsKey(component.getId())) {
+          for (var listener : axisChangedListeners.get(component.getId())) {
+            listener.accept(newData);
+          }
         }
       }
     }
@@ -203,7 +223,9 @@ public final class InputDevice implements Closeable {
 
   @Override
   public void close() {
-    listeners.clear();
+    this.listeners.clear();
+    this.buttonPressedListeners.clear();
+    this.buttonReleasedListeners.clear();
   }
 
   public void setAccuracy(int decimalPlaces) {
@@ -221,5 +243,102 @@ public final class InputDevice implements Closeable {
    */
   public boolean hasInputData() {
     return this.hasInputData;
+  }
+
+  public void onInputValueChanged(InputDeviceListener listener) {
+    this.listeners.add(listener);
+  }
+
+  public boolean onButtonPressed(int buttonId, Runnable runnable) {
+    return this.onButtonPressed(InputComponent.ID.getButton(buttonId), runnable);
+  }
+
+  public boolean onButtonPressed(InputComponent.ID buttonId, Runnable runnable) {
+    if (runnable == null || this.getComponent(buttonId).isEmpty()) {
+      return false;
+    }
+
+    if (!this.buttonPressedListeners.containsKey(buttonId)) {
+      this.buttonPressedListeners.put(buttonId, new CopyOnWriteArrayList<>());
+    }
+
+    this.buttonPressedListeners.get(buttonId).add(runnable);
+    return true;
+  }
+
+  public boolean onButtonReleased(int buttonId, Runnable runnable) {
+    return this.onButtonReleased(InputComponent.ID.getButton(buttonId), runnable);
+  }
+
+  public boolean onButtonReleased(InputComponent.ID buttonId, Runnable runnable) {
+    if (runnable == null || this.getComponent(buttonId).isEmpty()) {
+      return false;
+    }
+
+    if (!this.buttonReleasedListeners.containsKey(buttonId)) {
+      this.buttonReleasedListeners.put(buttonId, new CopyOnWriteArrayList<>());
+    }
+
+    this.buttonReleasedListeners.get(buttonId).add(runnable);
+    return true;
+  }
+
+  public void clearButtonPresedListeners(int buttonId) {
+    this.clearButtonPressedListeners(InputComponent.ID.getButton(buttonId));
+  }
+
+  public void clearButtonPressedListeners(InputComponent.ID buttonId) {
+    this.buttonPressedListeners.remove(buttonId);
+  }
+
+  public void clearButtonReleasedListeners(int buttonId) {
+    this.clearButtonPressedListeners(InputComponent.ID.getButton(buttonId));
+  }
+
+  public void clearButtonReleasedListeners(InputComponent.ID buttonId) {
+    this.buttonReleasedListeners.remove(buttonId);
+  }
+
+  public void removeButtonPressedListener(Runnable runnable) {
+    for (var entry : this.buttonPressedListeners.entrySet()) {
+      entry.getValue().remove(runnable);
+    }
+  }
+
+  public void removeButtonReleasedListener(Runnable runnable) {
+    for (var entry : this.buttonReleasedListeners.entrySet()) {
+      entry.getValue().remove(runnable);
+    }
+  }
+
+  public boolean onAxisChanged(int axisId, Consumer<Float> runnable) {
+    return this.onAxisChanged(InputComponent.ID.getAxis(axisId), runnable);
+  }
+
+  public boolean onAxisChanged(InputComponent.ID axis, Consumer<Float> runnable) {
+    if (runnable == null || this.getComponent(axis).isEmpty()) {
+      return false;
+    }
+
+    if (!this.axisChangedListeners.containsKey(axis)) {
+      this.axisChangedListeners.put(axis, new CopyOnWriteArrayList<>());
+    }
+
+    this.axisChangedListeners.get(axis).add(runnable);
+    return true;
+  }
+
+  public void clearAxisChangedListeners(int axisId) {
+    this.clearAxisChangedListeners(InputComponent.ID.getAxis(axisId));
+  }
+
+  public void clearAxisChangedListeners(InputComponent.ID axisId) {
+    this.axisChangedListeners.remove(axisId);
+  }
+
+  public void removeAxisChangedListener(Consumer<Float> runnable) {
+    for (var entry : this.axisChangedListeners.entrySet()) {
+      entry.getValue().remove(runnable);
+    }
   }
 }

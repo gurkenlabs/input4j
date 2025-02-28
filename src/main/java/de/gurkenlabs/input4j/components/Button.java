@@ -4,7 +4,7 @@ import de.gurkenlabs.input4j.ComponentType;
 import de.gurkenlabs.input4j.InputComponent;
 
 public final class Button {
-  public static int MAX_BUTTON_ID = 35;
+  public static int MAX_DEFAULT_BUTTON_ID = 35;
   public static final InputComponent.ID BUTTON_0 = new InputComponent.ID(ComponentType.BUTTON, 0, "BUTTON_0", 0);
   public static final InputComponent.ID BUTTON_1 = new InputComponent.ID(ComponentType.BUTTON, 1, "BUTTON_1", 0);
   public static final InputComponent.ID BUTTON_2 = new InputComponent.ID(ComponentType.BUTTON, 2, "BUTTON_2", 0);
@@ -40,5 +40,5 @@ public final class Button {
   public static final InputComponent.ID DPAD_UP = new InputComponent.ID(ComponentType.BUTTON, 32, "DPAD_UP", 0);
   public static final InputComponent.ID DPAD_RIGHT = new InputComponent.ID(ComponentType.BUTTON, 33, "DPAD_RIGHT", 0);
   public static final InputComponent.ID DPAD_DOWN = new InputComponent.ID(ComponentType.BUTTON, 34, "DPAD_DOWN", 0);
-  public static final InputComponent.ID DPAD_LEFT = new InputComponent.ID(ComponentType.BUTTON, MAX_BUTTON_ID, "DPAD_LEFT", 0);
+  public static final InputComponent.ID DPAD_LEFT = new InputComponent.ID(ComponentType.BUTTON, MAX_DEFAULT_BUTTON_ID, "DPAD_LEFT", 0);
 }

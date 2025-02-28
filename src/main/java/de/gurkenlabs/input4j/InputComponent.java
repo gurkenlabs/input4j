@@ -1,6 +1,7 @@
 package de.gurkenlabs.input4j;
 
 import de.gurkenlabs.input4j.components.Axis;
+import de.gurkenlabs.input4j.components.Button;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -85,6 +86,15 @@ public final class InputComponent {
   }
 
   /**
+   * Checks if this component is a button.
+   *
+   * @return true if this component is a button, false otherwise
+   */
+  public boolean isButton() {
+    return id.type == ComponentType.BUTTON;
+  }
+
+  /**
    * Checks if this component is an axis.
    *
    * @return true if this component is an axis, false otherwise
@@ -130,7 +140,7 @@ public final class InputComponent {
    * It is used to manage and reference different input components, such as buttons, axes, and other controls.
    * The class ensures that each {@code ID} is unique and provides functionality to remap IDs for better accessibility.
    *
-   * <p>Note: The {@code int} value needs to be unique. The {@link #getNextId()} method can be used to ensure this.</p>
+   * <p>Note: The {@code int} value needs to be unique. The {@link #getNextId(ComponentType, int)} method can be used to ensure this.</p>
    *
    * <p>Example usage:</p>
    * <pre>{@code
@@ -198,7 +208,7 @@ public final class InputComponent {
       this.name = name;
       this.nativeId = nativeId;
       // exclude remapped IDs, only add the original ID
-      if (ids.stream().noneMatch(i -> i.id == this.id)) {
+      if (ids.stream().noneMatch(i -> i.equals(this))) {
         ids.add(this);
       }
     }
@@ -212,18 +222,26 @@ public final class InputComponent {
     }
 
     @Override
+    public int hashCode() {
+      return 31 * type.hashCode() + id;
+    }
+
+    @Override
     public String toString() {
       return this.name;
     }
 
-    /**
-     * Gets the next unique ID value.
-     *
-     * @return the next unique ID value
-     */
-    public static int getNextId() {
-      // there are some predefined IDs, so we need to find the next available ID, reserve the first Axis.MAX_AXIS_ID IDs for predefined IDs
-      return Math.max(ids.stream().mapToInt(id -> id.id).max().orElse(0), Axis.MAX_AXIS_ID) + 1;
+    public static int getNextAxisId() {
+      return getNextId(ComponentType.AXIS, Axis.MAX_DEFAULT_AXIS_ID);
+    }
+
+    public static int getNextButtonId() {
+      return getNextId(ComponentType.BUTTON, Button.MAX_DEFAULT_BUTTON_ID);
+    }
+
+    public static int getNextId(ComponentType type, int minId) {
+      // reserve the id range for the default buttons and axes
+      return Math.max(ids.stream().filter(i -> i.type == type).mapToInt(i -> i.id).max().orElse(0), minId) + 1;
     }
 
     public static ID get(int id) {
@@ -231,7 +249,11 @@ public final class InputComponent {
     }
 
     public static ID getButton(int id) {
-      return ids.stream().filter(i -> i.type == ComponentType.BUTTON && i.id == id).findFirst().orElse(null);
+      return ids.stream().filter(i -> i.type.isButton() && i.id == id).findFirst().orElse(null);
+    }
+
+    public static ID getAxis(int id) {
+      return ids.stream().filter(i -> i.type.isAxis() && i.id == id).findFirst().orElse(null);
     }
 
     public static ID get(String name) {

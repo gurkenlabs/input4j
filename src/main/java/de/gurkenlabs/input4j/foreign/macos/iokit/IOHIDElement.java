@@ -165,7 +165,7 @@ class IOHIDElement {
       case RZ -> Axis.AXIS_RZ;
       case SLIDER -> Axis.AXIS_SLIDER;
       case HAT_SWITCH -> Axis.AXIS_DPAD;
-      default -> new InputComponent.ID(ComponentType.UNKNOWN, InputComponent.ID.getNextId(), this.usage.name());
+      default -> new InputComponent.ID(ComponentType.UNKNOWN, InputComponent.ID.getNextId(ComponentType.UNKNOWN, 0), this.usage.name());
     };
   }
 

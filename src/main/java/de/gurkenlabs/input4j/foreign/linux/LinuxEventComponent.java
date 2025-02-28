@@ -118,17 +118,20 @@ final class LinuxEventComponent {
       case ABS_RY -> new InputComponent.ID(Axis.AXIS_RY, this.nativeCode);
       case ABS_RZ -> new InputComponent.ID(Axis.AXIS_RZ, this.nativeCode);
       case ABS_HAT0X ->
-              new InputComponent.ID(ComponentType.AXIS, InputComponent.ID.getNextId(), ID_DPAD_LEFT_RIGHT, this.nativeCode);
+              new InputComponent.ID(ComponentType.AXIS, InputComponent.ID.getNextAxisId(), ID_DPAD_LEFT_RIGHT, this.nativeCode);
       case ABS_HAT0Y ->
-              new InputComponent.ID(ComponentType.AXIS, InputComponent.ID.getNextId(), ID_DPAD_UP_DOWN, this.nativeCode);
+              new InputComponent.ID(ComponentType.AXIS, InputComponent.ID.getNextAxisId(), ID_DPAD_UP_DOWN, this.nativeCode);
       default -> {
         var name = this.linuxComponentType.name();
         yield switch (this.componentType) {
-          case AXIS -> new InputComponent.ID(ComponentType.AXIS, InputComponent.ID.getNextId(), name, this.nativeCode);
+          case AXIS ->
+                  new InputComponent.ID(ComponentType.AXIS, InputComponent.ID.getNextAxisId(), name, this.nativeCode);
           case BUTTON ->
-                  new InputComponent.ID(ComponentType.BUTTON, InputComponent.ID.getNextId(), name, this.nativeCode);
-          case KEY -> new InputComponent.ID(ComponentType.KEY, InputComponent.ID.getNextId(), name, this.nativeCode);
-          default -> new InputComponent.ID(ComponentType.UNKNOWN, InputComponent.ID.getNextId(), name, this.nativeCode);
+                  new InputComponent.ID(ComponentType.BUTTON, InputComponent.ID.getNextButtonId(), name, this.nativeCode);
+          case KEY ->
+                  new InputComponent.ID(ComponentType.KEY, InputComponent.ID.getNextId(ComponentType.KEY, 0), name, this.nativeCode);
+          default ->
+                  new InputComponent.ID(ComponentType.UNKNOWN, InputComponent.ID.getNextId(ComponentType.UNKNOWN, 0), name, this.nativeCode);
         };
       }
     };

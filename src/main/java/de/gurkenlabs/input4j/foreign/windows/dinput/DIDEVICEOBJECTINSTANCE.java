@@ -165,13 +165,13 @@ final class DIDEVICEOBJECTINSTANCE {
       case Button:
         var button = InputComponent.ID.getButton(this.getInstance());
         if (button == null) {
-          button = new InputComponent.ID(ComponentType.BUTTON, InputComponent.ID.getNextId(), this.getName());
+          button = new InputComponent.ID(ComponentType.BUTTON, InputComponent.ID.getNextButtonId(), this.getName());
         }
         return button;
       case Key:
-        return new InputComponent.ID(ComponentType.KEY, InputComponent.ID.getNextId(), this.getName());
+        return new InputComponent.ID(ComponentType.KEY, InputComponent.ID.getNextId(ComponentType.KEY, 0), this.getName());
       default:
-        return new InputComponent.ID(ComponentType.UNKNOWN, InputComponent.ID.getNextId(), this.getName());
+        return new InputComponent.ID(ComponentType.UNKNOWN, InputComponent.ID.getNextId(ComponentType.UNKNOWN, 0), this.getName());
     }
   }
 
