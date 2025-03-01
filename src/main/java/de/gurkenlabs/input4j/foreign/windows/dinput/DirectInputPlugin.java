@@ -129,7 +129,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
 
       try {
 
-        log.log(Level.INFO, "Found input device: " + device.inputDevice.getInstanceName());
+        log.log(Level.FINE, "Found input device: " + device.inputDevice.getInstanceName());
 
         var deviceAddress = this.memoryArena.allocate(JAVA_LONG.byteSize());
         var deviceGuidMemorySegment = device.deviceInstance.guidInstance.write(this.memoryArena);
