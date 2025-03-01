@@ -1,7 +1,10 @@
 package de.gurkenlabs.input4j;
 
 import java.io.Closeable;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
@@ -28,6 +31,7 @@ import java.util.function.Function;
  * @see Closeable
  */
 public final class InputDevice implements Closeable {
+  private final String identifier;
   private final String instanceName;
   private final String productName;
   private final List<InputComponent> components = new CopyOnWriteArrayList<>();
@@ -44,17 +48,32 @@ public final class InputDevice implements Closeable {
   /**
    * Creates a new instance of the InputDevice class.
    *
+   * @param identifier     the identifier of the input device
    * @param instanceName   the name of the instance of the input device
    * @param productName    the name of the product of the input device
    * @param pollCallback   the function to be called when polling for input data from the device
    * @param rumbleCallback the function to be called when setting rumble intensity
    */
-  public InputDevice(String instanceName, String productName, Function<InputDevice, float[]> pollCallback, BiConsumer<InputDevice, float[]> rumbleCallback) {
+  public InputDevice(String identifier, String instanceName, String productName, Function<InputDevice, float[]> pollCallback, BiConsumer<InputDevice, float[]> rumbleCallback) {
+    this.identifier = identifier;
     this.instanceName = instanceName;
     this.productName = productName;
     this.pollCallback = pollCallback;
     this.rumbleCallback = rumbleCallback;
     this.setAccuracy(InputDevices.configure().getAccuracy());
+  }
+
+  /**
+   * Gets the identifier of the input device.
+   * <p>
+   * Note: The identifier is a unique string that identifies the input device on the system.
+   * It can be different of different platforms and libraries and can be used
+   * to uniquely identify the input device within the used input library during runtime.
+   *
+   * @return the identifier
+   */
+  public String getID() {
+    return identifier;
   }
 
   /**
@@ -81,7 +100,7 @@ public final class InputDevice implements Closeable {
    * @return the collection of input components
    */
   public List<InputComponent> getComponents() {
-    return Collections.unmodifiableList(components);
+    return components;
   }
 
   /**
@@ -133,7 +152,7 @@ public final class InputDevice implements Closeable {
    *
    * @param components the input components to add
    */
-  public void setComponents(Collection<InputComponent> components) {
+  public void setComponents(List<InputComponent> components) {
     this.components.clear();
     this.components.addAll(components);
   }

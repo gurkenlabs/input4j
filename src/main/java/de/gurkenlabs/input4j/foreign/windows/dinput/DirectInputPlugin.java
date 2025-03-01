@@ -10,7 +10,6 @@ import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +35,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
   private static final MethodHandle getModuleHandle;
 
   private IDirectInput8 directInput;
-  private final Collection<IDirectInputDevice8> devices = ConcurrentHashMap.newKeySet();
+  private final Map<String, IDirectInputDevice8> nativeDevices = new ConcurrentHashMap<>();
   private IDirectInputDevice8 currentDevice;
 
   /**
@@ -61,19 +60,15 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
 
       var hwnd = owner != null ? WindowHelper.getHWND(owner) : 0L;
       this.initializeDevices(hwnd);
+      this.setDevices(this.nativeDevices.values().stream().map(d -> d.inputDevice).toList());
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);
     }
   }
 
   @Override
-  public Collection<InputDevice> getAll() {
-    return this.devices.stream().map(x -> x.inputDevice).toList();
-  }
-
-  @Override
   public void close() {
-    for (var device : this.devices) {
+    for (var device : this.nativeDevices.values()) {
       try {
         device.Unacquire();
         device.inputDevice.close();
@@ -82,7 +77,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
       }
     }
 
-    this.devices.clear();
+    this.nativeDevices.clear();
     this.currentDevice = null;
     this.currentComponents.clear();
 
@@ -124,7 +119,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
     }
 
     // 2. create devices
-    for (var device : this.devices) {
+    for (var device : this.nativeDevices.values()) {
       currentDevice = device;
 
       try {
@@ -196,7 +191,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
 
   private float[] pollDirectInputDevice(InputDevice inputDevice) {
     // find native DirectInputDevice and poll it
-    var directInputDevice = this.devices.stream().filter(x -> x.inputDevice.equals(inputDevice)).findFirst().orElse(null);
+    var directInputDevice = this.nativeDevices.getOrDefault(inputDevice.getID(), null);
     if (directInputDevice == null) {
       log.log(Level.WARNING, "DirectInput device not found for input device " + inputDevice.getInstanceName());
       return new float[0];
@@ -360,8 +355,8 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
     var product = new String(deviceInstance.tszProductName).trim();
 
     // var type = DI8DEVTYPE.fromDwDevType(deviceInstance.dwDevType);
-    var inputDevice = new InputDevice(name, product, this::pollDirectInputDevice, null);
-    this.devices.add(new IDirectInputDevice8(deviceInstance, inputDevice));
+    var inputDevice = new InputDevice(deviceInstance.guidInstance.toString(), name, product, this::pollDirectInputDevice, null);
+    this.nativeDevices.put(inputDevice.getID(), new IDirectInputDevice8(deviceInstance, inputDevice));
 
     return true;
   }

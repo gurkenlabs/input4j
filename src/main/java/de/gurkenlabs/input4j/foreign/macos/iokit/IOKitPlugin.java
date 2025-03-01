@@ -12,7 +12,7 @@ import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -35,7 +35,7 @@ import static java.lang.foreign.ValueLayout.JAVA_INT;
  * </ul>
  */
 public class IOKitPlugin extends AbstractInputDevicePlugin {
-  private final Collection<IOHIDDevice> devices = ConcurrentHashMap.newKeySet();
+  private final Map<String, IOHIDDevice> nativeDevices = new ConcurrentHashMap<>();
   private Thread eventLoopThread;
 
   private boolean devicesInitialized;
@@ -51,7 +51,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
         for (var ioHIDDevice : ioHIDDevices) {
           log.log(Level.FINE, "Found HID device: " + ioHIDDevice.productName);
-          var inputDevice = new InputDevice(ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", this::pollIOHIDDevice, null);
+          var inputDevice = new InputDevice(Long.toString(ioHIDDevice.address), ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", this::pollIOHIDDevice, null);
           ioHIDDevice.inputDevice = inputDevice;
 
           for (var element : ioHIDDevice.getElements()) {
@@ -64,15 +64,17 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
           }
 
           IOKitVirtualComponentHandler.prepareVirtualComponents(inputDevice, inputDevice.getComponents());
-          devices.add(ioHIDDevice);
+          nativeDevices.put(inputDevice.getID(), ioHIDDevice);
         }
 
         devicesInitialized = true;
-        if (!devices.isEmpty()) {
+        if (!nativeDevices.isEmpty()) {
           log.log(Level.FINE, "Starting event loop for HID manager");
           // Start the event loop in a separate thread
           MacOS.runEventLoop(memoryArena, ioHIDManager);
         }
+
+        this.setDevices(this.nativeDevices.values().stream().map(d -> d.inputDevice).toList());
       } catch (Throwable e) {
         log.log(Level.SEVERE, "Failed to initialize IOKit devices", e);
       } finally {
@@ -111,7 +113,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     var values = new float[inputDevice.getComponents().size()];
 
     // find native IOHIDDevice and poll elements
-    var ioHIDDevice = this.devices.stream().filter(x -> x.inputDevice.equals(inputDevice)).findFirst().orElse(null);
+    var ioHIDDevice = this.nativeDevices.getOrDefault(inputDevice.getID(), null);
     if (ioHIDDevice == null) {
       log.log(Level.WARNING, "IOHIDDevice not found for input device " + inputDevice.getInstanceName());
       return values;
@@ -156,17 +158,12 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
   }
 
   @Override
-  public Collection<InputDevice> getAll() {
-    return this.devices.stream().map(x -> x.inputDevice).toList();
-  }
-
-  @Override
   public void close() {
     if (eventLoopThread != null) {
       eventLoopThread.interrupt();
     }
 
-    this.devices.clear();
+    this.nativeDevices.clear();
   }
 
   /**
@@ -177,7 +174,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     var value = MacOS.IOHIDValueGetIntegerValue(ioHIDValueRef);
     var timestamp = MacOS.IOHIDValueGetTimeStamp(ioHIDValueRef);
     // find element from the list in this instance according to the address of the element
-    var ioHIDElement = this.devices.stream().flatMap(x -> x.getElements().stream()).filter(x -> x.address == element.address()).findFirst().orElse(null);
+    var ioHIDElement = this.nativeDevices.values().stream().flatMap(x -> x.getElements().stream()).filter(x -> x.address == element.address()).findFirst().orElse(null);
     if (ioHIDElement == null) {
       log.log(Level.WARNING, "IOHIDElement not found for address " + element.address());
       return;
@@ -189,9 +186,9 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
   private MemorySegment hidInputValueCallbackPointer(Arena memoryArena) throws Throwable {
     // Create a method handle to the Java function as a callback
     MethodHandle enumDeviceMethodHandle = MethodHandles.lookup()
-            .bind(this, "hidInputValueCallback", MethodType.methodType(void.class, MemorySegment.class, int.class, MemorySegment.class, MemorySegment.class));
+      .bind(this, "hidInputValueCallback", MethodType.methodType(void.class, MemorySegment.class, int.class, MemorySegment.class, MemorySegment.class));
 
     return Linker.nativeLinker().upcallStub(
-            enumDeviceMethodHandle, FunctionDescriptor.ofVoid(ADDRESS, JAVA_INT, ADDRESS, ADDRESS), memoryArena);
+      enumDeviceMethodHandle, FunctionDescriptor.ofVoid(ADDRESS, JAVA_INT, ADDRESS, ADDRESS), memoryArena);
   }
 }

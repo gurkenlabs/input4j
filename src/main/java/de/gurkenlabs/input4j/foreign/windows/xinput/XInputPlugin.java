@@ -9,10 +9,11 @@ import de.gurkenlabs.input4j.foreign.NativeHelper;
 import java.awt.*;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -26,25 +27,26 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
   private static final MethodHandle xInputGetCapabilities;
 
   private final Arena memoryArena = Arena.ofConfined();
+  private final MemorySegment stateSegment = memoryArena.allocate(XINPUT_STATE.$LAYOUT);
 
-  private final Collection<XINPUT_GAMEPAD> devices = ConcurrentHashMap.newKeySet();
+  private final Map<String, XINPUT_GAMEPAD> nativeDevices = new ConcurrentHashMap<>();
 
   static {
     System.loadLibrary("XInput1_4");
 
     xInputGetState = NativeHelper.downcallHandle(
-            "XInputGetState",
-            FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+      "XInputGetState",
+      FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
     );
 
     xInputSetState = NativeHelper.downcallHandle(
-            "XInputSetState",
-            FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+      "XInputSetState",
+      FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
     );
 
     xInputGetCapabilities = NativeHelper.downcallHandle(
-            "XInputGetCapabilities",
-            FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+      "XInputGetCapabilities",
+      FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
     );
   }
 
@@ -75,7 +77,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
         var components = new ArrayList<InputComponent>();
 
         var instanceName = type + " (" + state.Gamepad.userIndex + ")";
-        var device = new InputDevice(instanceName, null, this::pollXInputDevice, this::rumbleXInputDevice);
+        var device = new InputDevice(Integer.toString(state.Gamepad.userIndex), instanceName, null, this::pollXInputDevice, this::rumbleXInputDevice);
 
         // order is important here, as the order of the components is used to map the polled data
         components.add(new InputComponent(device, XInput.DPAD_UP));
@@ -103,9 +105,11 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
         device.setComponents(components);
 
         state.Gamepad.inputDevice = device;
-        devices.add(state.Gamepad);
+        nativeDevices.put(device.getID(), state.Gamepad);
         log.log(Level.FINE, "Found XInput device: " + i);
       }
+
+      this.setDevices(this.nativeDevices.values().stream().map(x -> x.inputDevice).toList());
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);
     }
@@ -127,8 +131,8 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
 
     // Set the vibration for each motor (example for two motors)
     setVibration(Integer.parseInt(inputDevice.getInstanceName()),
-            (short) (motorSpeedLeft * XINPUT_VIBRATION.MAX_VIBRATION),
-            (short) (motorSpeedRight * XINPUT_VIBRATION.MAX_VIBRATION));
+      (short) (motorSpeedLeft * XINPUT_VIBRATION.MAX_VIBRATION),
+      (short) (motorSpeedRight * XINPUT_VIBRATION.MAX_VIBRATION));
   }
 
   /**
@@ -141,7 +145,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
     var polledValues = new float[inputDevice.getComponents().size()];
 
     // find native XINPUT_GAMEPAD and poll it
-    var xinputGamepad = this.devices.stream().filter(x -> x.inputDevice.equals(inputDevice)).findFirst().orElse(null);
+    var xinputGamepad = this.nativeDevices.getOrDefault(inputDevice.getInstanceName(), null);
     if (xinputGamepad == null) {
       log.log(Level.WARNING, "DirectInput device not found for input device " + inputDevice.getInstanceName());
       return polledValues;
@@ -153,8 +157,8 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
     }
 
     int i = 0;
-    for (; i < XInputButton.values().length; i++) {
-      var button = XInputButton.values()[i];
+    for (; i < XInputButton.values.length; i++) {
+      var button = XInputButton.values[i];
       polledValues[i] = button.isPressed(state.Gamepad.wButtons) ? 1 : 0;
     }
 
@@ -204,25 +208,15 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
   }
 
   /**
-   * Returns the collection of all XInput devices.
-   *
-   * @return The collection of all XInput devices.
-   */
-  @Override
-  public Collection<InputDevice> getAll() {
-    return this.devices.stream().map(x -> x.inputDevice).toList();
-  }
-
-  /**
    * Closes the plugin and clears the collection of devices.
    */
   @Override
   public void close() {
-    for (var device : this.devices) {
+    for (var device : this.nativeDevices.values()) {
       device.inputDevice.close();
     }
 
-    this.devices.clear();
+    this.nativeDevices.clear();
     this.memoryArena.close();
   }
 
@@ -251,13 +245,11 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
    * @param userIndex The user index.
    * @return The state of the XInput device, or {@code null} if the device is not connected.
    */
-  private XINPUT_STATE getState(int userIndex) {
-    try  {
-      var segment = this.memoryArena.allocate(XINPUT_STATE.$LAYOUT);
-
-      int result = (int) xInputGetState.invoke(userIndex, segment);
+  private synchronized XINPUT_STATE getState(int userIndex) {
+    try {
+      int result = (int) xInputGetState.invoke(userIndex, this.stateSegment);
       if (result == Result.ERROR_SUCCESS) {
-        return XINPUT_STATE.read(segment);
+        return XINPUT_STATE.read(this.stateSegment);
       } else if (result == Result.ERROR_DEVICE_NOT_CONNECTED) {
         return null;
       } else {

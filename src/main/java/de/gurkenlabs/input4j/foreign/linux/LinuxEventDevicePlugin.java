@@ -9,8 +9,8 @@ import java.awt.*;
 import java.io.File;
 import java.lang.foreign.Arena;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
@@ -18,25 +18,26 @@ import java.util.logging.Level;
  * The {@code LinuxEventDevicePlugin} class is responsible for managing Linux event devices.
  * It initializes and adds them to the collection of devices.
  * <p>
- *  The joystick API (/dev/input/jsX) is considered legacy and is no longer actively developed.
- *  The evdev API (/dev/input/eventX) has largely replaced it because it is more flexible and supports additional features like force feedback.
- *  Reasons to use evdev over the joystick API:
- *  <ul>
- *    <li>evdev is the modern Linux input API and is actively developed.</li>
- *    <li>evdev is more flexible and supports additional features like force feedback.</li>
- *    <li>evdev is the preferred API for newer software and libraries like SDL, libevdev, and udev.</li>
- *  </ul>
+ * The joystick API (/dev/input/jsX) is considered legacy and is no longer actively developed.
+ * The evdev API (/dev/input/eventX) has largely replaced it because it is more flexible and supports additional features like force feedback.
+ * Reasons to use evdev over the joystick API:
+ * <ul>
+ *   <li>evdev is the modern Linux input API and is actively developed.</li>
+ *   <li>evdev is more flexible and supports additional features like force feedback.</li>
+ *   <li>evdev is the preferred API for newer software and libraries like SDL, libevdev, and udev.</li>
+ * </ul>
  */
 public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   private final Arena memoryArena = Arena.ofConfined();
-  private final Collection<LinuxEventDevice> devices = ConcurrentHashMap.newKeySet();
+  private final Map<String, LinuxEventDevice> nativeDevices = new ConcurrentHashMap<>();
 
   @Override
   public void internalInitDevices(Frame owner) {
-    enumEventDevices();
+    initEventDevices();
+    this.setDevices(this.nativeDevices.values().stream().map(d -> d.inputDevice).toList());
   }
 
-  private void enumEventDevices() {
+  private void initEventDevices() {
     final File dev = new File("/dev/input");
     File[] eventDeviceFiles = dev.listFiles((File _, String name) -> name.startsWith("event"));
     if (eventDeviceFiles == null) {
@@ -55,16 +56,16 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
       // ignore some devices since they are not useful for input
       if (device.name != null
-              && (device.name.toUpperCase().contains("VIDEO BUS")
-              || device.name.toUpperCase().contains("VIRTUAL")
-              || device.name.toUpperCase().contains("POWER BUTTON")
-              || device.name.toUpperCase().contains("HDA INTEL")
-              || device.name.toUpperCase().contains("HDMI"))) {
+        && (device.name.toUpperCase().contains("VIDEO BUS")
+        || device.name.toUpperCase().contains("VIRTUAL")
+        || device.name.toUpperCase().contains("POWER BUTTON")
+        || device.name.toUpperCase().contains("HDA INTEL")
+        || device.name.toUpperCase().contains("HDMI"))) {
         log.log(Level.FINE, "Ignoring virtual device: " + device.name);
         continue;
       }
 
-      var inputDevice = new InputDevice(device.name, device.name, this::pollLinuxEventDevice, this::rumbleLinuxEventDevice);
+      var inputDevice = new InputDevice(eventDeviceFile.getAbsolutePath(), device.name, device.name, this::pollLinuxEventDevice, this::rumbleLinuxEventDevice);
       device.inputDevice = inputDevice;
 
       // Check for available event types
@@ -86,7 +87,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
       LinuxVirtualComponentHandler.prepareVirtualComponents(device.inputDevice, inputDevice.getComponents());
       log.log(Level.INFO, "Found input device: " + device.filename + " - " + device.name + " with " + device.componentList.size() + " components");
-      this.devices.add(device);
+      this.nativeDevices.put(inputDevice.getID(), device);
     }
   }
 
@@ -137,7 +138,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     var emptyValues = new float[inputDevice.getComponents().size()];
 
     // find native LinuxEventDevice and poll it
-    var linuxEventDevice = this.devices.stream().filter(x -> x.inputDevice.equals(inputDevice)).findFirst().orElse(null);
+    var linuxEventDevice = this.nativeDevices.getOrDefault(inputDevice.getID(), null);
     if (linuxEventDevice == null) {
       log.log(Level.WARNING, "LinuxEventDevice not found for input device " + inputDevice.getInstanceName());
       return emptyValues;
@@ -151,8 +152,8 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     input_event inputEvent;
     while ((inputEvent = Linux.read(this.memoryArena, linuxEventDevice.fd)) != null) {
       if (inputEvent.type == LinuxEventDevice.EV_SYN
-              || inputEvent.type == LinuxEventDevice.EV_MSC
-              || inputEvent.type == LinuxEventDevice.EV_REL) {
+        || inputEvent.type == LinuxEventDevice.EV_MSC
+        || inputEvent.type == LinuxEventDevice.EV_REL) {
         continue;
       }
 
@@ -195,7 +196,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       }
     }
 
-    if(nativeComponent.nativeType == LinuxEventDevice.EV_KEY) {
+    if (nativeComponent.nativeType == LinuxEventDevice.EV_KEY) {
       value = value == 0 ? 0 : 1;
     }
 
@@ -207,6 +208,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
    * <p>
    * The native ID is the code of the input event.
    * </p>
+   *
    * @return the index of the component in the input device or <c>Linux.ERROR</c> if the component is not found
    */
   static int getComponentIndexByNativeId(input_event inputEvent, InputDevice inputDevice) {
@@ -244,17 +246,12 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   }
 
   @Override
-  public Collection<InputDevice> getAll() {
-    return this.devices.stream().map(x -> x.inputDevice).toList();
-  }
-
-  @Override
   public void close() {
-    for (LinuxEventDevice device : devices) {
+    for (LinuxEventDevice device : nativeDevices.values()) {
       device.close(this.memoryArena);
     }
 
-    this.devices.clear();
+    this.nativeDevices.clear();
     memoryArena.close();
   }
 }
