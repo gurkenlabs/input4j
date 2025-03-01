@@ -40,9 +40,51 @@ public interface InputDevicePlugin extends Closeable {
    */
   Collection<InputDevice> getAll();
 
+  /**
+   * Registers a listener to be notified when the list of input devices changes.
+   * <p>
+   * This method allows you to register a {@link Runnable} that will be executed whenever the list of input devices changes.
+   * This can happen when a new device is connected or an existing device is disconnected.
+   * <p>
+   *   This is useful for updating the UI or other parts of the application that depend on the list of input devices.
+   *   The listener will be called on the same thread that called the {@link InputDevice#poll()} method.
+   *   <p>
+   *   The list of input devices is refreshed periodically based on the {@link InputDevices.DefaultInputConfiguration#getHotPlugInterval()} setting.
+   * </p>
+   *
+   * @param listener The listener to register.
+   */
   void onDevicesChanged(Runnable listener);
 
+  /**
+   * Registers a listener to be notified when a new input device is connected.
+   * <p>
+   * This method allows you to register a {@link Consumer} that will be executed whenever a new input device is connected.
+   * This can happen when a new device is plugged in or when a device that was previously disconnected is reconnected.
+   * <p>
+   *   This is useful for updating the UI or other parts of the application that depend on the list of input devices.
+   *   The listener will be called on the same thread that called the {@link InputDevice#poll()} method.
+   *   <p>
+   *   The list of input devices is refreshed periodically based on the {@link InputDevices.DefaultInputConfiguration#getHotPlugInterval()} setting.
+   * </p>
+   *
+   * @param listener The listener to register.
+   */
   void onDeviceConnected(Consumer<InputDevice> listener);
 
+  /**
+   * Registers a listener to be notified when an input device is disconnected.
+   * <p>
+   * This method allows you to register a {@link Consumer} that will be executed whenever an input device is disconnected.
+   * This can happen when a device is unplugged or when a device that was previously connected is disconnected.
+   * <p>
+   *   This is useful for updating the UI or other parts of the application that depend on the list of input devices.
+   *   The listener will be called on the same thread that called the {@link InputDevice#poll()} method.
+   *   <p>
+   *   The list of input devices is refreshed periodically based on the {@link InputDevices.DefaultInputConfiguration#getHotPlugInterval()} setting.
+   * </p>
+   *
+   * @param listener The listener to register.
+   */
   void onDeviceDisconnected(Consumer<InputDevice> listener);
 }

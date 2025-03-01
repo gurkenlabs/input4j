@@ -116,7 +116,7 @@ public abstract class AbstractInputDevicePlugin implements InputDevicePlugin {
   }
 
   protected abstract Collection<InputDevice> refreshInputDevices();
-
+  
   public void onDevicesChanged(Runnable listener) {
     this.devicesChangedListeners.add(listener);
   }

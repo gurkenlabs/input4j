@@ -239,6 +239,7 @@ public final class InputDevice implements Closeable {
 
     this.rumbleCallback.accept(this, intensity);
   }
+
   public void setAccuracy(int decimalPlaces) {
     if (decimalPlaces < 0) {
       throw new IllegalArgumentException("Decimal places must be a non-negative integer.");
@@ -268,14 +269,34 @@ public final class InputDevice implements Closeable {
     return this.getName();
   }
 
+  /**
+   * Registers a listener to be notified when the value of any input component changes.
+   *
+   * @param listener The listener to register.
+   */
   public void onInputValueChanged(InputDeviceListener listener) {
     this.listeners.add(listener);
   }
+
+  /**
+   * Registers a listener to be notified when a button is pressed.
+   *
+   * @param buttonId The ID of the button to listen to.
+   * @param runnable The listener to register.
+   * @return true if the listener was registered, otherwise false.
+   */
 
   public boolean onButtonPressed(int buttonId, Runnable runnable) {
     return this.onButtonPressed(InputComponent.ID.getButton(buttonId), runnable);
   }
 
+  /**
+   * Registers a listener to be notified when a button is pressed.
+   *
+   * @param buttonId The ID of the button to listen to.
+   * @param runnable The listener to register.
+   * @return true if the listener was registered, otherwise false.
+   */
   public boolean onButtonPressed(InputComponent.ID buttonId, Runnable runnable) {
     if (runnable == null || this.getComponent(buttonId).isEmpty()) {
       return false;
@@ -289,10 +310,24 @@ public final class InputDevice implements Closeable {
     return true;
   }
 
+  /**
+   * Registers a listener to be notified when a button is released.
+   *
+   * @param buttonId The ID of the button to listen to.
+   * @param runnable The listener to register.
+   * @return true if the listener was registered, otherwise false.
+   */
   public boolean onButtonReleased(int buttonId, Runnable runnable) {
     return this.onButtonReleased(InputComponent.ID.getButton(buttonId), runnable);
   }
 
+  /**
+   * Registers a listener to be notified when a button is released.
+   *
+   * @param buttonId The ID of the button to listen to.
+   * @param runnable The listener to register.
+   * @return true if the listener was registered, otherwise false.
+   */
   public boolean onButtonReleased(InputComponent.ID buttonId, Runnable runnable) {
     if (runnable == null || this.getComponent(buttonId).isEmpty()) {
       return false;
@@ -306,38 +341,82 @@ public final class InputDevice implements Closeable {
     return true;
   }
 
+  /**
+   * Clears all listeners for a specific button.
+   *
+   * @param buttonId The ID of the button to clear listeners for.
+   */
   public void clearButtonPresedListeners(int buttonId) {
     this.clearButtonPressedListeners(InputComponent.ID.getButton(buttonId));
   }
 
+  /**
+   * Clears all listeners for a specific button.
+   *
+   * @param buttonId The ID of the button to clear listeners for.
+   */
   public void clearButtonPressedListeners(InputComponent.ID buttonId) {
     this.buttonPressedListeners.remove(buttonId);
   }
 
+  /**
+   * Clears all listeners for a specific button.
+   *
+   * @param buttonId The ID of the button to clear listeners for.
+   */
   public void clearButtonReleasedListeners(int buttonId) {
     this.clearButtonPressedListeners(InputComponent.ID.getButton(buttonId));
   }
 
+  /**
+   * Clears all listeners for a specific button.
+   *
+   * @param buttonId The ID of the button to clear listeners for.
+   */
   public void clearButtonReleasedListeners(InputComponent.ID buttonId) {
     this.buttonReleasedListeners.remove(buttonId);
   }
 
+  /**
+   * Removes a specific button pressed listener.
+   *
+   * @param runnable The listener to remove.
+   */
   public void removeButtonPressedListener(Runnable runnable) {
     for (var entry : this.buttonPressedListeners.entrySet()) {
       entry.getValue().remove(runnable);
     }
   }
 
+  /**
+   * Removes a specific button released listener.
+   *
+   * @param runnable The listener to remove.
+   */
   public void removeButtonReleasedListener(Runnable runnable) {
     for (var entry : this.buttonReleasedListeners.entrySet()) {
       entry.getValue().remove(runnable);
     }
   }
 
+  /**
+   * Registers a listener to be notified when an axis value changes.
+   *
+   * @param axisId   The ID of the axis to listen to.
+   * @param runnable The listener to register.
+   * @return true if the listener was registered, otherwise false.
+   */
   public boolean onAxisChanged(int axisId, Consumer<Float> runnable) {
     return this.onAxisChanged(InputComponent.ID.getAxis(axisId), runnable);
   }
 
+  /**
+   * Registers a listener to be notified when an axis value changes.
+   *
+   * @param axis     The ID of the axis to listen to.
+   * @param runnable The listener to register.
+   * @return true if the listener was registered, otherwise false.
+   */
   public boolean onAxisChanged(InputComponent.ID axis, Consumer<Float> runnable) {
     if (runnable == null || this.getComponent(axis).isEmpty()) {
       return false;
@@ -351,14 +430,29 @@ public final class InputDevice implements Closeable {
     return true;
   }
 
+  /**
+   * Clears all listeners for a specific axis.
+   *
+   * @param axisId The ID of the axis to clear listeners for.
+   */
   public void clearAxisChangedListeners(int axisId) {
     this.clearAxisChangedListeners(InputComponent.ID.getAxis(axisId));
   }
 
+  /**
+   * Clears all listeners for a specific axis.
+   *
+   * @param axisId The ID of the axis to clear listeners for.
+   */
   public void clearAxisChangedListeners(InputComponent.ID axisId) {
     this.axisChangedListeners.remove(axisId);
   }
 
+  /**
+   * Removes a specific axis changed listener.
+   *
+   * @param runnable The listener to remove.
+   */
   public void removeAxisChangedListener(Consumer<Float> runnable) {
     for (var entry : this.axisChangedListeners.entrySet()) {
       entry.getValue().remove(runnable);

@@ -14,12 +14,17 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public final class InputComponent {
   private final InputDevice device;
   private final ID id;
-
   private final String originalName;
   private final boolean relative;
 
   private float data;
 
+  /**
+   * Creates a new instance of the InputComponent class.
+   *
+   * @param device the input device associated with this component
+   * @param id     the id of the component
+   */
   public InputComponent(InputDevice device, ID id) {
     this(device, id, false);
   }
@@ -34,7 +39,13 @@ public final class InputComponent {
     this(device, id, null, relative);
   }
 
-
+  /**
+   * Creates a new instance of the InputComponent class.
+   *
+   * @param device       the input device associated with this component
+   * @param id           the id of the component
+   * @param originalName the name of the component
+   */
   public InputComponent(InputDevice device, ID id, String originalName) {
     this(device, id, originalName, false);
   }
@@ -244,8 +255,12 @@ public final class InputComponent {
       return Math.max(ids.stream().filter(i -> i.type == type).mapToInt(i -> i.id).max().orElse(0), minId) + 1;
     }
 
-    public static ID get(int id) {
-      return ids.stream().filter(i -> i.id == id).findFirst().orElse(null);
+    public static List<ID> getAll() {
+      return ids;
+    }
+
+    public static ID get(ComponentType type, int id){
+      return ids.stream().filter(i -> i.type == type && i.id == id).findFirst().orElse(null);
     }
 
     public static ID getButton(int id) {
@@ -256,6 +271,15 @@ public final class InputComponent {
       return ids.stream().filter(i -> i.type.isAxis() && i.id == id).findFirst().orElse(null);
     }
 
+    /**
+     * Gets an ID by its name.
+     * <p>
+     * IMPORTANT: Be careful, since this method only returns the first ID with the specified name. And the name might not be unique.
+     * </p>
+     *
+     * @param name The name of the ID to get.
+     * @return The ID with the specified name, or null if no such ID exists.
+     */
     public static ID get(String name) {
       return ids.stream().filter(i -> i.name.equals(name)).findFirst().orElse(null);
     }

@@ -56,8 +56,8 @@ public class InputComponentIDTests {
 
   @Test
   public void testGetById() {
-    InputComponent.ID id = new InputComponent.ID(ComponentType.BUTTON, 1, "BUTTON_1");
-    assertEquals(id, InputComponent.ID.get(1));
+    InputComponent.ID id = new InputComponent.ID(ComponentType.UNKNOWN, 1, "SOMETHING_ELSE_1");
+    assertEquals(id, InputComponent.ID.get(ComponentType.UNKNOWN, 1));
   }
 
   @Test

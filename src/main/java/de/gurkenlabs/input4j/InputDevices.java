@@ -209,42 +209,15 @@ public final class InputDevices {
     // default number of decimal places to round input data to
     private static final int DEFAULT_ACCURACY = 3;
 
-    // default polling rate in hertz (times per second)
-    private static final int DEFAULT_POLLING_RATE = 100;
-
     private static final int DEFAULT_HOTPLUG_INTERVAL = 3000;
-
-    private int pollingRate;
-    private boolean pollingEnabled;
 
     private int accuracy;
 
     private int hotplugInterval;
 
     private DefaultInputConfiguration() {
-      this.pollingRate = DEFAULT_POLLING_RATE;
-      this.pollingEnabled = false;
-
       this.accuracy = DEFAULT_ACCURACY;
       this.hotplugInterval = DEFAULT_HOTPLUG_INTERVAL;
-    }
-
-    /**
-     * Gets the polling rate in hertz (times per second).
-     *
-     * @return The polling rate.
-     */
-    public int getPollingRate() {
-      return pollingRate;
-    }
-
-    /**
-     * Sets the polling rate in hertz (times per second).
-     *
-     * @param pollingRate The polling rate.
-     */
-    public void setPollingRate(int pollingRate) {
-      this.pollingRate = pollingRate;
     }
 
     /**
@@ -267,32 +240,32 @@ public final class InputDevices {
     }
 
     /**
-     * Checks if polling is enabled.
+     * Gets the interval in milliseconds for checking for hot-plugged devices.
+     * <p>
+     * This interval determines how often the system checks for newly connected or disconnected input devices.
+     * A shorter interval means more frequent checks, which can lead to faster detection of new devices but may also increase CPU usage.
+     * </p>
+     * By default, it is set to {@value #DEFAULT_HOTPLUG_INTERVAL} milliseconds.
+     * </p>
      *
-     * @return {@code true} if polling is enabled, {@code false} otherwise.
-     */
-    public boolean isPollingEnabled() {
-      return pollingEnabled;
-    }
-
-    /**
-     * Sets whether polling is enabled.
+     * @return The hot-plug interval in milliseconds.
      *
-     * @param pollingEnabled {@code true} to enable automatic polling at the interval defined by the polling rate,
-     *                       {@code false} to disable automatic polling and require manual polling via {@link InputDevice#poll()}.
-     *                       <p>
-     *                       The polling rate determines how frequently the input device is polled for new data when automatic polling is enabled.
-     *                       It is measured in hertz. A higher polling rate means the device is checked more frequently,
-     *                       which can lead to more responsive input handling but may also increase CPU usage.
+     * @see #DEFAULT_HOTPLUG_INTERVAL
      */
-    public void enablePolling(boolean pollingEnabled) {
-      this.pollingEnabled = pollingEnabled;
-    }
-
     public int getHotPlugInterval() {
       return hotplugInterval;
     }
 
+    /**
+     * Sets the interval in milliseconds for checking for hot-plugged devices.
+     * <p>
+     * This interval determines how often the system checks for newly connected or disconnected input devices.
+     * A shorter interval means more frequent checks, which can lead to faster detection of new devices but may also increase CPU usage.
+     * </p>
+     *
+     * @param hotplugInterval The hot-plug interval in milliseconds.
+     * @throws IllegalArgumentException if the interval is negative.
+     */
     public void setHotPlugInterval(int hotplugInterval) {
       this.hotplugInterval = hotplugInterval;
     }
