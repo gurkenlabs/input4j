@@ -12,6 +12,7 @@ import java.lang.foreign.MemorySegment;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -108,32 +109,21 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     }
   }
 
-  private float[] pollIOHIDDevice(InputDevice inputDevice) {
-    log.log(Level.FINE, "Polling IOHIDDevice for input device: " + inputDevice.getInstanceName());
-    var values = new float[inputDevice.getComponents().size()];
+  @Override
+  public void close() {
+    super.close();
 
-    // find native IOHIDDevice and poll elements
-    var ioHIDDevice = this.nativeDevices.getOrDefault(inputDevice.getID(), null);
-    if (ioHIDDevice == null) {
-      log.log(Level.WARNING, "IOHIDDevice not found for input device " + inputDevice.getInstanceName());
-      return values;
+    if (eventLoopThread != null) {
+      eventLoopThread.interrupt();
     }
 
-    for (int i = 0; i < inputDevice.getComponents().size(); i++) {
-      var component = inputDevice.getComponents().get(i);
-      var element = ioHIDDevice.getElements().stream().filter(x -> x.getIdentifier() == component.getId()).findFirst().orElse(null);
-      if (element == null) {
-        log.log(Level.FINE, "Native element not found for component ID: " + component.getId());
-        continue;
-      }
+    this.nativeDevices.clear();
+  }
 
-      var elementValue = element.currentValue;
-      log.log(Level.FINEST, "Element value for component ID " + component.getId() + ": " + elementValue);
-      var value = normalizeInputValue(elementValue, element, component.isAxis());
-      values[i] = value;
-    }
-
-    return IOKitVirtualComponentHandler.handlePolledValues(inputDevice, values);
+  @Override
+  protected Collection<InputDevice> refreshInputDevices() {
+    // TODO: implement refresh support
+    return this.getAll();
   }
 
   static float normalizeInputValue(int elementValue, IOHIDElement element, boolean isAxis) {
@@ -157,19 +147,38 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     return value;
   }
 
-  @Override
-  public void close() {
-    if (eventLoopThread != null) {
-      eventLoopThread.interrupt();
+  private float[] pollIOHIDDevice(InputDevice inputDevice) {
+    log.log(Level.FINE, "Polling IOHIDDevice for input device: " + inputDevice.getName());
+    var values = new float[inputDevice.getComponents().size()];
+
+    // find native IOHIDDevice and poll elements
+    var ioHIDDevice = this.nativeDevices.getOrDefault(inputDevice.getID(), null);
+    if (ioHIDDevice == null) {
+      log.log(Level.WARNING, "IOHIDDevice not found for input device " + inputDevice.getName());
+      return values;
     }
 
-    this.nativeDevices.clear();
+    for (int i = 0; i < inputDevice.getComponents().size(); i++) {
+      var component = inputDevice.getComponents().get(i);
+      var element = ioHIDDevice.getElements().stream().filter(x -> x.getIdentifier() == component.getId()).findFirst().orElse(null);
+      if (element == null) {
+        log.log(Level.FINE, "Native element not found for component ID: " + component.getId());
+        continue;
+      }
+
+      var elementValue = element.currentValue;
+      log.log(Level.FINEST, "Element value for component ID " + component.getId() + ": " + elementValue);
+      var value = normalizeInputValue(elementValue, element, component.isAxis());
+      values[i] = value;
+    }
+
+    return IOKitVirtualComponentHandler.handlePolledValues(inputDevice, values);
   }
 
   /**
    * This is called out of native code when an IOHIDElement  provides a value.
    */
-  public void hidInputValueCallback(MemorySegment context, int result, MemorySegment sender, MemorySegment ioHIDValueRef) {
+  private void hidInputValueCallback(MemorySegment context, int result, MemorySegment sender, MemorySegment ioHIDValueRef) {
     var element = MacOS.IOHIDValueGetElement(ioHIDValueRef);
     var value = MacOS.IOHIDValueGetIntegerValue(ioHIDValueRef);
     var timestamp = MacOS.IOHIDValueGetTimeStamp(ioHIDValueRef);

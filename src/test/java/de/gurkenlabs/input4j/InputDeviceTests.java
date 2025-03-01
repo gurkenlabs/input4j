@@ -27,7 +27,7 @@ public class InputDeviceTests {
 
   @Test
   public void testGetInstanceName() {
-    assertEquals("TestInstance", inputDevice.getInstanceName());
+    assertEquals("TestInstance", inputDevice.getName());
   }
 
   @Test

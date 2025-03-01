@@ -13,6 +13,7 @@ import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -22,6 +23,7 @@ import java.util.logging.Level;
  * It initializes, polls, and handles rumble functionality for XInput devices.
  */
 public final class XInputPlugin extends AbstractInputDevicePlugin {
+  private static final int MAX_XINPUT_DEVICES = 4;
   private static final MethodHandle xInputGetState;
   private static final MethodHandle xInputSetState;
   private static final MethodHandle xInputGetCapabilities;
@@ -57,119 +59,47 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
    */
   @Override
   public void internalInitDevices(Frame owner) {
-    try {
-      // Initialize XInput devices
-      for (int i = 0; i < 4; i++) {
-        var state = getState(i);
-        if (state == null) {
-          continue;
-        }
+    this.setDevices(refreshInputDevices());
+  }
 
-        state.Gamepad.userIndex = i;
+  /**
+   * Closes the plugin and clears the collection of devices.
+   */
+  @Override
+  public void close() {
+    super.close();
 
-        var type = "XInput Device";
-        var capabilities = getCapabilities(i);
-        if (capabilities != null) {
-          type = capabilities.getTypeName();
-        }
+    this.nativeDevices.clear();
+    this.memoryArena.close();
+  }
 
-        // Prepare components list based on the gamepad fields and XInputButton
-        var components = new ArrayList<InputComponent>();
-
-        var instanceName = type + " (" + state.Gamepad.userIndex + ")";
-        var device = new InputDevice(Integer.toString(state.Gamepad.userIndex), instanceName, null, this::pollXInputDevice, this::rumbleXInputDevice);
-
-        // order is important here, as the order of the components is used to map the polled data
-        components.add(new InputComponent(device, XInput.DPAD_UP));
-        components.add(new InputComponent(device, XInput.DPAD_DOWN));
-        components.add(new InputComponent(device, XInput.DPAD_LEFT));
-        components.add(new InputComponent(device, XInput.DPAD_RIGHT));
-        components.add(new InputComponent(device, XInput.START));
-        components.add(new InputComponent(device, XInput.BACK));
-        components.add(new InputComponent(device, XInput.LEFT_THUMB));
-        components.add(new InputComponent(device, XInput.RIGHT_THUMB));
-        components.add(new InputComponent(device, XInput.LEFT_SHOULDER));
-        components.add(new InputComponent(device, XInput.RIGHT_SHOULDER));
-        components.add(new InputComponent(device, XInput.A));
-        components.add(new InputComponent(device, XInput.B));
-        components.add(new InputComponent(device, XInput.X));
-        components.add(new InputComponent(device, XInput.Y));
-
-        components.add(new InputComponent(device, XInput.LEFT_TRIGGER));
-        components.add(new InputComponent(device, XInput.RIGHT_TRIGGER));
-        components.add(new InputComponent(device, XInput.LEFT_THUMB_X));
-        components.add(new InputComponent(device, XInput.LEFT_THUMB_Y));
-        components.add(new InputComponent(device, XInput.RIGHT_THUMB_X));
-        components.add(new InputComponent(device, XInput.RIGHT_THUMB_Y));
-
-        device.setComponents(components);
-
-        state.Gamepad.inputDevice = device;
-        nativeDevices.put(device.getID(), state.Gamepad);
-        log.log(Level.FINE, "Found XInput device: " + i);
+  @Override
+  protected Collection<InputDevice> refreshInputDevices() {
+    // Initialize XInput devices
+    var inputDevices = new ArrayList<InputDevice>();
+    for (int i = 0; i < MAX_XINPUT_DEVICES; i++) {
+      var deviceId = Integer.toString(i);
+      var state = getState(i);
+      if (state == null) {
+        this.nativeDevices.remove(deviceId);
+        continue;
       }
 
-      this.setDevices(this.nativeDevices.values().stream().map(x -> x.inputDevice).toList());
-    } catch (Throwable e) {
-      log.log(Level.SEVERE, e.getMessage(), e);
-    }
-  }
+      if (this.nativeDevices.containsKey(deviceId)) {
+        var existingDevice = this.getAll().stream().filter(device -> device.getID().equals(deviceId)).findFirst();
+        if (existingDevice.isPresent()) {
+          inputDevices.add(existingDevice.get());
+          continue;
+        }
+      }
 
-  /**
-   * Sets the vibration intensity for the specified input device.
-   *
-   * @param inputDevice The input device.
-   * @param intensity   The vibration intensity for the left and right motors.
-   */
-  private void rumbleXInputDevice(InputDevice inputDevice, float[] intensity) {
-    var motorSpeedLeft = 0f;
-    var motorSpeedRight = 0f;
-    if (intensity != null && intensity.length > 0) {
-      motorSpeedLeft = Math.clamp(intensity[0], 0, 1);
-      motorSpeedRight = intensity.length > 1 ? Math.clamp(intensity[2], 0, 1) : motorSpeedLeft;
+      state.Gamepad.userIndex = i;
+      var inputDevice = initInputDevice(state.Gamepad);
+      inputDevices.add(inputDevice);
+      this.nativeDevices.put(inputDevice.getID(), state.Gamepad);
     }
 
-    // Set the vibration for each motor (example for two motors)
-    setVibration(Integer.parseInt(inputDevice.getInstanceName()),
-      (short) (motorSpeedLeft * XINPUT_VIBRATION.MAX_VIBRATION),
-      (short) (motorSpeedRight * XINPUT_VIBRATION.MAX_VIBRATION));
-  }
-
-  /**
-   * Polls the input device state and returns the current state of its components.
-   *
-   * @param inputDevice The input device.
-   * @return The current state of the input device's components.
-   */
-  private float[] pollXInputDevice(InputDevice inputDevice) {
-    var polledValues = new float[inputDevice.getComponents().size()];
-
-    // find native XINPUT_GAMEPAD and poll it
-    var xinputGamepad = this.nativeDevices.getOrDefault(inputDevice.getInstanceName(), null);
-    if (xinputGamepad == null) {
-      log.log(Level.WARNING, "DirectInput device not found for input device " + inputDevice.getInstanceName());
-      return polledValues;
-    }
-
-    var state = getState(xinputGamepad.userIndex);
-    if (state == null) {
-      return new float[0];
-    }
-
-    int i = 0;
-    for (; i < XInputButton.values.length; i++) {
-      var button = XInputButton.values[i];
-      polledValues[i] = button.isPressed(state.Gamepad.wButtons) ? 1 : 0;
-    }
-
-    polledValues[i++] = normalizeTrigger(state.Gamepad.bLeftTrigger);
-    polledValues[i++] = normalizeTrigger(state.Gamepad.bRightTrigger);
-    polledValues[i++] = normalizeSignedShort(state.Gamepad.sThumbLX, XINPUT_GAMEPAD.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
-    polledValues[i++] = normalizeSignedShort(state.Gamepad.sThumbLY, XINPUT_GAMEPAD.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
-    polledValues[i++] = normalizeSignedShort(state.Gamepad.sThumbRX, XINPUT_GAMEPAD.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
-    polledValues[i] = normalizeSignedShort(state.Gamepad.sThumbRY, XINPUT_GAMEPAD.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
-
-    return polledValues;
+    return inputDevices;
   }
 
   /**
@@ -207,17 +137,98 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
     return (float) shortValue / Short.MAX_VALUE;
   }
 
-  /**
-   * Closes the plugin and clears the collection of devices.
-   */
-  @Override
-  public void close() {
-    for (var device : this.nativeDevices.values()) {
-      device.inputDevice.close();
+  private InputDevice initInputDevice(XINPUT_GAMEPAD gamepad) {
+    var type = "XInput Device";
+    var capabilities = getCapabilities(gamepad.userIndex);
+    if (capabilities != null) {
+      type = capabilities.getTypeName();
     }
 
-    this.nativeDevices.clear();
-    this.memoryArena.close();
+    // Prepare components list based on the gamepad fields and XInputButton
+    var components = new ArrayList<InputComponent>();
+
+    var instanceName = type + " (" + gamepad.userIndex + ")";
+    var device = new InputDevice(Integer.toString(gamepad.userIndex), instanceName, null, this::pollXInputDevice, this::rumbleXInputDevice);
+
+    // order is important here, as the order of the components is used to map the polled data
+    components.add(new InputComponent(device, XInput.DPAD_UP));
+    components.add(new InputComponent(device, XInput.DPAD_DOWN));
+    components.add(new InputComponent(device, XInput.DPAD_LEFT));
+    components.add(new InputComponent(device, XInput.DPAD_RIGHT));
+    components.add(new InputComponent(device, XInput.START));
+    components.add(new InputComponent(device, XInput.BACK));
+    components.add(new InputComponent(device, XInput.LEFT_THUMB));
+    components.add(new InputComponent(device, XInput.RIGHT_THUMB));
+    components.add(new InputComponent(device, XInput.LEFT_SHOULDER));
+    components.add(new InputComponent(device, XInput.RIGHT_SHOULDER));
+    components.add(new InputComponent(device, XInput.A));
+    components.add(new InputComponent(device, XInput.B));
+    components.add(new InputComponent(device, XInput.X));
+    components.add(new InputComponent(device, XInput.Y));
+
+    components.add(new InputComponent(device, XInput.LEFT_TRIGGER));
+    components.add(new InputComponent(device, XInput.RIGHT_TRIGGER));
+    components.add(new InputComponent(device, XInput.LEFT_THUMB_X));
+    components.add(new InputComponent(device, XInput.LEFT_THUMB_Y));
+    components.add(new InputComponent(device, XInput.RIGHT_THUMB_X));
+    components.add(new InputComponent(device, XInput.RIGHT_THUMB_Y));
+
+    device.setComponents(components);
+
+    log.log(Level.FINE, "Found XInput device: " + gamepad.userIndex);
+    return device;
+  }
+
+  /**
+   * Sets the vibration intensity for the specified input device.
+   *
+   * @param inputDevice The input device.
+   * @param intensity   The vibration intensity for the left and right motors.
+   */
+  private void rumbleXInputDevice(InputDevice inputDevice, float[] intensity) {
+    var motorSpeedLeft = 0f;
+    var motorSpeedRight = 0f;
+    if (intensity != null && intensity.length > 0) {
+      motorSpeedLeft = Math.clamp(intensity[0], 0, 1);
+      motorSpeedRight = intensity.length > 1 ? Math.clamp(intensity[2], 0, 1) : motorSpeedLeft;
+    }
+
+    // Set the vibration for each motor (example for two motors)
+    setVibration(Integer.parseInt(inputDevice.getName()),
+      (short) (motorSpeedLeft * XINPUT_VIBRATION.MAX_VIBRATION),
+      (short) (motorSpeedRight * XINPUT_VIBRATION.MAX_VIBRATION));
+  }
+
+  /**
+   * Polls the input device state and returns the current state of its components.
+   *
+   * @param inputDevice The input device.
+   * @return The current state of the input device's components.
+   */
+  private float[] pollXInputDevice(InputDevice inputDevice) {
+    this.refreshDevices();
+    var polledValues = new float[inputDevice.getComponents().size()];
+
+    var deviceId = Integer.parseInt(inputDevice.getID());
+    var state = getState(deviceId);
+    if (state == null) {
+      return new float[0];
+    }
+
+    int i = 0;
+    for (; i < XInputButton.values.length; i++) {
+      var button = XInputButton.values[i];
+      polledValues[i] = button.isPressed(state.Gamepad.wButtons) ? 1 : 0;
+    }
+
+    polledValues[i++] = normalizeTrigger(state.Gamepad.bLeftTrigger);
+    polledValues[i++] = normalizeTrigger(state.Gamepad.bRightTrigger);
+    polledValues[i++] = normalizeSignedShort(state.Gamepad.sThumbLX, XINPUT_GAMEPAD.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+    polledValues[i++] = normalizeSignedShort(state.Gamepad.sThumbLY, XINPUT_GAMEPAD.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+    polledValues[i++] = normalizeSignedShort(state.Gamepad.sThumbRX, XINPUT_GAMEPAD.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+    polledValues[i] = normalizeSignedShort(state.Gamepad.sThumbRY, XINPUT_GAMEPAD.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+
+    return polledValues;
   }
 
   private XINPUT_CAPABILITIES getCapabilities(int userIndex) {

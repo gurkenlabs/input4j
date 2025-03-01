@@ -9,6 +9,9 @@ import java.io.IOException;
 public class ExampleEventBasedInputHandling {
   public static void main(String[] args) throws IOException, InterruptedException {
     try (var devices = InputDevices.init()) {
+
+      devices.onDeviceConnected(inputDevice -> System.out.println("Device connected " + inputDevice));
+      devices.onDeviceDisconnected(inputDevice -> System.out.println("Device disconnected " + inputDevice));
       var device = devices.getAll().stream().findFirst().orElse(null);
       if (device == null) {
         System.out.println("No input devices found.");

@@ -53,7 +53,8 @@ public final class InputDevices {
   /**
    * Initializes the input device provider with the specified library.
    * <p>
-   *   Note: Some controllers don't support background mode which is why it can be necessary to pass a frame owner to the {@link InputDevices#init(Frame, String)} method.
+   * Note: Some controllers don't support background mode which is why it can be necessary to pass a frame owner to the {@link InputDevices#init(Frame, String)} method.
+   *
    * @param library The library to be used.
    * @return The initialized input device provider.
    * @throws IOException if the input device provider cannot be initialized.
@@ -65,7 +66,8 @@ public final class InputDevices {
   /**
    * Initializes the input device provider with the specified input plugin class.
    * <p>
-   *   Note: Some controllers don't support background mode which is why it can be necessary to pass a frame owner to the {@link InputDevices#init(Frame, String)} method.
+   * Note: Some controllers don't support background mode which is why it can be necessary to pass a frame owner to the {@link InputDevices#init(Frame, String)} method.
+   *
    * @param inputPluginClass The input plugin class to be used.
    * @return The initialized input device provider.
    * @throws IOException if the input device provider cannot be initialized.
@@ -214,16 +216,21 @@ public final class InputDevices {
     // default polling rate in hertz (times per second)
     private static final int DEFAULT_POLLING_RATE = 100;
 
+    private static final int DEFAULT_HOTPLUG_INTERVAL = 3000;
+
     private int pollingRate;
     private boolean pollingEnabled;
 
     private int accuracy;
+
+    private int hotplugInterval;
 
     private DefaultInputConfiguration() {
       this.pollingRate = DEFAULT_POLLING_RATE;
       this.pollingEnabled = false;
 
       this.accuracy = DEFAULT_ACCURACY;
+      this.hotplugInterval = DEFAULT_HOTPLUG_INTERVAL;
     }
 
     /**
@@ -284,6 +291,14 @@ public final class InputDevices {
      */
     public void enablePolling(boolean pollingEnabled) {
       this.pollingEnabled = pollingEnabled;
+    }
+
+    public int getHotPlugInterval() {
+      return hotplugInterval;
+    }
+
+    public void setHotPlugInterval(int hotplugInterval) {
+      this.hotplugInterval = hotplugInterval;
     }
   }
 }

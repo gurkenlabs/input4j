@@ -9,6 +9,7 @@ import java.awt.*;
 import java.io.File;
 import java.lang.foreign.Arena;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,6 +36,87 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   public void internalInitDevices(Frame owner) {
     initEventDevices();
     this.setDevices(this.nativeDevices.values().stream().map(d -> d.inputDevice).toList());
+  }
+
+  @Override
+  public void close() {
+    super.close();
+    for (LinuxEventDevice device : nativeDevices.values()) {
+      device.close(this.memoryArena);
+    }
+
+    this.nativeDevices.clear();
+    memoryArena.close();
+  }
+
+  @Override
+  protected Collection<InputDevice> refreshInputDevices() {
+    // TODO: implement refresh support
+    return this.getAll();
+  }
+
+
+  /**
+   * Normalize the input value to the range [-1, 1] for axes.
+   * <p>
+   * The value is normalized to the range [-1, 1] for axes.
+   * The value is 0 or 1 for buttons and non-axis D-Pad components.
+   * </p>
+   */
+  static float normalizeInputValue(input_event inputEvent, LinuxEventComponent nativeComponent) {
+    float value = inputEvent.value;
+    if (nativeComponent.nativeType == LinuxEventDevice.EV_ABS) {
+      int midpoint = Math.round((nativeComponent.min + nativeComponent.max) / 2.0f);
+      if (inputEvent.value == nativeComponent.flat || Math.abs(inputEvent.value - midpoint) <= nativeComponent.fuzz) {
+        value = 0;
+      } else {
+        // Ensure value is within the range [min, max]
+        // Then normalize the value to the range [-1, 1]
+        value = Math.max(nativeComponent.min, Math.min(nativeComponent.max, value));
+        value = (value - nativeComponent.min) / (float) (nativeComponent.max - nativeComponent.min) * 2 - 1;
+      }
+    }
+
+    if (nativeComponent.nativeType == LinuxEventDevice.EV_KEY) {
+      value = value == 0 ? 0 : 1;
+    }
+
+    return value;
+  }
+
+  /**
+   * Get the component index by the native ID.
+   * <p>
+   * The native ID is the code of the input event.
+   * </p>
+   *
+   * @return the index of the component in the input device or <c>Linux.ERROR</c> if the component is not found
+   */
+  static int getComponentIndexByNativeId(input_event inputEvent, InputDevice inputDevice) {
+    for (int j = 0; j < inputDevice.getComponents().size(); j++) {
+      var component = inputDevice.getComponents().get(j);
+
+      if (component.getType() != ComponentType.UNKNOWN) {
+        switch (inputEvent.type) {
+          case LinuxEventDevice.EV_KEY:
+            if (component.getType() != ComponentType.BUTTON) {
+              continue;
+            }
+            break;
+          case LinuxEventDevice.EV_ABS:
+            if (component.getType() != ComponentType.AXIS) {
+              continue;
+            }
+            break;
+        }
+      }
+
+      if (component.getId().nativeId == inputEvent.code) {
+        return j;
+      }
+    }
+
+    return Linux.ERROR;
   }
 
   private void initEventDevices() {
@@ -140,7 +222,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     // find native LinuxEventDevice and poll it
     var linuxEventDevice = this.nativeDevices.getOrDefault(inputDevice.getID(), null);
     if (linuxEventDevice == null) {
-      log.log(Level.WARNING, "LinuxEventDevice not found for input device " + inputDevice.getInstanceName());
+      log.log(Level.WARNING, "LinuxEventDevice not found for input device " + inputDevice.getName());
       return emptyValues;
     }
 
@@ -176,82 +258,8 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   }
 
   /**
-   * Normalize the input value to the range [-1, 1] for axes.
-   * <p>
-   * The value is normalized to the range [-1, 1] for axes.
-   * The value is 0 or 1 for buttons and non-axis D-Pad components.
-   * </p>
-   */
-  static float normalizeInputValue(input_event inputEvent, LinuxEventComponent nativeComponent) {
-    float value = inputEvent.value;
-    if (nativeComponent.nativeType == LinuxEventDevice.EV_ABS) {
-      int midpoint = Math.round((nativeComponent.min + nativeComponent.max) / 2.0f);
-      if (inputEvent.value == nativeComponent.flat || Math.abs(inputEvent.value - midpoint) <= nativeComponent.fuzz) {
-        value = 0;
-      } else {
-        // Ensure value is within the range [min, max]
-        // Then normalize the value to the range [-1, 1]
-        value = Math.max(nativeComponent.min, Math.min(nativeComponent.max, value));
-        value = (value - nativeComponent.min) / (float) (nativeComponent.max - nativeComponent.min) * 2 - 1;
-      }
-    }
-
-    if (nativeComponent.nativeType == LinuxEventDevice.EV_KEY) {
-      value = value == 0 ? 0 : 1;
-    }
-
-    return value;
-  }
-
-  /**
-   * Get the component index by the native ID.
-   * <p>
-   * The native ID is the code of the input event.
-   * </p>
-   *
-   * @return the index of the component in the input device or <c>Linux.ERROR</c> if the component is not found
-   */
-  static int getComponentIndexByNativeId(input_event inputEvent, InputDevice inputDevice) {
-    for (int j = 0; j < inputDevice.getComponents().size(); j++) {
-      var component = inputDevice.getComponents().get(j);
-
-      if (component.getType() != ComponentType.UNKNOWN) {
-        switch (inputEvent.type) {
-          case LinuxEventDevice.EV_KEY:
-            if (component.getType() != ComponentType.BUTTON) {
-              continue;
-            }
-            break;
-          case LinuxEventDevice.EV_ABS:
-            if (component.getType() != ComponentType.AXIS) {
-              continue;
-            }
-            break;
-        }
-      }
-
-      if (component.getId().nativeId == inputEvent.code) {
-        return j;
-      }
-    }
-
-    return Linux.ERROR;
-  }
-
-
-  /**
    * TODO: Support for rumble and force feedback. ioctl(fd, EVIOCSFF, &effect) and requires ff_effect struct.
    */
   private void rumbleLinuxEventDevice(InputDevice inputDevice, float[] floats) {
-  }
-
-  @Override
-  public void close() {
-    for (LinuxEventDevice device : nativeDevices.values()) {
-      device.close(this.memoryArena);
-    }
-
-    this.nativeDevices.clear();
-    memoryArena.close();
   }
 }

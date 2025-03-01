@@ -32,7 +32,7 @@ import java.util.function.Function;
  */
 public final class InputDevice implements Closeable {
   private final String identifier;
-  private final String instanceName;
+  private final String name;
   private final String productName;
   private final List<InputComponent> components = new CopyOnWriteArrayList<>();
   private final Collection<InputDeviceListener> listeners = ConcurrentHashMap.newKeySet();
@@ -49,14 +49,14 @@ public final class InputDevice implements Closeable {
    * Creates a new instance of the InputDevice class.
    *
    * @param identifier     the identifier of the input device
-   * @param instanceName   the name of the instance of the input device
+   * @param name           the name of the instance of the input device
    * @param productName    the name of the product of the input device
    * @param pollCallback   the function to be called when polling for input data from the device
    * @param rumbleCallback the function to be called when setting rumble intensity
    */
-  public InputDevice(String identifier, String instanceName, String productName, Function<InputDevice, float[]> pollCallback, BiConsumer<InputDevice, float[]> rumbleCallback) {
+  public InputDevice(String identifier, String name, String productName, Function<InputDevice, float[]> pollCallback, BiConsumer<InputDevice, float[]> rumbleCallback) {
     this.identifier = identifier;
-    this.instanceName = instanceName;
+    this.name = name;
     this.productName = productName;
     this.pollCallback = pollCallback;
     this.rumbleCallback = rumbleCallback;
@@ -81,8 +81,8 @@ public final class InputDevice implements Closeable {
    *
    * @return the instance name
    */
-  public String getInstanceName() {
-    return instanceName;
+  public String getName() {
+    return name;
   }
 
   /**
@@ -239,20 +239,19 @@ public final class InputDevice implements Closeable {
 
     this.rumbleCallback.accept(this, intensity);
   }
-
-  @Override
-  public void close() {
-    this.listeners.clear();
-    this.buttonPressedListeners.clear();
-    this.buttonReleasedListeners.clear();
-  }
-
   public void setAccuracy(int decimalPlaces) {
     if (decimalPlaces < 0) {
       throw new IllegalArgumentException("Decimal places must be a non-negative integer.");
     }
 
     this.accuracyFactor = (float) Math.pow(10, Math.min(decimalPlaces, 7));
+  }
+
+  @Override
+  public void close() {
+    this.listeners.clear();
+    this.buttonPressedListeners.clear();
+    this.buttonReleasedListeners.clear();
   }
 
   /**
@@ -262,6 +261,11 @@ public final class InputDevice implements Closeable {
    */
   public boolean hasInputData() {
     return this.hasInputData;
+  }
+
+  @Override
+  public String toString() {
+    return this.getName();
   }
 
   public void onInputValueChanged(InputDeviceListener listener) {

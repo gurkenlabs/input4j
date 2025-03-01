@@ -27,7 +27,7 @@ class ExamplePollAllInputDevicesManually {
             continue;
           }
 
-          System.out.println(inputDevice.getInstanceName() + ":" + inputDevice.getComponents().stream().filter(x -> x.getData() != 0).toList());
+          System.out.println(inputDevice.getName() + ":" + inputDevice.getComponents().stream().filter(x -> x.getData() != 0).toList());
 
           // Rumble the device if the X button is pressed
           // handleRumble(inputDevice);

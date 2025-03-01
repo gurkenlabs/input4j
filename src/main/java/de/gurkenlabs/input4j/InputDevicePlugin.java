@@ -3,6 +3,7 @@ package de.gurkenlabs.input4j;
 import java.awt.*;
 import java.io.Closeable;
 import java.util.Collection;
+import java.util.function.Consumer;
 
 /**
  * Represents a plugin that provides input devices.
@@ -38,4 +39,10 @@ public interface InputDevicePlugin extends Closeable {
    * @return A collection of {@link InputDevice} objects representing the available input devices of this system.
    */
   Collection<InputDevice> getAll();
+
+  void onDevicesChanged(Runnable listener);
+
+  void onDeviceConnected(Consumer<InputDevice> listener);
+
+  void onDeviceDisconnected(Consumer<InputDevice> listener);
 }
