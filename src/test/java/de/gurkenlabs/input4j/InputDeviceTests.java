@@ -21,7 +21,7 @@ public class InputDeviceTests {
     BiConsumer<InputDevice, float[]> rumbleCallback = (_, _) -> {
     };
 
-    inputDevice = new InputDevice("TestInstance", "TestProduct", pollCallback, rumbleCallback);
+    inputDevice = new InputDevice("123", "TestInstance", "TestProduct", pollCallback, rumbleCallback);
     inputDevice.setComponents(components);
   }
 
