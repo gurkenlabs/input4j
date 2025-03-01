@@ -4,9 +4,24 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class XInputPluginTests {
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void testInitXInputPlugin() {
+    assertDoesNotThrow(XInputPlugin::new);
+  }
+
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void testLinuxEventDevicesInit() {
+    try (var plugin = new XInputPlugin()) {
+      plugin.internalInitDevices(null);
+    }
+  }
+
   @Test
   @EnabledOnOs(OS.WINDOWS)
   void testNormalizeTrigger() {
