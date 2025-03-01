@@ -6,6 +6,11 @@ plugins {
 group='de.gurkenlabs.input4j'
 version='1.0-SNAPSHOT'
 
+java {
+  sourceCompatibility = JavaVersion.VERSION_22
+  targetCompatibility = JavaVersion.VERSION_22
+}
+
 application {
   mainClass = 'de.gurkenlabs.input4j.Program'
 }
