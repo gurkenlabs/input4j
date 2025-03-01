@@ -20,10 +20,6 @@ import java.util.logging.Level;
 import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
 import static java.lang.foreign.ValueLayout.*;
 
-/**
- * TODO: Implement hot swapping controllers
- * TODO: handle disconnect or permanent unavailability => retry X times => handle in hotplug thread if a device is unavailable throw it away
- */
 public final class DirectInputPlugin extends AbstractInputDevicePlugin {
   static final int DI8DEVCLASS_GAMECTRL = 4;
 
@@ -96,6 +92,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
   @Override
   protected Collection<InputDevice> refreshInputDevices() {
     // TODO: implement refresh support
+    // TODO: handle disconnect or permanent unavailability => retry X times => handle in hotplug thread if a device is unavailable throw it away
     return this.getAll();
   }
 

@@ -2,6 +2,7 @@ package de.gurkenlabs.input4j;
 
 import java.awt.*;
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -32,10 +33,9 @@ public final class InputDevices {
   /**
    * Initializes the input device provider with the default platform library.
    *
-   * @return The initialized input device provider.
-   * @throws IOException if the input device provider cannot be initialized.
+   * @return The initialized input device provider or null if the initialization fails.
    */
-  public static InputDevicePlugin init() throws IOException {
+  public static InputDevicePlugin init() {
     return init(null, InputLibrary.PLATFORM_DEFAULT);
   }
 
@@ -43,10 +43,9 @@ public final class InputDevices {
    * Initializes the input device provider with the default platform library and the specified owner.
    *
    * @param owner The owner to be passed to individual plugins, or null if running in background.
-   * @return The initialized input device provider.
-   * @throws IOException if the input device provider cannot be initialized.
+   * @return The initialized input device provider or null if the initialization fails.
    */
-  public static InputDevicePlugin init(Frame owner) throws IOException {
+  public static InputDevicePlugin init(Frame owner) {
     return init(owner, InputLibrary.PLATFORM_DEFAULT);
   }
 
@@ -56,10 +55,9 @@ public final class InputDevices {
    * Note: Some controllers don't support background mode which is why it can be necessary to pass a frame owner to the {@link InputDevices#init(Frame, String)} method.
    *
    * @param library The library to be used.
-   * @return The initialized input device provider.
-   * @throws IOException if the input device provider cannot be initialized.
+   * @return The initialized input device provider or null if the initialization fails.
    */
-  public static InputDevicePlugin init(InputLibrary library) throws IOException {
+  public static InputDevicePlugin init(InputLibrary library) {
     return init(null, library);
   }
 
@@ -69,10 +67,9 @@ public final class InputDevices {
    * Note: Some controllers don't support background mode which is why it can be necessary to pass a frame owner to the {@link InputDevices#init(Frame, String)} method.
    *
    * @param inputPluginClass The input plugin class to be used.
-   * @return The initialized input device provider.
-   * @throws IOException if the input device provider cannot be initialized.
+   * @return The initialized input device provider or null if the initialization fails.
    */
-  public static InputDevicePlugin init(String inputPluginClass) throws IOException {
+  public static InputDevicePlugin init(String inputPluginClass) {
     return init(null, inputPluginClass);
   }
 
@@ -81,10 +78,9 @@ public final class InputDevices {
    *
    * @param owner   The owner to be passed to individual plugins, or null if running in background.
    * @param library The input library to be used.
-   * @return The initialized input device provider.
-   * @throws IOException if the input device provider cannot be initialized.
+   * @return The initialized input device provider or null if the initialization fails.
    */
-  public static InputDevicePlugin init(Frame owner, InputLibrary library) throws IOException {
+  public static InputDevicePlugin init(Frame owner, InputLibrary library) {
     return init(owner, library.getPlugin());
   }
 
@@ -99,10 +95,9 @@ public final class InputDevices {
    *                         If the class is not found or cannot be instantiated, an {@link IOException} is thrown.
    *                         The class must have a public no-argument constructor.
    *                         </p>
-   * @return The initialized input device provider.
-   * @throws IOException if the input device provider cannot be initialized.
+   * @return The initialized input device provider or null if the initialization fails.
    */
-  public static InputDevicePlugin init(Frame owner, String inputPluginClass) throws IOException {
+  public static InputDevicePlugin init(Frame owner, String inputPluginClass) {
     try {
       if (inputPluginClass == null) {
         inputPluginClass = InputLibrary.PLATFORM_DEFAULT.getPlugin();
@@ -114,7 +109,8 @@ public final class InputDevices {
       provider.internalInitDevices(owner);
       return provider;
     } catch (Exception e) {
-      throw new IOException("Could not initialize input device provider: " + e.getMessage(), e);
+      log.log(Level.SEVERE, "Could not initialize input device provider: " + e.getMessage(), e);
+      return null;
     }
   }
 
