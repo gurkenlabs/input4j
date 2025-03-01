@@ -52,7 +52,8 @@ public final class InputDevices {
 
   /**
    * Initializes the input device provider with the specified library.
-   *
+   * <p>
+   *   Note: Some controllers don't support background mode which is why it can be necessary to pass a frame owner to the {@link InputDevices#init(Frame, String)} method.
    * @param library The library to be used.
    * @return The initialized input device provider.
    * @throws IOException if the input device provider cannot be initialized.
@@ -63,7 +64,8 @@ public final class InputDevices {
 
   /**
    * Initializes the input device provider with the specified input plugin class.
-   *
+   * <p>
+   *   Note: Some controllers don't support background mode which is why it can be necessary to pass a frame owner to the {@link InputDevices#init(Frame, String)} method.
    * @param inputPluginClass The input plugin class to be used.
    * @return The initialized input device provider.
    * @throws IOException if the input device provider cannot be initialized.
@@ -129,6 +131,10 @@ public final class InputDevices {
     /**
      * The DirectInput library for Windows.
      * This library provides support for older input devices on Windows.
+     *
+     * <p> Note: when using newer Gamepads or Xbox controllers, consider using {@link #WIN_XINPUT} instead.
+     * <p>
+     * Some controllers don't support background mode which is why it can be necessary to pass a frame owner to the {@link InputDevices#init(Frame, InputLibrary)} method.
      */
     WIN_DIRECTINPUT,
 
