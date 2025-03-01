@@ -72,6 +72,9 @@ final class XINPUT_CAPABILITIES {
   private static final VarHandle VH_SubType = $LAYOUT.varHandle(ValueLayout.PathElement.groupElement("SubType"));
   private static final VarHandle VH_Flags = $LAYOUT.varHandle(ValueLayout.PathElement.groupElement("Flags"));
 
+  private static final long GamepadOffset = $LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("Gamepad"));
+  private static final long VibrationOffset = $LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("Vibration"));
+
   /**
    * Reads the {@code XINPUT_CAPABILITIES} from the given memory segment.
    *
@@ -83,8 +86,8 @@ final class XINPUT_CAPABILITIES {
     capabilities.Type = (byte) VH_Type.get(segment, 0);
     capabilities.SubType = (byte) VH_SubType.get(segment, 0);
     capabilities.Flags = (short) VH_Flags.get(segment, 0);
-    capabilities.Gamepad = XINPUT_GAMEPAD.read(segment.asSlice($LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("Gamepad"))));
-    capabilities.Vibration = XINPUT_VIBRATION.read(segment.asSlice($LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("Vibration"))));
+    capabilities.Gamepad = XINPUT_GAMEPAD.read(segment.asSlice(GamepadOffset));
+    capabilities.Vibration = XINPUT_VIBRATION.read(segment.asSlice(VibrationOffset));
     return capabilities;
   }
 
@@ -97,8 +100,8 @@ final class XINPUT_CAPABILITIES {
     VH_Type.set(segment, 0, Type);
     VH_SubType.set(segment, 0, SubType);
     VH_Flags.set(segment, 0, Flags);
-    Gamepad.write(segment.asSlice($LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("Gamepad"))));
-    Vibration.write(segment.asSlice($LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("Vibration"))));
+    Gamepad.write(segment.asSlice(GamepadOffset));
+    Vibration.write(segment.asSlice(VibrationOffset));
   }
 
   public String getTypeName() {

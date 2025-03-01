@@ -26,6 +26,7 @@ final class XINPUT_STATE {
   );
 
   private static final VarHandle VH_dwPacketNumber = $LAYOUT.varHandle(ValueLayout.PathElement.groupElement("dwPacketNumber"));
+  private static final long GamepadOffset = $LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("Gamepad"));
 
   /**
    * Reads the {@code XINPUT_STATE} from the given memory segment.
@@ -36,7 +37,7 @@ final class XINPUT_STATE {
   static XINPUT_STATE read(MemorySegment segment) {
     var state = new XINPUT_STATE();
     state.dwPacketNumber = (int) VH_dwPacketNumber.get(segment, 0);
-    state.Gamepad = XINPUT_GAMEPAD.read(segment.asSlice($LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("Gamepad"))));
+    state.Gamepad = XINPUT_GAMEPAD.read(segment.asSlice(GamepadOffset));
     return state;
   }
 
@@ -47,6 +48,6 @@ final class XINPUT_STATE {
    */
   void write(MemorySegment segment) {
     VH_dwPacketNumber.set(segment, 0, dwPacketNumber);
-    Gamepad.write(segment.asSlice($LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("Gamepad"))));
+    Gamepad.write(segment.asSlice(GamepadOffset));
   }
 }
