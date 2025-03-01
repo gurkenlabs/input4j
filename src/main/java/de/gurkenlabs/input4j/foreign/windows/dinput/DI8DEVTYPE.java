@@ -19,6 +19,11 @@ enum DI8DEVTYPE {
   DI8DEVTYPE_SCREENPOINTER(0x1A),
   DI8DEVTYPE_REMOTE(0x1B),
   DI8DEVTYPE_SUPPLEMENTAL(0x1C);
+
+  /**
+   * Cache the values array to avoid creating a new array each time values() is called.
+   */
+  static final DI8DEVTYPE[] values = values();
   private final int devType;
 
   DI8DEVTYPE(int devType) {
@@ -34,7 +39,7 @@ enum DI8DEVTYPE {
   public static DI8DEVTYPE fromDwDevType(int dwDevType) {
     //  The least-significant byte of the device type description code specifies the device type.
     var devType = (dwDevType & 0xFF);
-    return Arrays.stream(DI8DEVTYPE.values()).filter(x -> x.devType == devType).findFirst().orElse(null);
+    return Arrays.stream(values).filter(x -> x.devType == devType).findFirst().orElse(null);
   }
 
   /**

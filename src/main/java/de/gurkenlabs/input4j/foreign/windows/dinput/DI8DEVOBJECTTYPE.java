@@ -19,6 +19,11 @@ enum DI8DEVOBJECTTYPE {
   POV(DIDEVICEOBJECTINSTANCE.GUID_POV),
   Unknown(DIDEVICEOBJECTINSTANCE.GUID_Unknown);
 
+  /**
+   * Cache the values array to avoid creating a new array each time values() is called.
+   */
+  static final DI8DEVOBJECTTYPE[] values = values();
+
   private final GUID typeGuid;
 
   DI8DEVOBJECTTYPE(GUID typeGuid) {
@@ -33,7 +38,7 @@ enum DI8DEVOBJECTTYPE {
    */
   public static DI8DEVOBJECTTYPE from(GUID typeGuid) {
     //  The least-significant byte of the device type description code specifies the device type.
-    return Arrays.stream(DI8DEVOBJECTTYPE.values()).filter(x -> x.typeGuid.equals(typeGuid)).findFirst().orElse(null);
+    return Arrays.stream(DI8DEVOBJECTTYPE.values).filter(x -> x.typeGuid.equals(typeGuid)).findFirst().orElse(null);
   }
 
   /**

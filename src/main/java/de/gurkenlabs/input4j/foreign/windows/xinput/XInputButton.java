@@ -20,6 +20,10 @@ public enum XInputButton {
   X(0x4000),
   Y(0x8000);
 
+  /**
+   * Cache the values array to avoid creating a new array each time values() is called.
+   */
+  static final XInputButton[] values = values();
   private final int value;
 
   XInputButton(int value) {
@@ -42,6 +46,6 @@ public enum XInputButton {
    * @return {@code true} if the button is pressed, {@code false} otherwise.
    */
   public boolean isPressed(int wButtons) {
-    return (wButtons & this.getValue()) != 0;
+    return (wButtons & this.value) != 0;
   }
 }

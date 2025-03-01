@@ -28,13 +28,18 @@ enum IOHIDElementUsagePage {
   BUTTON(0x09),
   ORDINAL(0x0A);
 
+  /**
+   * Cache the values array to avoid creating a new array each time values() is called.
+   */
+  private static final IOHIDElementUsagePage[] values = values();
+
   private final int value;
   IOHIDElementUsagePage(int value) {
     this.value = value;
   }
 
   static IOHIDElementUsagePage fromValue(int value) {
-    for (IOHIDElementUsagePage page : IOHIDElementUsagePage.values()) {
+    for (IOHIDElementUsagePage page : IOHIDElementUsagePage.values) {
       if (page.value == value) {
         return page;
       }

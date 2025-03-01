@@ -361,6 +361,11 @@ public enum LinuxComponentType {
   REL_DIAL(0x07, true, true),
   REL_MISC(0x09, true, true);
 
+  /**
+   * Cache the values array to avoid creating a new array each time values() is called.
+   */
+  private static final LinuxComponentType[] values = values();
+
   private final int code;
   private final boolean axis;
   private final boolean relative;
@@ -384,7 +389,7 @@ public enum LinuxComponentType {
   }
 
   public static LinuxComponentType fromCode(int nativeCode, boolean axis, boolean relative) {
-    return Arrays.stream(LinuxComponentType.values())
+    return Arrays.stream(LinuxComponentType.values)
             .filter(type -> type.code == nativeCode && (type.axis == axis && (!relative || type.relative)))
             .findFirst()
             .orElse(UNKNOWN);

@@ -13,6 +13,11 @@ enum IOHIDElementType {
   FEATURE(6),
   COLLECTION(7);
 
+  /**
+   * Cache the values array to avoid creating a new array each time values() is called.
+   */
+  private static final IOHIDElementType[] values = values();
+
   private final int value;
 
   IOHIDElementType(int value) {
@@ -35,7 +40,7 @@ enum IOHIDElementType {
    * @return the corresponding IOHIDElementType, or UNDEFINED if no match is found.
    */
   static IOHIDElementType fromValue(int value) {
-    for (IOHIDElementType type : IOHIDElementType.values()) {
+    for (IOHIDElementType type : IOHIDElementType.values) {
       if (type.value == value) {
         return type;
       }
