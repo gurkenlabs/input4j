@@ -34,6 +34,7 @@ dependencies {
 
 ## 💻 Quick start guide
 
+### Manually Polling and Reading Input Data
 ```java
 try (var inputDevices = InputDevices.init()) {
   while (!inputDevices.getAll().isEmpty()) {
@@ -43,6 +44,26 @@ try (var inputDevices = InputDevices.init()) {
       System.out.println(inputDevice.getInstanceName() + ":" + inputDevice.getComponents());
     }
 
+    Thread.sleep(1000);
+  }
+}
+```
+### Event-Based Input Handling
+```java
+try (var devices = InputDevices.init()) {
+  var device = devices.getAll().stream().findFirst().orElse(null);
+  if (device == null) {
+    System.out.println("No input devices found.");
+    return;
+  }
+
+  device.onInputValueChanged(e -> System.out.println("Value changed: " + e.component() + " -> " + e.newValue()));
+  device.onButtonPressed(XInput.X, () -> System.out.println("X button pressed"));
+  device.onAxisChanged(Axis.AXIS_X, value -> System.out.println("X axis: " + value));
+
+  // simulate external polling loop
+  while (true) {
+    device.poll();
     Thread.sleep(1000);
   }
 }
