@@ -1,7 +1,7 @@
 # 🎮 Input4j - The pure Java input library
 
 
-**Input4j** is a cutting-edge, pure Java input library leveraging the **Foreign Function & Memory API** (FFM API), offering cross-platform support, high performance, flexible input handling, and future-proofing without the need for additional native artifacts, making it the **best choice for Java developers**.
+**Input4j** is a cutting-edge, pure Java input library leveraging the **Foreign Function & Memory API** (FFM API), offering cross-platform support, high performance, flexible controller and gamepad input handling, and future-proofing without the need for additional native artifacts, making it the **best choice for Java developers**.
 
 Join the revolution in Java input handling with Input4j and experience unparalleled performance and ease of use!
 
