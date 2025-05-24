@@ -1,0 +1,9 @@
+[versions]
+junit = "5.10.0"
+
+[libraries]
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+
+[plugins]
+jreleaser = { id = "org.jreleaser", version = "1.18.0" }
+semverguru = { id = "de.gurkenlabs.semverguru", version = "1.5" }

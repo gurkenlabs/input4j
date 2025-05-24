@@ -1,0 +1,20 @@
+project:
+  authors:
+    - gurkenlabs
+  license: MIT
+  links:
+    homepage: https://gurkenlabs.github.io/input4j
+  languages:
+    java:
+      groupId: de.gurkenlabs.input4j
+      version: 24
+  inceptionYear: 2025
+
+release:
+  github:
+    owner: gurkenlabs
+
+distributions:
+  app:
+    artifacts:
+      - path: path/to/{{distributionName}}-{{projectVersion}}.zip
