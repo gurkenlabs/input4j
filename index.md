@@ -23,10 +23,6 @@ for (InputDevice device : InputDevices.getAll()) {
 }
 ```
 
-Input4j is a modern, open-source Java library designed to simplify and unify input device management for desktop applications and games. With Input4j, developers can easily access and handle a wide range of input devices such as gamepads, joysticks, and controllers across multiple platforms. The library is built for high performance and reliability, making it ideal for both professional and hobbyist Java developers who want seamless input integration without the hassle of native dependencies.
-
-Input4j stands out due to its use of the latest Java technologies, including the Foreign Function & Memory API (FFM API), ensuring compatibility with current and future Java versions. Its intuitive API, cross-platform support, and focus on safety and speed make it the best choice for anyone looking to add robust input support to their Java projects. Whether you are developing a game, simulation, or any interactive application, Input4j provides the tools you need for responsive and flexible input handling.
-
 ## 🆚 Advantages over traditional Java input libraries
 Input4j leverages the new Foreign Function & Memory API (FFM API) instead of JNI, offering:
 - No native artifacts or dependencies
@@ -73,7 +69,6 @@ try (var devices = InputDevices.init()) {
   }
 }
 ```
-
 ## 🚀 Technical Details
 - 🪟 **Windows: DirectInput** (dinput.h) – legacy & modern devices
 - 🎮 **Windows: XInput** (xinput.h) – Xbox controller support
@@ -82,6 +77,12 @@ try (var devices = InputDevices.init()) {
 
 ## 🖥️ System Requirements
 - ☕ Java Runtime: 22+
+
+## 📝 Details about the Project
+
+Input4j is a modern, open-source Java library designed to simplify and unify input device management for desktop applications and games. With Input4j, developers can easily access and handle a wide range of input devices such as gamepads, joysticks, and controllers across multiple platforms. The library is built for high performance and reliability, making it ideal for both professional and hobbyist Java developers who want seamless input integration without the hassle of native dependencies.
+
+Input4j stands out due to its use of the latest Java technologies, including the Foreign Function & Memory API (FFM API), ensuring compatibility with current and future Java versions. Its intuitive API, cross-platform support, and focus on safety and speed make it the best choice for anyone looking to add robust input support to their Java projects. Whether you are developing a game, simulation, or any interactive application, Input4j provides the tools you need for responsive and flexible input handling.
 
 ---
 
