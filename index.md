@@ -70,7 +70,7 @@ try (var devices = InputDevices.init()) {
 }
 ```
 ## 🚀 Technical Details
-- 🪟 **Windows: DirectInput** (dinput.h) – legacy & modern devices
+- 💻 **Windows: DirectInput** (dinput.h) – legacy & modern devices
 - 🎮 **Windows: XInput** (xinput.h) – Xbox controller support
 - 🐧 **Linux: evdev** – /dev/input event interface
 - 🍏 **macOS: IOKit** – HID device provisioning
