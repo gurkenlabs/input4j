@@ -1,4 +1,4 @@
-name: Release LITIENGINE
+name: Release
 
 on:
   push:
