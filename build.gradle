@@ -1,56 +1,94 @@
 plugins {
-  id 'java'
-  id 'application'
+  id 'java-library'
+  id 'jacoco'
+  id 'maven-publish'
+
+  alias(libs.plugins.gradle.maven.publish)
+  alias(libs.plugins.semverguru)
+  alias libs.plugins.spotless
 }
 
-group='de.gurkenlabs.input4j'
-version='1.0-SNAPSHOT'
+group = 'de.gurkenlabs'
+description = 'Input4j is a high-performance, cross-platform Java input library built on the FFM API. It supports flexible gamepad and controller input without native dependencies—future-proof and easy to use for modern Java development.'
+
+if(!isTaggedRevision(project.version)){
+  project.version +=  "-SNAPSHOT"
+  project.getLogger().lifecycle("Set project '{}' version to '{}'.", project.name, project.version)
+}
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_22
-  targetCompatibility = JavaVersion.VERSION_22
-}
-
-application {
-  mainClass = 'de.gurkenlabs.input4j.Program'
-}
-
-repositories {
-  mavenCentral()
-}
-
-dependencies {
-  testImplementation 'org.junit.jupiter:junit-jupiter:5.11.1'
-  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-test {
-  useJUnitPlatform()
-}
-
-jar {
-  manifest {
-    attributes 'Implementation-Title': "LITIENGINE input playground",
-            'Main-Class': 'de.gurkenlabs.input4j.Program',
-            'Enable-Native-Access': 'ALL-UNNAMED'
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(25)
   }
 }
 
+dependencies {
+  testImplementation libs.junit.jupiter
+  testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
 test {
+  finalizedBy jacocoTestReport
+  useJUnitPlatform()
   jvmArgs += '--enable-native-access=ALL-UNNAMED'
 }
 
-task remoteDebug(type: JavaExec) {
+tasks.register('remoteDebug', JavaExec) {
   mainClass = 'de.gurkenlabs.input4j.examples.ExamplePollAllInputDevicesManually'  // replace with your main class
   classpath = sourceSets.main.runtimeClasspath
   args = ['run']
 
   jvmArgs = [
-          '-Xdebug',
-          '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005'
+    '-Xdebug',
+    '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005'
   ]
 }
 
 tasks.withType(JavaExec).configureEach {
   jvmArgs += '--enable-native-access=ALL-UNNAMED'
+}
+
+mavenPublishing {
+  publishToMavenCentral()
+  if (!version.endsWith('SNAPSHOT')) {
+    signAllPublications()
+  }
+
+  coordinates('de.gurkenlabs', 'input4j', project.version.toString())
+
+  pom {
+    name = 'Input4j'
+    description = 'The pure java input library. Cross-plattform, high performance, future proof.'
+    inceptionYear = '2025'
+    url = 'https://gurkenlabs.github.io/input4j'
+
+    licenses {
+      license {
+        name = 'mit'
+        url = 'https://mit-license.org'
+        distribution = 'https://mit-license.org'
+      }
+    }
+
+    developers {
+      developer {
+        id = 'sQn'
+        name = 'Steffen Wilke'
+        url = 'https://github.com/steffen-wilke'
+        email = 'steffen@gurkenlabs.de'
+      }
+      developer {
+        id = 'nightm4re'
+        name = 'Matthias Wilke'
+        url = 'https://codeberg.org/nightm4re'
+        email = 'matthias@gurkenlabs.de'
+      }
+    }
+
+    scm {
+      url = 'https://github.com/gurkenlabs/input4j'
+      connection = 'scm:https://github.com/gurkenlabs/input4j.git'
+      developerConnection = 'scm:git@github.com:gurkenlabs/input4j.git'
+    }
+  }
 }

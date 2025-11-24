@@ -246,7 +246,6 @@ public final class InputDevices {
      * A shorter interval means more frequent checks, which can lead to faster detection of new devices but may also increase CPU usage.
      * </p>
      * By default, it is set to {@value #DEFAULT_HOTPLUG_INTERVAL} milliseconds.
-     * </p>
      *
      * @return The hot-plug interval in milliseconds.
      *
