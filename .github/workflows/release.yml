@@ -45,8 +45,6 @@ jobs:
 
       - name: Increment version
         if: inputs.incrementVersion != 'none' && inputs.incrementVersion != ''
-        env:
-          GRGIT_USER: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew incrementVersion --increment=${{inputs.incrementVersion}}
           git push --tags
