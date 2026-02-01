@@ -7,4 +7,4 @@ junit_jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "jun
 [plugins]
 gradle-maven-publish = { id = "com.vanniktech.maven.publish", version = "0.35.0" }
 semverguru = { id = "de.gurkenlabs.semverguru", version = "1.6" }
-spotless = { id = "com.diffplug.spotless", version = "8.1.0" }
+spotless = { id = "com.diffplug.spotless", version = "8.2.1" }
