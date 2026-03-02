@@ -5,6 +5,6 @@ junit = "6.0.3"
 junit_jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 
 [plugins]
-gradle-maven-publish = { id = "com.vanniktech.maven.publish", version = "0.35.0" }
+gradle-maven-publish = { id = "com.vanniktech.maven.publish", version = "0.36.0" }
 semverguru = { id = "de.gurkenlabs.semverguru", version = "1.6" }
 spotless = { id = "com.diffplug.spotless", version = "8.2.1" }
