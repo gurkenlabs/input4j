@@ -88,3 +88,37 @@ try (var devices = InputDevices.init()) {
 
 ### System Requirements
 - Java Runtime: 22+
+
+### Linux Permissions
+
+On Linux, Input4j uses the modern **evdev** API (`/dev/input/event*`) which provides detailed input information. This is the same approach used by SDL2 and other modern gamepad libraries.
+
+The `/dev/input/event*` devices are owned by `root:input` with restricted access (640).
+
+**Quick fix - Add user to input group:**
+```bash
+sudo usermod -a -G input $USER
+# Log out and log back in for changes to take effect
+```
+
+**Permanent solution - Create udev rules:**
+Create `/etc/udev/rules.d/99-input4j.rules`:
+```rules
+SUBSYSTEM=="input", ENV{ID_INPUT_JOYSTICK}=="1", MODE="0666"
+```
+Then reload the rules:
+```bash
+sudo udevadm control --reload-rules
+# Reconnect your gamepad
+```
+
+**Verify your setup:**
+```bash
+# Check device permissions
+ls -la /dev/input/event*
+
+# Check if user is in input group
+getent group input
+```
+
+> **Note:** Input4j uses the modern evdev API (`/dev/input/event*`) rather than the legacy joystick API (`/dev/input/js*`). Both require the same permissions, but evdev provides more detailed input information. This is the standard approach used by SDL2 and other modern Linux input libraries.
