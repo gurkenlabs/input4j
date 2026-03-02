@@ -190,7 +190,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
     var motorSpeedRight = 0f;
     if (intensity != null && intensity.length > 0) {
       motorSpeedLeft = Math.clamp(intensity[0], 0, 1);
-      motorSpeedRight = intensity.length > 1 ? Math.clamp(intensity[2], 0, 1) : motorSpeedLeft;
+      motorSpeedRight = intensity.length > 1 ? Math.clamp(intensity[1], 0, 1) : motorSpeedLeft;
     }
 
     // Set the vibration for each motor (example for two motors)
