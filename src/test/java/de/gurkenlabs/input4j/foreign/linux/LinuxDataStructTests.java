@@ -135,7 +135,7 @@ public class LinuxDataStructTests {
     assertEquals(expectedSize, timeval.$LAYOUT.byteSize(),
         "timeval should be " + expectedSize + " bytes on " + osArch);
 
-    assertEquals(expectedSize, input_event.$LAYOUT.byteSize(),
+    assertEquals(expectedSize + 8, input_event.$LAYOUT.byteSize(),
         "input_event should be " + expectedSize + "+8 bytes on " + osArch);
   }
 }
