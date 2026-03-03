@@ -159,9 +159,9 @@ public final class InputDevices {
      *
      * @return The plugin class name.
      */
-    private String getPlugin() {
+    public String getPlugin() {
       return switch (this) {
-        case PLATFORM_DEFAULT -> getCurrentPlatformDefaultPlugin();
+        case PLATFORM_DEFAULT -> InputLibrary.defaultForCurrentOs().getPlugin();
         case WIN_DIRECTINPUT -> "de.gurkenlabs.input4j.foreign.windows.dinput.DirectInputPlugin";
         case WIN_XINPUT -> "de.gurkenlabs.input4j.foreign.windows.xinput.XInputPlugin";
         case LINUX_INPUT -> "de.gurkenlabs.input4j.foreign.linux.LinuxEventDevicePlugin";
@@ -170,31 +170,13 @@ public final class InputDevices {
     }
 
     /**
-     * Detects the current platform and returns the default plugin class name for the platform.
+     * Returns the enum constant that corresponds to the current operating system.
      *
-     * @return The default plugin class name for the current platform.
+     * @return the detected {@code InputLibrary} for the current OS
+     * @throws IllegalStateException if the OS cannot be mapped to a known library
      */
-    private String getCurrentPlatformDefaultPlugin() {
-      String osName = System.getProperty("os.name", "").trim().toLowerCase();
-      String osVersion = System.getProperty("os.version");
-      String osArch = System.getProperty("os.arch");
-
-      log.fine("Detected OS: " + osName + " Version: " + osVersion + " (" + osArch + ")");
-
-      String pluginClassName = null;
-      if (osName.contains("windows")) {
-        pluginClassName = InputLibrary.WIN_XINPUT.getPlugin();
-      } else if (osName.contains("linux")) {
-        pluginClassName = InputLibrary.LINUX_INPUT.getPlugin();
-      } else if (osName.contains("mac os")) {
-        pluginClassName = InputLibrary.MACOS_IOKIT.getPlugin();
-      }
-
-      if (pluginClassName == null) {
-        throw new IllegalStateException("Could not initialize input device provider: Unknown operating system " + osName + " Version: " + osVersion + " (" + osArch + ")");
-      }
-
-      return pluginClassName;
+    public static InputLibrary defaultForCurrentOs() {
+      return de.gurkenlabs.input4j.foreign.util.PlatformDetector.detect();
     }
   }
 
