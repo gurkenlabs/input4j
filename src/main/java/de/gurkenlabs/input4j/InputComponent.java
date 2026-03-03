@@ -33,6 +33,7 @@ public final class InputComponent {
    * Creates a new instance of the InputComponent class.
    *
    * @param device   the input device associated with this component
+   * @param id       the id of the component
    * @param relative true if the component provides relative input, false otherwise
    */
   public InputComponent(InputDevice device, ID id, boolean relative) {
@@ -54,6 +55,7 @@ public final class InputComponent {
    * Creates a new instance of the InputComponent class.
    *
    * @param device       the input device associated with this component
+   * @param id          the id of the component
    * @param originalName the name of the component
    * @param relative     true if the component provides relative input, false otherwise
    */
@@ -83,6 +85,11 @@ public final class InputComponent {
     return this.getId().type;
   }
 
+  /**
+   * Gets the component identifier.
+   *
+   * @return the component identifier
+   */
   public ID getId() {
     return id;
   }
@@ -174,45 +181,80 @@ public final class InputComponent {
    * public static final DualShock4 SQUARE = new DualShock4(InputComponent.Button.get(0), "SQUARE");
    * }</pre>
    */
+  /**
+   * Identifier for an input component.
+   */
   public static class ID {
+    /** Component ID number. */
     public final int id;
+    /** Native platform-specific ID. */
     public final int nativeId;
+    /** Component type (axis, button, key). */
     public final ComponentType type;
+    /** Human-readable name. */
     public String name;
 
     private static final List<ID> ids = new CopyOnWriteArrayList<>();
 
     /**
-     * If you want to make this ID accessible with a different field, you can use this constructor.
+     * Creates a new ID by copying another ID.
      *
-     * @param otherId the ID to remap
+     * @param otherId the ID to copy
      */
     public ID(ID otherId) {
       this(otherId.type, otherId.id, otherId.name, 0);
     }
 
+    /**
+     * Creates a new ID by copying another ID with a native ID.
+     *
+     * @param otherId  the ID to copy
+     * @param nativeId the native platform-specific ID
+     */
     public ID(ID otherId, int nativeId) {
       this(otherId.type, otherId.id, otherId.name, nativeId);
     }
 
+    /**
+     * Creates a new ID by copying another ID with a custom name.
+     *
+     * @param otherId the ID to copy
+     * @param name    the custom name
+     */
     public ID(ID otherId, String name) {
       this(otherId.type, otherId.id, name, 0);
     }
 
     /**
-     * If you want to make this ID available with a different name, you can use this constructor.
+     * Creates a new ID by copying another ID with a custom name and native ID.
      *
-     * @param otherId the ID to remap
-     * @param name    the name of the new ID
+     * @param otherId  the ID to copy
+     * @param name     the custom name
+     * @param nativeId the native platform-specific ID
      */
     public ID(ID otherId, String name, int nativeId) {
       this(otherId.type, otherId.id, name, nativeId);
     }
 
+    /**
+     * Creates a new ID with the given type, id, and name.
+     *
+     * @param type the component type
+     * @param id   the component ID
+     * @param name the component name
+     */
     public ID(ComponentType type, int id, String name) {
       this(type, id, name, 0);
     }
 
+    /**
+     * Creates a new ID with the given type, id, name, and native ID.
+     *
+     * @param type     the component type
+     * @param id       the component ID
+     * @param name     the component name
+     * @param nativeId the native platform-specific ID
+     */
     public ID(ComponentType type, int id, String name, int nativeId) {
       this.type = type;
       this.id = id;
@@ -242,31 +284,72 @@ public final class InputComponent {
       return this.name;
     }
 
+    /**
+     * Gets the next available axis ID.
+     *
+     * @return the next available axis ID
+     */
     public static int getNextAxisId() {
       return getNextId(ComponentType.AXIS, Axis.MAX_DEFAULT_AXIS_ID);
     }
 
+    /**
+     * Gets the next available button ID.
+     *
+     * @return the next available button ID
+     */
     public static int getNextButtonId() {
       return getNextId(ComponentType.BUTTON, Button.MAX_DEFAULT_BUTTON_ID);
     }
 
+    /**
+     * Gets the next available ID for a given component type.
+     *
+     * @param type  the component type
+     * @param minId the minimum ID to reserve for default components
+     * @return the next available ID
+     */
     public static int getNextId(ComponentType type, int minId) {
       // reserve the id range for the default buttons and axes
       return Math.max(ids.stream().filter(i -> i.type == type).mapToInt(i -> i.id).max().orElse(0), minId) + 1;
     }
 
+    /**
+     * Gets all registered component IDs.
+     *
+     * @return list of all IDs
+     */
     public static List<ID> getAll() {
       return ids;
     }
 
+    /**
+     * Gets a component ID by type and numeric ID.
+     *
+     * @param type the component type
+     * @param id   the numeric ID
+     * @return the matching ID or null
+     */
     public static ID get(ComponentType type, int id){
       return ids.stream().filter(i -> i.type == type && i.id == id).findFirst().orElse(null);
     }
 
+    /**
+     * Gets a button ID by numeric ID.
+     *
+     * @param id the button numeric ID
+     * @return the matching button ID or null
+     */
     public static ID getButton(int id) {
       return ids.stream().filter(i -> i.type.isButton() && i.id == id).findFirst().orElse(null);
     }
 
+    /**
+     * Gets an axis ID by numeric ID.
+     *
+     * @param id the axis numeric ID
+     * @return the matching axis ID or null
+     */
     public static ID getAxis(int id) {
       return ids.stream().filter(i -> i.type.isAxis() && i.id == id).findFirst().orElse(null);
     }

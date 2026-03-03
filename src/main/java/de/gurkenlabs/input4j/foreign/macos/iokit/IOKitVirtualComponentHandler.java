@@ -9,6 +9,9 @@ import de.gurkenlabs.input4j.components.Button;
 import java.util.ArrayList;
 import java.util.Collection;
 
+/**
+ * Handles virtual components for IOKit devices, such as converting D-pad axis values to individual buttons.
+ */
 public class IOKitVirtualComponentHandler {
 
   private IOKitVirtualComponentHandler() {

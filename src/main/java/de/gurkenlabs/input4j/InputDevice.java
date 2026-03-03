@@ -240,6 +240,11 @@ public final class InputDevice implements Closeable {
     this.rumbleCallback.accept(this, intensity);
   }
 
+  /**
+   * Sets the accuracy for component value changes.
+   *
+   * @param decimalPlaces the number of decimal places to round to
+   */
   public void setAccuracy(int decimalPlaces) {
     if (decimalPlaces < 0) {
       throw new IllegalArgumentException("Decimal places must be a non-negative integer.");

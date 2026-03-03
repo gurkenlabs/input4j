@@ -6,7 +6,17 @@ import de.gurkenlabs.input4j.components.XInput;
 
 import java.io.IOException;
 
+/**
+ * Example demonstrating event-based input handling.
+ */
 public class ExampleEventBasedInputHandling {
+  /**
+   * Main entry point.
+   *
+   * @param args command line arguments
+   * @throws IOException      if an I/O error occurs
+   * @throws InterruptedException if the thread is interrupted
+   */
   public static void main(String[] args) throws IOException, InterruptedException {
     try (var devices = InputDevices.init()) {
 
