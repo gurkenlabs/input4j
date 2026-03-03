@@ -122,4 +122,20 @@ public class LinuxDataStructTests {
       assertEquals(t.tv_usec, timevalFromMemory.tv_usec);
     }
   }
+
+  @Test
+  @EnabledOnOs(OS.LINUX)
+  void testTimevalLayoutSize() {
+    String osArch = System.getProperty("os.arch", "").toLowerCase();
+    boolean is32Bit = osArch.equals("arm") || osArch.equals("i386") || osArch.equals("i486")
+        || osArch.equals("i586") || osArch.equals("i686") || osArch.equals("x86")
+        || osArch.startsWith("armv");
+
+    long expectedSize = is32Bit ? 8 : 16;
+    assertEquals(expectedSize, timeval.$LAYOUT.byteSize(),
+        "timeval should be " + expectedSize + " bytes on " + osArch);
+
+    assertEquals(expectedSize, input_event.$LAYOUT.byteSize(),
+        "input_event should be " + expectedSize + "+8 bytes on " + osArch);
+  }
 }

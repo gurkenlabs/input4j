@@ -32,7 +32,16 @@ class Linux {
   final static String HANDLE_READ = "read";
   final static String HANDLE_SELECT = "select";
 
-  private final static int EVIOCGVERSION = _IOR('E', 0x01, JAVA_INT.byteSize());
+  private static final boolean IS_32_BIT = is32BitSystem();
+
+  private static boolean is32BitSystem() {
+    String osArch = System.getProperty("os.arch", "").toLowerCase();
+    return osArch.equals("arm") || osArch.equals("i386") || osArch.equals("i486")
+        || osArch.equals("i586") || osArch.equals("i686") || osArch.equals("x86")
+        || osArch.startsWith("armv");
+  }
+
+  private static int EVIOCGVERSION = _IOR('E', 0x01, JAVA_INT.byteSize());
   private final static int EVIOCGID = _IOR('E', 0x02, input_id.$LAYOUT.byteSize());
   private final static int EVIOCGNAME = _IOC(_IOC_READ, 'E', 0x06, NAME_BUFFER_SIZE);
   private static final int EVIOCGEFFECTS = _IOR('E', 0x84, JAVA_INT.byteSize());
@@ -59,11 +68,13 @@ class Linux {
     errnoHandle = capturedStateLayout.varHandle(MemoryLayout.PathElement.groupElement(ERRNO));
     strerror = downcallHandle(HANDLE_STRERROR, FunctionDescriptor.of(ADDRESS, JAVA_INT));
 
+    ValueLayout sizeT = IS_32_BIT ? JAVA_INT : JAVA_LONG;
+
     handles.put(HANDLE_OPEN, downcallHandle(HANDLE_OPEN, FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT), ERRNO));
     handles.put(HANDLE_CLOSE, downcallHandle(HANDLE_CLOSE, FunctionDescriptor.of(JAVA_INT, JAVA_INT), ERRNO));
     handles.put(HANDLE_IOCTL, downcallHandle(HANDLE_IOCTL, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), ERRNO));
-    handles.put(HANDLE_READ, downcallHandle(HANDLE_READ, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, JAVA_LONG), ERRNO));
-    handles.put(HANDLE_SELECT, downcallHandle(HANDLE_SELECT, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS, JAVA_LONG), ERRNO));
+    handles.put(HANDLE_READ, downcallHandle(HANDLE_READ, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, sizeT), ERRNO));
+    handles.put(HANDLE_SELECT, downcallHandle(HANDLE_SELECT, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS, sizeT), ERRNO));
   }
 
   /**
