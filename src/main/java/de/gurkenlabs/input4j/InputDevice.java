@@ -233,8 +233,15 @@ public final class InputDevice implements Closeable {
    */
   public void rumble(float... intensity) {
     if (this.rumbleCallback == null) {
-      // rumble not supported if no rumble callback is provided by the library
       return;
+    }
+
+    if (intensity != null) {
+      for (float f : intensity) {
+        if (f < 0 || f > 1) {
+          throw new IllegalArgumentException("Rumble intensity must be between 0 and 1, got: " + f);
+        }
+      }
     }
 
     this.rumbleCallback.accept(this, intensity);

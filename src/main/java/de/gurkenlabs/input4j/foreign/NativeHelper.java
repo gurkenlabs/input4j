@@ -9,9 +9,11 @@ import java.lang.invoke.MethodHandle;
 public final class NativeHelper {
 
   public static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc) {
-    return SymbolLookup.loaderLookup().find(name).or(() -> Linker.nativeLinker().defaultLookup().find(name)).
-            map(addr -> Linker.nativeLinker().downcallHandle(addr, fdesc)).
-            orElse(null);
+    return SymbolLookup.loaderLookup().find(name)
+        .or(() -> Linker.nativeLinker().defaultLookup().find(name))
+        .map(addr -> Linker.nativeLinker().downcallHandle(addr, fdesc))
+        .orElseThrow(() -> new UnsatisfiedLinkError(
+            "Native symbol not found: " + name + " with descriptor " + fdesc));
   }
 
   public static MethodHandle downcallHandle(MemorySegment address, FunctionDescriptor fdesc) {

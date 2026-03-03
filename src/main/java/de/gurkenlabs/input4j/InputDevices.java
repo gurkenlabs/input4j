@@ -233,9 +233,12 @@ public final class InputDevices {
      * Sets the number of decimal places to round input data to.
      *
      * @param accuracy The number of decimal places. Must be a non-negative integer and should not exceed 7.
-     * @throws IllegalArgumentException if the accuracy is negative.
+     * @throws IllegalArgumentException if the accuracy is negative or exceeds 7.
      */
     public void setAccuracy(int accuracy) {
+      if (accuracy < 0 || accuracy > 7) {
+        throw new IllegalArgumentException("Accuracy must be between 0 and 7, got: " + accuracy);
+      }
       this.accuracy = accuracy;
     }
 
