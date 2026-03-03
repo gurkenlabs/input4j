@@ -8,9 +8,13 @@ package de.gurkenlabs.input4j;
  * </p>
  */
 public enum ComponentType {
+  /** Analog axis (e.g., joystick, trigger). */
   AXIS,
+  /** Digital button. */
   BUTTON,
+  /** Keyboard key. */
   KEY,
+  /** Unknown or unsupported component type. */
   UNKNOWN;
 
   /**

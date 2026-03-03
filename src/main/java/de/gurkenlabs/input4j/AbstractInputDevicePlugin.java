@@ -5,7 +5,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
+/**
+ * Base class for input device plugins that provides common functionality for device management,
+ * hot-plugging support, and event handling.
+ */
 public abstract class AbstractInputDevicePlugin implements InputDevicePlugin {
+  /** Logger for the plugin package. */
   protected static final Logger log = Logger.getLogger(AbstractInputDevicePlugin.class.getPackage().getName());
   private final Collection<Consumer<InputDevice>> deviceConnectedListeners = ConcurrentHashMap.newKeySet();
   private final Collection<Consumer<InputDevice>> deviceDisconnectedListeners = ConcurrentHashMap.newKeySet();
@@ -15,6 +20,9 @@ public abstract class AbstractInputDevicePlugin implements InputDevicePlugin {
   private long lastDeviceUpdate;
   private Collection<InputDevice> devices;
 
+  /**
+   * Initializes the plugin with the hot-plug interval from the configuration.
+   */
   protected AbstractInputDevicePlugin() {
     this.hotPlugInterval = InputDevices.configure().getHotPlugInterval();
   }
@@ -115,6 +123,11 @@ public abstract class AbstractInputDevicePlugin implements InputDevicePlugin {
     this.setDevices(refreshedDevices);
   }
 
+  /**
+   * Refreshes the list of input devices by querying the underlying native API.
+   *
+   * @return A collection of currently available input devices.
+   */
   protected abstract Collection<InputDevice> refreshInputDevices();
   
   public void onDevicesChanged(Runnable listener) {

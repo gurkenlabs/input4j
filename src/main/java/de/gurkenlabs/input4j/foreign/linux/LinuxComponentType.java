@@ -4,6 +4,9 @@ import de.gurkenlabs.input4j.ComponentType;
 
 import java.util.Arrays;
 
+/**
+ * Linux input event component types mapping to Linux input event codes.
+ */
 public enum LinuxComponentType {
   UNKNOWN(-1),
   KEY_ESC(1),
@@ -384,10 +387,23 @@ public enum LinuxComponentType {
     this.relative = relative;
   }
 
+  /**
+   * Gets the Linux input event code.
+   *
+   * @return the event code
+   */
   public int getCode() {
     return code;
   }
 
+  /**
+   * Gets a LinuxComponentType from a native code.
+   *
+   * @param nativeCode the native Linux input event code
+   * @param axis       true if it's an axis
+   * @param relative   true if it's a relative axis
+   * @return the LinuxComponentType or UNKNOWN
+   */
   public static LinuxComponentType fromCode(int nativeCode, boolean axis, boolean relative) {
     return Arrays.stream(LinuxComponentType.values)
             .filter(type -> type.code == nativeCode && (type.axis == axis && (!relative || type.relative)))
@@ -395,6 +411,14 @@ public enum LinuxComponentType {
             .orElse(UNKNOWN);
   }
 
+  /**
+   * Gets the ComponentType for a native code.
+   *
+   * @param nativeCode the native Linux input event code
+   * @param axis       true if it's an axis
+   * @param relative   true if it's a relative axis
+   * @return the ComponentType
+   */
   public ComponentType getComponentType(int nativeCode, boolean axis, boolean relative) {
     var type = fromCode(nativeCode, axis, relative);
     if (type == UNKNOWN) {
@@ -415,6 +439,11 @@ public enum LinuxComponentType {
     };
   }
 
+  /**
+   * Checks if this component type is an axis (ABS or REL).
+   *
+   * @return true if it's an axis
+   */
   public boolean isAxis() {
     return this.name().startsWith("ABS") || this.name().startsWith("REL");
   }

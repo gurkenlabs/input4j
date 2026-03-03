@@ -20,6 +20,9 @@ import java.util.logging.Level;
 import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
 import static java.lang.foreign.ValueLayout.*;
 
+/**
+ * Windows DirectInput plugin for gamepad/controller support.
+ */
 public final class DirectInputPlugin extends AbstractInputDevicePlugin {
   static final int DI8DEVCLASS_GAMECTRL = 4;
 
