@@ -20,10 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     name: Build
     steps:
-     - name: Checkout
-       uses: actions/checkout@v6
-       with:
-         fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: JDK Setup
         uses: actions/setup-java@v5
@@ -31,21 +31,21 @@ jobs:
           distribution: temurin
           java-version: 22
 
-     - name: Setup Gradle
-       uses: gradle/actions/setup-gradle@v5
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
 
-     - name: Gradle Wrapper Validation
-       uses: gradle/actions/wrapper-validation@v5
+      - name: Gradle Wrapper Validation
+        uses: gradle/actions/wrapper-validation@v5
 
-     - name: Build with Gradle Wrapper
-       run: ./gradlew build -PskipSpotless
+      - name: Build with Gradle Wrapper
+        run: ./gradlew build -PskipSpotless
 
-     - name: Publish Test Results
-       uses: dorny/test-reporter@v2
-       with:
-         name: JUnit test results
-         reporter: java-junit
-         path: '**/test-results/**/*.xml'
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v2
+        with:
+          name: JUnit test results
+          reporter: java-junit
+          path: '**/test-results/**/*.xml'
 
-     - name: Code Style Validation
-       run: ./gradlew spotlessCheck
+      - name: Code Style Validation
+        run: ./gradlew spotlessCheck
