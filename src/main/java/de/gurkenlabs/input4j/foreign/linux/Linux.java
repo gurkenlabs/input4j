@@ -31,6 +31,7 @@ class Linux {
   final static String HANDLE_IOCTL = "ioctl";
   final static String HANDLE_READ = "read";
   final static String HANDLE_SELECT = "select";
+  final static String HANDLE_WRITE = "write";
 
   private static final boolean IS_32_BIT = is32BitSystem();
 
@@ -45,6 +46,26 @@ class Linux {
   private final static int EVIOCGID = _IOR('E', 0x02, input_id.$LAYOUT.byteSize());
   private final static int EVIOCGNAME = _IOC(_IOC_READ, 'E', 0x06, NAME_BUFFER_SIZE);
   private static final int EVIOCGEFFECTS = _IOR('E', 0x84, JAVA_INT.byteSize());
+  private static final int EVIOCSFF = _IOW('E', 0x80, ff_effect.$LAYOUT.byteSize());
+  private static final int EVIOCRMFF = _IOW('E', 0x81, JAVA_INT.byteSize());
+
+  static final int FF_RUMBLE = 0x50;
+  static final int FF_PERIODIC = 0x51;
+  static final int FF_CONSTANT = 0x52;
+  static final int FF_SPRING = 0x53;
+  static final int FF_FRICTION = 0x54;
+  static final int FF_DAMPER = 0x55;
+  static final int FF_INERTIA = 0x56;
+  static final int FF_RAMP = 0x57;
+  static final int FF_EFFECT_MIN = 0x50;
+  static final int FF_EFFECT_MAX = 0x5f;
+  static final int FF_CNT = FF_EFFECT_MAX + 1;
+
+  static final int FF_STATUS_STOPPED = 0x00;
+  static final int FF_STATUS_PLAYING = 0x01;
+  static final int FF_STATUS_MAX = 0x01;
+
+  static final int FF_GAIN = 0x60;
 
   private static int EVIOCGKEY(int len) {
     return _IOC(_IOC_READ, 'E', 0x18, len);
@@ -75,6 +96,7 @@ class Linux {
     handles.put(HANDLE_IOCTL, downcallHandle(HANDLE_IOCTL, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), ERRNO));
     handles.put(HANDLE_READ, downcallHandle(HANDLE_READ, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, sizeT), ERRNO));
     handles.put(HANDLE_SELECT, downcallHandle(HANDLE_SELECT, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS, sizeT), ERRNO));
+    handles.put(HANDLE_WRITE, downcallHandle(HANDLE_WRITE, FunctionDescriptor.of(sizeT, JAVA_INT, ADDRESS, sizeT), ERRNO));
   }
 
   /**
@@ -87,6 +109,23 @@ class Linux {
   static int open(Arena memoryArena, String fileName) {
     var filenameMemorySegment = memoryArena.allocateFrom(fileName);
     return invoke(HANDLE_OPEN, memoryArena, filenameMemorySegment, O_RDONLY | O_NONBLOCK);
+  }
+
+  /**
+   * Open a file descriptor for the given file name in read/write mode.
+   *
+   * <p>
+   * This is required for force feedback support as writing to the device
+   * is needed to play/stop effects.
+   * </p>
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fileName    the file name to open
+   * @return the file descriptor or -1 if an error occurred
+   */
+  static int openRdwr(Arena memoryArena, String fileName) {
+    var filenameMemorySegment = memoryArena.allocateFrom(fileName);
+    return invoke(HANDLE_OPEN, memoryArena, filenameMemorySegment, O_RDWR | O_NONBLOCK);
   }
 
   /**
@@ -192,6 +231,87 @@ class Linux {
   }
 
   /**
+   * Upload a force feedback effect to the device.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @param effect      the effect to upload
+   * @return the effect ID assigned by the device, or -1 if an error occurred
+   */
+  static int uploadEffect(Arena memoryArena, int fd, ff_effect effect) {
+    var effectSegment = memoryArena.allocate(ff_effect.$LAYOUT);
+    effect.write(effectSegment);
+    int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCSFF, effectSegment);
+    if (result == ERROR) {
+      log.log(Level.SEVERE, "Failed to upload effect to device (" + fd + ")");
+      return ERROR;
+    }
+    return (int) ff_effect.VH_id.get(effectSegment, 0);
+  }
+
+  /**
+   * Remove a force feedback effect from the device.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @param effectId    the ID of the effect to remove
+   * @return 0 on success, or -1 if an error occurred
+   */
+  static int removeEffect(Arena memoryArena, int fd, int effectId) {
+    int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCRMFF, effectId);
+    if (result == ERROR) {
+      log.log(Level.SEVERE, "Failed to remove effect (" + effectId + ") from device (" + fd + ")");
+      return ERROR;
+    }
+    return result;
+  }
+
+  /**
+   * Write an event to the device.
+   *
+   * <p>
+   * This is used to play or stop force feedback effects.
+   * </p>
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @param event       the event to write
+   * @return the number of bytes written, or -1 if an error occurred
+   */
+  static int writeEvent(Arena memoryArena, int fd, input_event event) {
+    var eventSegment = memoryArena.allocate(input_event.$LAYOUT);
+    event.write(eventSegment);
+    int result = invoke(HANDLE_WRITE, memoryArena, fd, eventSegment, input_event.$LAYOUT.byteSize());
+    if (result == ERROR) {
+      log.log(Level.WARNING, "Failed to write event to device (" + fd + ")");
+      return ERROR;
+    }
+    return result;
+  }
+
+  /**
+   * Set the force feedback gain for the device.
+   *
+   * <p>
+   * This sets the overall gain for all force feedback effects.
+   * The gain is a value from 0 to 65535 representing 0% to 100%.
+   * </p>
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @param gain        the gain value (0 to 65535)
+   * @return 0 on success, or -1 if an error occurred
+   */
+  static int setGain(Arena memoryArena, int fd, int gain) {
+    var gainEvent = new input_event();
+    gainEvent.type = (short) LinuxEventDevice.EV_FF;
+    gainEvent.code = (short) FF_GAIN;
+    gainEvent.value = gain;
+
+    return writeEvent(memoryArena, fd, gainEvent);
+  }
+
+  /**
    * Get the bits for the given event type.
    * <p>
    * The bits are used to determine which event types are supported by the device.
@@ -293,5 +413,9 @@ class Linux {
 
   private static int _IOR(char type, int nr, long size) {
     return _IOC(_IOC_READ, type, nr, (int) size);
+  }
+
+  private static int _IOW(char type, int nr, long size) {
+    return _IOC(1, type, nr, (int) size);
   }
 }

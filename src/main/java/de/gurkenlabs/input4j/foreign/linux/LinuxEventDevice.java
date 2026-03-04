@@ -35,9 +35,15 @@ class LinuxEventDevice {
   final String name;
   final input_id id;
   final List<LinuxEventComponent> componentList = new ArrayList<>();
+  final boolean supportsForceFeedback;
+  final int maxEffects;
 
   InputDevice inputDevice;
   float[] currentValues;
+  int currentEffectId = -1;
+  float currentStrongMagnitude = 0f;
+  float currentWeakMagnitude = 0f;
+  boolean gainSet = false;
 
   public int version;
 
@@ -49,10 +55,38 @@ class LinuxEventDevice {
       this.name = null;
       this.id = null;
       this.version = 0;
+      this.supportsForceFeedback = false;
+      this.maxEffects = 0;
     } else {
       this.name = Linux.getEventDeviceName(memoryArena, this.fd);
       this.id = Linux.getEventDeviceId(memoryArena, this.fd);
       this.version = Linux.getEventDeviceVersion(memoryArena, this.fd);
+      this.maxEffects = Linux.getNumEffects(memoryArena, this.fd);
+      this.supportsForceFeedback = this.maxEffects > 0;
+    }
+  }
+
+  public LinuxEventDevice(Arena memoryArena, String filename, boolean forceRumble) {
+    this.filename = filename;
+
+    if (forceRumble) {
+      this.fd = Linux.openRdwr(memoryArena, this.filename);
+    } else {
+      this.fd = Linux.open(memoryArena, this.filename);
+    }
+
+    if (this.fd == Linux.ERROR) {
+      this.name = null;
+      this.id = null;
+      this.version = 0;
+      this.supportsForceFeedback = false;
+      this.maxEffects = 0;
+    } else {
+      this.name = Linux.getEventDeviceName(memoryArena, this.fd);
+      this.id = Linux.getEventDeviceId(memoryArena, this.fd);
+      this.version = Linux.getEventDeviceVersion(memoryArena, this.fd);
+      this.maxEffects = Linux.getNumEffects(memoryArena, this.fd);
+      this.supportsForceFeedback = this.maxEffects > 0;
     }
   }
 
@@ -74,6 +108,16 @@ class LinuxEventDevice {
   public void close(Arena memoryArena) {
     if (this.fd == Linux.ERROR) {
       return;
+    }
+
+    if (this.currentEffectId != -1) {
+      var stopEvent = new input_event();
+      stopEvent.type = (short) EV_FF;
+      stopEvent.code = (short) this.currentEffectId;
+      stopEvent.value = 0;
+      Linux.writeEvent(memoryArena, this.fd, stopEvent);
+      Linux.removeEffect(memoryArena, this.fd, this.currentEffectId);
+      this.currentEffectId = -1;
     }
 
     Linux.close(memoryArena, this.fd);

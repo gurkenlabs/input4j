@@ -130,7 +130,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     }
 
     for (var eventDeviceFile : eventDeviceFiles) {
-      LinuxEventDevice device = new LinuxEventDevice(this.memoryArena, eventDeviceFile.getAbsolutePath());
+      LinuxEventDevice device = new LinuxEventDevice(this.memoryArena, eventDeviceFile.getAbsolutePath(), true);
       if (device.fd == Linux.ERROR) {
         log.log(Level.SEVERE, "Failed to open " + eventDeviceFile.getAbsolutePath());
         continue;
@@ -145,6 +145,10 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
         || device.name.toUpperCase().contains("HDMI"))) {
         log.log(Level.FINE, "Ignoring virtual device: " + device.name);
         continue;
+      }
+
+      if (device.supportsForceFeedback) {
+        log.log(Level.FINE, "Device supports force feedback: " + device.name + " with " + device.maxEffects + " effects");
       }
 
       var inputDevice = new InputDevice(eventDeviceFile.getAbsolutePath(), device.name, device.name, this::pollLinuxEventDevice, this::rumbleLinuxEventDevice);
@@ -257,9 +261,122 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     return LinuxVirtualComponentHandler.handlePolledValues(inputDevice, linuxEventDevice.currentValues);
   }
 
+  private static final float RUMBLE_THRESHOLD = 0.01f;
+  private static final int MAX_MAGNITUDE = 65535;
+
+  private final ff_effect rumbleEffectTemplate = createRumbleEffectTemplate();
+  private final input_event playEventTemplate = new input_event();
+  private final input_event stopEventTemplate = new input_event();
+
+  private ff_effect createRumbleEffectTemplate() {
+    var effect = new ff_effect();
+    effect.type = Linux.FF_RUMBLE;
+    effect.id = -1;
+    effect.direction = 0;
+    effect.trigger = new ff_trigger();
+    effect.trigger.button = 0;
+    effect.trigger.interval = 0;
+    effect.replay = new ff_replay();
+    effect.replay.length = 0;
+    effect.replay.delay = 0;
+    effect.rumble = new ff_rumble_effect();
+    return effect;
+  }
+
   /**
-   * TODO: Support for rumble and force feedback. ioctl(fd, EVIOCSFF, &effect) and requires ff_effect struct.
+   * Sets the rumble (force feedback) intensity for the input device.
+   *
+   * @param inputDevice the input device
+   * @param intensity   the intensity values. intensity[0] is the strong motor,
+   *                    intensity[1] (optional) is the weak motor.
+   *                    Values should be in range 0.0 to 1.0.
    */
-  private void rumbleLinuxEventDevice(InputDevice inputDevice, float[] floats) {
+  private void rumbleLinuxEventDevice(InputDevice inputDevice, float[] intensity) {
+    var linuxEventDevice = this.nativeDevices.getOrDefault(inputDevice.getID(), null);
+    if (linuxEventDevice == null) {
+      log.log(Level.WARNING, "LinuxEventDevice not found for input device " + inputDevice.getName());
+      return;
+    }
+
+    if (!linuxEventDevice.supportsForceFeedback) {
+      return;
+    }
+
+    if (linuxEventDevice.fd == Linux.ERROR) {
+      return;
+    }
+
+    if (!linuxEventDevice.gainSet) {
+      int gainResult = Linux.setGain(this.memoryArena, linuxEventDevice.fd, MAX_MAGNITUDE);
+      if (gainResult != Linux.ERROR) {
+        linuxEventDevice.gainSet = true;
+      }
+    }
+
+    if (intensity == null || intensity.length == 0 || (intensity.length > 0 && intensity[0] < RUMBLE_THRESHOLD && (intensity.length == 1 || intensity[1] < RUMBLE_THRESHOLD))) {
+      stopRumble(linuxEventDevice);
+      return;
+    }
+
+    float strongMagnitude = Math.clamp(intensity[0], 0f, 1f);
+    float weakMagnitude = intensity.length > 1 ? Math.clamp(intensity[1], 0f, 1f) : strongMagnitude;
+
+    if (linuxEventDevice.currentEffectId != -1) {
+      if (Math.abs(linuxEventDevice.currentStrongMagnitude - strongMagnitude) >= RUMBLE_THRESHOLD
+          || Math.abs(linuxEventDevice.currentWeakMagnitude - weakMagnitude) >= RUMBLE_THRESHOLD) {
+        Linux.removeEffect(this.memoryArena, linuxEventDevice.fd, linuxEventDevice.currentEffectId);
+        linuxEventDevice.currentEffectId = -1;
+      } else {
+        playEventTemplate.type = (short) LinuxEventDevice.EV_FF;
+        playEventTemplate.code = (short) linuxEventDevice.currentEffectId;
+        playEventTemplate.value = 1;
+
+        Linux.writeEvent(this.memoryArena, linuxEventDevice.fd, playEventTemplate);
+        return;
+      }
+    }
+
+    rumbleEffectTemplate.rumble.strong_magnitude = (short) (strongMagnitude * MAX_MAGNITUDE);
+    rumbleEffectTemplate.rumble.weak_magnitude = (short) (weakMagnitude * MAX_MAGNITUDE);
+
+    int effectId = Linux.uploadEffect(this.memoryArena, linuxEventDevice.fd, rumbleEffectTemplate);
+    if (effectId == Linux.ERROR) {
+      log.log(Level.WARNING, "Failed to upload rumble effect for device " + inputDevice.getName());
+      return;
+    }
+
+    linuxEventDevice.currentEffectId = effectId;
+    linuxEventDevice.currentStrongMagnitude = strongMagnitude;
+    linuxEventDevice.currentWeakMagnitude = weakMagnitude;
+
+    playEventTemplate.type = (short) LinuxEventDevice.EV_FF;
+    playEventTemplate.code = (short) effectId;
+    playEventTemplate.value = 1;
+
+    int result = Linux.writeEvent(this.memoryArena, linuxEventDevice.fd, playEventTemplate);
+    if (result == Linux.ERROR) {
+      log.log(Level.WARNING, "Failed to play rumble effect for device " + inputDevice.getName());
+      Linux.removeEffect(this.memoryArena, linuxEventDevice.fd, effectId);
+      linuxEventDevice.currentEffectId = -1;
+    }
+  }
+
+  private void stopRumble(LinuxEventDevice linuxEventDevice) {
+    if (linuxEventDevice.currentEffectId == -1) {
+      return;
+    }
+
+    if (linuxEventDevice.fd != Linux.ERROR) {
+      stopEventTemplate.type = (short) LinuxEventDevice.EV_FF;
+      stopEventTemplate.code = (short) linuxEventDevice.currentEffectId;
+      stopEventTemplate.value = 0;
+
+      Linux.writeEvent(this.memoryArena, linuxEventDevice.fd, stopEventTemplate);
+
+      Linux.removeEffect(this.memoryArena, linuxEventDevice.fd, linuxEventDevice.currentEffectId);
+    }
+    linuxEventDevice.currentEffectId = -1;
+    linuxEventDevice.currentStrongMagnitude = 0f;
+    linuxEventDevice.currentWeakMagnitude = 0f;
   }
 }
