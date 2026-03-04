@@ -36,6 +36,15 @@ test {
   jvmArgs += '--enable-native-access=ALL-UNNAMED'
 }
 
+jacocoTestReport {
+  reports {
+    xml.required = true
+    xml.outputLocation = layout.buildDirectory.file('jacoco/jacoco.xml')
+    html.required = true
+    html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+  }
+}
+
 tasks.register('remoteDebug', JavaExec) {
   mainClass = 'de.gurkenlabs.input4j.examples.ExamplePollAllInputDevicesManually'  // replace with your main class
   classpath = sourceSets.main.runtimeClasspath
