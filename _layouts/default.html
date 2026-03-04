@@ -36,14 +36,14 @@
   </script>
   
   <!-- CSS -->
-  <link rel="stylesheet" href="/assets/css/style.css">
+  <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Preload critical resources -->
-  <link rel="preload" href="/assets/css/style.css" as="style">
-  <link rel="preload" href="/assets/js/main.js" as="script">
+  <link rel="preload" href="{{ '/assets/css/style.css' | relative_url }}" as="style">
+  <link rel="preload" href="{{ '/assets/js/main.js' | relative_url }}" as="script">
   
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
@@ -62,6 +62,6 @@
   <main>
     {{ content }}
   </main>
-  <script src="/assets/js/main.js"></script>
+  <script src="{{ '/assets/js/main.js' | relative_url }}"></script>
 </body>
 </html>
