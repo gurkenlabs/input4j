@@ -47,11 +47,13 @@ description: Learn how to use input4j for cross-platform Java input handling.
         <div class="card-icon">📚</div>
         <h3 class="card-title">Javadoc</h3>
         <p class="card-text">Complete API documentation for InputDevices, InputDevice, InputComponent, and all platform implementations.</p>
+        <a href="https://javadoc.io/doc/de.gurkenlabs/input4j" class="btn btn-primary" style="margin-top: var(--space-md);" target="_blank">View Javadoc</a>
       </div>
       <div class="card">
         <div class="card-icon">📦</div>
         <h3 class="card-title">Maven Central</h3>
         <p class="card-text">Release artifacts and version history available on Maven Central.</p>
+        <a href="https://central.sonatype.com/artifact/de.gurkenlabs/input4j" class="btn btn-primary" style="margin-top: var(--space-md);" target="_blank">View on Maven</a>
       </div>
     </div>
   </div>
