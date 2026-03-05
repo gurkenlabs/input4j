@@ -24,44 +24,6 @@ description: A lightweight, cross-platform Java library for unified input device
   </div>
 </div>
 
-<div class="section" id="features">
-  <div class="container">
-    <h2 class="section-title">Why Use input4j?</h2>
-    <div class="cards">
-      <div class="card">
-        <div class="card-icon">🌍</div>
-        <h3 class="card-title">Cross-Platform</h3>
-        <p class="card-text">Works seamlessly on Windows, Linux, and macOS. Single API for all platforms with zero platform-specific code required.</p>
-      </div>
-      <div class="card">
-        <div class="card-icon">⚡</div>
-        <h3 class="card-title">Modern Java API</h3>
-        <p class="card-text">Leverages the Foreign Function & Memory API (Java 21+) for high-performance native access without JNI complexity.</p>
-      </div>
-      <div class="card">
-        <div class="card-icon">🎮</div>
-        <h3 class="card-title">Unified Input API</h3>
-        <p class="card-text">Single consistent API for gamepads, joysticks, and other input devices. Supports XInput, DirectInput, evdev, and IOKit/HID.</p>
-      </div>
-      <div class="card">
-        <div class="card-icon">🔌</div>
-        <h3 class="card-title">No Native Dependencies</h3>
-        <p class="card-text">No .dll, .so, or .dylib files to manage. Simply add the JAR and start coding. Perfect for distribution.</p>
-      </div>
-      <div class="card">
-        <div class="card-icon">📡</div>
-        <h3 class="card-title">Event-Based & Polling</h3>
-        <p class="card-text">Flexible input handling with both event-driven callbacks and polling modes. Choose what fits your architecture.</p>
-      </div>
-      <div class="card">
-        <div class="card-icon">🛠️</div>
-        <h3 class="card-title">Lightweight</h3>
-        <p class="card-text">Minimal footprint with no external dependencies. Designed for games, simulations, and applications.</p>
-      </div>
-    </div>
-  </div>
-</div>
-
 <div class="section section-alt" id="quickstart">
   <div class="container">
     <h2 class="section-title">Quick Start</h2>
@@ -111,6 +73,44 @@ description: A lightweight, cross-platform Java library for unified input device
 
 device.onAxisChanged(XInput.Axis.LEFT_X, value -> 
     System.out.println("Left X: " + value));</code></pre>
+    </div>
+  </div>
+</div>
+
+<div class="section" id="features">
+  <div class="container">
+    <h2 class="section-title">Why Use input4j?</h2>
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🌍</div>
+        <h3 class="card-title">Cross-Platform</h3>
+        <p class="card-text">Works seamlessly on Windows, Linux, and macOS. Single API for all platforms with zero platform-specific code required.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h3 class="card-title">Modern Java API</h3>
+        <p class="card-text">Leverages the Foreign Function & Memory API (Java 21+) for high-performance native access without JNI complexity.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎮</div>
+        <h3 class="card-title">Unified Input API</h3>
+        <p class="card-text">Single consistent API for gamepads, joysticks, and other input devices. Supports XInput, DirectInput, evdev, and IOKit/HID.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔌</div>
+        <h3 class="card-title">No Native Dependencies</h3>
+        <p class="card-text">No .dll, .so, or .dylib files to manage. Simply add the JAR and start coding. Perfect for distribution.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📡</div>
+        <h3 class="card-title">Event-Based &amp; Polling</h3>
+        <p class="card-text">Flexible input handling with both event-driven callbacks and polling modes. Choose what fits your architecture.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🛠️</div>
+        <h3 class="card-title">Lightweight</h3>
+        <p class="card-text">Minimal footprint with no external dependencies. Designed for games, simulations, and applications.</p>
+      </div>
     </div>
   </div>
 </div>
