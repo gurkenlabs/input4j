@@ -1,5 +1,8 @@
 # 🎮 Input4j - The pure Java input library
-
+[![Maven Central](https://img.shields.io/maven-central/v/de.gurkenlabs/input4j)](https://search.maven.org/artifact/de.gurkenlabs/input4j)
+[![Build](https://img.shields.io/github/actions/workflow/status/gurkenlabs/input4j/build.yml)](https://github.com/gurkenlabs/input4j/actions)
+[![License](https://img.shields.io/github/license/gurkenlabs/input4j)](LICENSE)
+[![Java](https://img.shields.io/badge/java-22+-orange)]()
 
 **Input4j** is a cutting-edge, pure Java input library leveraging the **Foreign Function & Memory API** (FFM API), offering cross-platform support, high performance, flexible controller and gamepad input handling, and future-proofing without the need for additional native artifacts, making it the **best choice for Java developers**.
 
