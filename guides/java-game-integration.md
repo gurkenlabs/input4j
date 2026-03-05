@@ -1,6 +1,6 @@
 ---
 layout: default
-title: How to use input4j in your Java Game
+title: Java Game Integration
 description: Learn how to integrate input4j into your Java game for cross-platform gamepad controller support. Complete guide covering event-based input, polling, game loop integration, controller mapping, and force feedback vibration.
 keywords: Java game gamepad, game controller Java, input handling game Java, Java game input, LibGDX gamepad, LITIENGINE input, gamepad API Java, controller mapping Java, force feedback Java, rumble vibration Java, game loop input
 ---

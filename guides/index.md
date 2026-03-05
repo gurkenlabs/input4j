@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Guides - input4j
+title: Guides
 description: Complete documentation for input4j - cross-platform Java gamepad and joystick input library. Learn how to use the Foreign Function & Memory API for native input handling.
 keywords: input4j guide, Java gamepad tutorial, game controller Java, FFM API input, cross-platform Java input, XInput Java, DirectInput Java, evdev Java
 ---

@@ -1,6 +1,6 @@
 ---
 layout: default
-title: input4j
+title: input4j - Cross-Platform Java Gamepad & Joystick Library
 description: A lightweight, cross-platform Java library for unified input device handling. Supports Windows, Linux, and macOS with no native dependencies.
 ---
 
