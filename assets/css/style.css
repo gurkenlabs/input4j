@@ -104,6 +104,15 @@ a:hover {
   color: var(--accent);
 }
 
+.logo-text {
+  font-weight: 800;
+}
+
+.logo-accent {
+  color: var(--accent);
+  font-weight: 800;
+}
+
 .nav-menu {
   display: flex;
   align-items: center;
