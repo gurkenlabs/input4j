@@ -1,8 +1,8 @@
 ---
 layout: default
 title: Internal Architecture - How input4j Uses the FFM API
-description: Deep dive into input4j's architecture and how the Foreign Function & Memory API enables native input handling without JNI.
-keywords: FFM API architecture, Java native input, JNI alternative, MemorySegment, SymbolLookup, native interop
+description: Deep dive into input4j's internal architecture and how the Foreign Function & Memory API enables native input handling without JNI. Learn about MemorySegment, SymbolLookup, platform abstraction, XInput, DirectInput, evdev, IOKit implementations.
+keywords: FFM API architecture, Java native input, JNI alternative, MemorySegment, SymbolLookup, native interop Java, XInput implementation, evdev implementation, IOKit implementation, Java native bridge, platform abstraction layer, foreign memory Java
 ---
 
 <div class="guide-hero">

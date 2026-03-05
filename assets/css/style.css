@@ -520,6 +520,49 @@ a:hover {
   color: var(--accent);
 }
 
+/* FAQ Styles */
+.faq-item {
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-xl);
+  border-bottom: 1px solid var(--border);
+}
+
+.faq-item:last-child {
+  border-bottom: none;
+}
+
+.faq-item h4 {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+}
+
+.faq-item p {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-md);
+  line-height: 1.7;
+}
+
+.fuide-item ul {
+  color: var(--text-secondary);
+  margin-left: var(--space-lg);
+  margin-bottom: var(--space-md);
+}
+
+.faq-item li {
+  margin-bottom: var(--space-sm);
+  line-height: 1.6;
+}
+
+.faq-item code {
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  color: var(--accent);
+}
+
 .guide-section {
   margin-bottom: var(--space-3xl);
 }
