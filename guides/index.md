@@ -21,6 +21,20 @@ description: Learn how to use input4j for cross-platform Java input handling.
         <p class="card-text">Learn how input4j uses the Foreign Function & Memory API to provide cross-platform input handling without native dependencies.</p>
         <a href="{{ '/guides/cross-platform-java-input' | relative_url }}" class="btn btn-primary" style="margin-top: var(--space-md);">Read Guide</a>
       </div>
+      
+      <div class="card">
+        <div class="card-icon">🎮</div>
+        <h3 class="card-title">How to use input4j in your Java Game</h3>
+        <p class="card-text">A practical guide to integrating gamepad support into your Java game with event-based and polling input handling.</p>
+        <a href="{{ '/guides/java-game-integration' | relative_url }}" class="btn btn-primary" style="margin-top: var(--space-md);">Read Guide</a>
+      </div>
+      
+      <div class="card">
+        <div class="card-icon">🏗️</div>
+        <h3 class="card-title">Internal Architecture & FFM API</h3>
+        <p class="card-text">Deep dive into input4j's architecture and how the Foreign Function & Memory API enables native input without JNI.</p>
+        <a href="{{ '/guides/architecture-ffm-api' | relative_url }}" class="btn btn-primary" style="margin-top: var(--space-md);">Read Guide</a>
+      </div>
     </div>
   </div>
 </div>
