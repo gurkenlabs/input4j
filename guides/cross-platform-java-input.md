@@ -1,7 +1,8 @@
 ---
 layout: default
-title: Cross-platform Java input handling without JNI
-description: Learn how input4j uses the Foreign Function & Memory API to provide cross-platform input handling without native dependencies
+title: Cross-platform Java Input Handling Without JNI - input4j Guide
+description: Learn how input4j uses the Foreign Function & Memory API (FFM API) to provide cross-platform gamepad and joystick input handling in Java without native dependencies. Covers XInput, DirectInput, evdev, IOKit.
+keywords: Java FFM API, Foreign Function Memory API, gamepad input Java, XInput Java, DirectInput Java, evdev Java, IOKit Java, JNI alternative, Java 21 input, cross-platform gamepad
 ---
 
 <div class="guide-hero">

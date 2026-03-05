@@ -1,4 +1,4 @@
-// Glassy Windows Fluent 2 JavaScript
+// input4j Website JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize all interactive elements
@@ -38,7 +38,7 @@ function initializeCopyButtons() {
   
   copyButtons.forEach(button => {
     button.addEventListener('click', function() {
-      const codeBlock = this.closest('.code-snippet').querySelector('pre code');
+      const codeBlock = this.closest('.code-snippet').querySelector('pre code, pre');
       if (codeBlock) {
         copyToClipboard(codeBlock.textContent);
         showCopySuccess(this);

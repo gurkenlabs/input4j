@@ -5,63 +5,144 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% if page.title %}{{ page.title }} - {% endif %}{{ site.title }}</title>
   <meta name="description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
-  <meta name="keywords" content="{% if page.keywords %}{{ page.keywords }}{% else %}{{ site.keywords }}{% endif %}">
+  <meta name="keywords" content="Java input library, gamepad API, joystick input, cross-platform Java, XInput, DirectInput, evdev, IOKit, HID, game controller, Java 21, Foreign Function API, FFM API, native input">
+  <meta name="author" content="gurkenlabs">
+  <meta name="robots" content="index, follow">
+  <meta name="language" content="English">
   
-  <!-- Open Graph -->
-  <meta property="og:title" content="{% if page.title %}{{ page.title }} - {% endif %}{{ site.title }}">
-  <meta property="og:description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
+  <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="{{ site.url }}{{ page.url }}">
-  <meta property="og:image" content="{{ site.url }}/assets/images/og-image.jpg">
+  <meta property="og:title" content="{% if page.title %}{{ page.title }} - {% endif %}{{ site.title }}">
+  <meta property="og:description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
+  <meta property="og:site_name" content="{{ site.title }}">
+  <meta property="og:locale" content="en_US">
   
-  <!-- Twitter Cards -->
+  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{% if page.title %}{{ page.title }} - {% endif %}{{ site.title }}">
   <meta name="twitter:description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
-  <meta name="twitter:image" content="{{ site.url }}/assets/images/og-image.jpg">
-  
-  <!-- Schema.org -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "input4j",
-    "url": "{{ site.url }}",
-    "logo": "{{ site.url }}/assets/images/logo.png",
-    "description": "A lightweight, cross-platform Java library for unified input device handling",
-    "sameAs": [
-      "https://github.com/gurkenlabs/input4j"
-    ]
-  }
-  </script>
-  
-  <!-- CSS -->
-  <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Preload critical resources -->
-  <link rel="preload" href="{{ '/assets/css/style.css' | relative_url }}" as="style">
-  <link rel="preload" href="{{ '/assets/js/main.js' | relative_url }}" as="script">
-  
-  <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  <meta name="twitter:site" content="@gurkenlabs">
   
   <!-- Canonical URL -->
   <link rel="canonical" href="{{ site.url }}{{ page.url }}">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
   
   <!-- RSS Feed -->
   <link rel="alternate" type="application/rss+xml" title="{{ site.title }} Feed" href="/feed.xml">
   
   <!-- Theme Color -->
-  <meta name="theme-color" content="#498f9c">
+  <meta name="theme-color" content="#0f172a">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Preload critical resources -->
+  <link rel="preload" href="{{ '/assets/css/style.css' | relative_url }}" as="style">
+  <link rel="preload" href="{{ '/assets/js/main.js' | relative_url }}" as="script">
+  
+  <!-- Structured Data - Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "input4j",
+    "description": "A lightweight, cross-platform Java library for unified input device handling using the Foreign Function & Memory API",
+    "url": "{{ site.url }}",
+    "author": {
+      "@type": "Organization",
+      "name": "gurkenlabs",
+      "url": "https://gurkenlabs.de"
+    },
+    "codeRepository": "https://github.com/gurkenlabs/input4j",
+    "license": "https://opensource.org/licenses/MIT",
+    "programmingLanguage": {
+      "@type": "ComputerLanguage",
+      "name": "Java",
+      "version": "21+"
+    },
+    "operatingSystem": ["Windows", "Linux", "macOS"],
+    "applicationCategory": "DeveloperApplication",
+    "softwareVersion": "1.0.0",
+    "datePublished": "2024",
+    "keywords": "Java, gamepad, joystick, input, XInput, DirectInput, evdev, cross-platform"
+  }
+  </script>
+  
+  <!-- Structured Data - FAQPage for SEO -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [{
+      "@type": "Question",
+      "name": "What is input4j?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "input4j is a lightweight, cross-platform Java library for unified input device handling. It uses the Foreign Function & Memory API (FFM API) to provide native input access without JNI dependencies."
+      }
+    }, {
+      "@type": "Question",
+      "name": "What platforms does input4j support?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "input4j supports Windows (via DirectInput and XInput), Linux (via evdev), and macOS (via IOKit/HID)."
+      }
+    }, {
+      "@type": "Question",
+      "name": "What Java version is required?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "input4j requires Java 21 or later due to its use of the Foreign Function & Memory API."
+      }
+    }, {
+      "@type": "Question",
+      "name": "Does input4j require native libraries?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No, input4j does not require any native libraries (.dll, .so, or .dylib files). It uses the FFM API to directly invoke native system calls."
+      }
+    }]
+  }
+  </script>
+  
+  <!-- Structured Data - HowTo for getting started -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "Getting Started with input4j",
+    "description": "Learn how to set up and use input4j for cross-platform input handling in your Java application",
+    "step": [{
+      "@type": "HowToStep",
+      "name": "Add Dependency",
+      "text": "Add input4j to your project using Gradle or Maven",
+      "url": "{{ site.url }}/guides"
+    }, {
+      "@type": "HowToStep",
+      "name": "Initialize Devices",
+      "text": "Initialize the input system and discover connected devices",
+      "url": "{{ site.url }}/guides"
+    }, {
+      "@type": "HowToStep",
+      "name": "Handle Input",
+      "text": "Register event listeners or poll for button and axis changes",
+      "url": "{{ site.url }}/guides"
+    }]
+  }
+  </script>
 </head>
 <body>
   {% include navigation.html %}
   <main>
     {{ content }}
   </main>
+  {% include footer.html %}
   <script src="{{ '/assets/js/main.js' | relative_url }}"></script>
 </body>
 </html>
