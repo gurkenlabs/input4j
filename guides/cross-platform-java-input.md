@@ -5,6 +5,32 @@ description: Learn how input4j uses the Foreign Function & Memory API (FFM API) 
 keywords: Java FFM API, Foreign Function Memory API, gamepad input Java, XInput Java, DirectInput Java, evdev Java, IOKit Java, JNI alternative, Java 22 input, cross-platform gamepad, Java HID API, native input Java
 ---
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://gurkenlabs.github.io/input4j/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Guides",
+      "item": "https://gurkenlabs.github.io/input4j/guides/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Cross-platform Java Input Without JNI"
+    }
+  ]
+}
+</script>
+
 <div class="guide-hero">
   <div class="container">
     <div class="guide-header">

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% if page.title %}{{ page.title }} - input4j{% else %}input4j - Cross-platform Java Gamepad Library{% endif %}</title>
+  <title>{% if page.title %}{{ page.title }} - input4j{% else %}input4j - Cross-Platform Java Gamepad & Joystick Library{% endif %}</title>
   <meta name="description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
   <meta name="keywords" content="Java input library, gamepad API, joystick input, cross-platform Java, XInput, DirectInput, evdev, IOKit, HID, game controller, Java 22, Foreign Function API">
   <meta name="author" content="gurkenlabs">
@@ -48,7 +48,7 @@
     "@type": "SoftwareSourceCode",
     "name": "input4j",
     "description": "A lightweight, cross-platform Java library for unified input device handling",
-    "url": "{{ site.url }}",
+    "url": "{{ site.url }}{{ site.baseurl }}",
     "author": {
       "@type": "Organization",
       "name": "gurkenlabs",
@@ -63,7 +63,41 @@
     },
     "operatingSystem": ["Windows", "Linux", "macOS"],
     "applicationCategory": "DeveloperApplication",
-    "softwareVersion": "1.0.0"
+    "softwareVersion": "1.0.0",
+    "downloadUrl": "https://repo1.maven.org/maven2/de/gurkenlabs/input4j/1.0.0/input4j-1.0.0.jar",
+    "softwareRequirements": "Java 22+",
+    "uploadDate": "2024-01-15",
+    "keywords": "Java input library, gamepad API, joystick input, cross-platform Java, XInput, DirectInput, evdev, IOKit, HID, game controller"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "input4j",
+    "description": "A lightweight, cross-platform Java library for unified gamepad and joystick input handling",
+    "url": "https://gurkenlabs.github.io/input4j/",
+    "applicationCategory": "DeveloperApplication",
+    "applicationSubCategory": "Game Development Library",
+    "operatingSystem": ["Windows", "Linux", "macOS"],
+    "author": {
+      "@type": "Organization",
+      "name": "gurkenlabs",
+      "url": "https://gurkenlabs.de"
+    },
+    "provider": {
+      "@type": "Organization",
+      "name": "gurkenlabs"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock"
+    },
+    "downloadUrl": "https://repo1.maven.org/maven2/de/gurkenlabs/input4j/1.0.0/input4j-1.0.0.jar",
+    "softwareVersion": "1.0.0",
+    "softwareRequirements": "Java 22+"
   }
   </script>
 </head>

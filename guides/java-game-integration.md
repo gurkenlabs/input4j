@@ -5,6 +5,32 @@ description: Learn how to integrate input4j into your Java game for cross-platfo
 keywords: Java game gamepad, game controller Java, input handling game Java, Java game input, LibGDX gamepad, LITIENGINE input, gamepad API Java, controller mapping Java, force feedback Java, rumble vibration Java, game loop input
 ---
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://gurkenlabs.github.io/input4j/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Guides",
+      "item": "https://gurkenlabs.github.io/input4j/guides/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "How to use input4j in your Java Game"
+    }
+  ]
+}
+</script>
+
 <div class="guide-hero">
   <div class="container">
     <div class="guide-header">

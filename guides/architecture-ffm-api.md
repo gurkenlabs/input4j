@@ -5,6 +5,32 @@ description: Deep dive into input4j's internal architecture and how the Foreign 
 keywords: FFM API architecture, Java native input, JNI alternative, MemorySegment, SymbolLookup, native interop Java, XInput implementation, evdev implementation, IOKit implementation, Java native bridge, platform abstraction layer, foreign memory Java
 ---
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://gurkenlabs.github.io/input4j/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Guides",
+      "item": "https://gurkenlabs.github.io/input4j/guides/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "Internal Architecture - How input4j Uses the FFM API"
+    }
+  ]
+}
+</script>
+
 <div class="guide-hero">
   <div class="container">
     <div class="guide-header">

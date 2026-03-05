@@ -1,0 +1,13 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+Sitemap: https://gurkenlabs.github.io/input4j/sitemap.xml
+
+# Disallow access to build files
+Disallow: /build/
+Disallow: /.gradle/
+Disallow: /bin/
+
+# Allow all valid pages
+Allow: /

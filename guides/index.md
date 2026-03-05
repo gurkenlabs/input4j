@@ -5,6 +5,92 @@ description: Complete documentation for input4j - cross-platform Java gamepad an
 keywords: input4j guide, Java gamepad tutorial, game controller Java, FFM API input, cross-platform Java input, XInput Java, DirectInput Java, evdev Java
 ---
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What Java version is required for input4j?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "input4j requires Java 22 or later because it uses the Foreign Function & Memory API (FFM API) for native system calls. The FFM API was standardized in Java 22. Recommended distributions include Oracle JDK 21+, OpenJDK 21+, Amazon Corretto 21+, and Azul Zulu JDK 21+."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which game controllers are supported by input4j?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "input4j supports Xbox controllers (Xbox One, Series X/S via XInput on Windows), PlayStation controllers (DualShock 4, DualSense via HID), generic USB gamepads (any HID-compliant controller), and specialized input devices like flight sticks and racing wheels. On Linux, the evdev interface supports all HID-compliant devices."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does input4j work with game engines like LibGDX or LITIENGINE?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes! input4j is designed to work with any Java game engine or framework including LITIENGINE, LibGDX, JavaFX, Slick2D, and custom engines. The library is framework-agnostic and provides a clean API that integrates easily with any input handling pattern."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does input4j not require native DLL/SO files?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "input4j uses the Foreign Function & Memory API which allows direct calls to native functions without JNI or native libraries. Benefits include simpler deployment (just add the JAR to your classpath), no native library distribution headaches, better compatibility with Java's security model, and type-safe native function calls at compile time."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I handle controller disconnects in input4j?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "input4j provides device connection callbacks. Use InputDevices.onDeviceConnected(device -> {...}) to listen for new controllers and device.onDisconnected(() -> {...}) to handle disconnections. This enables hot-plugging support for gamepads."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I fix Linux permission denied errors for /dev/input/event*?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "On Linux, add your user to the input group with 'sudo usermod -a -G input $USER' and log out/in for changes to take effect. Alternatively, run your application with elevated privileges for testing, though this is not recommended for production."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use input4j for keyboard and mouse input?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No, input4j is specifically designed for gamepad and joystick input. For keyboard and mouse handling, use the native APIs provided by your game engine or framework such as Java AWT/Swing KeyListener, JavaFX input events, LibGDX input API, or LITIENGINE input handling."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://gurkenlabs.github.io/input4j/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Guides",
+      "item": "https://gurkenlabs.github.io/input4j/guides/"
+    }
+  ]
+}
+</script>
+
 <div class="hero">
   <div class="container">
     <h1 class="hero-title">Documentation</h1>
