@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InputDevices.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j</a> &gt; <span class="el_source">InputDevices.java</span></div><h1>InputDevices.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j;
+
+import java.awt.*;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * The `InputDevices` class is responsible for initializing and managing input device providers.
+ * It supports different input libraries for various platforms and allows explicit selection of the library.
+ */
+public final class InputDevices {
+<span class="fc" id="L13">  private static final Logger log = Logger.getLogger(InputDevices.class.getName());</span>
+<span class="fc" id="L14">  private static final DefaultInputConfiguration configuration = new DefaultInputConfiguration();</span>
+
+  /**
+   * This class should not be instantiated.
+   */
+  private InputDevices() {
+  }
+
+  /**
+   * Configures the default input settings that are applied to all input devices upon initialization.
+   * &lt;p&gt;
+   * Make sure to call this method before initializing the input device plugin.
+   *
+   * @return The default input configuration.
+   */
+  public static DefaultInputConfiguration configure() {
+<span class="fc" id="L30">    return configuration;</span>
+  }
+
+  /**
+   * Initializes the input device provider with the default platform library.
+   *
+   * @return The initialized input device provider or null if the initialization fails.
+   */
+  public static InputDevicePlugin init() {
+<span class="nc" id="L39">    return init(null, InputLibrary.PLATFORM_DEFAULT);</span>
+  }
+
+  /**
+   * Initializes the input device provider with the default platform library and the specified owner.
+   *
+   * @param owner The owner to be passed to individual plugins, or null if running in background.
+   * @return The initialized input device provider or null if the initialization fails.
+   */
+  public static InputDevicePlugin init(Frame owner) {
+<span class="nc" id="L49">    return init(owner, InputLibrary.PLATFORM_DEFAULT);</span>
+  }
+
+  /**
+   * Initializes the input device provider with the specified library.
+   * &lt;p&gt;
+   * Note: Some controllers don't support background mode which is why it can be necessary to pass a frame owner to the {@link InputDevices#init(Frame, String)} method.
+   *
+   * @param library The library to be used.
+   * @return The initialized input device provider or null if the initialization fails.
+   */
+  public static InputDevicePlugin init(InputLibrary library) {
+<span class="nc" id="L61">    return init(null, library);</span>
+  }
+
+  /**
+   * Initializes the input device provider with the specified input plugin class.
+   * &lt;p&gt;
+   * Note: Some controllers don't support background mode which is why it can be necessary to pass a frame owner to the {@link InputDevices#init(Frame, String)} method.
+   *
+   * @param inputPluginClass The input plugin class to be used.
+   * @return The initialized input device provider or null if the initialization fails.
+   */
+  public static InputDevicePlugin init(String inputPluginClass) {
+<span class="nc" id="L73">    return init(null, inputPluginClass);</span>
+  }
+
+  /**
+   * Initializes the input device provider based on the detected operating system.
+   *
+   * @param owner   The owner to be passed to individual plugins, or null if running in background.
+   * @param library The input library to be used.
+   * @return The initialized input device provider or null if the initialization fails.
+   */
+  public static InputDevicePlugin init(Frame owner, InputLibrary library) {
+<span class="nc" id="L84">    return init(owner, library.getPlugin());</span>
+  }
+
+  /**
+   * Initializes the input device provider based on the detected operating system.
+   *
+   * @param owner            The owner to be passed to individual plugins, or null if running in background.
+   * @param inputPluginClass The input plugin class to be used. If null, the default platform library is used.
+   *                         The plugin class must be a fully qualified class name of a class that implements the {@link InputDevicePlugin} interface.
+   *                         &lt;p&gt;
+   *                         This can be used to explicitly select a custom input library implementation.
+   *                         If the class is not found or cannot be instantiated, an {@link IOException} is thrown.
+   *                         The class must have a public no-argument constructor.
+   *                         &lt;/p&gt;
+   * @return The initialized input device provider or null if the initialization fails.
+   */
+  public static InputDevicePlugin init(Frame owner, String inputPluginClass) {
+    try {
+<span class="nc bnc" id="L102" title="All 2 branches missed.">      if (inputPluginClass == null) {</span>
+<span class="nc" id="L103">        inputPluginClass = InputLibrary.PLATFORM_DEFAULT.getPlugin();</span>
+      }
+
+<span class="nc" id="L106">      var pluginClass = Class.forName(inputPluginClass);</span>
+<span class="nc" id="L107">      var constructor = pluginClass.getDeclaredConstructor();</span>
+<span class="nc" id="L108">      var provider = (InputDevicePlugin) constructor.newInstance();</span>
+<span class="nc" id="L109">      provider.internalInitDevices(owner);</span>
+<span class="nc" id="L110">      return provider;</span>
+<span class="nc" id="L111">    } catch (Exception e) {</span>
+<span class="nc" id="L112">      log.log(Level.SEVERE, &quot;Could not initialize input device provider: &quot; + e.getMessage(), e);</span>
+<span class="nc" id="L113">      return null;</span>
+    }
+  }
+
+  /**
+   * Enum representing the available input libraries.
+   * This enum provides a list of supported input libraries for different platforms.
+   * Each enum constant corresponds to a specific input library implementation.
+   */
+<span class="nc" id="L122">  public enum InputLibrary {</span>
+    /**
+     * The default input library for the current platform.
+     * This will be determined based on the operating system at runtime.
+     */
+<span class="nc" id="L127">    PLATFORM_DEFAULT,</span>
+
+    /**
+     * The DirectInput library for Windows.
+     * This library provides support for older input devices on Windows.
+     *
+     * &lt;p&gt; Note: when using newer Gamepads or Xbox controllers, consider using {@link #WIN_XINPUT} instead.
+     * &lt;p&gt;
+     * Some controllers don't support background mode which is why it can be necessary to pass a frame owner to the {@link InputDevices#init(Frame, InputLibrary)} method.
+     */
+<span class="nc" id="L137">    WIN_DIRECTINPUT,</span>
+
+    /**
+     * The XInput library for Windows.
+     * This library provides support for Xbox controllers on Windows.
+     */
+<span class="nc" id="L143">    WIN_XINPUT,</span>
+
+    /**
+     * The input library for Linux.
+     * This library provides support for input devices on Linux.
+     */
+<span class="nc" id="L149">    LINUX_INPUT,</span>
+
+    /**
+     * The IOKIT library for macOS.
+     * This library provides support for game controllers on macOS.
+     */
+<span class="nc" id="L155">    MACOS_IOKIT;</span>
+
+    /**
+     * Gets the plugin class name for the specified library.
+     *
+     * @return The plugin class name.
+     */
+    private String getPlugin() {
+<span class="nc bnc" id="L163" title="All 5 branches missed.">      return switch (this) {</span>
+<span class="nc" id="L164">        case PLATFORM_DEFAULT -&gt; getCurrentPlatformDefaultPlugin();</span>
+<span class="nc" id="L165">        case WIN_DIRECTINPUT -&gt; &quot;de.gurkenlabs.input4j.foreign.windows.dinput.DirectInputPlugin&quot;;</span>
+<span class="nc" id="L166">        case WIN_XINPUT -&gt; &quot;de.gurkenlabs.input4j.foreign.windows.xinput.XInputPlugin&quot;;</span>
+<span class="nc" id="L167">        case LINUX_INPUT -&gt; &quot;de.gurkenlabs.input4j.foreign.linux.LinuxEventDevicePlugin&quot;;</span>
+<span class="nc" id="L168">        case MACOS_IOKIT -&gt; &quot;de.gurkenlabs.input4j.foreign.macos.iokit.IOKitPlugin&quot;;</span>
+      };
+    }
+
+    /**
+     * Detects the current platform and returns the default plugin class name for the platform.
+     *
+     * @return The default plugin class name for the current platform.
+     */
+    private String getCurrentPlatformDefaultPlugin() {
+<span class="nc" id="L178">      String osName = System.getProperty(&quot;os.name&quot;, &quot;&quot;).trim().toLowerCase();</span>
+<span class="nc" id="L179">      String osVersion = System.getProperty(&quot;os.version&quot;);</span>
+<span class="nc" id="L180">      String osArch = System.getProperty(&quot;os.arch&quot;);</span>
+
+<span class="nc" id="L182">      log.fine(&quot;Detected OS: &quot; + osName + &quot; Version: &quot; + osVersion + &quot; (&quot; + osArch + &quot;)&quot;);</span>
+
+<span class="nc" id="L184">      String pluginClassName = null;</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">      if (osName.contains(&quot;windows&quot;)) {</span>
+<span class="nc" id="L186">        pluginClassName = InputLibrary.WIN_XINPUT.getPlugin();</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">      } else if (osName.contains(&quot;linux&quot;)) {</span>
+<span class="nc" id="L188">        pluginClassName = InputLibrary.LINUX_INPUT.getPlugin();</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">      } else if (osName.contains(&quot;mac os&quot;)) {</span>
+<span class="nc" id="L190">        pluginClassName = InputLibrary.MACOS_IOKIT.getPlugin();</span>
+      }
+
+<span class="nc bnc" id="L193" title="All 2 branches missed.">      if (pluginClassName == null) {</span>
+<span class="nc" id="L194">        throw new IllegalStateException(&quot;Could not initialize input device provider: Unknown operating system &quot; + osName + &quot; Version: &quot; + osVersion + &quot; (&quot; + osArch + &quot;)&quot;);</span>
+      }
+
+<span class="nc" id="L197">      return pluginClassName;</span>
+    }
+  }
+
+  /**
+   * Global default configuration settings for all input devices.
+   * &lt;p&gt;
+   * The settings provided by this class are applied to input devices upon initialization.
+   * They cannot be changed in this class at runtime. To adjust settings for individual input devices and plugins, use the
+   * correlating methods provided by the input device plugin and input device classes.
+   */
+  public static final class DefaultInputConfiguration {
+    // default number of decimal places to round input data to
+    private static final int DEFAULT_ACCURACY = 3;
+
+    private static final int DEFAULT_HOTPLUG_INTERVAL = 3000;
+
+    private int accuracy;
+
+    private int hotplugInterval;
+
+<span class="fc" id="L218">    private DefaultInputConfiguration() {</span>
+<span class="fc" id="L219">      this.accuracy = DEFAULT_ACCURACY;</span>
+<span class="fc" id="L220">      this.hotplugInterval = DEFAULT_HOTPLUG_INTERVAL;</span>
+<span class="fc" id="L221">    }</span>
+
+    /**
+     * Gets the number of decimal places to round input data to.
+     *
+     * @return The number of decimal places.
+     */
+    public int getAccuracy() {
+<span class="fc" id="L229">      return accuracy;</span>
+    }
+
+    /**
+     * Sets the number of decimal places to round input data to.
+     *
+     * @param accuracy The number of decimal places. Must be a non-negative integer and should not exceed 7.
+     * @throws IllegalArgumentException if the accuracy is negative.
+     */
+    public void setAccuracy(int accuracy) {
+<span class="nc" id="L239">      this.accuracy = accuracy;</span>
+<span class="nc" id="L240">    }</span>
+
+    /**
+     * Gets the interval in milliseconds for checking for hot-plugged devices.
+     * &lt;p&gt;
+     * This interval determines how often the system checks for newly connected or disconnected input devices.
+     * A shorter interval means more frequent checks, which can lead to faster detection of new devices but may also increase CPU usage.
+     * &lt;/p&gt;
+     * By default, it is set to {@value #DEFAULT_HOTPLUG_INTERVAL} milliseconds.
+     *
+     * @return The hot-plug interval in milliseconds.
+     *
+     * @see #DEFAULT_HOTPLUG_INTERVAL
+     */
+    public int getHotPlugInterval() {
+<span class="nc" id="L255">      return hotplugInterval;</span>
+    }
+
+    /**
+     * Sets the interval in milliseconds for checking for hot-plugged devices.
+     * &lt;p&gt;
+     * This interval determines how often the system checks for newly connected or disconnected input devices.
+     * A shorter interval means more frequent checks, which can lead to faster detection of new devices but may also increase CPU usage.
+     * &lt;/p&gt;
+     *
+     * @param hotplugInterval The hot-plug interval in milliseconds.
+     * @throws IllegalArgumentException if the interval is negative.
+     */
+    public void setHotPlugInterval(int hotplugInterval) {
+<span class="nc" id="L269">      this.hotplugInterval = hotplugInterval;</span>
+<span class="nc" id="L270">    }</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

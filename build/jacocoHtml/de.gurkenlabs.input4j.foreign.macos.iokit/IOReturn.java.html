@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IOReturn.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.macos.iokit</a> &gt; <span class="el_source">IOReturn.java</span></div><h1>IOReturn.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.macos.iokit;
+
+/**
+ * The `IOReturn` class defines constants for various IOKit return codes.
+ * These constants represent different result codes that can be returned by IOKit functions.
+ */
+<span class="nc" id="L7">class IOReturn {</span>
+  static final int kIOReturnSuccess = 0;
+  static final int kIOReturnError = 0xE00002BC;
+  static final int kIOReturnNoMemory = 0xE00002BD;
+  static final int kIOReturnNoResources = 0xE00002BE;
+  static final int kIOReturnIPCError = 0xE00002BF;
+  static final int kIOReturnNoDevice = 0xE00002C0;
+  static final int kIOReturnNotPrivileged = 0xE00002C1;
+  static final int kIOReturnBadArgument = 0xE00002C2;
+  static final int kIOReturnLockedRead = 0xE00002C3;
+  static final int kIOReturnLockedWrite = 0xE00002C4;
+  static final int kIOReturnUnderrun = 0xE00002C5;
+  static final int kIOReturnUnsupported = 0xE00002C7;
+
+  /**
+   * Converts an IOKit return code to its string representation.
+   *
+   * @param errorCode The return code to convert.
+   * @return A string representation of the return code.
+   */
+  static String toString(int errorCode) {
+<span class="nc" id="L28">    var hexResult = String.format(&quot;%08X&quot;, errorCode);</span>
+<span class="nc bnc" id="L29" title="All 13 branches missed.">    return switch (errorCode) {</span>
+<span class="nc" id="L30">      case kIOReturnSuccess -&gt; &quot;kIOReturnSuccess: &quot; + hexResult;</span>
+<span class="nc" id="L31">      case kIOReturnError -&gt; &quot;kIOReturnError: &quot; + hexResult;</span>
+<span class="nc" id="L32">      case kIOReturnNoMemory -&gt; &quot;kIOReturnNoMemory: &quot; + hexResult;</span>
+<span class="nc" id="L33">      case kIOReturnNoResources -&gt; &quot;kIOReturnNoResources: &quot; + hexResult;</span>
+<span class="nc" id="L34">      case kIOReturnIPCError -&gt; &quot;kIOReturnIPCError: &quot; + hexResult;</span>
+<span class="nc" id="L35">      case kIOReturnNoDevice -&gt; &quot;kIOReturnNoDevice: &quot; + hexResult;</span>
+<span class="nc" id="L36">      case kIOReturnNotPrivileged -&gt; &quot;kIOReturnNotPrivileged: &quot; + hexResult;</span>
+<span class="nc" id="L37">      case kIOReturnBadArgument -&gt; &quot;kIOReturnBadArgument: &quot; + hexResult;</span>
+<span class="nc" id="L38">      case kIOReturnLockedRead -&gt; &quot;kIOReturnLockedRead: &quot; + hexResult;</span>
+<span class="nc" id="L39">      case kIOReturnLockedWrite -&gt; &quot;kIOReturnLockedWrite: &quot; + hexResult;</span>
+<span class="nc" id="L40">      case kIOReturnUnderrun -&gt; &quot;kIOReturnUnderrun&quot; + hexResult;</span>
+<span class="nc" id="L41">      case kIOReturnUnsupported -&gt; &quot;kIOReturnUnsupported: &quot; + hexResult;</span>
+<span class="nc" id="L42">      default -&gt; hexResult;</span>
+    };
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

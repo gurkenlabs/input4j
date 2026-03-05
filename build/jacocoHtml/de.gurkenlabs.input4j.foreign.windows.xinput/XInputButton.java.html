@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XInputButton.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.xinput</a> &gt; <span class="el_source">XInputButton.java</span></div><h1>XInputButton.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.xinput;
+
+/**
+ * The {@code XInputButton} enum represents the buttons on an XInput gamepad.
+ * Each enum constant corresponds to a specific button and its associated value.
+ */
+<span class="nc" id="L7">public enum XInputButton {</span>
+<span class="nc" id="L8">  DPAD_UP(0x0001),</span>
+<span class="nc" id="L9">  DPAD_DOWN(0x0002),</span>
+<span class="nc" id="L10">  DPAD_LEFT(0x0004),</span>
+<span class="nc" id="L11">  DPAD_RIGHT(0x0008),</span>
+<span class="nc" id="L12">  START(0x0010),</span>
+<span class="nc" id="L13">  BACK(0x0020),</span>
+<span class="nc" id="L14">  LEFT_THUMB(0x0040),</span>
+<span class="nc" id="L15">  RIGHT_THUMB(0x0080),</span>
+<span class="nc" id="L16">  LEFT_SHOULDER(0x0100),</span>
+<span class="nc" id="L17">  RIGHT_SHOULDER(0x0200),</span>
+<span class="nc" id="L18">  A(0x1000),</span>
+<span class="nc" id="L19">  B(0x2000),</span>
+<span class="nc" id="L20">  X(0x4000),</span>
+<span class="nc" id="L21">  Y(0x8000);</span>
+
+  /**
+   * Cache the values array to avoid creating a new array each time values() is called.
+   */
+<span class="nc" id="L26">  static final XInputButton[] values = values();</span>
+  private final int value;
+
+<span class="nc" id="L29">  XInputButton(int value) {</span>
+<span class="nc" id="L30">    this.value = value;</span>
+<span class="nc" id="L31">  }</span>
+
+  /**
+   * Gets the value associated with the button.
+   *
+   * @return The value of the button.
+   */
+  public int getValue() {
+<span class="nc" id="L39">    return value;</span>
+  }
+
+  /**
+   * Checks if the button is pressed based on the given button state.
+   *
+   * @param wButtons The button state to check against.
+   * @return {@code true} if the button is pressed, {@code false} otherwise.
+   */
+  public boolean isPressed(int wButtons) {
+<span class="nc bnc" id="L49" title="All 2 branches missed.">    return (wButtons &amp; this.value) != 0;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

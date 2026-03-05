@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DIDEVICEOBJECTINSTANCE.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.dinput</a> &gt; <span class="el_source">DIDEVICEOBJECTINSTANCE.java</span></div><h1>DIDEVICEOBJECTINSTANCE.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.dinput;
+
+import de.gurkenlabs.input4j.ComponentType;
+import de.gurkenlabs.input4j.InputComponent;
+import de.gurkenlabs.input4j.components.Axis;
+
+import java.lang.foreign.GroupLayout;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.lang.invoke.VarHandle;
+
+import static java.lang.foreign.ValueLayout.JAVA_INT;
+import static java.lang.foreign.ValueLayout.JAVA_SHORT;
+
+<span class="nc" id="L16">final class DIDEVICEOBJECTINSTANCE {</span>
+<span class="nc" id="L17">  final static GUID GUID_XAxis = new GUID(0xA36D02E0, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);</span>
+<span class="nc" id="L18">  final static GUID GUID_YAxis = new GUID(0xA36D02E1, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);</span>
+<span class="nc" id="L19">  final static GUID GUID_ZAxis = new GUID(0xA36D02E2, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);</span>
+<span class="nc" id="L20">  final static GUID GUID_RxAxis = new GUID(0xA36D02F4, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);</span>
+<span class="nc" id="L21">  final static GUID GUID_RyAxis = new GUID(0xA36D02F5, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);</span>
+<span class="nc" id="L22">  final static GUID GUID_RzAxis = new GUID(0xA36D02E3, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);</span>
+<span class="nc" id="L23">  final static GUID GUID_Slider = new GUID(0xA36D02E4, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);</span>
+<span class="nc" id="L24">  final static GUID GUID_Button = new GUID(0xA36D02F0, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);</span>
+<span class="nc" id="L25">  final static GUID GUID_Key = new GUID(0x55728220, 0xD33C, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);</span>
+<span class="nc" id="L26">  final static GUID GUID_POV = new GUID(0xA36D02F2, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);</span>
+<span class="nc" id="L27">  final static GUID GUID_Unknown = new GUID(0xA36D02F3, 0xC9F3, 0x11CF, 0xBF, 0xC7, 0x44, 0x45, 0x53, 0x54, 0x00, 0x00);</span>
+
+  final static int DIDOI_FFACTUATOR = 0x00000001;
+  final static int DIDOI_FFEFFECTTRIGGER = 0x00000002;
+  final static int DIDOI_POLLED = 0x00008000;
+  final static int DIDOI_ASPECTPOSITION = 0x00000100;
+  final static int DIDOI_ASPECTVELOCITY = 0x00000200;
+  final static int DIDOI_ASPECTACCEL = 0x00000300;
+  final static int DIDOI_ASPECTFORCE = 0x00000400;
+  final static int DIDOI_ASPECTMASK = 0x00000F00;
+  final static int DIDOI_GUIDISUSAGE = 0x00010000;
+
+<span class="nc" id="L39">  public int dwSize = (int) $LAYOUT.byteSize();</span>
+
+  /**
+   * Unique identifier that indicates the object type.
+   */
+  public GUID guidType;
+
+  public int dwOfs;
+
+  public int dwType;
+
+  public int dwFlags;
+
+<span class="nc" id="L52">  public char[] tszName = new char[DIDEVICEINSTANCE.MAX_STRING_LENGTH];</span>
+
+  public int dwFFMaxForce;
+
+  public int dwFFForceResolution;
+
+  public short wCollectionNumber;
+
+  public short wDesignatorIndex;
+
+  public short wUsagePage;
+
+  public short wUsage;
+
+  public int dwDimension;
+
+  public short wExponent;
+
+  public short wReportId;
+
+  public long min;
+  public long max;
+  public int deadzone;
+
+  public DI8DEVOBJECTTYPE objectType;
+
+  public int getInstance() {
+<span class="nc" id="L79">    return dwType &gt;&gt; 8;</span>
+  }
+
+  public int getType() {
+<span class="nc" id="L83">    return dwType &amp; 0xFF;</span>
+  }
+
+<span class="nc" id="L86">  static final GroupLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L87">          JAVA_INT.withName(&quot;dwSize&quot;),</span>
+<span class="nc" id="L88">          GUID.$LAYOUT.withName(&quot;guidType&quot;),</span>
+<span class="nc" id="L89">          JAVA_INT.withName(&quot;dwOfs&quot;),</span>
+<span class="nc" id="L90">          JAVA_INT.withName(&quot;dwType&quot;),</span>
+<span class="nc" id="L91">          JAVA_INT.withName(&quot;dwFlags&quot;),</span>
+<span class="nc" id="L92">          MemoryLayout.sequenceLayout(DIDEVICEINSTANCE.MAX_STRING_LENGTH, ValueLayout.JAVA_CHAR).withName(&quot;tszName&quot;),</span>
+<span class="nc" id="L93">          JAVA_INT.withName(&quot;dwFFMaxForce&quot;),</span>
+<span class="nc" id="L94">          JAVA_INT.withName(&quot;dwFFForceResolution&quot;),</span>
+<span class="nc" id="L95">          JAVA_SHORT.withName(&quot;wCollectionNumber&quot;),</span>
+<span class="nc" id="L96">          JAVA_SHORT.withName(&quot;wDesignatorIndex&quot;),</span>
+<span class="nc" id="L97">          JAVA_SHORT.withName(&quot;wUsagePage&quot;),</span>
+<span class="nc" id="L98">          JAVA_SHORT.withName(&quot;wUsage&quot;),</span>
+<span class="nc" id="L99">          JAVA_INT.withName(&quot;dwDimension&quot;),</span>
+<span class="nc" id="L100">          JAVA_SHORT.withName(&quot;wExponent&quot;),</span>
+<span class="nc" id="L101">          JAVA_SHORT.withName(&quot;wReportId&quot;)</span>
+<span class="nc" id="L102">  ).withName(&quot;DIDEVICEOBJECTINSTANCEW&quot;);</span>
+
+<span class="nc" id="L104">  static final VarHandle VH_dwSize = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwSize&quot;));</span>
+<span class="nc" id="L105">  static final VarHandle VH_dwOfs = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwOfs&quot;));</span>
+<span class="nc" id="L106">  static final VarHandle VH_dwType = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwType&quot;));</span>
+<span class="nc" id="L107">  static final VarHandle VH_dwFlags = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwFlags&quot;));</span>
+<span class="nc" id="L108">  static final VarHandle VH_tszName = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;tszName&quot;), MemoryLayout.PathElement.sequenceElement());</span>
+<span class="nc" id="L109">  static final VarHandle VH_dwFFMaxForce = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwFFMaxForce&quot;));</span>
+<span class="nc" id="L110">  static final VarHandle VH_dwFFForceResolution = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwFFForceResolution&quot;));</span>
+<span class="nc" id="L111">  static final VarHandle VH_wCollectionNumber = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;wCollectionNumber&quot;));</span>
+<span class="nc" id="L112">  static final VarHandle VH_wDesignatorIndex = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;wDesignatorIndex&quot;));</span>
+<span class="nc" id="L113">  static final VarHandle VH_wUsagePage = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;wUsagePage&quot;));</span>
+<span class="nc" id="L114">  static final VarHandle VH_wUsage = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;wUsage&quot;));</span>
+<span class="nc" id="L115">  static final VarHandle VH_dwDimension = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwDimension&quot;));</span>
+<span class="nc" id="L116">  static final VarHandle VH_wExponent = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;wExponent&quot;));</span>
+<span class="nc" id="L117">  static final VarHandle VH_wReportId = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;wReportId&quot;));</span>
+
+  public static DIDEVICEOBJECTINSTANCE read(MemorySegment segment) {
+<span class="nc" id="L120">    var data = new DIDEVICEOBJECTINSTANCE();</span>
+<span class="nc" id="L121">    data.dwSize = (int) VH_dwSize.get(segment, 0);</span>
+    // ensure the offset of the dwSize integer before reading the guid
+<span class="nc" id="L123">    data.guidType = GUID.read(segment.asSlice(ValueLayout.JAVA_INT.byteSize()));</span>
+
+<span class="nc" id="L125">    data.dwOfs = (int) VH_dwOfs.get(segment, 0);</span>
+<span class="nc" id="L126">    data.dwType = (int) VH_dwType.get(segment, 0);</span>
+<span class="nc" id="L127">    data.dwFlags = (int) VH_dwFlags.get(segment, 0);</span>
+
+<span class="nc" id="L129">    char[] tszName = new char[DIDEVICEINSTANCE.MAX_STRING_LENGTH];</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">    for (int i = 0; i &lt; DIDEVICEINSTANCE.MAX_STRING_LENGTH; i++) {</span>
+<span class="nc" id="L131">      tszName[i] = (char) VH_tszName.get(segment, 0, i);</span>
+    }
+
+<span class="nc" id="L134">    data.tszName = tszName;</span>
+<span class="nc" id="L135">    data.dwFFMaxForce = (int) VH_dwFFMaxForce.get(segment, 0);</span>
+<span class="nc" id="L136">    data.dwFFForceResolution = (int) VH_dwFFForceResolution.get(segment, 0);</span>
+<span class="nc" id="L137">    data.wCollectionNumber = (short) VH_wCollectionNumber.get(segment, 0);</span>
+<span class="nc" id="L138">    data.wDesignatorIndex = (short) VH_wDesignatorIndex.get(segment, 0);</span>
+<span class="nc" id="L139">    data.wUsagePage = (short) VH_wUsagePage.get(segment, 0);</span>
+<span class="nc" id="L140">    data.wUsage = (short) VH_wUsage.get(segment, 0);</span>
+<span class="nc" id="L141">    data.dwDimension = (int) VH_dwDimension.get(segment, 0);</span>
+<span class="nc" id="L142">    data.wExponent = (short) VH_wExponent.get(segment, 0);</span>
+<span class="nc" id="L143">    data.wReportId = (short) VH_wReportId.get(segment, 0);</span>
+<span class="nc" id="L144">    return data;</span>
+  }
+
+  public InputComponent.ID getIdentifier() {
+<span class="nc bnc" id="L148" title="All 11 branches missed.">    switch (this.objectType) {</span>
+      case XAxis:
+<span class="nc" id="L150">        return Axis.AXIS_X;</span>
+      case YAxis:
+<span class="nc" id="L152">        return Axis.AXIS_Y;</span>
+      case ZAxis:
+<span class="nc" id="L154">        return Axis.AXIS_Z;</span>
+      case RxAxis:
+<span class="nc" id="L156">        return Axis.AXIS_RX;</span>
+      case RyAxis:
+<span class="nc" id="L158">        return Axis.AXIS_RY;</span>
+      case RzAxis:
+<span class="nc" id="L160">        return Axis.AXIS_RZ;</span>
+      case Slider:
+<span class="nc" id="L162">        return Axis.AXIS_SLIDER;</span>
+      case POV:
+<span class="nc" id="L164">        return Axis.AXIS_DPAD;</span>
+      case Button:
+<span class="nc" id="L166">        var button = InputComponent.ID.getButton(this.getInstance());</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        if (button == null) {</span>
+<span class="nc" id="L168">          button = new InputComponent.ID(ComponentType.BUTTON, InputComponent.ID.getNextButtonId(), this.getName());</span>
+        }
+<span class="nc" id="L170">        return button;</span>
+      case Key:
+<span class="nc" id="L172">        return new InputComponent.ID(ComponentType.KEY, InputComponent.ID.getNextId(ComponentType.KEY, 0), this.getName());</span>
+      default:
+<span class="nc" id="L174">        return new InputComponent.ID(ComponentType.UNKNOWN, InputComponent.ID.getNextId(ComponentType.UNKNOWN, 0), this.getName());</span>
+    }
+  }
+
+  boolean isAxis() {
+<span class="nc bnc" id="L179" title="All 2 branches missed.">    return (dwType &amp; IDirectInputDevice8.DIDFT_AXIS) != 0;</span>
+  }
+
+  boolean isRelative() {
+<span class="nc bnc" id="L183" title="All 4 branches missed.">    return this.isAxis() &amp;&amp; (dwType &amp; IDirectInputDevice8.DIDFT_RELAXIS) != 0;</span>
+  }
+
+  boolean isButton() {
+<span class="nc bnc" id="L187" title="All 2 branches missed.">    return (dwType &amp; IDirectInputDevice8.DIDFT_BUTTON) != 0;</span>
+  }
+
+  String getName() {
+<span class="nc" id="L191">    return new String(this.tszName).trim();</span>
+  }
+
+  /**
+   * Converts the raw input value to a unified relative value.
+   *
+   * @param rawValue The raw value from DirectInput API
+   * @return The unified relative value.
+   */
+  float convertRawInputValue(float rawValue) {
+<span class="nc bnc" id="L201" title="All 4 branches missed.">    if (this.deadzone != 0 &amp;&amp; Math.abs(rawValue) &lt; this.deadzone) {</span>
+<span class="nc" id="L202">      return 0;</span>
+    }
+
+<span class="nc" id="L205">    var convertedValue = rawValue;</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">    if (this.isButton()) {</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">      convertedValue = (((int) rawValue) &amp; 0x80) != 0 ? 1 : 0;</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">    } else if (this.objectType == DI8DEVOBJECTTYPE.POV) {</span>
+<span class="nc" id="L209">      convertedValue = DI8DEVOBJECTTYPE.getPOV((int) rawValue);</span>
+<span class="nc bnc" id="L210" title="All 4 branches missed.">    } else if (this.isAxis() &amp;&amp; !this.isRelative()) {</span>
+<span class="nc" id="L211">      convertedValue = 2 * (rawValue - min) / (float) (max - min) - 1;</span>
+    }
+
+    // this is used to minimize input noise and static small values that are usually related to a controller deadzone
+<span class="nc" id="L215">    final float minValue = 0.05f;</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">    return (Math.abs(convertedValue) &lt; minValue) ? 0 : convertedValue;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XINPUT_GAMEPAD.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.xinput</a> &gt; <span class="el_source">XINPUT_GAMEPAD.java</span></div><h1>XINPUT_GAMEPAD.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.xinput;
+
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.lang.invoke.VarHandle;
+
+/**
+ * The {@code XINPUT_GAMEPAD} class represents the state of an XInput gamepad.
+ * It includes information about the buttons, triggers, and thumbsticks of the gamepad.
+ */
+<span class="nc" id="L12">final class XINPUT_GAMEPAD {</span>
+  static final int XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE = 7849;
+  static final int XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE = 8689;
+  static final int XINPUT_GAMEPAD_TRIGGER_THRESHOLD = 30;
+
+  /**
+   * The buttons pressed on the gamepad.
+   * Potential values:
+   * &lt;ul&gt;
+   *   &lt;li&gt;{@code 0x0001}: D-pad Up&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x0002}: D-pad Down&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x0004}: D-pad Left&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x0008}: D-pad Right&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x0010}: Start&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x0020}: Back&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x0040}: Left Thumb&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x0080}: Right Thumb&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x0100}: Left Shoulder&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x0200}: Right Shoulder&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x1000}: A&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x2000}: B&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x4000}: X&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x8000}: Y&lt;/li&gt;
+   * &lt;/ul&gt;
+   */
+  short wButtons;
+
+  /**
+   * Represents the pressure applied to the left trigger.
+   * Value range: 0 to 255.
+   */
+  byte bLeftTrigger;
+
+  /**
+   * Represents the pressure applied to the right trigger.
+   * Value range: 0 to 255.
+   */
+  byte bRightTrigger;
+
+  /**
+   * Represents the position of the left thumbstick along the X-axis.
+   * Value range: -32768 to 32767.
+   */
+  short sThumbLX;
+
+  /**
+   * Represents the position of the left thumbstick along the Y-axis.
+   * Value range: -32768 to 32767.
+   */
+  short sThumbLY;
+
+  /**
+   * Represents the position of the right thumbstick along the X-axis.
+   * Value range: -32768 to 32767.
+   */
+  short sThumbRX;
+
+  /**
+   * Represents the position of the right thumbstick along the Y-axis.
+   * Value range: -32768 to 32767.
+   */
+  short sThumbRY;
+
+  int userIndex;
+
+<span class="nc" id="L77">  static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L78">          ValueLayout.JAVA_SHORT.withName(&quot;wButtons&quot;),</span>
+<span class="nc" id="L79">          ValueLayout.JAVA_BYTE.withName(&quot;bLeftTrigger&quot;),</span>
+<span class="nc" id="L80">          ValueLayout.JAVA_BYTE.withName(&quot;bRightTrigger&quot;),</span>
+<span class="nc" id="L81">          ValueLayout.JAVA_SHORT.withName(&quot;sThumbLX&quot;),</span>
+<span class="nc" id="L82">          ValueLayout.JAVA_SHORT.withName(&quot;sThumbLY&quot;),</span>
+<span class="nc" id="L83">          ValueLayout.JAVA_SHORT.withName(&quot;sThumbRX&quot;),</span>
+<span class="nc" id="L84">          ValueLayout.JAVA_SHORT.withName(&quot;sThumbRY&quot;)</span>
+  );
+
+<span class="nc" id="L87">  private static final VarHandle VH_wButtons = $LAYOUT.varHandle(ValueLayout.PathElement.groupElement(&quot;wButtons&quot;));</span>
+<span class="nc" id="L88">  private static final VarHandle VH_bLeftTrigger = $LAYOUT.varHandle(ValueLayout.PathElement.groupElement(&quot;bLeftTrigger&quot;));</span>
+<span class="nc" id="L89">  private static final VarHandle VH_bRightTrigger = $LAYOUT.varHandle(ValueLayout.PathElement.groupElement(&quot;bRightTrigger&quot;));</span>
+<span class="nc" id="L90">  private static final VarHandle VH_sThumbLX = $LAYOUT.varHandle(ValueLayout.PathElement.groupElement(&quot;sThumbLX&quot;));</span>
+<span class="nc" id="L91">  private static final VarHandle VH_sThumbLY = $LAYOUT.varHandle(ValueLayout.PathElement.groupElement(&quot;sThumbLY&quot;));</span>
+<span class="nc" id="L92">  private static final VarHandle VH_sThumbRX = $LAYOUT.varHandle(ValueLayout.PathElement.groupElement(&quot;sThumbRX&quot;));</span>
+<span class="nc" id="L93">  private static final VarHandle VH_sThumbRY = $LAYOUT.varHandle(ValueLayout.PathElement.groupElement(&quot;sThumbRY&quot;));</span>
+
+  /**
+   * Reads the {@code XINPUT_GAMEPAD} from the given memory segment.
+   *
+   * @param segment The memory segment to read from.
+   * @return The {@code XINPUT_GAMEPAD} instance.
+   */
+  static XINPUT_GAMEPAD read(MemorySegment segment) {
+<span class="nc" id="L102">    var gamepad = new XINPUT_GAMEPAD();</span>
+<span class="nc" id="L103">    gamepad.wButtons = (short) VH_wButtons.get(segment, 0);</span>
+<span class="nc" id="L104">    gamepad.bLeftTrigger = (byte) VH_bLeftTrigger.get(segment, 0);</span>
+<span class="nc" id="L105">    gamepad.bRightTrigger = (byte) VH_bRightTrigger.get(segment, 0);</span>
+<span class="nc" id="L106">    gamepad.sThumbLX = (short) VH_sThumbLX.get(segment, 0);</span>
+<span class="nc" id="L107">    gamepad.sThumbLY = (short) VH_sThumbLY.get(segment, 0);</span>
+<span class="nc" id="L108">    gamepad.sThumbRX = (short) VH_sThumbRX.get(segment, 0);</span>
+<span class="nc" id="L109">    gamepad.sThumbRY = (short) VH_sThumbRY.get(segment, 0);</span>
+<span class="nc" id="L110">    return gamepad;</span>
+  }
+
+  /**
+   * Writes the {@code XINPUT_GAMEPAD} to the given memory segment.
+   *
+   * @param segment The memory segment to write to.
+   */
+  void write(MemorySegment segment) {
+<span class="nc" id="L119">    VH_wButtons.set(segment, 0, wButtons);</span>
+<span class="nc" id="L120">    VH_bLeftTrigger.set(segment, 0, bLeftTrigger);</span>
+<span class="nc" id="L121">    VH_bRightTrigger.set(segment, 0, bRightTrigger);</span>
+<span class="nc" id="L122">    VH_sThumbLX.set(segment, 0, sThumbLX);</span>
+<span class="nc" id="L123">    VH_sThumbLY.set(segment, 0, sThumbLY);</span>
+<span class="nc" id="L124">    VH_sThumbRX.set(segment, 0, sThumbRX);</span>
+<span class="nc" id="L125">    VH_sThumbRY.set(segment, 0, sThumbRY);</span>
+<span class="nc" id="L126">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

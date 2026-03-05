@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XINPUT_CAPABILITIES.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.xinput</a> &gt; <span class="el_source">XINPUT_CAPABILITIES.java</span></div><h1>XINPUT_CAPABILITIES.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.xinput;
+
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.lang.invoke.VarHandle;
+
+/**
+ * The {@code XINPUT_CAPABILITIES} class represents the capabilities of an XInput device.
+ * It includes information about the type, subtype, flags, gamepad, and vibration settings of the device.
+ */
+<span class="nc" id="L12">final class XINPUT_CAPABILITIES {</span>
+  /**
+   * The type of the XInput device.
+   * Native type: {@code BYTE}
+   * Potential values:
+   * &lt;ul&gt;
+   *   &lt;li&gt;{@code 0x00}: Device&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x01}: Headset&lt;/li&gt;
+   * &lt;/ul&gt;
+   */
+  byte Type;
+
+  /**
+   * The subtype of the XInput device.
+   * Native type: {@code BYTE}
+   * Potential values:
+   * &lt;ul&gt;
+   *   &lt;li&gt;{@code 0x01}: Gamepad&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x02}: Wheel&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x03}: Arcade Stick&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x04}: Flight Stick&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x05}: Dance Pad&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x06}: Guitar&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x07}: Guitar Alternate&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x08}: Drum Kit&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x0A}: Guitar Bass&lt;/li&gt;
+   *   &lt;li&gt;{@code 0x0B}: Arcade Pad&lt;/li&gt;
+   * &lt;/ul&gt;
+   */
+  byte SubType;
+
+  /**
+   * The flags indicating the capabilities of the XInput device.
+   * Native type: {@code WORD}
+   * Potential values:
+   * &lt;ul&gt;
+   *   &lt;li&gt;{@code 0x0001}: Voice supported&lt;/li&gt;
+   * &lt;/ul&gt;
+   */
+  short Flags;
+
+  /**
+   * The gamepad capabilities of the XInput device.
+   */
+  XINPUT_GAMEPAD Gamepad;
+
+  /**
+   * The vibration capabilities of the XInput device.
+   */
+  XINPUT_VIBRATION Vibration;
+
+<span class="nc" id="L63">  static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L64">          ValueLayout.JAVA_BYTE.withName(&quot;Type&quot;),</span>
+<span class="nc" id="L65">          ValueLayout.JAVA_BYTE.withName(&quot;SubType&quot;),</span>
+<span class="nc" id="L66">          ValueLayout.JAVA_SHORT.withName(&quot;Flags&quot;),</span>
+<span class="nc" id="L67">          XINPUT_GAMEPAD.$LAYOUT.withName(&quot;Gamepad&quot;),</span>
+<span class="nc" id="L68">          XINPUT_VIBRATION.$LAYOUT.withName(&quot;Vibration&quot;)</span>
+  );
+
+<span class="nc" id="L71">  private static final VarHandle VH_Type = $LAYOUT.varHandle(ValueLayout.PathElement.groupElement(&quot;Type&quot;));</span>
+<span class="nc" id="L72">  private static final VarHandle VH_SubType = $LAYOUT.varHandle(ValueLayout.PathElement.groupElement(&quot;SubType&quot;));</span>
+<span class="nc" id="L73">  private static final VarHandle VH_Flags = $LAYOUT.varHandle(ValueLayout.PathElement.groupElement(&quot;Flags&quot;));</span>
+
+<span class="nc" id="L75">  private static final long GamepadOffset = $LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement(&quot;Gamepad&quot;));</span>
+<span class="nc" id="L76">  private static final long VibrationOffset = $LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement(&quot;Vibration&quot;));</span>
+
+  /**
+   * Reads the {@code XINPUT_CAPABILITIES} from the given memory segment.
+   *
+   * @param segment The memory segment to read from.
+   * @return The {@code XINPUT_CAPABILITIES} instance.
+   */
+  static XINPUT_CAPABILITIES read(MemorySegment segment) {
+<span class="nc" id="L85">    var capabilities = new XINPUT_CAPABILITIES();</span>
+<span class="nc" id="L86">    capabilities.Type = (byte) VH_Type.get(segment, 0);</span>
+<span class="nc" id="L87">    capabilities.SubType = (byte) VH_SubType.get(segment, 0);</span>
+<span class="nc" id="L88">    capabilities.Flags = (short) VH_Flags.get(segment, 0);</span>
+<span class="nc" id="L89">    capabilities.Gamepad = XINPUT_GAMEPAD.read(segment.asSlice(GamepadOffset));</span>
+<span class="nc" id="L90">    capabilities.Vibration = XINPUT_VIBRATION.read(segment.asSlice(VibrationOffset));</span>
+<span class="nc" id="L91">    return capabilities;</span>
+  }
+
+  /**
+   * Writes the {@code XINPUT_CAPABILITIES} to the given memory segment.
+   *
+   * @param segment The memory segment to write to.
+   */
+  void write(MemorySegment segment) {
+<span class="nc" id="L100">    VH_Type.set(segment, 0, Type);</span>
+<span class="nc" id="L101">    VH_SubType.set(segment, 0, SubType);</span>
+<span class="nc" id="L102">    VH_Flags.set(segment, 0, Flags);</span>
+<span class="nc" id="L103">    Gamepad.write(segment.asSlice(GamepadOffset));</span>
+<span class="nc" id="L104">    Vibration.write(segment.asSlice(VibrationOffset));</span>
+<span class="nc" id="L105">  }</span>
+
+  public String getTypeName() {
+<span class="nc bnc" id="L108" title="All 11 branches missed.">    switch (SubType) {</span>
+      case 0x01:
+<span class="nc" id="L110">        return &quot;Gamepad&quot;;</span>
+      case 0x02:
+<span class="nc" id="L112">        return &quot;Wheel&quot;;</span>
+      case 0x03:
+<span class="nc" id="L114">        return &quot;Arcade Stick&quot;;</span>
+      case 0x04:
+<span class="nc" id="L116">        return &quot;Flight Stick&quot;;</span>
+      case 0x05:
+<span class="nc" id="L118">        return &quot;Dance Pad&quot;;</span>
+      case 0x06:
+<span class="nc" id="L120">        return &quot;Guitar&quot;;</span>
+      case 0x07:
+<span class="nc" id="L122">        return &quot;Guitar Alternate&quot;;</span>
+      case 0x08:
+<span class="nc" id="L124">        return &quot;Drum Kit&quot;;</span>
+      case 0x0B:
+<span class="nc" id="L126">        return &quot;Guitar Bass&quot;;</span>
+      case 0x0C:
+<span class="nc" id="L128">        return &quot;Arcade Pad&quot;;</span>
+      default:
+<span class="nc" id="L130">        return &quot;Unknown&quot;;</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

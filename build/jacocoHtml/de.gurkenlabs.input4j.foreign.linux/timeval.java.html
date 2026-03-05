@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>timeval.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.linux</a> &gt; <span class="el_source">timeval.java</span></div><h1>timeval.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.linux;
+
+import java.lang.foreign.GroupLayout;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.VarHandle;
+
+import static java.lang.foreign.ValueLayout.JAVA_INT;
+import static java.lang.foreign.ValueLayout.JAVA_LONG;
+
+<span class="nc" id="L11">class timeval {</span>
+  /**
+   * seconds
+   */
+  public long tv_sec;
+
+  /**
+   * microseconds
+   */
+  public long tv_usec;
+
+<span class="nc" id="L22">  private static final boolean IS_32_BIT = is32BitSystem();</span>
+
+  private static boolean is32BitSystem() {
+<span class="nc" id="L25">    String osArch = System.getProperty(&quot;os.arch&quot;, &quot;&quot;).toLowerCase();</span>
+<span class="nc bnc" id="L26" title="All 6 branches missed.">    return osArch.equals(&quot;arm&quot;) || osArch.equals(&quot;i386&quot;) || osArch.equals(&quot;i486&quot;)</span>
+<span class="nc bnc" id="L27" title="All 6 branches missed.">        || osArch.equals(&quot;i586&quot;) || osArch.equals(&quot;i686&quot;) || osArch.equals(&quot;x86&quot;)</span>
+<span class="nc bnc" id="L28" title="All 2 branches missed.">        || osArch.startsWith(&quot;armv&quot;);</span>
+  }
+
+<span class="nc" id="L31">  static final GroupLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">          (IS_32_BIT ? JAVA_INT : JAVA_LONG).withName(&quot;tv_sec&quot;),</span>
+<span class="nc bnc" id="L33" title="All 2 branches missed.">          (IS_32_BIT ? JAVA_INT : JAVA_LONG).withName(&quot;tv_usec&quot;)</span>
+<span class="nc" id="L34">  ).withName(&quot;timeval&quot;);</span>
+
+<span class="nc" id="L36">  static final VarHandle VH_tv_sec = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;tv_sec&quot;));</span>
+<span class="nc" id="L37">  static final VarHandle VH_tv_usec = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;tv_usec&quot;));</span>
+
+  public static timeval read(MemorySegment segment) {
+<span class="nc" id="L40">    var timeval = new timeval();</span>
+<span class="nc" id="L41">    timeval.tv_sec = (long) VH_tv_sec.get(segment, 0);</span>
+<span class="nc" id="L42">    timeval.tv_usec = (long) VH_tv_usec.get(segment, 0);</span>
+
+<span class="nc" id="L44">    return timeval;</span>
+  }
+
+  public void write(MemorySegment segment) {
+<span class="nc" id="L48">    VH_tv_sec.set(segment, 0, tv_sec);</span>
+<span class="nc" id="L49">    VH_tv_usec.set(segment, 0, tv_usec);</span>
+<span class="nc" id="L50">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

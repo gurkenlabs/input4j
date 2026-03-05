@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ff_trigger.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.linux</a> &gt; <span class="el_source">ff_trigger.java</span></div><h1>ff_trigger.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.linux;
+
+import java.lang.foreign.GroupLayout;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.VarHandle;
+
+import static java.lang.foreign.ValueLayout.JAVA_SHORT;
+
+/**
+ * struct ff_trigger - defines when a force feedback effect is played.
+ *
+ * &lt;p&gt;
+ * This structure defines the button that triggers the effect and
+ * the interval for automatic repeat.
+ * &lt;/p&gt;
+ */
+<span class="nc" id="L18">class ff_trigger {</span>
+  /**
+   * Button that triggers the effect. Set to 0xFFFF to disable triggering.
+   */
+  public short button;
+
+  /**
+   * Time between automatic repeats in milliseconds.
+   */
+  public short interval;
+
+<span class="nc" id="L29">  static final GroupLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L30">      JAVA_SHORT.withName(&quot;button&quot;),</span>
+<span class="nc" id="L31">      JAVA_SHORT.withName(&quot;interval&quot;)</span>
+<span class="nc" id="L32">  ).withName(&quot;ff_trigger&quot;);</span>
+
+<span class="nc" id="L34">  static final VarHandle VH_button = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;button&quot;));</span>
+<span class="nc" id="L35">  static final VarHandle VH_interval = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;interval&quot;));</span>
+
+  public static ff_trigger read(MemorySegment segment) {
+<span class="nc" id="L38">    var trigger = new ff_trigger();</span>
+<span class="nc" id="L39">    trigger.button = (short) VH_button.get(segment, 0);</span>
+<span class="nc" id="L40">    trigger.interval = (short) VH_interval.get(segment, 0);</span>
+<span class="nc" id="L41">    return trigger;</span>
+  }
+
+  public void write(MemorySegment segment) {
+<span class="nc" id="L45">    VH_button.set(segment, 0, button);</span>
+<span class="nc" id="L46">    VH_interval.set(segment, 0, interval);</span>
+<span class="nc" id="L47">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

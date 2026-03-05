@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DIPROPHEADER.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.dinput</a> &gt; <span class="el_source">DIPROPHEADER.java</span></div><h1>DIPROPHEADER.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.dinput;
+
+import java.lang.foreign.GroupLayout;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.VarHandle;
+
+import static java.lang.foreign.ValueLayout.JAVA_INT;
+
+<span class="nc" id="L10">class DIPROPHEADER {</span>
+  static final int DIPH_DEVICE = 0;
+  static final int DIPH_BYOFFSET = 1;
+  static final int DIPH_BYID = 2;
+  static final int DIPH_BYUSAGE = 3;
+
+  public int dwSize;
+<span class="nc" id="L17">  public int dwHeaderSize = (int) $LAYOUT.byteSize();</span>
+  public int dwObj;
+  public int dwHow;
+
+<span class="nc" id="L21">  static final GroupLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L22">          JAVA_INT.withName(&quot;dwSize&quot;),</span>
+<span class="nc" id="L23">          JAVA_INT.withName(&quot;dwHeaderSize&quot;),</span>
+<span class="nc" id="L24">          JAVA_INT.withName(&quot;dwObj&quot;),</span>
+<span class="nc" id="L25">          JAVA_INT.withName(&quot;dwHow&quot;)</span>
+<span class="nc" id="L26">  ).withName(&quot;DIPROPHEADER&quot;);</span>
+
+<span class="nc" id="L28">  static final VarHandle VH_dwSize = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwSize&quot;));</span>
+<span class="nc" id="L29">  static final VarHandle VH_dwHeaderSize = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwHeaderSize&quot;));</span>
+<span class="nc" id="L30">  static final VarHandle VH_dwObj = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwObj&quot;));</span>
+<span class="nc" id="L31">  static final VarHandle VH_dwHow = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwHow&quot;));</span>
+
+  public static DIPROPHEADER read(MemorySegment segment) {
+<span class="nc" id="L34">    var data = new DIPROPHEADER();</span>
+<span class="nc" id="L35">    data.dwSize = (int) VH_dwSize.get(segment, 0);</span>
+<span class="nc" id="L36">    data.dwHeaderSize = (int) VH_dwHeaderSize.get(segment, 0);</span>
+<span class="nc" id="L37">    data.dwObj = (int) VH_dwObj.get(segment, 0);</span>
+<span class="nc" id="L38">    data.dwHow = (int) VH_dwHow.get(segment, 0);</span>
+
+<span class="nc" id="L40">    return data;</span>
+  }
+
+  public void write(MemorySegment segment) {
+<span class="nc" id="L44">    VH_dwSize.set(segment, 0, dwSize);</span>
+<span class="nc" id="L45">    VH_dwHeaderSize.set(segment, 0, dwHeaderSize);</span>
+<span class="nc" id="L46">    VH_dwObj.set(segment, 0, dwObj);</span>
+<span class="nc" id="L47">    VH_dwHow.set(segment, 0, dwHow);</span>
+<span class="nc" id="L48">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

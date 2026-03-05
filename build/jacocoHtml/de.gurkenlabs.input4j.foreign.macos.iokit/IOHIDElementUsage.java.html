@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IOHIDElementUsage.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.macos.iokit</a> &gt; <span class="el_source">IOHIDElementUsage.java</span></div><h1>IOHIDElementUsage.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.macos.iokit;
+
+/**
+ * Enum representing the different usages of IOHID elements.
+ *
+ * &lt;p&gt;These values are used to identify the type of data that an IOHID element represents.
+ * For example, a button element would have a usage of BUTTON_1, BUTTON_2, etc.,
+ * while an axis element would have a usage of X, Y, Z, etc.&lt;/p&gt;
+ */
+<span class="nc" id="L10">enum IOHIDElementUsage {</span>
+<span class="nc" id="L11">  UNDEFINED(0x00),</span>
+<span class="nc" id="L12">  BUTTON_1(0x01),</span>
+<span class="nc" id="L13">  BUTTON_2(0x02),</span>
+<span class="nc" id="L14">  BUTTON_3(0x03),</span>
+<span class="nc" id="L15">  BUTTON_4(0x04),</span>
+<span class="nc" id="L16">  BUTTON_5(0x05),</span>
+<span class="nc" id="L17">  BUTTON_6(0x06),</span>
+<span class="nc" id="L18">  BUTTON_7(0x07),</span>
+<span class="nc" id="L19">  BUTTON_8(0x08),</span>
+<span class="nc" id="L20">  BUTTON_9(0x09),</span>
+<span class="nc" id="L21">  BUTTON_10(0x0A),</span>
+<span class="nc" id="L22">  BUTTON_11(0x0B),</span>
+<span class="nc" id="L23">  BUTTON_12(0x0C),</span>
+<span class="nc" id="L24">  BUTTON_13(0x0D),</span>
+<span class="nc" id="L25">  BUTTON_14(0x0E),</span>
+<span class="nc" id="L26">  BUTTON_15(0x0F),</span>
+<span class="nc" id="L27">  BUTTON_16(0x10),</span>
+<span class="nc" id="L28">  BUTTON_17(0x11),</span>
+<span class="nc" id="L29">  BUTTON_18(0x12),</span>
+<span class="nc" id="L30">  BUTTON_19(0x13),</span>
+<span class="nc" id="L31">  BUTTON_20(0x14),</span>
+<span class="nc" id="L32">  BUTTON_21(0x15),</span>
+<span class="nc" id="L33">  BUTTON_22(0x16),</span>
+<span class="nc" id="L34">  BUTTON_23(0x17),</span>
+<span class="nc" id="L35">  BUTTON_24(0x18),</span>
+<span class="nc" id="L36">  BUTTON_25(0x19),</span>
+<span class="nc" id="L37">  BUTTON_26(0x1A),</span>
+<span class="nc" id="L38">  BUTTON_27(0x1B),</span>
+<span class="nc" id="L39">  BUTTON_28(0x1C),</span>
+<span class="nc" id="L40">  BUTTON_29(0x1D),</span>
+<span class="nc" id="L41">  BUTTON_30(0x1E),</span>
+<span class="nc" id="L42">  BUTTON_31(0x1F),</span>
+<span class="nc" id="L43">  BUTTON_32(0x20),</span>
+<span class="nc" id="L44">  X(0x30),</span>
+<span class="nc" id="L45">  Y(0x31),</span>
+<span class="nc" id="L46">  Z(0x32),</span>
+<span class="nc" id="L47">  RX(0x33),</span>
+<span class="nc" id="L48">  RY(0x34),</span>
+<span class="nc" id="L49">  RZ(0x35),</span>
+<span class="nc" id="L50">  SLIDER(0x36),</span>
+<span class="nc" id="L51">  DIAL(0x37),</span>
+<span class="nc" id="L52">  WHEEL(0x38),</span>
+<span class="nc" id="L53">  HAT_SWITCH(0x39),</span>
+<span class="nc" id="L54">  COUNTED_BUFFER(0x3A),</span>
+<span class="nc" id="L55">  BYTE_COUNT(0x3D),</span>
+<span class="nc" id="L56">  MOTION_WAKEUP(0x3F),</span>
+<span class="nc" id="L57">  START(0x40),</span>
+<span class="nc" id="L58">  SELECT(0x41),</span>
+<span class="nc" id="L59">  VX(0x42),</span>
+<span class="nc" id="L60">  VY(0x43),</span>
+<span class="nc" id="L61">  VZ(0x44),</span>
+<span class="nc" id="L62">  VBRX(0x45),</span>
+<span class="nc" id="L63">  VBRY(0x46),</span>
+<span class="nc" id="L64">  VBRZ(0x47),</span>
+<span class="nc" id="L65">  VNO(0x48),</span>
+<span class="nc" id="L66">  SYSTEM_CONTROL(0x80),</span>
+<span class="nc" id="L67">  SYSTEM_POWER_DOWN(0x81),</span>
+<span class="nc" id="L68">  SYSTEM_SLEEP(0x82),</span>
+<span class="nc" id="L69">  SYSTEM_WAKE_UP(0x83),</span>
+<span class="nc" id="L70">  SYSTEM_CONTEXT_MENU(0x84),</span>
+<span class="nc" id="L71">  SYSTEM_MAIN_MENU(0x85),</span>
+<span class="nc" id="L72">  SYSTEM_APP_MENU(0x86),</span>
+<span class="nc" id="L73">  SYSTEM_MENU_HELP(0x87),</span>
+<span class="nc" id="L74">  SYSTEM_MENU_EXIT(0x88),</span>
+<span class="nc" id="L75">  SYSTEM_MENU_SELECT(0x89),</span>
+<span class="nc" id="L76">  SYSTEM_MENU_RIGHT(0x8A),</span>
+<span class="nc" id="L77">  SYSTEM_MENU_LEFT(0x8B),</span>
+<span class="nc" id="L78">  SYSTEM_MENU_UP(0x8C),</span>
+<span class="nc" id="L79">  SYSTEM_MENU_DOWN(0x8D);</span>
+
+  private final int usage;
+
+<span class="nc" id="L83">  IOHIDElementUsage(int usage) {</span>
+<span class="nc" id="L84">    this.usage = usage;</span>
+<span class="nc" id="L85">  }</span>
+
+  /**
+   * Gets the integer value associated with the element usage.
+   *
+   * @return the integer value of the element usage.
+   */
+  int getUsage() {
+<span class="nc" id="L93">    return usage;</span>
+  }
+
+  /**
+   * Returns the IOHIDElementUsage corresponding to the given integer value.
+   *
+   * @param value the integer value.
+   * @return the corresponding IOHIDElementUsage, or UNDEFINED if no match is found.
+   */
+  static IOHIDElementUsage fromValue(int value) {
+<span class="nc bnc" id="L103" title="All 2 branches missed.">    for (IOHIDElementUsage usage : values()) {</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">      if (usage.getUsage() == value) {</span>
+<span class="nc" id="L105">        return usage;</span>
+      }
+    }
+
+<span class="nc" id="L109">    return UNDEFINED;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

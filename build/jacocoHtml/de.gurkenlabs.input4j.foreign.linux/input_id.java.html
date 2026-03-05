@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>input_id.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.linux</a> &gt; <span class="el_source">input_id.java</span></div><h1>input_id.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.linux;
+
+import java.lang.foreign.GroupLayout;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.VarHandle;
+
+import static java.lang.foreign.ValueLayout.JAVA_SHORT;
+
+/*
+ * IOCTLs (0x00 - 0x7f)
+ */
+<span class="nc" id="L13">class input_id {</span>
+  public short bustype;
+  public short vendor;
+  public short product;
+  public short version;
+
+<span class="nc" id="L19">  static final GroupLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L20">          JAVA_SHORT.withName(&quot;bustype&quot;),</span>
+<span class="nc" id="L21">          JAVA_SHORT.withName(&quot;vendor&quot;),</span>
+<span class="nc" id="L22">          JAVA_SHORT.withName(&quot;product&quot;),</span>
+<span class="nc" id="L23">          JAVA_SHORT.withName(&quot;version&quot;)</span>
+<span class="nc" id="L24">  ).withName(&quot;input_id&quot;);</span>
+
+<span class="nc" id="L26">  static final VarHandle VH_bustype = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;bustype&quot;));</span>
+<span class="nc" id="L27">  static final VarHandle VH_vendor = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;vendor&quot;));</span>
+<span class="nc" id="L28">  static final VarHandle VH_product = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;product&quot;));</span>
+<span class="nc" id="L29">  static final VarHandle VH_version = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;version&quot;));</span>
+
+  public static input_id read(MemorySegment segment) {
+<span class="nc" id="L32">    var inputId = new input_id();</span>
+<span class="nc" id="L33">    inputId.bustype = (short) VH_bustype.get(segment, 0);</span>
+<span class="nc" id="L34">    inputId.vendor = (short) VH_vendor.get(segment, 0);</span>
+<span class="nc" id="L35">    inputId.product = (short) VH_product.get(segment, 0);</span>
+<span class="nc" id="L36">    inputId.version = (short) VH_version.get(segment, 0);</span>
+
+<span class="nc" id="L38">    return inputId;</span>
+  }
+
+  public void write(MemorySegment segment) {
+<span class="nc" id="L42">    VH_bustype.set(segment, 0, bustype);</span>
+<span class="nc" id="L43">    VH_vendor.set(segment, 0, vendor);</span>
+<span class="nc" id="L44">    VH_product.set(segment, 0, product);</span>
+<span class="nc" id="L45">    VH_version.set(segment, 0, version);</span>
+<span class="nc" id="L46">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

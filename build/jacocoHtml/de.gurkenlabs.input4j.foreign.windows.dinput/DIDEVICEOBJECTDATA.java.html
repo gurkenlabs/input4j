@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DIDEVICEOBJECTDATA.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.dinput</a> &gt; <span class="el_source">DIDEVICEOBJECTDATA.java</span></div><h1>DIDEVICEOBJECTDATA.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.dinput;
+
+import java.lang.foreign.GroupLayout;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.VarHandle;
+
+import static java.lang.foreign.ValueLayout.JAVA_INT;
+import static java.lang.foreign.ValueLayout.JAVA_LONG;
+
+<span class="nc" id="L11">class DIDEVICEOBJECTDATA {</span>
+  public int dwOfs;
+  public int dwData;
+  public int dwTimeStamp;
+  public int dwSequence;
+  public long uAppData;
+
+<span class="nc" id="L18">  static final GroupLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L19">          JAVA_INT.withName(&quot;dwOfs&quot;),</span>
+<span class="nc" id="L20">          JAVA_INT.withName(&quot;dwData&quot;),</span>
+<span class="nc" id="L21">          JAVA_INT.withName(&quot;dwTimeStamp&quot;),</span>
+<span class="nc" id="L22">          JAVA_INT.withName(&quot;dwSequence&quot;),</span>
+<span class="nc" id="L23">          JAVA_LONG.withName(&quot;uAppData&quot;)</span>
+<span class="nc" id="L24">  ).withName(&quot;DIDEVICEOBJECTDATA&quot;);</span>
+
+<span class="nc" id="L26">  static final VarHandle VH_dwOfs = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwOfs&quot;));</span>
+<span class="nc" id="L27">  static final VarHandle VH_dwData = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwData&quot;));</span>
+<span class="nc" id="L28">  static final VarHandle VH_dwTimeStamp = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwTimeStamp&quot;));</span>
+<span class="nc" id="L29">  static final VarHandle VH_dwSequence = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwSequence&quot;));</span>
+<span class="nc" id="L30">  static final VarHandle VH_uAppData = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;uAppData&quot;));</span>
+
+  public static DIDEVICEOBJECTDATA read(MemorySegment segment) {
+<span class="nc" id="L33">    var data = new DIDEVICEOBJECTDATA();</span>
+<span class="nc" id="L34">    data.dwOfs = (int) VH_dwOfs.get(segment, 0);</span>
+<span class="nc" id="L35">    data.dwData = (int) VH_dwData.get(segment, 0);</span>
+<span class="nc" id="L36">    data.dwTimeStamp = (int) VH_dwTimeStamp.get(segment, 0);</span>
+<span class="nc" id="L37">    data.dwSequence = (int) VH_dwSequence.get(segment, 0);</span>
+<span class="nc" id="L38">    data.uAppData = (long) VH_uAppData.get(segment, 0);</span>
+<span class="nc" id="L39">    return data;</span>
+  }
+
+  public void write(MemorySegment segment) {
+<span class="nc" id="L43">    VH_dwOfs.set(segment, 0, dwOfs);</span>
+<span class="nc" id="L44">    VH_dwData.set(segment, 0, dwData);</span>
+<span class="nc" id="L45">    VH_dwTimeStamp.set(segment, 0, dwTimeStamp);</span>
+<span class="nc" id="L46">    VH_dwSequence.set(segment, 0, dwSequence);</span>
+<span class="nc" id="L47">    VH_uAppData.set(segment, 0, uAppData);</span>
+<span class="nc" id="L48">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

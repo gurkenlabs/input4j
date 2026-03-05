@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DIOBJECTDATAFORMAT.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.dinput</a> &gt; <span class="el_source">DIOBJECTDATAFORMAT.java</span></div><h1>DIOBJECTDATAFORMAT.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.dinput;
+
+import java.lang.foreign.GroupLayout;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.VarHandle;
+
+import static java.lang.foreign.ValueLayout.ADDRESS;
+import static java.lang.foreign.ValueLayout.JAVA_INT;
+
+class DIOBJECTDATAFORMAT {
+  public MemorySegment pguid;
+
+  public int dwOfs;
+
+  public int dwType;
+
+  public int dwFlags;
+
+<span class="nc" id="L20">  DIOBJECTDATAFORMAT() {</span>
+<span class="nc" id="L21">  }</span>
+
+<span class="nc" id="L23">  DIOBJECTDATAFORMAT(MemorySegment pguid, int dwOfs, int dwType, int dwFlags) {</span>
+<span class="nc" id="L24">    this.pguid = pguid;</span>
+<span class="nc" id="L25">    this.dwOfs = dwOfs;</span>
+<span class="nc" id="L26">    this.dwType = dwType;</span>
+<span class="nc" id="L27">    this.dwFlags = dwFlags;</span>
+<span class="nc" id="L28">  }</span>
+
+<span class="nc" id="L30">  static final GroupLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L31">          ADDRESS.withName(&quot;pguid&quot;),</span>
+<span class="nc" id="L32">          JAVA_INT.withName(&quot;dwOfs&quot;),</span>
+<span class="nc" id="L33">          JAVA_INT.withName(&quot;dwType&quot;),</span>
+<span class="nc" id="L34">          JAVA_INT.withName(&quot;dwFlags&quot;),</span>
+<span class="nc" id="L35">          MemoryLayout.paddingLayout(4)</span>
+<span class="nc" id="L36">  ).withName(&quot;DIOBJECTDATAFORMAT&quot;);</span>
+
+<span class="nc" id="L38">  static final VarHandle VH_pguid = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;pguid&quot;));</span>
+<span class="nc" id="L39">  static final VarHandle VH_dwOfs = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwOfs&quot;));</span>
+<span class="nc" id="L40">  static final VarHandle VH_dwType = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwType&quot;));</span>
+<span class="nc" id="L41">  static final VarHandle VH_dwFlags = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwFlags&quot;));</span>
+
+  public static DIOBJECTDATAFORMAT read(MemorySegment segment) {
+<span class="nc" id="L44">    var data = new DIOBJECTDATAFORMAT();</span>
+
+<span class="nc" id="L46">    data.pguid = (MemorySegment) VH_pguid.get(segment, 0);</span>
+<span class="nc" id="L47">    data.dwOfs = (int) VH_dwOfs.get(segment, 0);</span>
+<span class="nc" id="L48">    data.dwType = (int) VH_dwType.get(segment, 0);</span>
+<span class="nc" id="L49">    data.dwFlags = (int) VH_dwFlags.get(segment, 0);</span>
+
+<span class="nc" id="L51">    return data;</span>
+  }
+
+  public void write(MemorySegment segment) {
+<span class="nc" id="L55">    VH_pguid.set(segment, 0, pguid);</span>
+<span class="nc" id="L56">    VH_dwOfs.set(segment, 0, dwOfs);</span>
+<span class="nc" id="L57">    VH_dwType.set(segment, 0, dwType);</span>
+<span class="nc" id="L58">    VH_dwFlags.set(segment, 0, dwFlags);</span>
+<span class="nc" id="L59">  }</span>
+
+  @Override
+  public boolean equals(Object obj) {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">    if (obj == this) return true;</span>
+<span class="nc bnc" id="L64" title="All 4 branches missed.">    if (obj == null || obj.getClass() != this.getClass()) return false;</span>
+<span class="nc" id="L65">    var that = (DIOBJECTDATAFORMAT) obj;</span>
+<span class="nc bnc" id="L66" title="All 8 branches missed.">    return this.pguid.equals(that.pguid) &amp;&amp;</span>
+            this.dwOfs == that.dwOfs &amp;&amp;
+            this.dwType == that.dwType &amp;&amp;
+            this.dwFlags == that.dwFlags;
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LinuxEventComponent.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.linux</a> &gt; <span class="el_source">LinuxEventComponent.java</span></div><h1>LinuxEventComponent.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.linux;
+
+
+import de.gurkenlabs.input4j.ComponentType;
+import de.gurkenlabs.input4j.InputComponent;
+import de.gurkenlabs.input4j.components.Axis;
+import de.gurkenlabs.input4j.components.Button;
+
+final class LinuxEventComponent {
+  final static String ID_DPAD_LEFT_RIGHT = &quot;DPAD_LEFT_RIGHT&quot;;
+  final static String ID_DPAD_UP_DOWN = &quot;DPAD_UP_DOWN&quot;;
+
+  final LinuxComponentType linuxComponentType;
+  final ComponentType componentType;
+  final boolean axis;
+  final boolean relative;
+  final int min;
+  final int max;
+  final int flat;
+  final int fuzz;
+  final int nativeType;
+  final int nativeCode;
+
+  InputComponent inputComponent;
+
+  LinuxEventComponent(LinuxComponentType linuxComponentType, boolean axis, boolean relative, int nativeType, int nativeCode) {
+<span class="nc" id="L27">    this(linuxComponentType, axis, relative, nativeType, nativeCode, Integer.MIN_VALUE, Integer.MAX_VALUE, 0, 0);</span>
+<span class="nc" id="L28">  }</span>
+
+<span class="nc" id="L30">  LinuxEventComponent(LinuxComponentType linuxComponentType, boolean axis, boolean relative, int nativeType, int nativeCode, int min, int max, int flat, int fuzz) {</span>
+<span class="nc" id="L31">    this.linuxComponentType = linuxComponentType;</span>
+<span class="nc" id="L32">    this.axis = axis;</span>
+<span class="nc" id="L33">    this.relative = relative;</span>
+<span class="nc" id="L34">    this.componentType = linuxComponentType.getComponentType(nativeCode, this.axis, this.relative);</span>
+
+<span class="nc" id="L36">    this.nativeType = nativeType;</span>
+<span class="nc" id="L37">    this.nativeCode = nativeCode;</span>
+
+<span class="nc" id="L39">    this.min = min;</span>
+<span class="nc" id="L40">    this.max = max;</span>
+<span class="nc" id="L41">    this.flat = flat;</span>
+<span class="nc" id="L42">    this.fuzz = fuzz;</span>
+<span class="nc" id="L43">  }</span>
+
+  LinuxEventComponent(int nativeType, int nativeCode) {
+<span class="nc bnc" id="L46" title="All 8 branches missed.">    this(LinuxComponentType.fromCode(nativeCode, nativeType == LinuxEventDevice.EV_ABS, nativeType == LinuxEventDevice.EV_REL),</span>
+            nativeType == LinuxEventDevice.EV_ABS,
+            nativeType == LinuxEventDevice.EV_REL,
+            nativeType,
+            nativeCode);
+<span class="nc" id="L51">  }</span>
+
+  LinuxEventComponent(int nativeType, int nativeCode, input_absinfo absInfo) {
+<span class="nc bnc" id="L54" title="All 8 branches missed.">    this(LinuxComponentType.fromCode(nativeCode, nativeType == LinuxEventDevice.EV_ABS, nativeType == LinuxEventDevice.EV_REL),</span>
+            nativeType == LinuxEventDevice.EV_ABS,
+            nativeType == LinuxEventDevice.EV_REL,
+            nativeType,
+            nativeCode,
+            absInfo.minimum,
+            absInfo.maximum,
+            absInfo.flat,
+            absInfo.fuzz);
+<span class="nc" id="L63">  }</span>
+
+  @Override
+  public boolean equals(Object obj) {
+<span class="nc bnc" id="L67" title="All 2 branches missed.">    if (obj instanceof LinuxEventComponent component) {</span>
+<span class="nc bnc" id="L68" title="All 4 branches missed.">      return component.nativeType == this.nativeType &amp;&amp; component.nativeCode == this.nativeCode;</span>
+    }
+<span class="nc" id="L70">    return false;</span>
+  }
+
+  boolean isRelative() {
+<span class="nc" id="L74">    return relative;</span>
+  }
+
+  boolean isAnalog() {
+<span class="nc bnc" id="L78" title="All 4 branches missed.">    return linuxComponentType.isAxis() &amp;&amp; !this.isRelative();</span>
+  }
+
+  float convertValue(float value) {
+<span class="nc bnc" id="L82" title="All 4 branches missed.">    if (linuxComponentType.isAxis() &amp;&amp; !relative) {</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">      if (min == max) {</span>
+<span class="nc" id="L84">        return 0;</span>
+      }
+<span class="nc bnc" id="L86" title="All 2 branches missed.">      if (value &gt; max) {</span>
+<span class="nc" id="L87">        value = max;</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">      } else if (value &lt; min) {</span>
+<span class="nc" id="L89">        value = min;</span>
+      }
+<span class="nc" id="L91">      return 2 * (value - min) / (max - min) - 1;</span>
+    } else {
+<span class="nc" id="L93">      return value;</span>
+    }
+  }
+
+  public InputComponent.ID getIdentifier() {
+<span class="nc bnc" id="L98" title="All 24 branches missed.">    return switch (linuxComponentType) {</span>
+<span class="nc" id="L99">      case BTN_SOUTH -&gt; new InputComponent.ID(Button.BUTTON_0, this.nativeCode);</span>
+<span class="nc" id="L100">      case BTN_EAST -&gt; new InputComponent.ID(Button.BUTTON_1, this.nativeCode);</span>
+<span class="nc" id="L101">      case BTN_NORTH -&gt; new InputComponent.ID(Button.BUTTON_2, this.nativeCode);</span>
+<span class="nc" id="L102">      case BTN_WEST -&gt; new InputComponent.ID(Button.BUTTON_3, this.nativeCode);</span>
+<span class="nc" id="L103">      case BTN_TL -&gt; new InputComponent.ID(Button.BUTTON_4, this.nativeCode);</span>
+<span class="nc" id="L104">      case BTN_TR -&gt; new InputComponent.ID(Button.BUTTON_5, this.nativeCode);</span>
+<span class="nc" id="L105">      case BTN_SELECT -&gt; new InputComponent.ID(Button.BUTTON_6, this.nativeCode);</span>
+<span class="nc" id="L106">      case BTN_START -&gt; new InputComponent.ID(Button.BUTTON_7, this.nativeCode);</span>
+<span class="nc" id="L107">      case BTN_MODE -&gt; new InputComponent.ID(Button.BUTTON_10, this.nativeCode);</span>
+<span class="nc" id="L108">      case BTN_THUMBL -&gt; new InputComponent.ID(Button.BUTTON_8, this.nativeCode);</span>
+<span class="nc" id="L109">      case BTN_THUMBR -&gt; new InputComponent.ID(Button.BUTTON_9, this.nativeCode);</span>
+<span class="nc" id="L110">      case BTN_TRIGGER_HAPPY1 -&gt; new InputComponent.ID(Button.DPAD_LEFT, this.nativeCode);</span>
+<span class="nc" id="L111">      case BTN_TRIGGER_HAPPY2 -&gt; new InputComponent.ID(Button.DPAD_RIGHT, this.nativeCode);</span>
+<span class="nc" id="L112">      case BTN_TRIGGER_HAPPY3 -&gt; new InputComponent.ID(Button.DPAD_UP, this.nativeCode);</span>
+<span class="nc" id="L113">      case BTN_TRIGGER_HAPPY4 -&gt; new InputComponent.ID(Button.DPAD_DOWN, this.nativeCode);</span>
+<span class="nc" id="L114">      case ABS_X -&gt; new InputComponent.ID(Axis.AXIS_X, this.nativeCode);</span>
+<span class="nc" id="L115">      case ABS_Y -&gt; new InputComponent.ID(Axis.AXIS_Y, this.nativeCode);</span>
+<span class="nc" id="L116">      case ABS_Z -&gt; new InputComponent.ID(Axis.AXIS_Z, this.nativeCode);</span>
+<span class="nc" id="L117">      case ABS_RX -&gt; new InputComponent.ID(Axis.AXIS_RX, this.nativeCode);</span>
+<span class="nc" id="L118">      case ABS_RY -&gt; new InputComponent.ID(Axis.AXIS_RY, this.nativeCode);</span>
+<span class="nc" id="L119">      case ABS_RZ -&gt; new InputComponent.ID(Axis.AXIS_RZ, this.nativeCode);</span>
+      case ABS_HAT0X -&gt;
+<span class="nc" id="L121">              new InputComponent.ID(ComponentType.AXIS, InputComponent.ID.getNextAxisId(), ID_DPAD_LEFT_RIGHT, this.nativeCode);</span>
+      case ABS_HAT0Y -&gt;
+<span class="nc" id="L123">              new InputComponent.ID(ComponentType.AXIS, InputComponent.ID.getNextAxisId(), ID_DPAD_UP_DOWN, this.nativeCode);</span>
+      default -&gt; {
+<span class="nc" id="L125">        var name = this.linuxComponentType.name();</span>
+<span class="nc bnc" id="L126" title="All 4 branches missed.">        yield switch (this.componentType) {</span>
+          case AXIS -&gt;
+<span class="nc" id="L128">                  new InputComponent.ID(ComponentType.AXIS, InputComponent.ID.getNextAxisId(), name, this.nativeCode);</span>
+          case BUTTON -&gt;
+<span class="nc" id="L130">                  new InputComponent.ID(ComponentType.BUTTON, InputComponent.ID.getNextButtonId(), name, this.nativeCode);</span>
+          case KEY -&gt;
+<span class="nc" id="L132">                  new InputComponent.ID(ComponentType.KEY, InputComponent.ID.getNextId(ComponentType.KEY, 0), name, this.nativeCode);</span>
+          default -&gt;
+<span class="nc" id="L134">                  new InputComponent.ID(ComponentType.UNKNOWN, InputComponent.ID.getNextId(ComponentType.UNKNOWN, 0), name, this.nativeCode);</span>
+        };
+      }
+    };
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

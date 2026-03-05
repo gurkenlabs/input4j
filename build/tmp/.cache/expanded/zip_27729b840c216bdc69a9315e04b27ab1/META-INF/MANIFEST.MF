@@ -1,0 +1,20 @@
+Manifest-Version: 1.0
+Created-By: Apache Maven Bundle Plugin 6.0.0
+Build-Jdk-Spec: 21
+Build-Tool-Jdk-Spec: 21
+Automatic-Module-Name: org.jacoco.agent
+Bnd-LastModified: 1760142604027
+Bundle-Description: JaCoCo Agent
+Bundle-License: https://www.eclipse.org/legal/epl-2.0/
+Bundle-ManifestVersion: 2
+Bundle-Name: JaCoCo Agent
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-SymbolicName: org.jacoco.agent
+Bundle-Vendor: Mountainminds GmbH & Co. KG
+Bundle-Version: 0.8.14.202510111229
+Eclipse-SourceReferences: scm:git:git://github.com/jacoco/jacoco.git;pat
+ h="org.jacoco.agent";commitId=2eb248366f0eb63fd964fc7a81804b27229a6edd
+Export-Package: org.jacoco.agent;version="0.8.14"
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.5))"
+Tool: Bnd-7.0.0.202310060912
+

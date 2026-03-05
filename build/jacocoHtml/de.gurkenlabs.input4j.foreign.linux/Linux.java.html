@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Linux.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.linux</a> &gt; <span class="el_source">Linux.java</span></div><h1>Linux.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.linux;
+
+import java.lang.foreign.*;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
+import static java.lang.foreign.ValueLayout.*;
+
+<span class="nc" id="L15">class Linux {</span>
+<span class="nc" id="L16">  private static final Logger log = Logger.getLogger(Linux.class.getName());</span>
+  final static int ERROR = -1;
+  final static int EAGAIN = 11;
+
+  final static int O_RDONLY = 0;
+  // TODO: if we want to rumble, we need to open the device in read/write mode
+  final static int O_RDWR = 2;
+  final static int O_NONBLOCK = 0x800;
+
+  final static int _IOC_READ = 2;
+  final static int NAME_BUFFER_SIZE = 1024;
+  final static String ERRNO = &quot;errno&quot;;
+  final static String HANDLE_STRERROR = &quot;strerror&quot;;
+  final static String HANDLE_OPEN = &quot;open&quot;;
+  final static String HANDLE_CLOSE = &quot;close&quot;;
+  final static String HANDLE_IOCTL = &quot;ioctl&quot;;
+  final static String HANDLE_READ = &quot;read&quot;;
+  final static String HANDLE_SELECT = &quot;select&quot;;
+  final static String HANDLE_WRITE = &quot;write&quot;;
+
+<span class="nc" id="L36">  private static final boolean IS_32_BIT = is32BitSystem();</span>
+
+  private static boolean is32BitSystem() {
+<span class="nc" id="L39">    String osArch = System.getProperty(&quot;os.arch&quot;, &quot;&quot;).toLowerCase();</span>
+<span class="nc bnc" id="L40" title="All 6 branches missed.">    return osArch.equals(&quot;arm&quot;) || osArch.equals(&quot;i386&quot;) || osArch.equals(&quot;i486&quot;)</span>
+<span class="nc bnc" id="L41" title="All 6 branches missed.">        || osArch.equals(&quot;i586&quot;) || osArch.equals(&quot;i686&quot;) || osArch.equals(&quot;x86&quot;)</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        || osArch.startsWith(&quot;armv&quot;);</span>
+  }
+
+<span class="nc" id="L45">  private static int EVIOCGVERSION = _IOR('E', 0x01, JAVA_INT.byteSize());</span>
+<span class="nc" id="L46">  private final static int EVIOCGID = _IOR('E', 0x02, input_id.$LAYOUT.byteSize());</span>
+<span class="nc" id="L47">  private final static int EVIOCGNAME = _IOC(_IOC_READ, 'E', 0x06, NAME_BUFFER_SIZE);</span>
+<span class="nc" id="L48">  private static final int EVIOCGEFFECTS = _IOR('E', 0x84, JAVA_INT.byteSize());</span>
+<span class="nc" id="L49">  private static final int EVIOCSFF = _IOW('E', 0x80, ff_effect.$LAYOUT.byteSize());</span>
+<span class="nc" id="L50">  private static final int EVIOCRMFF = _IOW('E', 0x81, JAVA_INT.byteSize());</span>
+
+  static final int FF_RUMBLE = 0x50;
+  static final int FF_PERIODIC = 0x51;
+  static final int FF_CONSTANT = 0x52;
+  static final int FF_SPRING = 0x53;
+  static final int FF_FRICTION = 0x54;
+  static final int FF_DAMPER = 0x55;
+  static final int FF_INERTIA = 0x56;
+  static final int FF_RAMP = 0x57;
+  static final int FF_EFFECT_MIN = 0x50;
+  static final int FF_EFFECT_MAX = 0x5f;
+  static final int FF_CNT = FF_EFFECT_MAX + 1;
+
+  static final int FF_STATUS_STOPPED = 0x00;
+  static final int FF_STATUS_PLAYING = 0x01;
+  static final int FF_STATUS_MAX = 0x01;
+
+  static final int FF_GAIN = 0x60;
+
+  private static int EVIOCGKEY(int len) {
+<span class="nc" id="L71">    return _IOC(_IOC_READ, 'E', 0x18, len);</span>
+  }
+
+  private static int EVIOCGBIT(int evtype, int len) {
+<span class="nc" id="L75">    return _IOC(_IOC_READ, 'E', 0x20 + evtype, len);</span>
+  }
+
+  private static int EVIOCGABS(int absAxis) {
+<span class="nc" id="L79">    return _IOC(_IOC_READ, 'E', 0x40 + absAxis, (int) input_absinfo.$LAYOUT.byteSize());</span>
+  }
+
+  private static final VarHandle errnoHandle;
+  private static final MethodHandle strerror;
+<span class="nc" id="L84">  private static final Map&lt;String, MethodHandle&gt; handles = new HashMap&lt;&gt;();</span>
+
+  static {
+<span class="nc" id="L87">    StructLayout capturedStateLayout = Linker.Option.captureStateLayout();</span>
+
+<span class="nc" id="L89">    errnoHandle = capturedStateLayout.varHandle(MemoryLayout.PathElement.groupElement(ERRNO));</span>
+<span class="nc" id="L90">    strerror = downcallHandle(HANDLE_STRERROR, FunctionDescriptor.of(ADDRESS, JAVA_INT));</span>
+
+<span class="nc bnc" id="L92" title="All 2 branches missed.">    ValueLayout sizeT = IS_32_BIT ? JAVA_INT : JAVA_LONG;</span>
+
+<span class="nc" id="L94">    handles.put(HANDLE_OPEN, downcallHandle(HANDLE_OPEN, FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT), ERRNO));</span>
+<span class="nc" id="L95">    handles.put(HANDLE_CLOSE, downcallHandle(HANDLE_CLOSE, FunctionDescriptor.of(JAVA_INT, JAVA_INT), ERRNO));</span>
+<span class="nc" id="L96">    handles.put(HANDLE_IOCTL, downcallHandle(HANDLE_IOCTL, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), ERRNO));</span>
+<span class="nc" id="L97">    handles.put(HANDLE_READ, downcallHandle(HANDLE_READ, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, sizeT), ERRNO));</span>
+<span class="nc" id="L98">    handles.put(HANDLE_SELECT, downcallHandle(HANDLE_SELECT, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS, sizeT), ERRNO));</span>
+<span class="nc" id="L99">    handles.put(HANDLE_WRITE, downcallHandle(HANDLE_WRITE, FunctionDescriptor.of(sizeT, JAVA_INT, ADDRESS, sizeT), ERRNO));</span>
+<span class="nc" id="L100">  }</span>
+
+  /**
+   * Open a file descriptor for the given file name.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fileName    the file name to open
+   * @return the file descriptor or -1 if an error occurred
+   */
+  static int open(Arena memoryArena, String fileName) {
+<span class="nc" id="L110">    var filenameMemorySegment = memoryArena.allocateFrom(fileName);</span>
+<span class="nc" id="L111">    return invoke(HANDLE_OPEN, memoryArena, filenameMemorySegment, O_RDONLY | O_NONBLOCK);</span>
+  }
+
+  /**
+   * Open a file descriptor for the given file name in read/write mode.
+   *
+   * &lt;p&gt;
+   * This is required for force feedback support as writing to the device
+   * is needed to play/stop effects.
+   * &lt;/p&gt;
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fileName    the file name to open
+   * @return the file descriptor or -1 if an error occurred
+   */
+  static int openRdwr(Arena memoryArena, String fileName) {
+<span class="nc" id="L127">    var filenameMemorySegment = memoryArena.allocateFrom(fileName);</span>
+<span class="nc" id="L128">    return invoke(HANDLE_OPEN, memoryArena, filenameMemorySegment, O_RDWR | O_NONBLOCK);</span>
+  }
+
+  /**
+   * Close the file descriptor.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor to close
+   */
+  static void close(Arena memoryArena, int fd) {
+<span class="nc" id="L138">    invoke(HANDLE_CLOSE, memoryArena, fd);</span>
+<span class="nc" id="L139">  }</span>
+
+ /**
+   * Read an input event from the device.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @return the input event or null if no more events are available
+   */
+  public static input_event read(Arena memoryArena, int fd) {
+<span class="nc" id="L149">    MemorySegment inputEventMemorySegment = memoryArena.allocate(input_event.$LAYOUT);</span>
+<span class="nc" id="L150">    int result = invoke(&quot;read&quot;, memoryArena, fd, inputEventMemorySegment, input_event.$LAYOUT.byteSize());</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">    if (result == ERROR) {</span>
+<span class="nc" id="L152">      log.log(Level.FINE, &quot;No more events to read from device (&quot; + fd + &quot;)&quot;);</span>
+<span class="nc" id="L153">      return null;</span>
+    }
+
+<span class="nc" id="L156">    return input_event.read(inputEventMemorySegment);</span>
+  }
+
+  /**
+   * Get the name of the event device.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @return the name of the event device or null if an error occurred
+   */
+  static String getEventDeviceName(Arena memoryArena, int fd) {
+<span class="nc" id="L167">    var nameMemorySegment = memoryArena.allocateFrom(JAVA_CHAR, new char[NAME_BUFFER_SIZE]);</span>
+<span class="nc" id="L168">    var result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGNAME, nameMemorySegment);</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">    if (result == ERROR) {</span>
+<span class="nc" id="L170">      log.log(Level.SEVERE, &quot;Failed to get device name for device (&quot; + fd + &quot;)&quot;);</span>
+<span class="nc" id="L171">      return null;</span>
+    }
+
+<span class="nc" id="L174">    return nameMemorySegment.getString(0);</span>
+  }
+
+  /**
+   * Get the version of the event device.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @return the version of the event device or 0 if an error occurred
+   */
+  static int getEventDeviceVersion(Arena memoryArena, int fd) {
+<span class="nc" id="L185">    var versionMemorySegment = memoryArena.allocate(JAVA_INT);</span>
+<span class="nc" id="L186">    var result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGVERSION, versionMemorySegment);</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">    if (result == ERROR) {</span>
+<span class="nc" id="L188">      log.log(Level.SEVERE, &quot;Failed to get device version for device (&quot; + fd + &quot;)&quot;);</span>
+<span class="nc" id="L189">      return 0;</span>
+    }
+
+<span class="nc" id="L192">    return versionMemorySegment.get(JAVA_INT, 0);</span>
+  }
+
+  /**
+   * Get the id of the event device.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @return the id of the event device or null if an error occurred
+   */
+  static input_id getEventDeviceId(Arena memoryArena, int fd) {
+<span class="nc" id="L203">    var inputIdMemorySegment = memoryArena.allocate(input_id.$LAYOUT);</span>
+<span class="nc" id="L204">    var result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGID, inputIdMemorySegment);</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">    if (result == ERROR) {</span>
+<span class="nc" id="L206">      log.log(Level.SEVERE, &quot;Failed to get device id for device (&quot; + fd + &quot;)&quot;);</span>
+<span class="nc" id="L207">      return null;</span>
+    }
+
+<span class="nc" id="L210">    return input_id.read(inputIdMemorySegment);</span>
+  }
+
+  static input_absinfo getAbsInfo(Arena memoryArena, int fd, int absAxis) {
+<span class="nc" id="L214">    MemorySegment absInfoSegment = memoryArena.allocate(input_absinfo.$LAYOUT);</span>
+<span class="nc" id="L215">    int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGABS(absAxis), absInfoSegment);</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">    if (result == ERROR) {</span>
+<span class="nc" id="L217">      log.log(Level.SEVERE, &quot;Failed to get abs info for axis (&quot; + absAxis + &quot;)&quot;);</span>
+<span class="nc" id="L218">      return null;</span>
+    }
+<span class="nc" id="L220">    return input_absinfo.read(absInfoSegment);</span>
+  }
+
+  static int getNumEffects(Arena memoryArena, int fd) {
+<span class="nc" id="L224">    MemorySegment numEffectsSegment = memoryArena.allocate(JAVA_INT);</span>
+<span class="nc" id="L225">    int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGEFFECTS, numEffectsSegment);</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">    if (result == ERROR) {</span>
+<span class="nc" id="L227">      log.log(Level.SEVERE, &quot;Failed to get number of device effects (&quot; + fd + &quot;)&quot;);</span>
+<span class="nc" id="L228">      return ERROR;</span>
+    }
+<span class="nc" id="L230">    return numEffectsSegment.get(JAVA_INT, 0);</span>
+  }
+
+  /**
+   * Upload a force feedback effect to the device.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @param effect      the effect to upload
+   * @return the effect ID assigned by the device, or -1 if an error occurred
+   */
+  static int uploadEffect(Arena memoryArena, int fd, ff_effect effect) {
+<span class="nc" id="L242">    var effectSegment = memoryArena.allocate(ff_effect.$LAYOUT);</span>
+<span class="nc" id="L243">    effect.write(effectSegment);</span>
+<span class="nc" id="L244">    int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCSFF, effectSegment);</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">    if (result == ERROR) {</span>
+<span class="nc" id="L246">      log.log(Level.SEVERE, &quot;Failed to upload effect to device (&quot; + fd + &quot;)&quot;);</span>
+<span class="nc" id="L247">      return ERROR;</span>
+    }
+<span class="nc" id="L249">    return (int) ff_effect.VH_id.get(effectSegment, 0);</span>
+  }
+
+  /**
+   * Remove a force feedback effect from the device.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @param effectId    the ID of the effect to remove
+   * @return 0 on success, or -1 if an error occurred
+   */
+  static int removeEffect(Arena memoryArena, int fd, int effectId) {
+<span class="nc" id="L261">    int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCRMFF, effectId);</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">    if (result == ERROR) {</span>
+<span class="nc" id="L263">      log.log(Level.SEVERE, &quot;Failed to remove effect (&quot; + effectId + &quot;) from device (&quot; + fd + &quot;)&quot;);</span>
+<span class="nc" id="L264">      return ERROR;</span>
+    }
+<span class="nc" id="L266">    return result;</span>
+  }
+
+  /**
+   * Write an event to the device.
+   *
+   * &lt;p&gt;
+   * This is used to play or stop force feedback effects.
+   * &lt;/p&gt;
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @param event       the event to write
+   * @return the number of bytes written, or -1 if an error occurred
+   */
+  static int writeEvent(Arena memoryArena, int fd, input_event event) {
+<span class="nc" id="L282">    var eventSegment = memoryArena.allocate(input_event.$LAYOUT);</span>
+<span class="nc" id="L283">    event.write(eventSegment);</span>
+<span class="nc" id="L284">    int result = invoke(HANDLE_WRITE, memoryArena, fd, eventSegment, input_event.$LAYOUT.byteSize());</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">    if (result == ERROR) {</span>
+<span class="nc" id="L286">      log.log(Level.WARNING, &quot;Failed to write event to device (&quot; + fd + &quot;)&quot;);</span>
+<span class="nc" id="L287">      return ERROR;</span>
+    }
+<span class="nc" id="L289">    return result;</span>
+  }
+
+  /**
+   * Set the force feedback gain for the device.
+   *
+   * &lt;p&gt;
+   * This sets the overall gain for all force feedback effects.
+   * The gain is a value from 0 to 65535 representing 0% to 100%.
+   * &lt;/p&gt;
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @param gain        the gain value (0 to 65535)
+   * @return 0 on success, or -1 if an error occurred
+   */
+  static int setGain(Arena memoryArena, int fd, int gain) {
+<span class="nc" id="L306">    var gainEvent = new input_event();</span>
+<span class="nc" id="L307">    gainEvent.type = (short) LinuxEventDevice.EV_FF;</span>
+<span class="nc" id="L308">    gainEvent.code = (short) FF_GAIN;</span>
+<span class="nc" id="L309">    gainEvent.value = gain;</span>
+
+<span class="nc" id="L311">    return writeEvent(memoryArena, fd, gainEvent);</span>
+  }
+
+  /**
+   * Get the bits for the given event type.
+   * &lt;p&gt;
+   * The bits are used to determine which event types are supported by the device.
+   * The bits are stored in a byte array where each bit represents an event type.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param evtype      the event type
+   * @param fd          the file descriptor of the event device
+   * @return the bits for the given event type or null if an error occurred
+   */
+  static byte[] getBits(Arena memoryArena, int evtype, int fd) {
+<span class="nc" id="L326">    var len = LinuxEventDevice.getMaxBits(evtype) / 8 + 1;</span>
+
+<span class="nc" id="L328">    MemorySegment bitsMemorySegment = memoryArena.allocate(MemoryLayout.sequenceLayout(len, JAVA_BYTE));</span>
+<span class="nc" id="L329">    int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGBIT(evtype, len), bitsMemorySegment);</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">    if (result == ERROR) {</span>
+<span class="nc" id="L331">      log.log(Level.SEVERE, &quot;Failed to get key states for device (&quot; + fd + &quot;) and evtype &quot; + evtype);</span>
+<span class="nc" id="L332">      return null;</span>
+    }
+
+<span class="nc" id="L335">    byte[] bits = new byte[len];</span>
+<span class="nc bnc" id="L336" title="All 2 branches missed.">    for (int i = 0; i &lt; len; i++) {</span>
+<span class="nc" id="L337">      bits[i] = bitsMemorySegment.get(JAVA_BYTE, i);</span>
+    }
+
+<span class="nc" id="L340">    return bits;</span>
+  }
+
+  private static int invoke(String handleName, Arena memoryArena, Object... args) {
+<span class="nc" id="L344">    var capturedState = memoryArena.allocate(Linker.Option.captureStateLayout());</span>
+<span class="nc" id="L345">    var methodHandle = handles.get(handleName);</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">    if (methodHandle == null) {</span>
+<span class="nc" id="L347">      log.log(Level.SEVERE, &quot;Could not find method handle for '&quot; + handleName + &quot;'&quot;);</span>
+<span class="nc" id="L348">      return ERROR;</span>
+    }
+
+    try {
+<span class="nc" id="L352">      var result = ERROR;</span>
+<span class="nc bnc" id="L353" title="All 4 branches missed.">      if (args == null || args.length == 0) {</span>
+<span class="nc" id="L354">        result = (int) methodHandle.invoke(capturedState);</span>
+<span class="nc bnc" id="L355" title="All 2 branches missed.">      } else if (args.length == 1) {</span>
+<span class="nc" id="L356">        result = (int) methodHandle.invoke(capturedState, args[0]);</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">      } else if (args.length == 2) {</span>
+<span class="nc" id="L358">        result = (int) methodHandle.invoke(capturedState, args[0], args[1]);</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">      } else if (args.length == 3) {</span>
+<span class="nc" id="L360">        result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2]);</span>
+<span class="nc bnc" id="L361" title="All 2 branches missed.">      } else if (args.length == 4) {</span>
+<span class="nc" id="L362">        result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3]);</span>
+<span class="nc bnc" id="L363" title="All 2 branches missed.">      } else if (args.length == 5) {</span>
+<span class="nc" id="L364">        result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3], args[4]);</span>
+      }
+
+<span class="nc bnc" id="L367" title="All 2 branches missed.">      if (result == ERROR) {</span>
+<span class="nc" id="L368">        var errorNo = getErrorNo(capturedState);</span>
+
+        // we are using non-blocking mode, so we can ignore EAGAIN because it is not an error, just a signal that we're done reading
+<span class="nc bnc" id="L371" title="All 2 branches missed.">        if(errorNo == EAGAIN) {</span>
+<span class="nc" id="L372">          return result;</span>
+        }
+
+<span class="nc" id="L375">        log.log(Level.SEVERE, &quot;Could not invoke '&quot; + handleName + &quot;' - &quot; + getErrorString(errorNo) + &quot;(&quot; + errorNo + &quot;)&quot;);</span>
+      }
+
+<span class="nc" id="L378">      return result;</span>
+<span class="nc" id="L379">    } catch (Throwable e) {</span>
+<span class="nc" id="L380">      log.log(Level.SEVERE, e.getMessage(), e);</span>
+    }
+
+<span class="nc" id="L383">    return ERROR;</span>
+  }
+
+  private static int getErrorNo(MemorySegment capturedState) {
+<span class="nc" id="L387">    return (int) errnoHandle.get(capturedState, 0);</span>
+  }
+
+  private static String getErrorString(int errorNo) {
+    try {
+<span class="nc" id="L392">      return ((MemorySegment) strerror.invoke(errorNo)).reinterpret(Long.MAX_VALUE).getString(0, Charset.defaultCharset());</span>
+<span class="nc" id="L393">    } catch (Throwable e) {</span>
+<span class="nc" id="L394">      log.log(Level.SEVERE, e.getMessage(), e);</span>
+    }
+<span class="nc" id="L396">    return null;</span>
+  }
+
+  /**
+   * see ioctl.h for details
+   */
+  private static int _IOC(int dir, char type, int nr, int size) {
+<span class="nc" id="L403">    final int IOC_DIRSHIFT = 30;</span>
+<span class="nc" id="L404">    final int IOC_TYPESHIFT = 8;</span>
+<span class="nc" id="L405">    final int IOC_NRSHIFT = 0;</span>
+<span class="nc" id="L406">    final int IOC_SIZESHIFT = 16;</span>
+
+<span class="nc" id="L408">    return ((dir &lt;&lt; IOC_DIRSHIFT) |</span>
+            (type &lt;&lt; IOC_TYPESHIFT) |
+            (nr &lt;&lt; IOC_NRSHIFT) |
+            (size &lt;&lt; IOC_SIZESHIFT));
+  }
+
+  private static int _IOR(char type, int nr, long size) {
+<span class="nc" id="L415">    return _IOC(_IOC_READ, type, nr, (int) size);</span>
+  }
+
+  private static int _IOW(char type, int nr, long size) {
+<span class="nc" id="L419">    return _IOC(1, type, nr, (int) size);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

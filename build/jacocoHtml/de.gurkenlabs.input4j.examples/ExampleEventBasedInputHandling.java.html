@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExampleEventBasedInputHandling.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.examples</a> &gt; <span class="el_source">ExampleEventBasedInputHandling.java</span></div><h1>ExampleEventBasedInputHandling.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.examples;
+
+import de.gurkenlabs.input4j.InputDevices;
+import de.gurkenlabs.input4j.components.Axis;
+import de.gurkenlabs.input4j.components.XInput;
+
+import java.io.IOException;
+
+<span class="nc" id="L9">public class ExampleEventBasedInputHandling {</span>
+  public static void main(String[] args) throws IOException, InterruptedException {
+<span class="nc" id="L11">    try (var devices = InputDevices.init()) {</span>
+
+<span class="nc" id="L13">      devices.onDeviceConnected(inputDevice -&gt; System.out.println(&quot;Device connected &quot; + inputDevice));</span>
+<span class="nc" id="L14">      devices.onDeviceDisconnected(inputDevice -&gt; System.out.println(&quot;Device disconnected &quot; + inputDevice));</span>
+<span class="nc" id="L15">      var device = devices.getAll().stream().findFirst().orElse(null);</span>
+<span class="nc bnc" id="L16" title="All 2 branches missed.">      if (device == null) {</span>
+<span class="nc" id="L17">        System.out.println(&quot;No input devices found.&quot;);</span>
+<span class="nc" id="L18">        return;</span>
+      }
+
+<span class="nc" id="L21">      device.onInputValueChanged(e -&gt;</span>
+<span class="nc" id="L22">        System.out.println(&quot;Value changed: &quot; + e.component() + &quot;: &quot; + e.oldValue() + &quot; -&gt; &quot; + e.newValue())</span>
+      );
+
+<span class="nc" id="L25">      device.onButtonPressed(XInput.X, () -&gt;</span>
+<span class="nc" id="L26">        System.out.println(&quot;X button pressed&quot;)</span>
+      );
+
+<span class="nc" id="L29">      device.onButtonReleased(XInput.X, () -&gt;</span>
+<span class="nc" id="L30">        System.out.println(&quot;X button released&quot;)</span>
+      );
+
+<span class="nc" id="L33">      device.onButtonPressed(0, () -&gt;</span>
+<span class="nc" id="L34">        System.out.println(&quot;Button 0 pressed&quot;)</span>
+      );
+
+<span class="nc" id="L37">      device.onAxisChanged(Axis.AXIS_X, value -&gt;</span>
+<span class="nc" id="L38">        System.out.println(&quot;X axis value: &quot; + value)</span>
+      );
+
+<span class="nc" id="L41">      device.onAxisChanged(3, value -&gt;</span>
+<span class="nc" id="L42">        System.out.println(&quot;Axis 3 value: &quot; + value)</span>
+      );
+
+      // simulate external polling loop
+      while (true) {
+<span class="nc" id="L47">        device.poll();</span>
+<span class="nc" id="L48">        Thread.sleep(1000);</span>
+      }
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

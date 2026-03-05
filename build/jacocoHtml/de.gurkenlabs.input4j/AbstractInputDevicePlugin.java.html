@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractInputDevicePlugin.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j</a> &gt; <span class="el_source">AbstractInputDevicePlugin.java</span></div><h1>AbstractInputDevicePlugin.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j;
+
+import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.logging.Logger;
+
+public abstract class AbstractInputDevicePlugin implements InputDevicePlugin {
+<span class="nc" id="L9">  protected static final Logger log = Logger.getLogger(AbstractInputDevicePlugin.class.getPackage().getName());</span>
+<span class="nc" id="L10">  private final Collection&lt;Consumer&lt;InputDevice&gt;&gt; deviceConnectedListeners = ConcurrentHashMap.newKeySet();</span>
+<span class="nc" id="L11">  private final Collection&lt;Consumer&lt;InputDevice&gt;&gt; deviceDisconnectedListeners = ConcurrentHashMap.newKeySet();</span>
+<span class="nc" id="L12">  private final Collection&lt;Runnable&gt; devicesChangedListeners = ConcurrentHashMap.newKeySet();</span>
+
+  private final int hotPlugInterval;
+  private long lastDeviceUpdate;
+  private Collection&lt;InputDevice&gt; devices;
+
+<span class="nc" id="L18">  protected AbstractInputDevicePlugin() {</span>
+<span class="nc" id="L19">    this.hotPlugInterval = InputDevices.configure().getHotPlugInterval();</span>
+<span class="nc" id="L20">  }</span>
+
+  /**
+   * Gets all devices that are managed by this plugin. If the plugin has not been initialized yet, this method will throw an {@code IllegalStateException}.
+   *
+   * @return A collection of all devices that are managed by this plugin.
+   */
+  @Override
+  public Collection&lt;InputDevice&gt; getAll() {
+<span class="nc bnc" id="L29" title="All 2 branches missed.">    if (this.devices == null) {</span>
+<span class="nc" id="L30">      throw new IllegalStateException(&quot;The plugin has not been initialized yet.&quot;);</span>
+    }
+
+<span class="nc" id="L33">    return this.devices;</span>
+  }
+
+  /**
+   * Closes the plugin and clears the collection of devices.
+   */
+  @Override
+  public void close() {
+<span class="nc bnc" id="L41" title="All 2 branches missed.">    if (this.devices != null) {</span>
+<span class="nc" id="L42">      this.devices.forEach(InputDevice::close);</span>
+    }
+
+<span class="nc" id="L45">    deviceConnectedListeners.clear();</span>
+<span class="nc" id="L46">    deviceDisconnectedListeners.clear();</span>
+<span class="nc" id="L47">    devicesChangedListeners.clear();</span>
+<span class="nc" id="L48">  }</span>
+
+  /**
+   * Sets the devices that are managed by this plugin.
+   * &lt;p&gt;
+   * &lt;b&gt;IMPORTANT&lt;/b&gt;: This method needs to be called by the implementing class to set the devices that are managed by this plugin.
+   *
+   * @param devices The devices to set.
+   */
+  protected void setDevices(Collection&lt;InputDevice&gt; devices) {
+<span class="nc" id="L58">    this.devices = devices;</span>
+<span class="nc" id="L59">    this.lastDeviceUpdate = System.currentTimeMillis();</span>
+<span class="nc" id="L60">  }</span>
+
+  /**
+   * Refreshes the list of input devices.
+   * &lt;p&gt;
+   * This method needs to be called explicitly to support hot-plugging devices.
+   * If a new device is connected or an existing device is disconnected, the list of input devices is updated accordingly.
+   * &lt;/p&gt;
+   * &lt;p&gt;
+   * IMPORTANT: This is a costly operation and should be called periodically to ensure that the list of input devices is up-to-date.
+   * This method should not be called in the same interval as the polling of input devices.
+   * &lt;/p&gt;
+   * &lt;p&gt;
+   * This also triggers the {@link #onDeviceConnected(Consumer)} and {@link #onDeviceDisconnected(Consumer)} events when necessary.
+   * &lt;/p&gt;
+   */
+  protected void refreshDevices() {
+<span class="nc bnc" id="L77" title="All 4 branches missed.">    if (this.lastDeviceUpdate == 0 || System.currentTimeMillis() - this.lastDeviceUpdate &lt; this.hotPlugInterval) {</span>
+<span class="nc" id="L78">      return;</span>
+    }
+
+<span class="nc" id="L81">    this.lastDeviceUpdate = System.currentTimeMillis();</span>
+<span class="nc" id="L82">    final var oldDeviceIds = this.getAll().stream().map(InputDevice::getID).toList();</span>
+<span class="nc" id="L83">    var refreshedDevices = this.refreshInputDevices();</span>
+<span class="nc" id="L84">    var refreshedDeviceIds = refreshedDevices.stream().map(InputDevice::getID).toList();</span>
+
+<span class="nc" id="L86">    var devicesChanged = false;</span>
+    // Check for disconnected devices
+<span class="nc bnc" id="L88" title="All 2 branches missed.">    for (var currentDeviceId : oldDeviceIds) {</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">      if (!refreshedDeviceIds.contains(currentDeviceId)) {</span>
+        // Device was disconnected
+<span class="nc" id="L91">        var disconnectedDevice = this.devices.stream().filter(d -&gt; d.getID().equals(currentDeviceId)).findFirst().orElse(null);</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if (disconnectedDevice != null) {</span>
+<span class="nc" id="L93">          this.deviceDisconnectedListeners.forEach(listener -&gt; listener.accept(disconnectedDevice));</span>
+<span class="nc" id="L94">          devicesChanged = true;</span>
+        }
+      }
+<span class="nc" id="L97">    }</span>
+
+    // Check for newly connected devices
+<span class="nc bnc" id="L100" title="All 2 branches missed.">    for (var connectedDeviceId : refreshedDeviceIds) {</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">      if (!oldDeviceIds.contains(connectedDeviceId)) {</span>
+        // New device connected
+<span class="nc" id="L103">        InputDevice connectedDevice = refreshedDevices.stream().filter(d -&gt; d.getID().equals(connectedDeviceId)).findFirst().orElse(null);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (connectedDevice != null) {</span>
+<span class="nc" id="L105">          this.deviceConnectedListeners.forEach(listener -&gt; listener.accept(connectedDevice));</span>
+<span class="nc" id="L106">          devicesChanged = true;</span>
+        }
+      }
+<span class="nc" id="L109">    }</span>
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">    if (devicesChanged) {</span>
+<span class="nc" id="L112">      this.devicesChangedListeners.forEach(Runnable::run);</span>
+    }
+
+<span class="nc" id="L115">    this.setDevices(refreshedDevices);</span>
+<span class="nc" id="L116">  }</span>
+
+  protected abstract Collection&lt;InputDevice&gt; refreshInputDevices();
+  
+  public void onDevicesChanged(Runnable listener) {
+<span class="nc" id="L121">    this.devicesChangedListeners.add(listener);</span>
+<span class="nc" id="L122">  }</span>
+
+  public void onDeviceConnected(Consumer&lt;InputDevice&gt; listener) {
+<span class="nc" id="L125">    this.deviceConnectedListeners.add(listener);</span>
+<span class="nc" id="L126">  }</span>
+
+  public void onDeviceDisconnected(Consumer&lt;InputDevice&gt; listener) {
+<span class="nc" id="L129">    this.deviceDisconnectedListeners.add(listener);</span>
+<span class="nc" id="L130">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GUID.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.dinput</a> &gt; <span class="el_source">GUID.java</span></div><h1>GUID.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.dinput;
+
+import java.lang.foreign.Arena;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.lang.invoke.VarHandle;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.UUID;
+
+/**
+ * A GUID identifies an object such as a COM interfaces, or a COM class object, or a manager entry-point vector (EPV).
+ * A GUID is a 128-bit value consisting of one group of 8 hexadecimal digits, followed by three groups of 4 hexadecimal
+ * digits each, followed by one group of 12 hexadecimal digits. The following example GUID shows the groupings of
+ * hexadecimal digits in a GUID: 6B29FC40-CA47-1067-B31D-00DD010662DA.
+ */
+final class GUID {
+<span class="nc" id="L19">  static int DATA4_LENGTH = 8;</span>
+
+<span class="nc" id="L21">  static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L22">          ValueLayout.JAVA_INT.withName(&quot;Data1&quot;),</span>
+<span class="nc" id="L23">          ValueLayout.JAVA_SHORT.withName(&quot;Data2&quot;),</span>
+<span class="nc" id="L24">          ValueLayout.JAVA_SHORT.withName(&quot;Data3&quot;),</span>
+<span class="nc" id="L25">          MemoryLayout.sequenceLayout(8, ValueLayout.JAVA_BYTE).withName(&quot;Data4&quot;)</span>
+<span class="nc" id="L26">  ).withName(&quot;GUID&quot;);</span>
+
+<span class="nc" id="L28">  static final VarHandle VH_Data1 = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;Data1&quot;));</span>
+<span class="nc" id="L29">  static final VarHandle VH_Data2 = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;Data2&quot;));</span>
+<span class="nc" id="L30">  static final VarHandle VH_Data3 = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;Data3&quot;));</span>
+<span class="nc" id="L31">  static final VarHandle VH_Data4 = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;Data4&quot;), MemoryLayout.PathElement.sequenceElement());</span>
+  public final int Data1;
+  public final short Data2;
+  public final short Data3;
+  public final byte[] Data4;
+
+  /**
+   * @param Data1 Specifies the first 8 hexadecimal digits of the GUID.
+   * @param Data2 Specifies the first group of 4 hexadecimal digits.
+   * @param Data3 Specifies the second group of 4 hexadecimal digits.
+   * @param Data4 Array of 8 bytes. The first 2 bytes contain the third group of 4 hexadecimal digits.
+   *              The remaining 6 bytes contain the final 12 hexadecimal digits.
+   */
+<span class="nc" id="L44">  GUID(int Data1, short Data2, short Data3, byte... Data4) {</span>
+<span class="nc" id="L45">    this.Data1 = Data1;</span>
+<span class="nc" id="L46">    this.Data2 = Data2;</span>
+<span class="nc" id="L47">    this.Data3 = Data3;</span>
+<span class="nc" id="L48">    this.Data4 = Data4;</span>
+<span class="nc" id="L49">  }</span>
+
+<span class="nc" id="L51">  GUID(int Data1, int Data2, int Data3, int Data4_1, int Data4_2, int Data4_3, int Data4_4, int Data4_5, int Data4_6, int Data4_7, int Data4_8) {</span>
+<span class="nc" id="L52">    this.Data1 = Data1;</span>
+<span class="nc" id="L53">    this.Data2 = (short) Data2;</span>
+<span class="nc" id="L54">    this.Data3 = (short) Data3;</span>
+<span class="nc" id="L55">    this.Data4 = new byte[]{(byte) Data4_1, (byte) Data4_2, (byte) Data4_3, (byte) Data4_4, (byte) Data4_5, (byte) Data4_6, (byte) Data4_7, (byte) Data4_8,};</span>
+<span class="nc" id="L56">  }</span>
+
+  public static GUID read(MemorySegment segment) {
+<span class="nc" id="L59">    var data1 = (int) VH_Data1.get(segment, 0);</span>
+<span class="nc" id="L60">    var data2 = (short) VH_Data2.get(segment, 0);</span>
+<span class="nc" id="L61">    var data3 = (short) VH_Data3.get(segment, 0);</span>
+
+<span class="nc" id="L63">    byte[] data4 = new byte[DATA4_LENGTH];</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">    for (int i = 0; i &lt; DATA4_LENGTH; i++) {</span>
+<span class="nc" id="L65">      data4[i] = (byte) VH_Data4.get(segment, 0, i);</span>
+    }
+
+<span class="nc" id="L68">    return new GUID(data1, data2, data3, data4);</span>
+  }
+
+  public MemorySegment write(Arena memorySession) {
+<span class="nc" id="L72">    var memorySegment = memorySession.allocate($LAYOUT);</span>
+<span class="nc" id="L73">    write(memorySegment);</span>
+<span class="nc" id="L74">    return memorySegment;</span>
+  }
+
+  public void write(MemorySegment segment) {
+<span class="nc" id="L78">    VH_Data1.set(segment, 0, Data1);</span>
+<span class="nc" id="L79">    VH_Data2.set(segment, 0, Data2);</span>
+<span class="nc" id="L80">    VH_Data3.set(segment, 0, Data3);</span>
+
+<span class="nc bnc" id="L82" title="All 2 branches missed.">    for (int i = 0; i &lt; DATA4_LENGTH; i++) {</span>
+<span class="nc" id="L83">      VH_Data4.set(segment, 0, (long)i, Data4[i]);</span>
+    }
+<span class="nc" id="L85">  }</span>
+
+
+  public UUID toUUID() {
+<span class="nc" id="L89">    return UUID.fromString(this.rawString());</span>
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+<span class="nc bnc" id="L94" title="All 2 branches missed.">    if (obj == this) return true;</span>
+<span class="nc bnc" id="L95" title="All 4 branches missed.">    if (obj == null || obj.getClass() != this.getClass()) return false;</span>
+<span class="nc" id="L96">    var that = (GUID) obj;</span>
+<span class="nc bnc" id="L97" title="All 6 branches missed.">    return this.Data1 == that.Data1 &amp;&amp;</span>
+            this.Data2 == that.Data2 &amp;&amp;
+            this.Data3 == that.Data3 &amp;&amp;
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            Arrays.equals(this.Data4, that.Data4);</span>
+  }
+
+  @Override
+  public int hashCode() {
+<span class="nc" id="L105">    return Objects.hash(Data1, Data2, Data3, Arrays.hashCode(Data4));</span>
+  }
+
+  @Override
+  public String toString() {
+<span class="nc" id="L110">    return (&quot;{&quot; + this.rawString() + &quot;}&quot;).toUpperCase();</span>
+  }
+
+  private String rawString() {
+<span class="nc" id="L114">    var sb = new StringBuilder();</span>
+<span class="nc" id="L115">    sb.append(String.format(&quot;%08X&quot;, Data1));</span>
+<span class="nc" id="L116">    sb.append(&quot;-&quot;);</span>
+<span class="nc" id="L117">    sb.append(String.format(&quot;%04X&quot;, Data2));</span>
+<span class="nc" id="L118">    sb.append(&quot;-&quot;);</span>
+<span class="nc" id="L119">    sb.append(String.format(&quot;%04X&quot;, Data3));</span>
+<span class="nc" id="L120">    sb.append(&quot;-&quot;);</span>
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">    for (int i = 0; i &lt; Data4.length; i++) {</span>
+<span class="nc" id="L123">      sb.append(String.format(&quot;%02X&quot;, Data4[i]));</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">      if (i == 1) {</span>
+<span class="nc" id="L125">        sb.append(&quot;-&quot;);</span>
+      }
+    }
+
+<span class="nc" id="L129">    return sb.toString();</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

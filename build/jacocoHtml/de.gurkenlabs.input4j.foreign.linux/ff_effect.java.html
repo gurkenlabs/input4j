@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ff_effect.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.linux</a> &gt; <span class="el_source">ff_effect.java</span></div><h1>ff_effect.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.linux;
+
+import java.lang.foreign.GroupLayout;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.VarHandle;
+
+import static java.lang.foreign.ValueLayout.JAVA_SHORT;
+
+/**
+ * struct ff_effect - defines a force feedback effect.
+ *
+ * &lt;p&gt;
+ * This is the main structure used to define force feedback effects
+ * for Linux input devices. It contains the effect type, direction,
+ * trigger conditions, playback parameters, and effect-specific data.
+ * &lt;/p&gt;
+ *
+ * @see ff_rumble_effect
+ * @see ff_trigger
+ * @see ff_replay
+ */
+<span class="nc" id="L23">class ff_effect {</span>
+  /**
+   * Effect type (FF_RUMBLE, FF_CONSTANT, FF_PERIODIC, etc.).
+   */
+  public short type;
+
+  /**
+   * Unique effect ID assigned by the driver.
+   * Set to -1 when uploading a new effect.
+   */
+  public short id;
+
+  /**
+   * Direction of the effect (0-360 degrees, encoded as 0xFFFF represent 360 degrees).
+   */
+  public short direction;
+
+  /**
+   * Trigger conditions for the effect.
+   */
+  public ff_trigger trigger;
+
+  /**
+   * Playback scheduling parameters.
+   */
+  public ff_replay replay;
+
+  /**
+   * Effect-specific data (union of different effect types).
+   * For rumble effects, use the rumble field.
+   */
+  public ff_rumble_effect rumble;
+
+  static final int FF_EFFECT_MAX = 24;
+
+<span class="nc" id="L58">  static final GroupLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L59">      JAVA_SHORT.withName(&quot;type&quot;),</span>
+<span class="nc" id="L60">      JAVA_SHORT.withName(&quot;id&quot;),</span>
+<span class="nc" id="L61">      JAVA_SHORT.withName(&quot;direction&quot;),</span>
+<span class="nc" id="L62">      ff_trigger.$LAYOUT.withName(&quot;trigger&quot;),</span>
+<span class="nc" id="L63">      ff_replay.$LAYOUT.withName(&quot;replay&quot;),</span>
+<span class="nc" id="L64">      MemoryLayout.sequenceLayout(FF_EFFECT_MAX, JAVA_SHORT).withName(&quot;u&quot;)</span>
+<span class="nc" id="L65">  ).withName(&quot;ff_effect&quot;);</span>
+
+<span class="nc" id="L67">  static final VarHandle VH_type = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;type&quot;));</span>
+<span class="nc" id="L68">  static final VarHandle VH_id = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;id&quot;));</span>
+<span class="nc" id="L69">  static final VarHandle VH_direction = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;direction&quot;));</span>
+
+<span class="nc" id="L71">  static final long OFFSET_trigger = $LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement(&quot;trigger&quot;));</span>
+<span class="nc" id="L72">  static final long OFFSET_replay = $LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement(&quot;replay&quot;));</span>
+<span class="nc" id="L73">  static final long OFFSET_u = $LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement(&quot;u&quot;));</span>
+
+  public static ff_effect read(MemorySegment segment) {
+<span class="nc" id="L76">    var effect = new ff_effect();</span>
+<span class="nc" id="L77">    effect.type = (short) VH_type.get(segment, 0);</span>
+<span class="nc" id="L78">    effect.id = (short) VH_id.get(segment, 0);</span>
+<span class="nc" id="L79">    effect.direction = (short) VH_direction.get(segment, 0);</span>
+<span class="nc" id="L80">    effect.trigger = ff_trigger.read(segment.asSlice(OFFSET_trigger));</span>
+<span class="nc" id="L81">    effect.replay = ff_replay.read(segment.asSlice(OFFSET_replay));</span>
+<span class="nc" id="L82">    effect.rumble = ff_rumble_effect.read(segment.asSlice(OFFSET_u));</span>
+<span class="nc" id="L83">    return effect;</span>
+  }
+
+  public void write(MemorySegment segment) {
+<span class="nc" id="L87">    VH_type.set(segment, 0, type);</span>
+<span class="nc" id="L88">    VH_id.set(segment, 0, id);</span>
+<span class="nc" id="L89">    VH_direction.set(segment, 0, direction);</span>
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">    if (trigger != null) {</span>
+<span class="nc" id="L92">      trigger.write(segment.asSlice(OFFSET_trigger));</span>
+    }
+<span class="nc bnc" id="L94" title="All 2 branches missed.">    if (replay != null) {</span>
+<span class="nc" id="L95">      replay.write(segment.asSlice(OFFSET_replay));</span>
+    }
+<span class="nc bnc" id="L97" title="All 2 branches missed.">    if (rumble != null) {</span>
+<span class="nc" id="L98">      rumble.write(segment.asSlice(OFFSET_u));</span>
+    }
+<span class="nc" id="L100">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -65,7 +65,7 @@ keywords: Java FFM API, Foreign Function Memory API, gamepad input Java, XInput 
         </table>
       </div>
       
-      <div class="code-snippet">
+      <div class="code-block">
         <div class="code-header">
           <span class="language">Java (Traditional JNI)</span>
         </div>
@@ -123,7 +123,7 @@ public class NativeInput {
         </div>
       </div>
       
-      <div class="code-snippet">
+      <div class="code-block">
         <div class="code-header">
           <span class="language">Java (FFM API)</span>
         </div>
@@ -245,7 +245,7 @@ public class ModernInput {
         </div>
       </div>
       
-      <div class="code-snippet">
+      <div class="code-block">
         <div class="code-header">
           <span class="language">Java (input4j Architecture)</span>
         </div>
@@ -278,7 +278,7 @@ public class ModernInput {
           <div class="step-number">1</div>
           <div class="step-content">
             <h3>Add Dependency</h3>
-            <div class="code-snippet">
+            <div class="code-block">
               <pre><code class="language-groovy">dependencies {
     implementation 'de.gurkenlabs:input4j:1.0.0'
 }</code></pre>
@@ -290,7 +290,7 @@ public class ModernInput {
           <div class="step-number">2</div>
           <div class="step-content">
             <h3>Initialize Devices</h3>
-            <div class="code-snippet">
+            <div class="code-block">
               <pre><code class="language-java">try (var devices = InputDevices.init()) {
     for (var device : devices.getAll()) {
         System.out.println("Found: " + device.getName());
@@ -304,7 +304,7 @@ public class ModernInput {
           <div class="step-number">3</div>
           <div class="step-content">
             <h3>Handle Input</h3>
-            <div class="code-snippet">
+            <div class="code-block">
               <pre><code class="language-java">device.onButtonPressed(XInput.X, () -> 
     System.out.println("X button pressed"));
 
@@ -318,5 +318,4 @@ device.onAxisChanged(Axis.AXIS_X, value ->
     </div>
   </div>
 </div>
-
-{% include footer.html %}
+</div>

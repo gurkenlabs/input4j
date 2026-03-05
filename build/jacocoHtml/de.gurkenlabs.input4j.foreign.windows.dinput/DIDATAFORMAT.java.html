@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DIDATAFORMAT.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.dinput</a> &gt; <span class="el_source">DIDATAFORMAT.java</span></div><h1>DIDATAFORMAT.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.dinput;
+
+import java.lang.foreign.Arena;
+import java.lang.foreign.GroupLayout;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.VarHandle;
+
+import static java.lang.foreign.ValueLayout.ADDRESS;
+import static java.lang.foreign.ValueLayout.JAVA_INT;
+
+<span class="nc" id="L12">class DIDATAFORMAT {</span>
+<span class="nc" id="L13">  public int dwSize = (int) DIDATAFORMAT.$LAYOUT.byteSize();</span>
+<span class="nc" id="L14">  public int dwObjSize = (int) DIOBJECTDATAFORMAT.$LAYOUT.byteSize();</span>
+  public int dwFlags;
+  public int dwDataSize;
+  public int dwNumObjs;
+
+  public MemorySegment rgodf;
+
+  private DIOBJECTDATAFORMAT[] objectDataFormats;
+
+<span class="nc" id="L23">  static final GroupLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L24">          JAVA_INT.withName(&quot;dwSize&quot;),</span>
+<span class="nc" id="L25">          JAVA_INT.withName(&quot;dwObjSize&quot;),</span>
+<span class="nc" id="L26">          JAVA_INT.withName(&quot;dwFlags&quot;),</span>
+<span class="nc" id="L27">          JAVA_INT.withName(&quot;dwDataSize&quot;),</span>
+<span class="nc" id="L28">          JAVA_INT.withName(&quot;dwNumObjs&quot;),</span>
+<span class="nc" id="L29">          MemoryLayout.paddingLayout(4),</span>
+<span class="nc" id="L30">          ADDRESS.withName(&quot;rgodf&quot;)</span>
+<span class="nc" id="L31">  ).withName(&quot;DIDATAFORMAT&quot;);</span>
+
+<span class="nc" id="L33">  static final VarHandle VH_dwSize = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwSize&quot;));</span>
+<span class="nc" id="L34">  static final VarHandle VH_dwObjSize = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwObjSize&quot;));</span>
+<span class="nc" id="L35">  static final VarHandle VH_dwFlags = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwFlags&quot;));</span>
+<span class="nc" id="L36">  static final VarHandle VH_dwDataSize = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwDataSize&quot;));</span>
+<span class="nc" id="L37">  static final VarHandle VH_dwNumObjs = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwNumObjs&quot;));</span>
+<span class="nc" id="L38">  static final VarHandle VH_rgodf = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;rgodf&quot;));</span>
+
+  public static DIDATAFORMAT read(MemorySegment segment, Arena memoryArena) {
+<span class="nc" id="L41">    var data = new DIDATAFORMAT();</span>
+<span class="nc" id="L42">    data.dwSize = (int) VH_dwSize.get(segment, 0);</span>
+<span class="nc" id="L43">    data.dwObjSize = (int) VH_dwObjSize.get(segment, 0);</span>
+<span class="nc" id="L44">    data.dwFlags = (int) VH_dwFlags.get(segment, 0);</span>
+<span class="nc" id="L45">    data.dwDataSize = (int) VH_dwDataSize.get(segment, 0);</span>
+<span class="nc" id="L46">    data.dwNumObjs = (int) VH_dwNumObjs.get(segment, 0);</span>
+<span class="nc" id="L47">    data.rgodf = (MemorySegment) VH_rgodf.get(segment, 0);</span>
+
+<span class="nc" id="L49">    var objetDataFormatPointerSegment = data.rgodf.reinterpret(DIOBJECTDATAFORMAT.$LAYOUT.byteSize() * data.dwNumObjs, memoryArena, null);</span>
+
+<span class="nc" id="L51">    data.objectDataFormats = new DIOBJECTDATAFORMAT[data.dwNumObjs];</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">    for (int i = 0; i &lt; data.dwNumObjs; i++) {</span>
+<span class="nc" id="L53">      data.objectDataFormats[i] = DIOBJECTDATAFORMAT.read(objetDataFormatPointerSegment.asSlice(i * DIOBJECTDATAFORMAT.$LAYOUT.byteSize()));</span>
+    }
+
+<span class="nc" id="L56">    return data;</span>
+  }
+
+  public void write(MemorySegment segment, Arena memoryArena) {
+<span class="nc" id="L60">    VH_dwSize.set(segment, 0, dwSize);</span>
+<span class="nc" id="L61">    VH_dwObjSize.set(segment, 0, dwObjSize);</span>
+<span class="nc" id="L62">    VH_dwFlags.set(segment, 0, dwFlags);</span>
+<span class="nc" id="L63">    VH_dwDataSize.set(segment, 0, dwDataSize);</span>
+<span class="nc" id="L64">    VH_dwNumObjs.set(segment, 0, dwNumObjs);</span>
+
+<span class="nc" id="L66">    var objectDataFormatSegment = memoryArena.allocate(MemoryLayout.sequenceLayout(dwNumObjs, DIOBJECTDATAFORMAT.$LAYOUT));</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">    for (int i = 0; i &lt; dwNumObjs; i++) {</span>
+<span class="nc" id="L68">      var objectFormat = this.objectDataFormats[i];</span>
+<span class="nc" id="L69">      objectFormat.write(objectDataFormatSegment.asSlice(i * DIOBJECTDATAFORMAT.$LAYOUT.byteSize()));</span>
+    }
+
+<span class="nc" id="L72">    rgodf = objectDataFormatSegment;</span>
+<span class="nc" id="L73">    VH_rgodf.set(segment, 0, rgodf);</span>
+<span class="nc" id="L74">  }</span>
+
+  public DIOBJECTDATAFORMAT[] getObjectDataFormats() {
+<span class="nc" id="L77">    return this.objectDataFormats;</span>
+  }
+
+  public void setObjectDataFormats(DIOBJECTDATAFORMAT[] objectDataFormats) {
+<span class="nc" id="L81">    this.objectDataFormats = objectDataFormats;</span>
+<span class="nc" id="L82">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

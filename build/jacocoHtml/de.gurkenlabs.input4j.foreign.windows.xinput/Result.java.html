@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Result.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.xinput</a> &gt; <span class="el_source">Result.java</span></div><h1>Result.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.xinput;
+
+/**
+ * The `Result` class defines constants for various XInput error codes.
+ * These constants represent different result codes that can be returned by XInput functions.
+ */
+<span class="nc" id="L7">class Result {</span>
+  /**
+   * The operation completed successfully.
+   */
+  static final int ERROR_SUCCESS = 0x00000000;
+
+  /**
+   * The device is not connected.
+   */
+  static final int ERROR_DEVICE_NOT_CONNECTED = 0x0000048F;
+
+  /**
+   * An invalid parameter was passed to the returning function.
+   */
+  static final int ERROR_BAD_ARGUMENTS = 0x000000A0;
+
+  /**
+   * Converts an XInput error code to its string representation.
+   *
+   * @param errorCode The error code to convert.
+   * @return A string representation of the error code.
+   */
+  static String toString(int errorCode) {
+<span class="nc" id="L30">    var hexResult = String.format(&quot;%08X&quot;, errorCode);</span>
+<span class="nc bnc" id="L31" title="All 4 branches missed.">    return switch (errorCode) {</span>
+<span class="nc" id="L32">      case ERROR_SUCCESS -&gt; &quot;ERROR_SUCCESS: &quot; + hexResult;</span>
+<span class="nc" id="L33">      case ERROR_DEVICE_NOT_CONNECTED -&gt; &quot;ERROR_DEVICE_NOT_CONNECTED: &quot; + hexResult;</span>
+<span class="nc" id="L34">      case ERROR_BAD_ARGUMENTS -&gt; &quot;ERROR_BAD_ARGUMENTS: &quot; + hexResult;</span>
+<span class="nc" id="L35">      default -&gt; hexResult;</span>
+    };
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

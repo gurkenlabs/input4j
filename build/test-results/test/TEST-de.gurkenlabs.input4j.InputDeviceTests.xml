@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="de.gurkenlabs.input4j.InputDeviceTests" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-03-04T21:02:13.682Z" hostname="STEFFEN-GAMING" time="0.083">
+  <properties/>
+  <testcase name="testClose()" classname="de.gurkenlabs.input4j.InputDeviceTests" time="0.039"/>
+  <testcase name="testPoll()" classname="de.gurkenlabs.input4j.InputDeviceTests" time="0.004"/>
+  <testcase name="testSetAccuracy()" classname="de.gurkenlabs.input4j.InputDeviceTests" time="0.003"/>
+  <testcase name="testAddComponent()" classname="de.gurkenlabs.input4j.InputDeviceTests" time="0.001"/>
+  <testcase name="testGetComponentById()" classname="de.gurkenlabs.input4j.InputDeviceTests" time="0.001"/>
+  <testcase name="testGetInstanceName()" classname="de.gurkenlabs.input4j.InputDeviceTests" time="0.0"/>
+  <testcase name="testGetComponentByName()" classname="de.gurkenlabs.input4j.InputDeviceTests" time="0.001"/>
+  <testcase name="testGetProductName()" classname="de.gurkenlabs.input4j.InputDeviceTests" time="0.0"/>
+  <testcase name="testGetComponents()" classname="de.gurkenlabs.input4j.InputDeviceTests" time="0.001"/>
+  <testcase name="testHasInputData()" classname="de.gurkenlabs.input4j.InputDeviceTests" time="0.001"/>
+  <testcase name="testRumble()" classname="de.gurkenlabs.input4j.InputDeviceTests" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

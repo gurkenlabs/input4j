@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XINPUT_STATE.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.xinput</a> &gt; <span class="el_source">XINPUT_STATE.java</span></div><h1>XINPUT_STATE.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.xinput;
+
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.lang.invoke.VarHandle;
+
+/**
+ * The {@code XINPUT_STATE} class represents the state of an XInput device.
+ * It includes information about the packet number and the gamepad state.
+ */
+<span class="nc" id="L12">final class XINPUT_STATE {</span>
+  /**
+   * The packet number of the XInput device.
+   */
+  int dwPacketNumber;
+
+  /**
+   * The gamepad state of the XInput device.
+   */
+  XINPUT_GAMEPAD Gamepad;
+
+<span class="nc" id="L23">  static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L24">          ValueLayout.JAVA_INT.withName(&quot;dwPacketNumber&quot;),</span>
+<span class="nc" id="L25">          XINPUT_GAMEPAD.$LAYOUT.withName(&quot;Gamepad&quot;)</span>
+  );
+
+<span class="nc" id="L28">  private static final VarHandle VH_dwPacketNumber = $LAYOUT.varHandle(ValueLayout.PathElement.groupElement(&quot;dwPacketNumber&quot;));</span>
+<span class="nc" id="L29">  private static final long GamepadOffset = $LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement(&quot;Gamepad&quot;));</span>
+
+  /**
+   * Reads the {@code XINPUT_STATE} from the given memory segment.
+   *
+   * @param segment The memory segment to read from.
+   * @return The {@code XINPUT_STATE} instance.
+   */
+  static XINPUT_STATE read(MemorySegment segment) {
+<span class="nc" id="L38">    var state = new XINPUT_STATE();</span>
+<span class="nc" id="L39">    state.dwPacketNumber = (int) VH_dwPacketNumber.get(segment, 0);</span>
+<span class="nc" id="L40">    state.Gamepad = XINPUT_GAMEPAD.read(segment.asSlice(GamepadOffset));</span>
+<span class="nc" id="L41">    return state;</span>
+  }
+
+  /**
+   * Writes the {@code XINPUT_STATE} to the given memory segment.
+   *
+   * @param segment The memory segment to write to.
+   */
+  void write(MemorySegment segment) {
+<span class="nc" id="L50">    VH_dwPacketNumber.set(segment, 0, dwPacketNumber);</span>
+<span class="nc" id="L51">    Gamepad.write(segment.asSlice(GamepadOffset));</span>
+<span class="nc" id="L52">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

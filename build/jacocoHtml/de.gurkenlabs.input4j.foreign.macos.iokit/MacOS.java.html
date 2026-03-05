@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MacOS.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.macos.iokit</a> &gt; <span class="el_source">MacOS.java</span></div><h1>MacOS.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.macos.iokit;
+
+import java.lang.foreign.Arena;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.MethodHandle;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
+
+import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
+import static java.lang.foreign.ValueLayout.*;
+
+<span class="nc" id="L14">class MacOS {</span>
+  private static final int kCFStringEncodingUTF8 = 0x08000100;
+  private static final int kCFNumberIntType = 9;
+
+  private final static String kIOHIDTransportKey = &quot;Transport&quot;;
+  private final static String kIOHIDVendorIDKey = &quot;VendorID&quot;;
+  private final static String kIOHIDProductIDKey = &quot;ProductID&quot;;
+  private final static String kIOHIDManufacturerKey = &quot;Manufacturer&quot;;
+  private final static String kIOHIDProductKey = &quot;Product&quot;;
+  private final static String kIOHIDPrimaryUsageKey = &quot;PrimaryUsage&quot;;
+  private final static String kIOHIDPrimaryUsagePageKey = &quot;PrimaryUsagePage&quot;;
+
+  private final static String kCFRunLoopDefaultMode = &quot;kCFRunLoopDefaultMode&quot;;
+
+  private static final MethodHandle CFRelease;
+  private static final MethodHandle CFStringCreateWithCString;
+  private static final MethodHandle CFNumberGetValue;
+  private static final MethodHandle CFArrayGetCount;
+  private static final MethodHandle CFArrayGetValueAtIndex;
+  private static final MethodHandle CFSetGetCount;
+  private static final MethodHandle CFSetGetValues;
+  private static final MethodHandle CFStringGetCString;
+  private static final MethodHandle CFRunLoopGetCurrent;
+  private static final MethodHandle CFRunLoopRun;
+
+  private static final MethodHandle IOHIDManagerCreate;
+  private static final MethodHandle IOHIDManagerOpen;
+  private static final MethodHandle IOHIDManagerCopyDevices;
+  private static final MethodHandle IOHIDManagerSetDeviceMatching;
+  private static final MethodHandle IOHIDManagerRegisterInputValueCallback;
+  private static final MethodHandle IOHIDManagerScheduleWithRunLoop;
+  private static final MethodHandle IOHIDManagerClose;
+
+  private static final MethodHandle IOHIDDeviceGetProperty;
+  private static final MethodHandle IOHIDDeviceCopyMatchingElements;
+
+  private static final MethodHandle IOHIDValueGetIntegerValue;
+  private static final MethodHandle IOHIDValueGetElement;
+  private static final MethodHandle IOHIDValueGetTimeStamp;
+
+  private static final MethodHandle IOHIDElementGetName;
+  private static final MethodHandle IOHIDElementGetUsage;
+  private static final MethodHandle IOHIDElementGetUsagePage;
+  private static final MethodHandle IOHIDElementGetType;
+  private static final MethodHandle IOHIDElementGetLogicalMin;
+  private static final MethodHandle IOHIDElementGetLogicalMax;
+  private static final MethodHandle IOHIDElementGetPhysicalMin;
+  private static final MethodHandle IOHIDElementGetPhysicalMax;
+  private static final MethodHandle IOHIDElementGetUnit;
+  private static final MethodHandle IOHIDElementGetUnitExponent;
+  private static final MethodHandle IOHIDElementGetReportSize;
+
+  static {
+<span class="nc" id="L67">    System.load(&quot;/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation&quot;);</span>
+<span class="nc" id="L68">    System.load(&quot;/System/Library/Frameworks/IOKit.framework/IOKit&quot;);</span>
+
+    // CoreFoundation methods
+<span class="nc" id="L71">    CFRelease = downcallHandle(&quot;CFRelease&quot;, FunctionDescriptor.ofVoid(ADDRESS));</span>
+<span class="nc" id="L72">    CFStringCreateWithCString = downcallHandle(&quot;CFStringCreateWithCString&quot;, FunctionDescriptor.of(ADDRESS, ADDRESS, ADDRESS, JAVA_INT));</span>
+<span class="nc" id="L73">    CFNumberGetValue = downcallHandle(&quot;CFNumberGetValue&quot;, FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, JAVA_INT, ADDRESS));</span>
+<span class="nc" id="L74">    CFArrayGetCount = downcallHandle(&quot;CFArrayGetCount&quot;, FunctionDescriptor.of(JAVA_INT, ADDRESS));</span>
+<span class="nc" id="L75">    CFArrayGetValueAtIndex = downcallHandle(&quot;CFArrayGetValueAtIndex&quot;, FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_INT));</span>
+<span class="nc" id="L76">    CFSetGetCount = downcallHandle(&quot;CFSetGetCount&quot;, FunctionDescriptor.of(JAVA_INT, ADDRESS));</span>
+<span class="nc" id="L77">    CFSetGetValues = downcallHandle(&quot;CFSetGetValues&quot;, FunctionDescriptor.ofVoid(ADDRESS, ADDRESS));</span>
+<span class="nc" id="L78">    CFStringGetCString = downcallHandle(&quot;CFStringGetCString&quot;, FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, ADDRESS, JAVA_INT, JAVA_INT));</span>
+<span class="nc" id="L79">    CFRunLoopGetCurrent = downcallHandle(&quot;CFRunLoopGetCurrent&quot;, FunctionDescriptor.of(ADDRESS));</span>
+<span class="nc" id="L80">    CFRunLoopRun = downcallHandle(&quot;CFRunLoopRun&quot;, FunctionDescriptor.ofVoid());</span>
+
+    // IOKit methods
+<span class="nc" id="L83">    IOHIDManagerCreate = downcallHandle(&quot;IOHIDManagerCreate&quot;, FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_INT));</span>
+<span class="nc" id="L84">    IOHIDManagerOpen = downcallHandle(&quot;IOHIDManagerOpen&quot;, FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT));</span>
+<span class="nc" id="L85">    IOHIDManagerCopyDevices = downcallHandle(&quot;IOHIDManagerCopyDevices&quot;, FunctionDescriptor.of(ADDRESS, ADDRESS));</span>
+<span class="nc" id="L86">    IOHIDManagerSetDeviceMatching = downcallHandle(&quot;IOHIDManagerSetDeviceMatching&quot;, FunctionDescriptor.ofVoid(ADDRESS, ADDRESS));</span>
+<span class="nc" id="L87">    IOHIDManagerRegisterInputValueCallback = downcallHandle(&quot;IOHIDManagerRegisterInputValueCallback&quot;, FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS));</span>
+<span class="nc" id="L88">    IOHIDManagerScheduleWithRunLoop = downcallHandle(&quot;IOHIDManagerScheduleWithRunLoop&quot;, FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS));</span>
+<span class="nc" id="L89">    IOHIDManagerClose = downcallHandle(&quot;IOHIDManagerClose&quot;, FunctionDescriptor.of(JAVA_INT, ADDRESS));</span>
+
+<span class="nc" id="L91">    IOHIDDeviceGetProperty = downcallHandle(&quot;IOHIDDeviceGetProperty&quot;, FunctionDescriptor.of(ADDRESS, JAVA_LONG, ADDRESS));</span>
+<span class="nc" id="L92">    IOHIDDeviceCopyMatchingElements = downcallHandle(&quot;IOHIDDeviceCopyMatchingElements&quot;, FunctionDescriptor.of(ADDRESS, JAVA_LONG, ADDRESS, JAVA_INT));</span>
+
+<span class="nc" id="L94">    IOHIDValueGetIntegerValue = downcallHandle(&quot;IOHIDValueGetIntegerValue&quot;, FunctionDescriptor.of(JAVA_INT, ADDRESS));</span>
+<span class="nc" id="L95">    IOHIDValueGetElement = downcallHandle(&quot;IOHIDValueGetElement&quot;, FunctionDescriptor.of(ADDRESS, ADDRESS));</span>
+<span class="nc" id="L96">    IOHIDValueGetTimeStamp = downcallHandle(&quot;IOHIDValueGetTimeStamp&quot;, FunctionDescriptor.of(JAVA_LONG, ADDRESS));</span>
+
+<span class="nc" id="L98">    IOHIDElementGetName = downcallHandle(&quot;IOHIDElementGetName&quot;, FunctionDescriptor.of(ADDRESS, JAVA_LONG));</span>
+<span class="nc" id="L99">    IOHIDElementGetUsage = downcallHandle(&quot;IOHIDElementGetUsage&quot;, FunctionDescriptor.of(JAVA_INT, JAVA_LONG));</span>
+<span class="nc" id="L100">    IOHIDElementGetUsagePage = downcallHandle(&quot;IOHIDElementGetUsagePage&quot;, FunctionDescriptor.of(JAVA_INT, JAVA_LONG));</span>
+<span class="nc" id="L101">    IOHIDElementGetType = downcallHandle(&quot;IOHIDElementGetType&quot;, FunctionDescriptor.of(JAVA_INT, JAVA_LONG));</span>
+<span class="nc" id="L102">    IOHIDElementGetLogicalMin = downcallHandle(&quot;IOHIDElementGetLogicalMin&quot;, FunctionDescriptor.of(JAVA_INT, JAVA_LONG));</span>
+<span class="nc" id="L103">    IOHIDElementGetLogicalMax = downcallHandle(&quot;IOHIDElementGetLogicalMax&quot;, FunctionDescriptor.of(JAVA_INT, JAVA_LONG));</span>
+<span class="nc" id="L104">    IOHIDElementGetPhysicalMin = downcallHandle(&quot;IOHIDElementGetPhysicalMin&quot;, FunctionDescriptor.of(JAVA_INT, JAVA_LONG));</span>
+<span class="nc" id="L105">    IOHIDElementGetPhysicalMax = downcallHandle(&quot;IOHIDElementGetPhysicalMax&quot;, FunctionDescriptor.of(JAVA_INT, JAVA_LONG));</span>
+<span class="nc" id="L106">    IOHIDElementGetUnit = downcallHandle(&quot;IOHIDElementGetUnit&quot;, FunctionDescriptor.of(JAVA_INT, JAVA_LONG));</span>
+<span class="nc" id="L107">    IOHIDElementGetUnitExponent = downcallHandle(&quot;IOHIDElementGetUnitExponent&quot;, FunctionDescriptor.of(JAVA_INT, JAVA_LONG));</span>
+<span class="nc" id="L108">    IOHIDElementGetReportSize = downcallHandle(&quot;IOHIDElementGetReportSize&quot;, FunctionDescriptor.of(JAVA_INT, JAVA_LONG));</span>
+<span class="nc" id="L109">  }</span>
+
+  /**
+   * Retrieves the IOHIDElement associated with the given IOHIDValue.
+   *
+   * @param ioHIDValue The IOHIDValue from which to retrieve the element.
+   * @return The IOHIDElement associated with the given value.
+   * @throws RuntimeException if an error occurs during the invocation.
+   */
+  static MemorySegment IOHIDValueGetElement(MemorySegment ioHIDValue) {
+    try {
+<span class="nc" id="L120">      return (MemorySegment) IOHIDValueGetElement.invoke(ioHIDValue);</span>
+<span class="nc" id="L121">    } catch (Throwable t) {</span>
+<span class="nc" id="L122">      throw new RuntimeException(t);</span>
+    }
+  }
+
+  /**
+   * Retrieves the integer value from the given IOHIDValue.
+   *
+   * @param ioHIDValue The IOHIDValue from which to retrieve the integer value.
+   * @return The integer value associated with the given IOHIDValue.
+   * @throws RuntimeException if an error occurs during the invocation.
+   */
+  static int IOHIDValueGetIntegerValue(MemorySegment ioHIDValue) {
+    try {
+<span class="nc" id="L135">      return (int) IOHIDValueGetIntegerValue.invoke(ioHIDValue);</span>
+<span class="nc" id="L136">    } catch (Throwable t) {</span>
+<span class="nc" id="L137">      throw new RuntimeException(t);</span>
+    }
+  }
+
+  /**
+   * Retrieves the timestamp from the given IOHIDValue.
+   *
+   * @param ioHIDValue The IOHIDValue from which to retrieve the timestamp.
+   * @return The timestamp associated with the given IOHIDValue.
+   * @throws RuntimeException if an error occurs during the invocation.
+   */
+  static long IOHIDValueGetTimeStamp(MemorySegment ioHIDValue) {
+    try {
+<span class="nc" id="L150">      return (long) IOHIDValueGetTimeStamp.invoke(ioHIDValue);</span>
+<span class="nc" id="L151">    } catch (Throwable t) {</span>
+<span class="nc" id="L152">      throw new RuntimeException(t);</span>
+    }
+  }
+
+  /**
+   * Initializes the HID manager and registers the input value callback.
+   *
+   * @param hidInputValueCallbackPointer The pointer to the input value callback function.
+   * @return The initialized HID manager.
+   * @throws RuntimeException if an error occurs during the initialization.
+   */
+  static MemorySegment initHIDManager(MemorySegment hidInputValueCallbackPointer) {
+    try {
+<span class="nc" id="L165">      var hidManager = (MemorySegment) IOHIDManagerCreate.invoke(MemorySegment.NULL, 0x00);</span>
+
+<span class="nc" id="L167">      var openResult = (int) IOHIDManagerOpen.invoke(hidManager, 0);</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">      if (openResult != IOReturn.kIOReturnSuccess) {</span>
+<span class="nc" id="L169">        throw new RuntimeException(&quot;Failed to open HID manager: &quot; + openResult);</span>
+      }
+
+<span class="nc" id="L172">      IOHIDManagerSetDeviceMatching.invoke(hidManager, MemorySegment.NULL);</span>
+<span class="nc" id="L173">      IOHIDManagerRegisterInputValueCallback.invoke(hidManager, hidInputValueCallbackPointer, MemorySegment.NULL);</span>
+<span class="nc" id="L174">      return hidManager;</span>
+<span class="nc" id="L175">    } catch (Throwable t) {</span>
+<span class="nc" id="L176">      throw new RuntimeException(t);</span>
+    }
+  }
+
+  /**
+   * Closes the HID manager.
+   *
+   * @param hidManager The HID manager to close.
+   * @return The result of the close operation.
+   * @throws RuntimeException if an error occurs during the close operation.
+   */
+  static int IOHIDManagerClose(MemorySegment hidManager) {
+    try {
+<span class="nc" id="L189">      return (int) IOHIDManagerClose.invoke(hidManager);</span>
+<span class="nc" id="L190">    } catch (Throwable t) {</span>
+<span class="nc" id="L191">      throw new RuntimeException(t);</span>
+    }
+  }
+
+  /**
+   * Runs the event loop for the HID manager.
+   *
+   * @param memoryArena The memory arena to use for allocations.
+   * @param hidManager  The HID manager for which to run the event loop.
+   * @throws RuntimeException if an error occurs during the event loop execution.
+   */
+  static void runEventLoop(Arena memoryArena, MemorySegment hidManager) {
+    try {
+<span class="nc" id="L204">      var kCFRunLoopDefaultModeString = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(kCFRunLoopDefaultMode), kCFStringEncodingUTF8);</span>
+      try {
+<span class="nc" id="L206">        IOHIDManagerScheduleWithRunLoop.invoke(hidManager, CFRunLoopGetCurrent.invoke(), kCFRunLoopDefaultModeString);</span>
+      } finally {
+<span class="nc" id="L208">        CFRelease.invoke(kCFRunLoopDefaultModeString);</span>
+      }
+
+<span class="nc" id="L211">      CFRunLoopRun.invoke();</span>
+<span class="nc" id="L212">    } catch (Throwable t) {</span>
+<span class="nc" id="L213">      throw new RuntimeException(t);</span>
+<span class="nc" id="L214">    }</span>
+<span class="nc" id="L215">  }</span>
+
+  /**
+   * Retrieves the supported HID devices from the HID manager.
+   *
+   * @param memoryArena The memory arena to use for allocations.
+   * @param hidManager  The HID manager from which to retrieve the devices.
+   * @return A collection of supported HID devices.
+   * @throws RuntimeException if an error occurs during the retrieval.
+   */
+  static Collection&lt;IOHIDDevice&gt; getSupportedHIDDevices(Arena memoryArena, MemorySegment hidManager) {
+    try {
+      // Copy the set of devices from the HID manager
+<span class="nc" id="L228">      var deviceSet = (MemorySegment) IOHIDManagerCopyDevices.invoke(hidManager);</span>
+<span class="nc" id="L229">      var count = (int) CFSetGetCount.invoke(deviceSet);</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">      if (deviceSet.equals(MemorySegment.NULL)) {</span>
+<span class="nc" id="L231">        throw new RuntimeException(&quot;Failed to copy devices from HID manager&quot;);</span>
+      }
+
+      // Allocate memory for the devices
+<span class="nc" id="L235">      var devices = memoryArena.allocate(JAVA_LONG, count);</span>
+<span class="nc" id="L236">      CFSetGetValues.invoke(deviceSet, devices);</span>
+
+<span class="nc" id="L238">      var hidDevices = new ArrayList&lt;IOHIDDevice&gt;();</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">      for (int i = 0; i &lt; count; i++) {</span>
+<span class="nc" id="L240">        var device = new IOHIDDevice();</span>
+<span class="nc" id="L241">        device.address = devices.get(JAVA_LONG, i * JAVA_LONG.byteSize());</span>
+
+        // Initialize the device and check if it is supported
+<span class="nc bnc" id="L244" title="All 2 branches missed.">        if (!initializeDevice(memoryArena, device)) {</span>
+<span class="nc" id="L245">          continue;</span>
+        }
+
+        // Copy matching elements for the device
+<span class="nc" id="L249">        var elements = (MemorySegment) IOHIDDeviceCopyMatchingElements.invoke(device.address, MemorySegment.NULL, 0);</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">        if (!elements.equals(MemorySegment.NULL)) {</span>
+<span class="nc" id="L251">          var elementCount = (int) CFArrayGetCount.invoke(elements);</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">          for (int j = 0; j &lt; elementCount; j++) {</span>
+<span class="nc" id="L253">            var elementAddress = (MemorySegment) CFArrayGetValueAtIndex.invoke(elements, j);</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">            if (elementAddress.equals(MemorySegment.NULL)) {</span>
+<span class="nc" id="L255">              continue;</span>
+            }
+
+            // Get the IOHIDElement and add it to the device
+<span class="nc" id="L259">            var element = getIOHIDElement(memoryArena, elementAddress);</span>
+<span class="nc" id="L260">            device.addElement(element);</span>
+          }
+        }
+
+        // Add the device to the list of HID devices
+<span class="nc" id="L265">        hidDevices.add(device);</span>
+      }
+
+<span class="nc" id="L268">      return hidDevices;</span>
+<span class="nc" id="L269">    } catch (Throwable t) {</span>
+<span class="nc" id="L270">      throw new RuntimeException(t);</span>
+    }
+  }
+
+  private static boolean initializeDevice(Arena memoryArena, IOHIDDevice device) throws Throwable {
+<span class="nc" id="L275">    device.vendorId = getIntProperty(memoryArena, kIOHIDVendorIDKey, device);</span>
+<span class="nc" id="L276">    device.productId = getIntProperty(memoryArena, kIOHIDProductIDKey, device);</span>
+<span class="nc" id="L277">    device.usage = getIntProperty(memoryArena, kIOHIDPrimaryUsageKey, device);</span>
+<span class="nc" id="L278">    device.usagePage = getIntProperty(memoryArena, kIOHIDPrimaryUsagePageKey, device);</span>
+<span class="nc" id="L279">    device.productName = getStringProperty(memoryArena, kIOHIDProductKey, device);</span>
+<span class="nc" id="L280">    device.manufacturer = getStringProperty(memoryArena, kIOHIDManufacturerKey, device);</span>
+<span class="nc" id="L281">    device.transport = getStringProperty(memoryArena, kIOHIDTransportKey, device);</span>
+
+<span class="nc" id="L283">    return device.isSupportedHIDDevice();</span>
+  }
+
+  private static IOHIDElement getIOHIDElement(Arena memoryArena, MemorySegment elementAddress) throws Throwable {
+<span class="nc" id="L287">    var element = new IOHIDElement();</span>
+<span class="nc" id="L288">    element.address = elementAddress.address();</span>
+
+<span class="nc" id="L290">    var elementNameRef = (MemorySegment) IOHIDElementGetName.invoke(element.address);</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">    if (!elementNameRef.equals(MemorySegment.NULL)) {</span>
+<span class="nc" id="L292">      var elementNameSegment = memoryArena.allocate(JAVA_CHAR, 256);</span>
+<span class="nc bnc" id="L293" title="All 4 branches missed.">      if ((boolean) CFStringGetCString.invoke(elementNameRef, elementNameSegment, 256, kCFStringEncodingUTF8) &amp;&amp; elementNameSegment != MemorySegment.NULL) {</span>
+<span class="nc" id="L294">        element.name = elementNameSegment.reinterpret(256).getString(0, StandardCharsets.UTF_8);</span>
+      }
+    }
+
+<span class="nc" id="L298">    element.type = IOHIDElementType.fromValue((int) IOHIDElementGetType.invoke(element.address));</span>
+<span class="nc" id="L299">    element.usagePage = IOHIDElementUsagePage.fromValue((int) IOHIDElementGetUsagePage.invoke(element.address));</span>
+<span class="nc" id="L300">    element.usage = IOHIDElementUsage.fromValue((int) IOHIDElementGetUsage.invoke(element.address));</span>
+<span class="nc" id="L301">    element.min = (int) IOHIDElementGetLogicalMin.invoke(element.address);</span>
+<span class="nc" id="L302">    element.max = (int) IOHIDElementGetLogicalMax.invoke(element.address);</span>
+<span class="nc" id="L303">    element.physicalMin = (int) IOHIDElementGetPhysicalMin.invoke(element.address);</span>
+<span class="nc" id="L304">    element.physicalMax = (int) IOHIDElementGetPhysicalMax.invoke(element.address);</span>
+<span class="nc" id="L305">    element.unit = (int) IOHIDElementGetUnit.invoke(element.address);</span>
+<span class="nc" id="L306">    element.unitExponent = (int) IOHIDElementGetUnitExponent.invoke(element.address);</span>
+<span class="nc" id="L307">    element.reportSize = (int) IOHIDElementGetReportSize.invoke(element.address);</span>
+<span class="nc" id="L308">    return element;</span>
+  }
+
+  private static int getIntProperty(Arena memoryArena, String propertyKey, IOHIDDevice device) throws Throwable {
+<span class="nc" id="L312">    var propertyKeyString = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(propertyKey), kCFStringEncodingUTF8);</span>
+    try {
+<span class="nc" id="L314">      var propertyRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.address, propertyKeyString);</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">      if (!propertyRef.equals(MemorySegment.NULL)) {</span>
+<span class="nc" id="L316">        var propertyValue = memoryArena.allocate(JAVA_INT);</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">        if ((boolean) CFNumberGetValue.invoke(propertyRef, kCFNumberIntType, propertyValue)) {</span>
+<span class="nc" id="L318">          return propertyValue.get(JAVA_INT, 0);</span>
+        }
+      }
+    } finally {
+<span class="nc" id="L322">      CFRelease.invoke(propertyKeyString);</span>
+    }
+
+<span class="nc" id="L325">    return 0;</span>
+  }
+
+  private static String getStringProperty(Arena memoryArena, String propertyKey, IOHIDDevice device) throws Throwable {
+<span class="nc" id="L329">    final int MAX_STRING_LENGTH = 256;</span>
+<span class="nc" id="L330">    var propertyKeyString = (MemorySegment) CFStringCreateWithCString.invoke(MemorySegment.NULL, memoryArena.allocateFrom(propertyKey), kCFStringEncodingUTF8);</span>
+    try {
+<span class="nc" id="L332">      var propertyRef = (MemorySegment) IOHIDDeviceGetProperty.invoke(device.address, propertyKeyString);</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">      if (!propertyRef.equals(MemorySegment.NULL)) {</span>
+<span class="nc" id="L334">        var propertyValue = memoryArena.allocate(JAVA_CHAR, MAX_STRING_LENGTH);</span>
+<span class="nc bnc" id="L335" title="All 4 branches missed.">        if ((boolean) CFStringGetCString.invoke(propertyRef, propertyValue, MAX_STRING_LENGTH, kCFStringEncodingUTF8) &amp;&amp; propertyValue != MemorySegment.NULL) {</span>
+<span class="nc" id="L336">          return propertyValue.reinterpret(MAX_STRING_LENGTH).getString(0, StandardCharsets.UTF_8);</span>
+        }
+      }
+    } finally {
+<span class="nc" id="L340">      CFRelease.invoke(propertyKeyString);</span>
+    }
+
+<span class="nc" id="L343">    return null;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

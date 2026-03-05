@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InputDevice.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j</a> &gt; <span class="el_source">InputDevice.java</span></div><h1>InputDevice.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j;
+
+import java.io.Closeable;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+/**
+ * Represents an input device.
+ * An input device is a physical device that can provide input to a computer system.
+ * It is composed of a collection of input components, such as buttons, axes, and other controls.
+ * &lt;p&gt;
+ * The input device can be polled for input data, which is then used to update the associated input components.
+ * The input device can also be used to set rumble (vibration) intensity.
+ * &lt;br&gt;
+ * The input device can have multiple listeners that are notified when the value of an input component changes.
+ * The listeners should implement the {@link InputDeviceListener} interface.
+ * &lt;br&gt;
+ * The input device should be closed to release any resources it holds.
+ * &lt;/p&gt;
+ *
+ * @see InputComponent
+ * @see InputDeviceListener
+ * @see de.gurkenlabs.input4j.InputComponent.InputValueChangedEvent
+ * @see Closeable
+ */
+public final class InputDevice implements Closeable {
+  private final String identifier;
+  private final String name;
+  private final String productName;
+<span class="fc" id="L37">  private final List&lt;InputComponent&gt; components = new CopyOnWriteArrayList&lt;&gt;();</span>
+<span class="fc" id="L38">  private final Collection&lt;InputDeviceListener&gt; listeners = ConcurrentHashMap.newKeySet();</span>
+<span class="fc" id="L39">  private final Map&lt;InputComponent.ID, Collection&lt;Runnable&gt;&gt; buttonPressedListeners = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L40">  private final Map&lt;InputComponent.ID, Collection&lt;Runnable&gt;&gt; buttonReleasedListeners = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L41">  private final Map&lt;InputComponent.ID, Collection&lt;Consumer&lt;Float&gt;&gt;&gt; axisChangedListeners = new ConcurrentHashMap&lt;&gt;();</span>
+
+  private final Function&lt;InputDevice, float[]&gt; pollCallback;
+  private final BiConsumer&lt;InputDevice, float[]&gt; rumbleCallback;
+  private float accuracyFactor;
+  private boolean hasInputData;
+
+  /**
+   * Creates a new instance of the InputDevice class.
+   *
+   * @param identifier     the identifier of the input device
+   * @param name           the name of the instance of the input device
+   * @param productName    the name of the product of the input device
+   * @param pollCallback   the function to be called when polling for input data from the device
+   * @param rumbleCallback the function to be called when setting rumble intensity
+   */
+<span class="fc" id="L57">  public InputDevice(String identifier, String name, String productName, Function&lt;InputDevice, float[]&gt; pollCallback, BiConsumer&lt;InputDevice, float[]&gt; rumbleCallback) {</span>
+<span class="fc" id="L58">    this.identifier = identifier;</span>
+<span class="fc" id="L59">    this.name = name;</span>
+<span class="fc" id="L60">    this.productName = productName;</span>
+<span class="fc" id="L61">    this.pollCallback = pollCallback;</span>
+<span class="fc" id="L62">    this.rumbleCallback = rumbleCallback;</span>
+<span class="fc" id="L63">    this.setAccuracy(InputDevices.configure().getAccuracy());</span>
+<span class="fc" id="L64">  }</span>
+
+  /**
+   * Gets the identifier of the input device.
+   * &lt;p&gt;
+   * Note: The identifier is a unique string that identifies the input device on the system.
+   * It can be different of different platforms and libraries and can be used
+   * to uniquely identify the input device within the used input library during runtime.
+   *
+   * @return the identifier
+   */
+  public String getID() {
+<span class="nc" id="L76">    return identifier;</span>
+  }
+
+  /**
+   * Gets the name of the instance of the input device.
+   *
+   * @return the instance name
+   */
+  public String getName() {
+<span class="fc" id="L85">    return name;</span>
+  }
+
+  /**
+   * Gets the name of the product of the input device.
+   *
+   * @return the product name
+   */
+  public String getProductName() {
+<span class="fc" id="L94">    return productName;</span>
+  }
+
+  /**
+   * Gets the collection of input components associated with the input device.
+   *
+   * @return the collection of input components
+   */
+  public List&lt;InputComponent&gt; getComponents() {
+<span class="fc" id="L103">    return components;</span>
+  }
+
+  /**
+   * Gets an input component by its name.
+   *
+   * @param name the name of the input component
+   * @return an Optional containing the input component if found, otherwise an empty Optional
+   */
+  public Optional&lt;InputComponent&gt; getComponent(String name) {
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">    if (name == null) {</span>
+<span class="nc" id="L114">      return Optional.empty();</span>
+    }
+
+<span class="fc" id="L117">    return components.stream().filter(c -&gt; c.getId().name.equals(name)).findFirst();</span>
+  }
+
+  /**
+   * Gets an input component by its ID.
+   *
+   * @param id the ID of the input component
+   * @return an Optional containing the input component if found, otherwise an empty Optional
+   */
+  public Optional&lt;InputComponent&gt; getComponent(InputComponent.ID id) {
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">    if (id == null) {</span>
+<span class="nc" id="L128">      return Optional.empty();</span>
+    }
+
+<span class="fc" id="L131">    return components.stream().filter(c -&gt; c.getId().equals(id)).findFirst();</span>
+  }
+
+  /**
+   * Finds the index of the specified component in the input device.
+   *
+   * @param id the component ID
+   * @return the index of the component, or -1 if not found
+   */
+  public int getComponentIndex(InputComponent.ID id) {
+<span class="nc bnc" id="L141" title="All 2 branches missed.">    for (int i = 0; i &lt; this.components.size(); i++) {</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">      if (this.components.get(i).getId().equals(id)) {</span>
+<span class="nc" id="L143">        return i;</span>
+      }
+    }
+
+<span class="nc" id="L147">    return -1;</span>
+  }
+
+  /**
+   * Adds a collection of input components to the input device.
+   *
+   * @param components the input components to add
+   */
+  public void setComponents(List&lt;InputComponent&gt; components) {
+<span class="fc" id="L156">    this.components.clear();</span>
+<span class="fc" id="L157">    this.components.addAll(components);</span>
+<span class="fc" id="L158">  }</span>
+
+  /**
+   * Adds an input component to the input device.
+   * If a component with the same ID already exists, it is replaced.
+   *
+   * @param component the input component to add
+   */
+  public void addComponent(InputComponent component) {
+<span class="fc" id="L167">    Optional&lt;InputComponent&gt; existingComponent = components.stream()</span>
+<span class="pc" id="L168">      .filter(c -&gt; c.equals(component))</span>
+<span class="fc" id="L169">      .findFirst();</span>
+
+<span class="fc" id="L171">    existingComponent.ifPresent(components::remove);</span>
+<span class="fc" id="L172">    components.add(component);</span>
+<span class="fc" id="L173">  }</span>
+
+  /**
+   * Polls the input device for input data and updates the associated input components.
+   */
+  public void poll() {
+<span class="fc" id="L179">    var polledData = this.pollCallback.apply(this);</span>
+<span class="fc" id="L180">    var hasInputData = false;</span>
+
+<span class="fc" id="L182">    var componentList = this.components;</span>
+<span class="pc bpc" id="L183" title="1 of 4 branches missed.">    for (var i = 0; i &lt; polledData.length &amp;&amp; i &lt; componentList.size(); i++) {</span>
+<span class="fc" id="L184">      var component = componentList.get(i);</span>
+<span class="fc" id="L185">      var oldData = component.getData();</span>
+<span class="fc" id="L186">      var newData = polledData[i];</span>
+
+<span class="fc" id="L188">      newData = Math.round(newData * this.accuracyFactor) / this.accuracyFactor;</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">      hasInputData |= newData != 0;</span>
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">      if (oldData != newData) {</span>
+<span class="fc" id="L191">        hasInputData = true;</span>
+<span class="fc" id="L192">        component.setData(newData);</span>
+
+<span class="fc" id="L194">        var inputEvent = new InputComponent.InputValueChangedEvent(component, oldData, newData);</span>
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">        for (var listener : listeners) {</span>
+<span class="nc" id="L196">          listener.onValueChanged(inputEvent);</span>
+<span class="nc" id="L197">        }</span>
+
+<span class="fc bfc" id="L199" title="All 2 branches covered.">        if (component.isButton()) {</span>
+<span class="fc" id="L200">          var id = component.getId();</span>
+<span class="pc bpc" id="L201" title="3 of 4 branches missed.">          if (newData == 1 &amp;&amp; buttonPressedListeners.containsKey(id)) {</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">            for (var listener : buttonPressedListeners.get(id)) {</span>
+<span class="nc" id="L203">              listener.run();</span>
+<span class="nc" id="L204">            }</span>
+<span class="pc bpc" id="L205" title="3 of 4 branches missed.">          } else if (newData == 0 &amp;&amp; buttonReleasedListeners.containsKey(id)) {</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">            for (var listener : buttonReleasedListeners.get(id)) {</span>
+<span class="nc" id="L207">              listener.run();</span>
+<span class="nc" id="L208">            }</span>
+          }
+        }
+
+<span class="pc bpc" id="L212" title="1 of 4 branches missed.">        if (component.isAxis() &amp;&amp; axisChangedListeners.containsKey(component.getId())) {</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">          for (var listener : axisChangedListeners.get(component.getId())) {</span>
+<span class="nc" id="L214">            listener.accept(newData);</span>
+<span class="nc" id="L215">          }</span>
+        }
+      }
+    }
+
+<span class="fc" id="L220">    this.hasInputData = hasInputData;</span>
+<span class="fc" id="L221">  }</span>
+
+  /**
+   * Sets the rumble (vibration) intensity for the input device.
+   * The intensity values should be between 0 and 1.
+   *
+   * @param intensity The intensity values for the rumble.
+   *                  &lt;ul&gt;
+   *                    &lt;li&gt;If values are provided, they are used for the corresponding motors in order.&lt;/li&gt;
+   *                    &lt;li&gt;If fewer values are provided than the number of motors, the last provided value is used for the remaining motors.&lt;/li&gt;
+   *                    &lt;li&gt;If no values are provided, the rumble is stopped (intensity set to 0).&lt;/li&gt;
+   *                  &lt;/ul&gt;
+   */
+  public void rumble(float... intensity) {
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">    if (this.rumbleCallback == null) {</span>
+      // rumble not supported if no rumble callback is provided by the library
+<span class="nc" id="L237">      return;</span>
+    }
+
+<span class="fc" id="L240">    this.rumbleCallback.accept(this, intensity);</span>
+<span class="fc" id="L241">  }</span>
+
+  public void setAccuracy(int decimalPlaces) {
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">    if (decimalPlaces &lt; 0) {</span>
+<span class="nc" id="L245">      throw new IllegalArgumentException(&quot;Decimal places must be a non-negative integer.&quot;);</span>
+    }
+
+<span class="fc" id="L248">    this.accuracyFactor = (float) Math.pow(10, Math.min(decimalPlaces, 7));</span>
+<span class="fc" id="L249">  }</span>
+
+  @Override
+  public void close() {
+<span class="fc" id="L253">    this.listeners.clear();</span>
+<span class="fc" id="L254">    this.buttonPressedListeners.clear();</span>
+<span class="fc" id="L255">    this.buttonReleasedListeners.clear();</span>
+<span class="fc" id="L256">  }</span>
+
+  /**
+   * Checks if the input device has any input data.
+   *
+   * @return true if the input device has input data, false otherwise
+   */
+  public boolean hasInputData() {
+<span class="fc" id="L264">    return this.hasInputData;</span>
+  }
+
+  @Override
+  public String toString() {
+<span class="nc" id="L269">    return this.getName();</span>
+  }
+
+  /**
+   * Registers a listener to be notified when the value of any input component changes.
+   *
+   * @param listener The listener to register.
+   */
+  public void onInputValueChanged(InputDeviceListener listener) {
+<span class="nc" id="L278">    this.listeners.add(listener);</span>
+<span class="nc" id="L279">  }</span>
+
+  /**
+   * Registers a listener to be notified when a button is pressed.
+   *
+   * @param buttonId The ID of the button to listen to.
+   * @param runnable The listener to register.
+   * @return true if the listener was registered, otherwise false.
+   */
+
+  public boolean onButtonPressed(int buttonId, Runnable runnable) {
+<span class="nc" id="L290">    return this.onButtonPressed(InputComponent.ID.getButton(buttonId), runnable);</span>
+  }
+
+  /**
+   * Registers a listener to be notified when a button is pressed.
+   *
+   * @param buttonId The ID of the button to listen to.
+   * @param runnable The listener to register.
+   * @return true if the listener was registered, otherwise false.
+   */
+  public boolean onButtonPressed(InputComponent.ID buttonId, Runnable runnable) {
+<span class="nc bnc" id="L301" title="All 4 branches missed.">    if (runnable == null || this.getComponent(buttonId).isEmpty()) {</span>
+<span class="nc" id="L302">      return false;</span>
+    }
+
+<span class="nc bnc" id="L305" title="All 2 branches missed.">    if (!this.buttonPressedListeners.containsKey(buttonId)) {</span>
+<span class="nc" id="L306">      this.buttonPressedListeners.put(buttonId, new CopyOnWriteArrayList&lt;&gt;());</span>
+    }
+
+<span class="nc" id="L309">    this.buttonPressedListeners.get(buttonId).add(runnable);</span>
+<span class="nc" id="L310">    return true;</span>
+  }
+
+  /**
+   * Registers a listener to be notified when a button is released.
+   *
+   * @param buttonId The ID of the button to listen to.
+   * @param runnable The listener to register.
+   * @return true if the listener was registered, otherwise false.
+   */
+  public boolean onButtonReleased(int buttonId, Runnable runnable) {
+<span class="nc" id="L321">    return this.onButtonReleased(InputComponent.ID.getButton(buttonId), runnable);</span>
+  }
+
+  /**
+   * Registers a listener to be notified when a button is released.
+   *
+   * @param buttonId The ID of the button to listen to.
+   * @param runnable The listener to register.
+   * @return true if the listener was registered, otherwise false.
+   */
+  public boolean onButtonReleased(InputComponent.ID buttonId, Runnable runnable) {
+<span class="nc bnc" id="L332" title="All 4 branches missed.">    if (runnable == null || this.getComponent(buttonId).isEmpty()) {</span>
+<span class="nc" id="L333">      return false;</span>
+    }
+
+<span class="nc bnc" id="L336" title="All 2 branches missed.">    if (!this.buttonReleasedListeners.containsKey(buttonId)) {</span>
+<span class="nc" id="L337">      this.buttonReleasedListeners.put(buttonId, new CopyOnWriteArrayList&lt;&gt;());</span>
+    }
+
+<span class="nc" id="L340">    this.buttonReleasedListeners.get(buttonId).add(runnable);</span>
+<span class="nc" id="L341">    return true;</span>
+  }
+
+  /**
+   * Clears all listeners for a specific button.
+   *
+   * @param buttonId The ID of the button to clear listeners for.
+   */
+  public void clearButtonPresedListeners(int buttonId) {
+<span class="nc" id="L350">    this.clearButtonPressedListeners(InputComponent.ID.getButton(buttonId));</span>
+<span class="nc" id="L351">  }</span>
+
+  /**
+   * Clears all listeners for a specific button.
+   *
+   * @param buttonId The ID of the button to clear listeners for.
+   */
+  public void clearButtonPressedListeners(InputComponent.ID buttonId) {
+<span class="nc" id="L359">    this.buttonPressedListeners.remove(buttonId);</span>
+<span class="nc" id="L360">  }</span>
+
+  /**
+   * Clears all listeners for a specific button.
+   *
+   * @param buttonId The ID of the button to clear listeners for.
+   */
+  public void clearButtonReleasedListeners(int buttonId) {
+<span class="nc" id="L368">    this.clearButtonPressedListeners(InputComponent.ID.getButton(buttonId));</span>
+<span class="nc" id="L369">  }</span>
+
+  /**
+   * Clears all listeners for a specific button.
+   *
+   * @param buttonId The ID of the button to clear listeners for.
+   */
+  public void clearButtonReleasedListeners(InputComponent.ID buttonId) {
+<span class="nc" id="L377">    this.buttonReleasedListeners.remove(buttonId);</span>
+<span class="nc" id="L378">  }</span>
+
+  /**
+   * Removes a specific button pressed listener.
+   *
+   * @param runnable The listener to remove.
+   */
+  public void removeButtonPressedListener(Runnable runnable) {
+<span class="nc bnc" id="L386" title="All 2 branches missed.">    for (var entry : this.buttonPressedListeners.entrySet()) {</span>
+<span class="nc" id="L387">      entry.getValue().remove(runnable);</span>
+<span class="nc" id="L388">    }</span>
+<span class="nc" id="L389">  }</span>
+
+  /**
+   * Removes a specific button released listener.
+   *
+   * @param runnable The listener to remove.
+   */
+  public void removeButtonReleasedListener(Runnable runnable) {
+<span class="nc bnc" id="L397" title="All 2 branches missed.">    for (var entry : this.buttonReleasedListeners.entrySet()) {</span>
+<span class="nc" id="L398">      entry.getValue().remove(runnable);</span>
+<span class="nc" id="L399">    }</span>
+<span class="nc" id="L400">  }</span>
+
+  /**
+   * Registers a listener to be notified when an axis value changes.
+   *
+   * @param axisId   The ID of the axis to listen to.
+   * @param runnable The listener to register.
+   * @return true if the listener was registered, otherwise false.
+   */
+  public boolean onAxisChanged(int axisId, Consumer&lt;Float&gt; runnable) {
+<span class="nc" id="L410">    return this.onAxisChanged(InputComponent.ID.getAxis(axisId), runnable);</span>
+  }
+
+  /**
+   * Registers a listener to be notified when an axis value changes.
+   *
+   * @param axis     The ID of the axis to listen to.
+   * @param runnable The listener to register.
+   * @return true if the listener was registered, otherwise false.
+   */
+  public boolean onAxisChanged(InputComponent.ID axis, Consumer&lt;Float&gt; runnable) {
+<span class="nc bnc" id="L421" title="All 4 branches missed.">    if (runnable == null || this.getComponent(axis).isEmpty()) {</span>
+<span class="nc" id="L422">      return false;</span>
+    }
+
+<span class="nc bnc" id="L425" title="All 2 branches missed.">    if (!this.axisChangedListeners.containsKey(axis)) {</span>
+<span class="nc" id="L426">      this.axisChangedListeners.put(axis, new CopyOnWriteArrayList&lt;&gt;());</span>
+    }
+
+<span class="nc" id="L429">    this.axisChangedListeners.get(axis).add(runnable);</span>
+<span class="nc" id="L430">    return true;</span>
+  }
+
+  /**
+   * Clears all listeners for a specific axis.
+   *
+   * @param axisId The ID of the axis to clear listeners for.
+   */
+  public void clearAxisChangedListeners(int axisId) {
+<span class="nc" id="L439">    this.clearAxisChangedListeners(InputComponent.ID.getAxis(axisId));</span>
+<span class="nc" id="L440">  }</span>
+
+  /**
+   * Clears all listeners for a specific axis.
+   *
+   * @param axisId The ID of the axis to clear listeners for.
+   */
+  public void clearAxisChangedListeners(InputComponent.ID axisId) {
+<span class="nc" id="L448">    this.axisChangedListeners.remove(axisId);</span>
+<span class="nc" id="L449">  }</span>
+
+  /**
+   * Removes a specific axis changed listener.
+   *
+   * @param runnable The listener to remove.
+   */
+  public void removeAxisChangedListener(Consumer&lt;Float&gt; runnable) {
+<span class="nc bnc" id="L457" title="All 2 branches missed.">    for (var entry : this.axisChangedListeners.entrySet()) {</span>
+<span class="nc" id="L458">      entry.getValue().remove(runnable);</span>
+<span class="nc" id="L459">    }</span>
+<span class="nc" id="L460">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

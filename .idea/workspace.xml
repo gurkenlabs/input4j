@@ -1,0 +1,806 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f2f89e38-693b-44cd-ab44-6aa4f16a7ec2" name="Changes" comment="Add missing documentation and cleanup unused settings.">
+      <change beforePath="$PROJECT_DIR$/index.md" beforeDir="false" afterPath="$PROJECT_DIR$/index.md" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <task path="$PROJECT_DIR$">
+          <activation />
+        </task>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="input4j" type="f1a62948:ProjectNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="input4j" type="f1a62948:ProjectNode" />
+                <item name="Run Configurations" type="7b0102dc:RunConfigurationsNode" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Interface" />
+        <option value="Enum" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <excluded-from-favorite>
+      <branch-storage>
+        <map>
+          <entry type="LOCAL">
+            <value>
+              <list>
+                <branch-info repo="$PROJECT_DIR$" source="main" />
+              </list>
+            </value>
+          </entry>
+        </map>
+      </branch-storage>
+    </excluded-from-favorite>
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="macos_iokit" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
+    <option name="UPDATE_TYPE" value="REBASE" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;steffen-wilke&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/gurkenlabs/input4j.git&quot;,
+    &quot;accountId&quot;: &quot;b06a5b60-245d-478d-98d4-abd818710141&quot;
+  }
+}</component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="2UPAwr0nMwpPOqht59ZLZ6bWa5P" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Gradle.DirectInputDataStructTests.executor": "Debug",
+    "Gradle.DirectInputDataStructTests.testDIEFFECT.executor": "Run",
+    "Gradle.DirectInputDataStructTests.testDIENVELOPE.executor": "Run",
+    "Gradle.DirectInputDataStructTests.testDIPROPDWORD.executor": "Run",
+    "Gradle.DirectInputDataStructTests.testDIPROPRANGE.executor": "Run",
+    "Gradle.DirectInputPluginTests.executor": "Run",
+    "Gradle.IOKitPluginTests.testNormalizeInputValue.executor": "Run",
+    "Gradle.InputComponentIDTests.executor": "Run",
+    "Gradle.InputComponentIDTests.testIDEquality.executor": "Run",
+    "Gradle.InputDeviceTests.executor": "Run",
+    "Gradle.InputDeviceTests.testSetAccuracy.executor": "Run",
+    "Gradle.LinuxDataStructTests.executor": "Run",
+    "Gradle.LinuxDataStructTests.testEpollEventReadWrite.executor": "Run",
+    "Gradle.LinuxDataStructTests.testTimeval.executor": "Run",
+    "Gradle.LinuxEventComponentTests.executor": "Run",
+    "Gradle.LinuxEventComponentTests.testGetDeadZone.executor": "Debug",
+    "Gradle.LinuxEventComponentTests.testGetIdentifier.executor": "Run",
+    "Gradle.LinuxEventDevicePluginTests.testGetComponentIndexByNativeId.executor": "Run",
+    "Gradle.LinuxEventDevicePluginTests.testNormalizeInputValue.executor": "Run",
+    "Gradle.LinuxEventDevicePluginTests.testNormalizeInputValueForEVKey.executor": "Run",
+    "Gradle.NativeDataStructTests (1).executor": "Run",
+    "Gradle.NativeDataStructTests.executor": "Run",
+    "Gradle.NativeDataStructTests.testDIDEVICEOBJECTDATA.executor": "Run",
+    "Gradle.NativeDataStructTests.testDirectInputInitDevices.executor": "Run",
+    "Gradle.NativeDataStructTests.testGUID.executor": "Run",
+    "Gradle.NativeDataStructTests.testXInputVibration.executor": "Run",
+    "Gradle.Tests in 'input4j.test'.executor": "Run",
+    "Gradle.Upgrade Gradle wrapper.executor": "Run",
+    "Gradle.XInputDataStructTests.executor": "Run",
+    "Gradle.XInputDataStructTests.testXInputCapabilities.executor": "Run",
+    "Gradle.XInputPluginTests.executor": "Run",
+    "Gradle.XInputPluginTests.testNormalizeSignedShort.executor": "Run",
+    "Gradle.XInputPluginTests.testNormalizeTrigger.executor": "Run",
+    "Gradle.input4j [:Program.main()].executor": "Run",
+    "Gradle.input4j [:de.gurkenlabs.input4j.examples.ExampleEventBasedInputHandling.main()].executor": "Run",
+    "Gradle.input4j [:de.gurkenlabs.input4j.examples.ExamplePollAllInputDevicesManually.main()].executor": "Run",
+    "Gradle.input4j [build].executor": "Run",
+    "Gradle.input4j [check].executor": "Run",
+    "Gradle.input4j [clean].executor": "Run",
+    "Gradle.input4j [jar].executor": "Run",
+    "Gradle.input4j [run].executor": "Run",
+    "Gradle.input4j [test].executor": "Run",
+    "Gradle.input4j [wrapper --gradle-version 8.7].executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "ToolWindow.GitHub Copilot Chat.ShowToolbar": "false",
+    "git-widget-placeholder": "gh-pages",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "E:/repositories/input4j",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.5678161",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="E:\repositories\input4j" />
+      <recent name="E:\repositories\input4j\src\test\java" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\repositories\input4j\src\main\java" />
+      <recent name="E:\repositories\input4j\src\main\java\de\gurkenlabs\input4j" />
+    </key>
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="de.gurkenlabs.input4j" />
+      <recent name="de.gurkenlabs.input4j.foreign.windows.dinput" />
+      <recent name="de.gurkenlabs.input4j.linux" />
+    </key>
+  </component>
+  <component name="RunAnythingCache">
+    <option name="myCommands">
+      <command value="gradle wrapper --gradle-version 8.7" />
+    </option>
+  </component>
+  <component name="RunManager" selected="Gradle.input4j [build]">
+    <configuration name="ExampleEventBasedInputHandling" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="de.gurkenlabs.input4j.examples.ExampleEventBasedInputHandling" />
+      <module name="input4j.main" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="de.gurkenlabs.input4j.examples.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="DirectInputPluginTests" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;de.gurkenlabs.input4j.foreign.windows.dinput.DirectInputPluginTests&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="Tests in 'input4j.test'" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":test" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="XInputPluginTests" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;de.gurkenlabs.input4j.foreign.windows.xinput.XInputPluginTests&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="input4j [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="build" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>false</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Gradle.input4j [build]" />
+        <item itemvalue="Gradle.XInputPluginTests" />
+        <item itemvalue="Gradle.Tests in 'input4j.test'" />
+        <item itemvalue="Gradle.DirectInputPluginTests" />
+        <item itemvalue="Application.ExampleEventBasedInputHandling" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.31033.145" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f2f89e38-693b-44cd-ab44-6aa4f16a7ec2" name="Changes" comment="" />
+      <created>1692831082927</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1692831082927</updated>
+    </task>
+    <task id="LOCAL-00109" summary="Streamline string output">
+      <option name="closed" value="true" />
+      <created>1740258465299</created>
+      <option name="number" value="00109" />
+      <option name="presentableId" value="LOCAL-00109" />
+      <option name="project" value="LOCAL" />
+      <updated>1740258465299</updated>
+    </task>
+    <task id="LOCAL-00110" summary="Optimize IOHIDElementUsage">
+      <option name="closed" value="true" />
+      <created>1740258879619</created>
+      <option name="number" value="00110" />
+      <option name="presentableId" value="LOCAL-00110" />
+      <option name="project" value="LOCAL" />
+      <updated>1740258879619</updated>
+    </task>
+    <task id="LOCAL-00111" summary="Optimize IOHIDElementUsage">
+      <option name="closed" value="true" />
+      <created>1740258942548</created>
+      <option name="number" value="00111" />
+      <option name="presentableId" value="LOCAL-00111" />
+      <option name="project" value="LOCAL" />
+      <updated>1740258942548</updated>
+    </task>
+    <task id="LOCAL-00112" summary="Connect MacOS specific implementation with the exposed input API&#10;&#10;- Initialize InputDevice and InputComponent instances based on the native values&#10;- Initial implementation to poll component values.">
+      <option name="closed" value="true" />
+      <created>1740261701574</created>
+      <option name="number" value="00112" />
+      <option name="presentableId" value="LOCAL-00112" />
+      <option name="project" value="LOCAL" />
+      <updated>1740261701574</updated>
+    </task>
+    <task id="LOCAL-00113" summary="Also track report size">
+      <option name="closed" value="true" />
+      <created>1740264755819</created>
+      <option name="number" value="00113" />
+      <option name="presentableId" value="LOCAL-00113" />
+      <option name="project" value="LOCAL" />
+      <updated>1740264755819</updated>
+    </task>
+    <task id="LOCAL-00114" summary="Seems like the IOHIDValueRef struct is more complex than just the primitive value.">
+      <option name="closed" value="true" />
+      <created>1740265931846</created>
+      <option name="number" value="00114" />
+      <option name="presentableId" value="LOCAL-00114" />
+      <option name="project" value="LOCAL" />
+      <updated>1740265931847</updated>
+    </task>
+    <task id="LOCAL-00115" summary="Try to query the element from the value reference to ensure it is present.">
+      <option name="closed" value="true" />
+      <created>1740267522784</created>
+      <option name="number" value="00115" />
+      <option name="presentableId" value="LOCAL-00115" />
+      <option name="project" value="LOCAL" />
+      <updated>1740267522784</updated>
+    </task>
+    <task id="LOCAL-00116" summary="Some more tinkering to get the IOHIDValueRef struct working">
+      <option name="closed" value="true" />
+      <created>1740308517168</created>
+      <option name="number" value="00116" />
+      <option name="presentableId" value="LOCAL-00116" />
+      <option name="project" value="LOCAL" />
+      <updated>1740308517168</updated>
+    </task>
+    <task id="LOCAL-00117" summary="Attempt to manually query the device interface.">
+      <option name="closed" value="true" />
+      <created>1740309524807</created>
+      <option name="number" value="00117" />
+      <option name="presentableId" value="LOCAL-00117" />
+      <option name="project" value="LOCAL" />
+      <updated>1740309524807</updated>
+    </task>
+    <task id="LOCAL-00118" summary="Use confined memory area instead of heap memory to pass the constants.">
+      <option name="closed" value="true" />
+      <created>1740309698042</created>
+      <option name="number" value="00118" />
+      <option name="presentableId" value="LOCAL-00118" />
+      <option name="project" value="LOCAL" />
+      <updated>1740309698042</updated>
+    </task>
+    <task id="LOCAL-00119" summary="io_service_t is typically an integer. &#10;This is not a long reference.">
+      <option name="closed" value="true" />
+      <created>1740310083834</created>
+      <option name="number" value="00119" />
+      <option name="presentableId" value="LOCAL-00119" />
+      <option name="project" value="LOCAL" />
+      <updated>1740310083834</updated>
+    </task>
+    <task id="LOCAL-00120" summary="Use CFUUIDGetConstantUUIDWithBytes to get the constant UUID instances">
+      <option name="closed" value="true" />
+      <created>1740310849284</created>
+      <option name="number" value="00120" />
+      <option name="presentableId" value="LOCAL-00120" />
+      <option name="project" value="LOCAL" />
+      <updated>1740310849284</updated>
+    </task>
+    <task id="LOCAL-00121" summary="Get the class name to determine whether IOCreatePlugInInterfaceForService is even supported.">
+      <option name="closed" value="true" />
+      <created>1740311736042</created>
+      <option name="number" value="00121" />
+      <option name="presentableId" value="LOCAL-00121" />
+      <option name="project" value="LOCAL" />
+      <updated>1740311736042</updated>
+    </task>
+    <task id="LOCAL-00122" summary="Try the event driven approach with IOHIDManagerRegisterInputValueCallback">
+      <option name="closed" value="true" />
+      <created>1740313728688</created>
+      <option name="number" value="00122" />
+      <option name="presentableId" value="LOCAL-00122" />
+      <option name="project" value="LOCAL" />
+      <updated>1740313728688</updated>
+    </task>
+    <task id="LOCAL-00123" summary="Try to use IOHIDManagerScheduleWithRunLoop and CFRunLoopRun to capture events.">
+      <option name="closed" value="true" />
+      <created>1740314630077</created>
+      <option name="number" value="00123" />
+      <option name="presentableId" value="LOCAL-00123" />
+      <option name="project" value="LOCAL" />
+      <updated>1740314630077</updated>
+    </task>
+    <task id="LOCAL-00124" summary="Callback actually receives proper values.&#10;&#10;Now it's time to rewrite this implementation to be in a non blocking background thread and to match the elements with the previously retrieved ones.">
+      <option name="closed" value="true" />
+      <created>1740315075661</created>
+      <option name="number" value="00124" />
+      <option name="presentableId" value="LOCAL-00124" />
+      <option name="project" value="LOCAL" />
+      <updated>1740315075661</updated>
+    </task>
+    <task id="LOCAL-00125" summary="Separate device retrieval and move the event loop to a separate thread.">
+      <option name="closed" value="true" />
+      <created>1740316184351</created>
+      <option name="number" value="00125" />
+      <option name="presentableId" value="LOCAL-00125" />
+      <option name="project" value="LOCAL" />
+      <updated>1740316184351</updated>
+    </task>
+    <task id="LOCAL-00126" summary="MemorySegments need to be accessed from the thread they were created in.">
+      <option name="closed" value="true" />
+      <created>1740316659884</created>
+      <option name="number" value="00126" />
+      <option name="presentableId" value="LOCAL-00126" />
+      <option name="project" value="LOCAL" />
+      <updated>1740316659884</updated>
+    </task>
+    <task id="LOCAL-00127" summary="Fix return value for IOHIDValueGetTimeStamp">
+      <option name="closed" value="true" />
+      <created>1740316827135</created>
+      <option name="number" value="00127" />
+      <option name="presentableId" value="LOCAL-00127" />
+      <option name="project" value="LOCAL" />
+      <updated>1740316827135</updated>
+    </task>
+    <task id="LOCAL-00128" summary="Clean up implementation&#10;&#10;- Remove unused structs and interfaces&#10;- Provide captured values of the callback to the library&#10;- Reduce visibility of internal components&#10;- Clean up resources after closing the background thread.">
+      <option name="closed" value="true" />
+      <created>1740324609252</created>
+      <option name="number" value="00128" />
+      <option name="presentableId" value="LOCAL-00128" />
+      <option name="project" value="LOCAL" />
+      <updated>1740324609252</updated>
+    </task>
+    <task id="LOCAL-00129" summary="Don't reset values on polling.&#10;&#10;If an element gets released, there will be a callback for it.">
+      <option name="closed" value="true" />
+      <created>1740325435902</created>
+      <option name="number" value="00129" />
+      <option name="presentableId" value="LOCAL-00129" />
+      <option name="project" value="LOCAL" />
+      <updated>1740325435902</updated>
+    </task>
+    <task id="LOCAL-00130" summary="The native element type is not always AXIS but could also be MISC.&#10;&#10;Use the InputComponent to determine the necessary normalization.">
+      <option name="closed" value="true" />
+      <created>1740325960798</created>
+      <option name="number" value="00130" />
+      <option name="presentableId" value="LOCAL-00130" />
+      <option name="project" value="LOCAL" />
+      <updated>1740325960798</updated>
+    </task>
+    <task id="LOCAL-00131" summary="Add IOKitVirtualComponentHandler to unify DPAD handling.">
+      <option name="closed" value="true" />
+      <created>1740327484738</created>
+      <option name="number" value="00131" />
+      <option name="presentableId" value="LOCAL-00131" />
+      <option name="project" value="LOCAL" />
+      <updated>1740327484738</updated>
+    </task>
+    <task id="LOCAL-00132" summary="Remove unnecessary log&#10;&#10;There can be virtual components that don't have a native element attached.">
+      <option name="closed" value="true" />
+      <created>1740327726678</created>
+      <option name="number" value="00132" />
+      <option name="presentableId" value="LOCAL-00132" />
+      <option name="project" value="LOCAL" />
+      <updated>1740327726678</updated>
+    </task>
+    <task id="LOCAL-00133" summary="Update docs.">
+      <option name="closed" value="true" />
+      <created>1740328566981</created>
+      <option name="number" value="00133" />
+      <option name="presentableId" value="LOCAL-00133" />
+      <option name="project" value="LOCAL" />
+      <updated>1740328566981</updated>
+    </task>
+    <task id="LOCAL-00134" summary="Add some detail logs.">
+      <option name="closed" value="true" />
+      <created>1740328875131</created>
+      <option name="number" value="00134" />
+      <option name="presentableId" value="LOCAL-00134" />
+      <option name="project" value="LOCAL" />
+      <updated>1740328875131</updated>
+    </task>
+    <task id="LOCAL-00135" summary="Add docs and unit tests.">
+      <option name="closed" value="true" />
+      <created>1740329424246</created>
+      <option name="number" value="00135" />
+      <option name="presentableId" value="LOCAL-00135" />
+      <option name="project" value="LOCAL" />
+      <updated>1740329424246</updated>
+    </task>
+    <task id="LOCAL-00136" summary="Add additional method overloads that potentially enable custom input plugin implementations.">
+      <option name="closed" value="true" />
+      <created>1740438471034</created>
+      <option name="number" value="00136" />
+      <option name="presentableId" value="LOCAL-00136" />
+      <option name="project" value="LOCAL" />
+      <updated>1740438471034</updated>
+    </task>
+    <task id="LOCAL-00137" summary="Use the same logger for all plugins to simplify configuration across platforms.">
+      <option name="closed" value="true" />
+      <created>1740438670999</created>
+      <option name="number" value="00137" />
+      <option name="presentableId" value="LOCAL-00137" />
+      <option name="project" value="LOCAL" />
+      <updated>1740438670999</updated>
+    </task>
+    <task id="LOCAL-00138" summary="Streamline public API and add more unittests">
+      <option name="closed" value="true" />
+      <created>1740522309157</created>
+      <option name="number" value="00138" />
+      <option name="presentableId" value="LOCAL-00138" />
+      <option name="project" value="LOCAL" />
+      <updated>1740522309157</updated>
+    </task>
+    <task id="LOCAL-00139" summary="Some more code cleanup and tests">
+      <option name="closed" value="true" />
+      <created>1740523147477</created>
+      <option name="number" value="00139" />
+      <option name="presentableId" value="LOCAL-00139" />
+      <option name="project" value="LOCAL" />
+      <updated>1740523147477</updated>
+    </task>
+    <task id="LOCAL-00140" summary="Properly clean up memory Arena and device collections.">
+      <option name="closed" value="true" />
+      <created>1740523452278</created>
+      <option name="number" value="00140" />
+      <option name="presentableId" value="LOCAL-00140" />
+      <option name="project" value="LOCAL" />
+      <updated>1740523452278</updated>
+    </task>
+    <task id="LOCAL-00141" summary="Remove unnecessary methods">
+      <option name="closed" value="true" />
+      <created>1740523733896</created>
+      <option name="number" value="00141" />
+      <option name="presentableId" value="LOCAL-00141" />
+      <option name="project" value="LOCAL" />
+      <updated>1740523733896</updated>
+    </task>
+    <task id="LOCAL-00142" summary="Use raw button IDs instead of remapped XInput buttons for linux">
+      <option name="closed" value="true" />
+      <created>1740693593194</created>
+      <option name="number" value="00142" />
+      <option name="presentableId" value="LOCAL-00142" />
+      <option name="project" value="LOCAL" />
+      <updated>1740693593194</updated>
+    </task>
+    <task id="LOCAL-00143" summary="Fix button indices for MacOS&#10;&#10;MacOS is one-based while the buttons in this library are zero-based">
+      <option name="closed" value="true" />
+      <created>1740779623260</created>
+      <option name="number" value="00143" />
+      <option name="presentableId" value="LOCAL-00143" />
+      <option name="project" value="LOCAL" />
+      <updated>1740779623260</updated>
+    </task>
+    <task id="LOCAL-00144" summary="Bump junit-jupiter to 5.11.1">
+      <option name="closed" value="true" />
+      <created>1740780615415</created>
+      <option name="number" value="00144" />
+      <option name="presentableId" value="LOCAL-00144" />
+      <option name="project" value="LOCAL" />
+      <updated>1740780615415</updated>
+    </task>
+    <task id="LOCAL-00145" summary="Add explicit events for buttons and axis changes&#10;- Improve ID equality&#10;- IDs are unique by type + id -&gt; there can be an Axis with id 0 and a Button with id 0.&#10;- Provide an example implementation&#10;- Also add an editorconfig file">
+      <option name="closed" value="true" />
+      <created>1740782701676</created>
+      <option name="number" value="00145" />
+      <option name="presentableId" value="LOCAL-00145" />
+      <option name="project" value="LOCAL" />
+      <updated>1740782701676</updated>
+    </task>
+    <task id="LOCAL-00146" summary="Add more platform specific test cases.">
+      <option name="closed" value="true" />
+      <created>1740823553823</created>
+      <option name="number" value="00146" />
+      <option name="presentableId" value="LOCAL-00146" />
+      <option name="project" value="LOCAL" />
+      <updated>1740823553823</updated>
+    </task>
+    <task id="LOCAL-00147" summary="Cache the values array for enums to avoid creating a new array each time values() is called.">
+      <option name="closed" value="true" />
+      <created>1740823613972</created>
+      <option name="number" value="00147" />
+      <option name="presentableId" value="LOCAL-00147" />
+      <option name="project" value="LOCAL" />
+      <updated>1740823613972</updated>
+    </task>
+    <task id="LOCAL-00148" summary="Reduce log level for DirectInputPlugin">
+      <option name="closed" value="true" />
+      <created>1740823665494</created>
+      <option name="number" value="00148" />
+      <option name="presentableId" value="LOCAL-00148" />
+      <option name="project" value="LOCAL" />
+      <updated>1740823665494</updated>
+    </task>
+    <task id="LOCAL-00149" summary="Add some more docs">
+      <option name="closed" value="true" />
+      <created>1740823738747</created>
+      <option name="number" value="00149" />
+      <option name="presentableId" value="LOCAL-00149" />
+      <option name="project" value="LOCAL" />
+      <updated>1740823738747</updated>
+    </task>
+    <task id="LOCAL-00150" summary="Prevent unnecessary offset evaluation at runtime by storing static offsets">
+      <option name="closed" value="true" />
+      <created>1740826795494</created>
+      <option name="number" value="00150" />
+      <option name="presentableId" value="LOCAL-00150" />
+      <option name="project" value="LOCAL" />
+      <updated>1740826795494</updated>
+    </task>
+    <task id="LOCAL-00151" summary="Improve performance for accessing the native devices while polling&#10;&#10;- Add runtime unique identifier for InputDevice &#10;- Move the getAll method and the InputDevice Collection to the base class AbstractInputDevicePlugin&#10;- Prevent unnecessary memory allocation on every poll by reusing the same memory segment for data polling &#10;- Apply general formatting to some files.">
+      <option name="closed" value="true" />
+      <created>1740826948360</created>
+      <option name="number" value="00151" />
+      <option name="presentableId" value="LOCAL-00151" />
+      <option name="project" value="LOCAL" />
+      <updated>1740826948360</updated>
+    </task>
+    <task id="LOCAL-00152" summary="Fix unit tests after changing constructor signature of InputDevice">
+      <option name="closed" value="true" />
+      <created>1740827006926</created>
+      <option name="number" value="00152" />
+      <option name="presentableId" value="LOCAL-00152" />
+      <option name="project" value="LOCAL" />
+      <updated>1740827006926</updated>
+    </task>
+    <task id="LOCAL-00153" summary="Beautify event based example and add it to the README">
+      <option name="closed" value="true" />
+      <created>1740828248772</created>
+      <option name="number" value="00153" />
+      <option name="presentableId" value="LOCAL-00153" />
+      <option name="project" value="LOCAL" />
+      <updated>1740828248772</updated>
+    </task>
+    <task id="LOCAL-00154" summary="Build this library with jitpack &#10;&#10;This is temporary since the official publishing will be done via Maven Central.&#10;&#10;- Specify required Java version for this library">
+      <option name="closed" value="true" />
+      <created>1740828910537</created>
+      <option name="number" value="00154" />
+      <option name="presentableId" value="LOCAL-00154" />
+      <option name="project" value="LOCAL" />
+      <updated>1740828910537</updated>
+    </task>
+    <task id="LOCAL-00155" summary="Implement hot plugging support and connect/disconnect events for InputDevices&#10;&#10;Currently this is only supported by XInput&#10;&#10;- Reorder some methods">
+      <option name="closed" value="true" />
+      <created>1740849485307</created>
+      <option name="number" value="00155" />
+      <option name="presentableId" value="LOCAL-00155" />
+      <option name="project" value="LOCAL" />
+      <updated>1740849485307</updated>
+    </task>
+    <task id="LOCAL-00156" summary="Don't throw an IOException on the top level API">
+      <option name="closed" value="true" />
+      <created>1740861632411</created>
+      <option name="number" value="00156" />
+      <option name="presentableId" value="LOCAL-00156" />
+      <option name="project" value="LOCAL" />
+      <updated>1740861632411</updated>
+    </task>
+    <task id="LOCAL-00157" summary="Add missing documentation and cleanup unused settings.">
+      <option name="closed" value="true" />
+      <created>1740868388342</created>
+      <option name="number" value="00157" />
+      <option name="presentableId" value="LOCAL-00157" />
+      <option name="project" value="LOCAL" />
+      <updated>1740868388342</updated>
+    </task>
+    <option name="localTasksCounter" value="158" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="main" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Update docs." />
+    <MESSAGE value="Add some detail logs." />
+    <MESSAGE value="Add docs and unit tests." />
+    <MESSAGE value="Add additional method overloads that potentially enable custom input plugin implementations." />
+    <MESSAGE value="Use the same logger for all plugins to simplify configuration across platforms." />
+    <MESSAGE value="Streamline public API and add more unittests" />
+    <MESSAGE value="Some more code cleanup and tests" />
+    <MESSAGE value="Properly clean up memory Arena and device collections." />
+    <MESSAGE value="Remove unnecessary methods" />
+    <MESSAGE value="Use raw button IDs instead of remapped XInput buttons for linux" />
+    <MESSAGE value="Fix button indices for MacOS&#10;&#10;MacOS is one-based while the buttons in this library are zero-based" />
+    <MESSAGE value="Bump junit-jupiter to 5.11.1" />
+    <MESSAGE value="Add explicit events for buttons and axis changes&#10;- Improve ID equality&#10;- IDs are unique by type + id -&gt; there can be an Axis with id 0 and a Button with id 0.&#10;- Provide an example implementation&#10;- Also add an editorconfig file" />
+    <MESSAGE value="Add more platform specific test cases." />
+    <MESSAGE value="Cache the values array for enums to avoid creating a new array each time values() is called." />
+    <MESSAGE value="Reduce log level for DirectInputPlugin" />
+    <MESSAGE value="Add some more docs" />
+    <MESSAGE value="Prevent unnecessary offset evaluation at runtime by storing static offsets" />
+    <MESSAGE value="Improve performance for accessing the native devices while polling&#10;&#10;- Add runtime unique identifier for InputDevice &#10;- Move the getAll method and the InputDevice Collection to the base class AbstractInputDevicePlugin&#10;- Prevent unnecessary memory allocation on every poll by reusing the same memory segment for data polling &#10;- Apply general formatting to some files." />
+    <MESSAGE value="Fix unit tests after changing constructor signature of InputDevice" />
+    <MESSAGE value="Beautify event based example and add it to the README" />
+    <MESSAGE value="Build this library with jitpack &#10;&#10;This is temporary since the official publishing will be done via Maven Central.&#10;&#10;- Specify required Java version for this library" />
+    <MESSAGE value="Implement hot plugging support and connect/disconnect events for InputDevices&#10;&#10;Currently this is only supported by XInput&#10;&#10;- Reorder some methods" />
+    <MESSAGE value="Don't throw an IOException on the top level API" />
+    <MESSAGE value="Add missing documentation and cleanup unused settings." />
+    <option name="LAST_COMMIT_MESSAGE" value="Add missing documentation and cleanup unused settings." />
+    <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>jar://C:/Program Files/Java/jdk-21/lib/src.zip!/java.base/jdk/internal/foreign/layout/StructLayoutImpl.java</url>
+          <line>48</line>
+          <option name="timeStamp" value="8" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/de/gurkenlabs/input4j/foreign/windows/dinput/DirectInputPlugin.java</url>
+          <line>247</line>
+          <option name="timeStamp" value="11" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <pin-to-top-manager>
+      <pinned-members>
+        <PinnedItemInfo parentTag="javax.swing.JFrame" memberName="containerSerializedDataVersion" />
+        <PinnedItemInfo parentTag="jdk.internal.foreign.LayoutPath$PathElementImpl$PathKind" memberName="description" />
+      </pinned-members>
+    </pin-to-top-manager>
+    <watches-manager>
+      <configuration name="GradleRunConfiguration">
+        <watch expression="axisChangedListeners.containsKey(component.getId())" language="JAVA" />
+        <watch expression="axisChangedListeners." language="JAVA" />
+        <watch expression="component.e" language="JAVA" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>

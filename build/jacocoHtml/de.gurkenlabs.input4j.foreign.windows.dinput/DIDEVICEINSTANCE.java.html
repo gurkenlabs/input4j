@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DIDEVICEINSTANCE.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.dinput</a> &gt; <span class="el_source">DIDEVICEINSTANCE.java</span></div><h1>DIDEVICEINSTANCE.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.dinput;
+
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.VarHandle;
+
+import static java.lang.foreign.ValueLayout.*;
+
+/**
+ * Describes an instance of a DirectInput device.
+ * This structure is used with the IDirectInput8::EnumDevices, IDirectInput8::EnumDevicesBySemantics,
+ * and IDirectInputDevice8::GetDeviceInfo methods.
+ */
+<span class="nc" id="L14">final class DIDEVICEINSTANCE {</span>
+  static final int MAX_STRING_LENGTH = 260;
+
+  /**
+   * Size of this structure, in bytes. This member must be initialized before the structure is used.
+   */
+<span class="nc" id="L20">  public int dwSize = (int) $LAYOUT.byteSize();</span>
+
+  /**
+   * Unique identifier for the instance of the device. An application can save the instance globally unique identifier
+   * (GUID) into a configuration file and use it at a later time. Instance GUIDs are specific to a particular computer.
+   * An instance GUID obtained from one computer is unrelated to instance GUIDs on another.
+   */
+  public GUID guidInstance;
+
+  /**
+   * Unique identifier for the product. This identifier is established by the manufacturer of the device.
+   */
+  public GUID guidProduct;
+
+  /**
+   * Device type specifier. The least-significant byte of the device type description code specifies the device type.
+   * The next-significant byte specifies the device subtype.
+   * This value can also be combined with DIDEVTYPE_HID, which specifies a Human Interface Device (human interface device).
+   */
+  public int dwDevType;
+
+  /**
+   * Friendly name for the instance. For example, &quot;Joystick 1.&quot;
+   */
+<span class="nc" id="L44">  public char[] tszInstanceName = new char[MAX_STRING_LENGTH];</span>
+
+  /**
+   * Friendly name for the product.
+   */
+<span class="nc" id="L49">  public char[] tszProductName = new char[MAX_STRING_LENGTH];</span>
+
+  /**
+   * Unique identifier for the driver being used for force feedback.
+   * The driver's manufacturer establishes this identifier.
+   */
+  public GUID guidFFDriver;
+
+  /**
+   * If the device is a Human Interface Device (HID), this member contains the HID usage page code.
+   * &lt;ul&gt;
+   *  &lt;li&gt;0x01	Generic Desktop Controls&lt;/li&gt;
+   *  &lt;lI&gt;0x05	Game Controls&lt;/lI&gt;
+   *  &lt;lI&gt;0x08	LEDs&lt;/lI&gt;
+   *  &lt;lI&gt;0x09	Button&lt;/lI&gt;
+   * &lt;/ul&gt;
+   */
+  public short wUsagePage;
+
+  /**
+   * If the device is a Human Interface Device (HID), this member contains the HID usage code.
+   * &lt;ul&gt;
+   *  &lt;li&gt;0x01	Pointer&lt;/li&gt;
+   *  &lt;li&gt;0x02	Mouse&lt;/li&gt;
+   *  &lt;li&gt;0x04	Joystick&lt;/li&gt;
+   *  &lt;li&gt;0x05	Game Pad&lt;/li&gt;
+   *  &lt;li&gt;0x06	Keyboard&lt;/li&gt;
+   *  &lt;li&gt;0x07	Keypad&lt;/li&gt;
+   *  &lt;li&gt;0x08	Multi-axis Controller&lt;/li&gt;
+   * &lt;/ul&gt;
+   */
+  public short wUsage;
+
+<span class="nc" id="L82">  static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L83">          JAVA_INT.withName(&quot;dwSize&quot;),</span>
+<span class="nc" id="L84">          GUID.$LAYOUT.withName(&quot;guidInstance&quot;),</span>
+<span class="nc" id="L85">          GUID.$LAYOUT.withName(&quot;guidProduct&quot;),</span>
+<span class="nc" id="L86">          JAVA_INT.withName(&quot;dwDevType&quot;),</span>
+<span class="nc" id="L87">          MemoryLayout.sequenceLayout(MAX_STRING_LENGTH, JAVA_CHAR).withName(&quot;tszInstanceName&quot;),</span>
+<span class="nc" id="L88">          MemoryLayout.sequenceLayout(MAX_STRING_LENGTH, JAVA_CHAR).withName(&quot;tszProductName&quot;),</span>
+<span class="nc" id="L89">          GUID.$LAYOUT.withName(&quot;guidFFDriver&quot;),</span>
+<span class="nc" id="L90">          JAVA_SHORT.withName(&quot;wUsagePage&quot;),</span>
+<span class="nc" id="L91">          JAVA_SHORT.withName(&quot;wUsage&quot;)</span>
+<span class="nc" id="L92">  ).withName(&quot;DIDEVICEINSTANCE&quot;);</span>
+
+<span class="nc" id="L94">  static final VarHandle VH_dwSize = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwSize&quot;));</span>
+<span class="nc" id="L95">  static final VarHandle VH_dwDevType = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;dwDevType&quot;));</span>
+<span class="nc" id="L96">  static final VarHandle VH_tszInstanceName = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;tszInstanceName&quot;), MemoryLayout.PathElement.sequenceElement());</span>
+<span class="nc" id="L97">  static final VarHandle VH_tszProductName = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;tszProductName&quot;), MemoryLayout.PathElement.sequenceElement());</span>
+<span class="nc" id="L98">  static final VarHandle VH_wUsagePage = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;wUsagePage&quot;));</span>
+<span class="nc" id="L99">  static final VarHandle VH_wUsage = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;wUsage&quot;));</span>
+
+  public static DIDEVICEINSTANCE read(MemorySegment segment) {
+<span class="nc" id="L102">    var data = new DIDEVICEINSTANCE();</span>
+<span class="nc" id="L103">    data.dwSize = (int) VH_dwSize.get(segment, 0);</span>
+    // ensure the offset of the dwSize integer before reading the guid
+<span class="nc" id="L105">    data.guidInstance = GUID.read(segment.asSlice(JAVA_INT.byteSize()));</span>
+<span class="nc" id="L106">    data.guidProduct = GUID.read(segment.asSlice(JAVA_INT.byteSize() + GUID.$LAYOUT.byteSize()));</span>
+<span class="nc" id="L107">    data.dwDevType = (int) VH_dwDevType.get(segment, 0);</span>
+
+<span class="nc" id="L109">    char[] tszInstanceName = new char[MAX_STRING_LENGTH];</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">    for (int i = 0; i &lt; MAX_STRING_LENGTH; i++) {</span>
+<span class="nc" id="L111">      tszInstanceName[i] = (char) VH_tszInstanceName.get(segment,0, i);</span>
+    }
+
+<span class="nc" id="L114">    data.tszInstanceName = tszInstanceName;</span>
+
+<span class="nc" id="L116">    char[] tszProductName = new char[MAX_STRING_LENGTH];</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">    for (int i = 0; i &lt; MAX_STRING_LENGTH; i++) {</span>
+<span class="nc" id="L118">      tszProductName[i] = (char) VH_tszProductName.get(segment, 0, i);</span>
+    }
+
+<span class="nc" id="L121">    data.tszProductName = tszProductName;</span>
+<span class="nc" id="L122">    data.guidFFDriver = GUID.read(segment.asSlice(JAVA_INT.byteSize() + GUID.$LAYOUT.byteSize() + GUID.$LAYOUT.byteSize() + JAVA_INT.byteSize() + MAX_STRING_LENGTH + MAX_STRING_LENGTH));</span>
+<span class="nc" id="L123">    data.wUsagePage = (short) VH_wUsagePage.get(segment, 0);</span>
+<span class="nc" id="L124">    data.wUsage = (short) VH_wUsage.get(segment, 0);</span>
+<span class="nc" id="L125">    return data;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

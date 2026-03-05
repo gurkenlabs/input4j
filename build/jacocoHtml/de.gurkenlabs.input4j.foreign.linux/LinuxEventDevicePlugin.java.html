@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LinuxEventDevicePlugin.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.linux</a> &gt; <span class="el_source">LinuxEventDevicePlugin.java</span></div><h1>LinuxEventDevicePlugin.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.linux;
+
+import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
+import de.gurkenlabs.input4j.ComponentType;
+import de.gurkenlabs.input4j.InputComponent;
+import de.gurkenlabs.input4j.InputDevice;
+
+import java.awt.*;
+import java.io.File;
+import java.lang.foreign.Arena;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+
+/**
+ * The {@code LinuxEventDevicePlugin} class is responsible for managing Linux event devices.
+ * It initializes and adds them to the collection of devices.
+ * &lt;p&gt;
+ * The joystick API (/dev/input/jsX) is considered legacy and is no longer actively developed.
+ * The evdev API (/dev/input/eventX) has largely replaced it because it is more flexible and supports additional features like force feedback.
+ * Reasons to use evdev over the joystick API:
+ * &lt;ul&gt;
+ *   &lt;li&gt;evdev is the modern Linux input API and is actively developed.&lt;/li&gt;
+ *   &lt;li&gt;evdev is more flexible and supports additional features like force feedback.&lt;/li&gt;
+ *   &lt;li&gt;evdev is the preferred API for newer software and libraries like SDL, libevdev, and udev.&lt;/li&gt;
+ * &lt;/ul&gt;
+ */
+<span class="nc" id="L31">public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {</span>
+<span class="nc" id="L32">  private final Arena memoryArena = Arena.ofConfined();</span>
+<span class="nc" id="L33">  private final Map&lt;String, LinuxEventDevice&gt; nativeDevices = new ConcurrentHashMap&lt;&gt;();</span>
+
+  @Override
+  public void internalInitDevices(Frame owner) {
+<span class="nc" id="L37">    initEventDevices();</span>
+<span class="nc" id="L38">    this.setDevices(this.nativeDevices.values().stream().map(d -&gt; d.inputDevice).toList());</span>
+<span class="nc" id="L39">  }</span>
+
+  @Override
+  public void close() {
+<span class="nc" id="L43">    super.close();</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">    for (LinuxEventDevice device : nativeDevices.values()) {</span>
+<span class="nc" id="L45">      device.close(this.memoryArena);</span>
+<span class="nc" id="L46">    }</span>
+
+<span class="nc" id="L48">    this.nativeDevices.clear();</span>
+<span class="nc" id="L49">    memoryArena.close();</span>
+<span class="nc" id="L50">  }</span>
+
+  @Override
+  protected Collection&lt;InputDevice&gt; refreshInputDevices() {
+    // TODO: implement refresh support
+<span class="nc" id="L55">    return this.getAll();</span>
+  }
+
+
+  /**
+   * Normalize the input value to the range [-1, 1] for axes.
+   * &lt;p&gt;
+   * The value is normalized to the range [-1, 1] for axes.
+   * The value is 0 or 1 for buttons and non-axis D-Pad components.
+   * &lt;/p&gt;
+   */
+  static float normalizeInputValue(input_event inputEvent, LinuxEventComponent nativeComponent) {
+<span class="nc" id="L67">    float value = inputEvent.value;</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">    if (nativeComponent.nativeType == LinuxEventDevice.EV_ABS) {</span>
+<span class="nc" id="L69">      int midpoint = Math.round((nativeComponent.min + nativeComponent.max) / 2.0f);</span>
+<span class="nc bnc" id="L70" title="All 4 branches missed.">      if (inputEvent.value == nativeComponent.flat || Math.abs(inputEvent.value - midpoint) &lt;= nativeComponent.fuzz) {</span>
+<span class="nc" id="L71">        value = 0;</span>
+      } else {
+        // Ensure value is within the range [min, max]
+        // Then normalize the value to the range [-1, 1]
+<span class="nc" id="L75">        value = Math.max(nativeComponent.min, Math.min(nativeComponent.max, value));</span>
+<span class="nc" id="L76">        value = (value - nativeComponent.min) / (float) (nativeComponent.max - nativeComponent.min) * 2 - 1;</span>
+      }
+    }
+
+<span class="nc bnc" id="L80" title="All 2 branches missed.">    if (nativeComponent.nativeType == LinuxEventDevice.EV_KEY) {</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">      value = value == 0 ? 0 : 1;</span>
+    }
+
+<span class="nc" id="L84">    return value;</span>
+  }
+
+  /**
+   * Get the component index by the native ID.
+   * &lt;p&gt;
+   * The native ID is the code of the input event.
+   * &lt;/p&gt;
+   *
+   * @return the index of the component in the input device or &lt;c&gt;Linux.ERROR&lt;/c&gt; if the component is not found
+   */
+  static int getComponentIndexByNativeId(input_event inputEvent, InputDevice inputDevice) {
+<span class="nc bnc" id="L96" title="All 2 branches missed.">    for (int j = 0; j &lt; inputDevice.getComponents().size(); j++) {</span>
+<span class="nc" id="L97">      var component = inputDevice.getComponents().get(j);</span>
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">      if (component.getType() != ComponentType.UNKNOWN) {</span>
+<span class="nc bnc" id="L100" title="All 3 branches missed.">        switch (inputEvent.type) {</span>
+          case LinuxEventDevice.EV_KEY:
+<span class="nc bnc" id="L102" title="All 2 branches missed.">            if (component.getType() != ComponentType.BUTTON) {</span>
+<span class="nc" id="L103">              continue;</span>
+            }
+            break;
+          case LinuxEventDevice.EV_ABS:
+<span class="nc bnc" id="L107" title="All 2 branches missed.">            if (component.getType() != ComponentType.AXIS) {</span>
+<span class="nc" id="L108">              continue;</span>
+            }
+            break;
+        }
+      }
+
+<span class="nc bnc" id="L114" title="All 2 branches missed.">      if (component.getId().nativeId == inputEvent.code) {</span>
+<span class="nc" id="L115">        return j;</span>
+      }
+    }
+
+<span class="nc" id="L119">    return Linux.ERROR;</span>
+  }
+
+  private void initEventDevices() {
+<span class="nc" id="L123">    final File dev = new File(&quot;/dev/input&quot;);</span>
+<span class="nc" id="L124">    File[] eventDeviceFiles = dev.listFiles((File _, String name) -&gt; name.startsWith(&quot;event&quot;));</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">    if (eventDeviceFiles == null) {</span>
+<span class="nc" id="L126">      log.log(Level.SEVERE, &quot;No event devices found&quot;);</span>
+<span class="nc" id="L127">      return;</span>
+    } else {
+<span class="nc" id="L129">      Arrays.sort(eventDeviceFiles, Comparator.comparing(File::getName));</span>
+    }
+
+<span class="nc bnc" id="L132" title="All 2 branches missed.">    for (var eventDeviceFile : eventDeviceFiles) {</span>
+<span class="nc" id="L133">      LinuxEventDevice device = new LinuxEventDevice(this.memoryArena, eventDeviceFile.getAbsolutePath(), true);</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">      if (device.fd == Linux.ERROR) {</span>
+<span class="nc" id="L135">        log.log(Level.SEVERE, &quot;Failed to open &quot; + eventDeviceFile.getAbsolutePath());</span>
+<span class="nc" id="L136">        continue;</span>
+      }
+
+      // ignore some devices since they are not useful for input
+<span class="nc bnc" id="L140" title="All 2 branches missed.">      if (device.name != null</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">        &amp;&amp; (device.name.toUpperCase().contains(&quot;VIDEO BUS&quot;)</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">        || device.name.toUpperCase().contains(&quot;VIRTUAL&quot;)</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        || device.name.toUpperCase().contains(&quot;POWER BUTTON&quot;)</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">        || device.name.toUpperCase().contains(&quot;HDA INTEL&quot;)</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        || device.name.toUpperCase().contains(&quot;HDMI&quot;))) {</span>
+<span class="nc" id="L146">        log.log(Level.FINE, &quot;Ignoring virtual device: &quot; + device.name);</span>
+<span class="nc" id="L147">        continue;</span>
+      }
+
+<span class="nc bnc" id="L150" title="All 2 branches missed.">      if (device.supportsForceFeedback) {</span>
+<span class="nc" id="L151">        log.log(Level.FINE, &quot;Device supports force feedback: &quot; + device.name + &quot; with &quot; + device.maxEffects + &quot; effects&quot;);</span>
+      }
+
+<span class="nc" id="L154">      var inputDevice = new InputDevice(eventDeviceFile.getAbsolutePath(), device.name, device.name, this::pollLinuxEventDevice, this::rumbleLinuxEventDevice);</span>
+<span class="nc" id="L155">      device.inputDevice = inputDevice;</span>
+
+      // Check for available event types
+<span class="nc" id="L158">      byte[] eventTypes = Linux.getBits(this.memoryArena, LinuxEventDevice.EV_SYN, device.fd);</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">      if (eventTypes == null) {</span>
+<span class="nc" id="L160">        log.log(Level.SEVERE, &quot;Failed to get event types for &quot; + device.filename);</span>
+<span class="nc" id="L161">        continue;</span>
+      }
+
+      // Check for available components per event type (EV_KEY, EV_ABS, EV_REL, etc.)
+<span class="nc" id="L165">      addEventComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_KEY, LinuxEventDevice.KEY_MAX, &quot;EV_KEY&quot;);</span>
+<span class="nc" id="L166">      addEventComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_ABS, LinuxEventDevice.ABS_MAX, &quot;EV_ABS&quot;);</span>
+
+      // ignore devices without components
+      // also ignore devices that have no buttons, axis or dpad (this should also exclude keyboards)
+<span class="nc bnc" id="L170" title="All 8 branches missed.">      if (device.componentList.isEmpty() || device.componentList.stream().noneMatch(x -&gt; x.componentType == ComponentType.BUTTON || x.componentType == ComponentType.AXIS)) {</span>
+<span class="nc" id="L171">        continue;</span>
+      }
+
+<span class="nc" id="L174">      LinuxVirtualComponentHandler.prepareVirtualComponents(device.inputDevice, inputDevice.getComponents());</span>
+<span class="nc" id="L175">      log.log(Level.INFO, &quot;Found input device: &quot; + device.filename + &quot; - &quot; + device.name + &quot; with &quot; + device.componentList.size() + &quot; components&quot;);</span>
+<span class="nc" id="L176">      this.nativeDevices.put(inputDevice.getID(), device);</span>
+    }
+<span class="nc" id="L178">  }</span>
+
+  private void addEventComponents(Arena memoryArena, LinuxEventDevice device, InputDevice inputDevice, byte[] eventTypes, int eventType, int max, String componentType) {
+<span class="nc bnc" id="L181" title="All 2 branches missed.">    if (LinuxEventDevice.isBitSet(eventTypes, eventType)) {</span>
+<span class="nc" id="L182">      byte[] components = Linux.getBits(memoryArena, eventType, device.fd);</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">      if (components == null) {</span>
+<span class="nc" id="L184">        log.log(Level.SEVERE, &quot;Failed to get &quot; + componentType + &quot; components for &quot; + device.filename);</span>
+<span class="nc" id="L185">        return;</span>
+      }
+
+<span class="nc bnc" id="L188" title="All 2 branches missed.">      for (int i = 0; i &lt; max; i++) {</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">        if (LinuxEventDevice.isBitSet(components, i)) {</span>
+          LinuxEventComponent nativeComponent;
+<span class="nc bnc" id="L191" title="All 2 branches missed.">          if (eventType == LinuxEventDevice.EV_ABS) {</span>
+            // Get the absolute axis information if available (contains min, max, flat, fuzz, etc.)
+<span class="nc" id="L193">            input_absinfo absInfo = Linux.getAbsInfo(memoryArena, device.fd, i);</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">            if (absInfo == null) {</span>
+<span class="nc" id="L195">              nativeComponent = new LinuxEventComponent(eventType, i);</span>
+            } else {
+<span class="nc" id="L197">              nativeComponent = new LinuxEventComponent(eventType, i, absInfo);</span>
+            }
+<span class="nc" id="L199">          } else {</span>
+<span class="nc" id="L200">            nativeComponent = new LinuxEventComponent(eventType, i);</span>
+          }
+
+<span class="nc" id="L203">          device.componentList.add(nativeComponent);</span>
+
+<span class="nc" id="L205">          var id = nativeComponent.getIdentifier();</span>
+<span class="nc" id="L206">          var inputComponent = new InputComponent(inputDevice, id, nativeComponent.linuxComponentType.name(), nativeComponent.relative);</span>
+<span class="nc" id="L207">          nativeComponent.inputComponent = inputComponent;</span>
+<span class="nc" id="L208">          inputDevice.addComponent(inputComponent);</span>
+        }
+      }
+    }
+<span class="nc" id="L212">  }</span>
+
+  /**
+   * Processes input events, excluding EV_MSC and EV_SYN events.
+   * &lt;p&gt;
+   * EV_MSC events provide extra device-specific information (e.g., scan codes) and
+   * EV_SYN events mark the end of an event batch for synchronization. Although these
+   * events are necessary for the low-level input system, they are not needed for the
+   * core event handling logic in this method.
+   * &lt;/p&gt;
+   */
+  private float[] pollLinuxEventDevice(InputDevice inputDevice) {
+<span class="nc" id="L224">    var emptyValues = new float[inputDevice.getComponents().size()];</span>
+
+    // find native LinuxEventDevice and poll it
+<span class="nc" id="L227">    var linuxEventDevice = this.nativeDevices.getOrDefault(inputDevice.getID(), null);</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">    if (linuxEventDevice == null) {</span>
+<span class="nc" id="L229">      log.log(Level.WARNING, &quot;LinuxEventDevice not found for input device &quot; + inputDevice.getName());</span>
+<span class="nc" id="L230">      return emptyValues;</span>
+    }
+
+    // use the last polled values since we need to keep the state of the buttons and axes until they are released
+<span class="nc bnc" id="L234" title="All 2 branches missed.">    if (linuxEventDevice.currentValues == null) {</span>
+<span class="nc" id="L235">      linuxEventDevice.currentValues = emptyValues;</span>
+    }
+
+    input_event inputEvent;
+<span class="nc bnc" id="L239" title="All 2 branches missed.">    while ((inputEvent = Linux.read(this.memoryArena, linuxEventDevice.fd)) != null) {</span>
+<span class="nc bnc" id="L240" title="All 6 branches missed.">      if (inputEvent.type == LinuxEventDevice.EV_SYN</span>
+        || inputEvent.type == LinuxEventDevice.EV_MSC
+        || inputEvent.type == LinuxEventDevice.EV_REL) {
+<span class="nc" id="L243">        continue;</span>
+      }
+
+<span class="nc" id="L246">      var nativeComponent = linuxEventDevice.getNativeComponent(inputEvent);</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">      if (nativeComponent == null) {</span>
+<span class="nc" id="L248">        log.log(Level.SEVERE, &quot;Failed to find component for &quot; + inputEvent.type + &quot; &quot; + inputEvent.code);</span>
+<span class="nc" id="L249">        continue;</span>
+      }
+
+<span class="nc" id="L252">      var componentIndex = getComponentIndexByNativeId(inputEvent, inputDevice);</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">      if (componentIndex == Linux.ERROR) {</span>
+<span class="nc" id="L254">        log.log(Level.SEVERE, &quot;Failed to find component for &quot; + inputEvent.type + &quot; &quot; + inputEvent.code);</span>
+<span class="nc" id="L255">        continue;</span>
+      }
+
+<span class="nc" id="L258">      linuxEventDevice.currentValues[componentIndex] = normalizeInputValue(inputEvent, nativeComponent);</span>
+<span class="nc" id="L259">    }</span>
+
+<span class="nc" id="L261">    return LinuxVirtualComponentHandler.handlePolledValues(inputDevice, linuxEventDevice.currentValues);</span>
+  }
+
+  private static final float RUMBLE_THRESHOLD = 0.01f;
+  private static final int MAX_MAGNITUDE = 65535;
+
+<span class="nc" id="L267">  private final ff_effect rumbleEffectTemplate = createRumbleEffectTemplate();</span>
+<span class="nc" id="L268">  private final input_event playEventTemplate = new input_event();</span>
+<span class="nc" id="L269">  private final input_event stopEventTemplate = new input_event();</span>
+
+  private ff_effect createRumbleEffectTemplate() {
+<span class="nc" id="L272">    var effect = new ff_effect();</span>
+<span class="nc" id="L273">    effect.type = Linux.FF_RUMBLE;</span>
+<span class="nc" id="L274">    effect.id = -1;</span>
+<span class="nc" id="L275">    effect.direction = 0;</span>
+<span class="nc" id="L276">    effect.trigger = new ff_trigger();</span>
+<span class="nc" id="L277">    effect.trigger.button = 0;</span>
+<span class="nc" id="L278">    effect.trigger.interval = 0;</span>
+<span class="nc" id="L279">    effect.replay = new ff_replay();</span>
+<span class="nc" id="L280">    effect.replay.length = 0;</span>
+<span class="nc" id="L281">    effect.replay.delay = 0;</span>
+<span class="nc" id="L282">    effect.rumble = new ff_rumble_effect();</span>
+<span class="nc" id="L283">    return effect;</span>
+  }
+
+  /**
+   * Sets the rumble (force feedback) intensity for the input device.
+   *
+   * @param inputDevice the input device
+   * @param intensity   the intensity values. intensity[0] is the strong motor,
+   *                    intensity[1] (optional) is the weak motor.
+   *                    Values should be in range 0.0 to 1.0.
+   */
+  private void rumbleLinuxEventDevice(InputDevice inputDevice, float[] intensity) {
+<span class="nc" id="L295">    var linuxEventDevice = this.nativeDevices.getOrDefault(inputDevice.getID(), null);</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">    if (linuxEventDevice == null) {</span>
+<span class="nc" id="L297">      log.log(Level.WARNING, &quot;LinuxEventDevice not found for input device &quot; + inputDevice.getName());</span>
+<span class="nc" id="L298">      return;</span>
+    }
+
+<span class="nc bnc" id="L301" title="All 2 branches missed.">    if (!linuxEventDevice.supportsForceFeedback) {</span>
+<span class="nc" id="L302">      return;</span>
+    }
+
+<span class="nc bnc" id="L305" title="All 2 branches missed.">    if (linuxEventDevice.fd == Linux.ERROR) {</span>
+<span class="nc" id="L306">      return;</span>
+    }
+
+<span class="nc bnc" id="L309" title="All 2 branches missed.">    if (!linuxEventDevice.gainSet) {</span>
+<span class="nc" id="L310">      int gainResult = Linux.setGain(this.memoryArena, linuxEventDevice.fd, MAX_MAGNITUDE);</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">      if (gainResult != Linux.ERROR) {</span>
+<span class="nc" id="L312">        linuxEventDevice.gainSet = true;</span>
+      }
+    }
+
+<span class="nc bnc" id="L316" title="All 12 branches missed.">    if (intensity == null || intensity.length == 0 || (intensity.length &gt; 0 &amp;&amp; intensity[0] &lt; RUMBLE_THRESHOLD &amp;&amp; (intensity.length == 1 || intensity[1] &lt; RUMBLE_THRESHOLD))) {</span>
+<span class="nc" id="L317">      stopRumble(linuxEventDevice);</span>
+<span class="nc" id="L318">      return;</span>
+    }
+
+<span class="nc" id="L321">    float strongMagnitude = Math.clamp(intensity[0], 0f, 1f);</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">    float weakMagnitude = intensity.length &gt; 1 ? Math.clamp(intensity[1], 0f, 1f) : strongMagnitude;</span>
+
+<span class="nc bnc" id="L324" title="All 2 branches missed.">    if (linuxEventDevice.currentEffectId != -1) {</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">      if (Math.abs(linuxEventDevice.currentStrongMagnitude - strongMagnitude) &gt;= RUMBLE_THRESHOLD</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">          || Math.abs(linuxEventDevice.currentWeakMagnitude - weakMagnitude) &gt;= RUMBLE_THRESHOLD) {</span>
+<span class="nc" id="L327">        Linux.removeEffect(this.memoryArena, linuxEventDevice.fd, linuxEventDevice.currentEffectId);</span>
+<span class="nc" id="L328">        linuxEventDevice.currentEffectId = -1;</span>
+      } else {
+<span class="nc" id="L330">        playEventTemplate.type = (short) LinuxEventDevice.EV_FF;</span>
+<span class="nc" id="L331">        playEventTemplate.code = (short) linuxEventDevice.currentEffectId;</span>
+<span class="nc" id="L332">        playEventTemplate.value = 1;</span>
+
+<span class="nc" id="L334">        Linux.writeEvent(this.memoryArena, linuxEventDevice.fd, playEventTemplate);</span>
+<span class="nc" id="L335">        return;</span>
+      }
+    }
+
+<span class="nc" id="L339">    rumbleEffectTemplate.rumble.strong_magnitude = (short) (strongMagnitude * MAX_MAGNITUDE);</span>
+<span class="nc" id="L340">    rumbleEffectTemplate.rumble.weak_magnitude = (short) (weakMagnitude * MAX_MAGNITUDE);</span>
+
+<span class="nc" id="L342">    int effectId = Linux.uploadEffect(this.memoryArena, linuxEventDevice.fd, rumbleEffectTemplate);</span>
+<span class="nc bnc" id="L343" title="All 2 branches missed.">    if (effectId == Linux.ERROR) {</span>
+<span class="nc" id="L344">      log.log(Level.WARNING, &quot;Failed to upload rumble effect for device &quot; + inputDevice.getName());</span>
+<span class="nc" id="L345">      return;</span>
+    }
+
+<span class="nc" id="L348">    linuxEventDevice.currentEffectId = effectId;</span>
+<span class="nc" id="L349">    linuxEventDevice.currentStrongMagnitude = strongMagnitude;</span>
+<span class="nc" id="L350">    linuxEventDevice.currentWeakMagnitude = weakMagnitude;</span>
+
+<span class="nc" id="L352">    playEventTemplate.type = (short) LinuxEventDevice.EV_FF;</span>
+<span class="nc" id="L353">    playEventTemplate.code = (short) effectId;</span>
+<span class="nc" id="L354">    playEventTemplate.value = 1;</span>
+
+<span class="nc" id="L356">    int result = Linux.writeEvent(this.memoryArena, linuxEventDevice.fd, playEventTemplate);</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">    if (result == Linux.ERROR) {</span>
+<span class="nc" id="L358">      log.log(Level.WARNING, &quot;Failed to play rumble effect for device &quot; + inputDevice.getName());</span>
+<span class="nc" id="L359">      Linux.removeEffect(this.memoryArena, linuxEventDevice.fd, effectId);</span>
+<span class="nc" id="L360">      linuxEventDevice.currentEffectId = -1;</span>
+    }
+<span class="nc" id="L362">  }</span>
+
+  private void stopRumble(LinuxEventDevice linuxEventDevice) {
+<span class="nc bnc" id="L365" title="All 2 branches missed.">    if (linuxEventDevice.currentEffectId == -1) {</span>
+<span class="nc" id="L366">      return;</span>
+    }
+
+<span class="nc bnc" id="L369" title="All 2 branches missed.">    if (linuxEventDevice.fd != Linux.ERROR) {</span>
+<span class="nc" id="L370">      stopEventTemplate.type = (short) LinuxEventDevice.EV_FF;</span>
+<span class="nc" id="L371">      stopEventTemplate.code = (short) linuxEventDevice.currentEffectId;</span>
+<span class="nc" id="L372">      stopEventTemplate.value = 0;</span>
+
+<span class="nc" id="L374">      Linux.writeEvent(this.memoryArena, linuxEventDevice.fd, stopEventTemplate);</span>
+
+<span class="nc" id="L376">      Linux.removeEffect(this.memoryArena, linuxEventDevice.fd, linuxEventDevice.currentEffectId);</span>
+    }
+<span class="nc" id="L378">    linuxEventDevice.currentEffectId = -1;</span>
+<span class="nc" id="L379">    linuxEventDevice.currentStrongMagnitude = 0f;</span>
+<span class="nc" id="L380">    linuxEventDevice.currentWeakMagnitude = 0f;</span>
+<span class="nc" id="L381">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

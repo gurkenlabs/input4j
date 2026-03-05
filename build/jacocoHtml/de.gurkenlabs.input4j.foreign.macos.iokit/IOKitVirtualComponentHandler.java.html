@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IOKitVirtualComponentHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.macos.iokit</a> &gt; <span class="el_source">IOKitVirtualComponentHandler.java</span></div><h1>IOKitVirtualComponentHandler.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.macos.iokit;
+
+
+import de.gurkenlabs.input4j.InputComponent;
+import de.gurkenlabs.input4j.InputDevice;
+import de.gurkenlabs.input4j.components.Axis;
+import de.gurkenlabs.input4j.components.Button;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+public class IOKitVirtualComponentHandler {
+
+  private IOKitVirtualComponentHandler() {
+  }
+
+  /**
+   * Prepares virtual components for the specified input device by adding additional components
+   * for D-Pad if necessary.
+   *
+   * @param device     the input device
+   * @param components the collection of input components
+   */
+  static void prepareVirtualComponents(final InputDevice device, final Collection&lt;InputComponent&gt; components) {
+<span class="nc" id="L25">    var allComponents = new ArrayList&lt;&gt;(components);</span>
+
+    // Add D-Pad components if necessary
+<span class="nc bnc" id="L28" title="All 2 branches missed.">    if (components.stream().anyMatch(x -&gt; x.getId().equals(Axis.AXIS_DPAD))) {</span>
+<span class="nc" id="L29">      allComponents.add(new InputComponent(device, Button.DPAD_UP));</span>
+<span class="nc" id="L30">      allComponents.add(new InputComponent(device, Button.DPAD_DOWN));</span>
+<span class="nc" id="L31">      allComponents.add(new InputComponent(device, Button.DPAD_LEFT));</span>
+<span class="nc" id="L32">      allComponents.add(new InputComponent(device, Button.DPAD_RIGHT));</span>
+    }
+
+<span class="nc" id="L35">    device.setComponents(allComponents);</span>
+<span class="nc" id="L36">  }</span>
+
+  static float[] handlePolledValues(final InputDevice device, final float[] nativeValues) {
+<span class="nc" id="L39">    var allValues = new float[device.getComponents().size()];</span>
+<span class="nc" id="L40">    var dpadUpIndex = device.getComponentIndex(Button.DPAD_UP);</span>
+<span class="nc" id="L41">    var dpadDownIndex = device.getComponentIndex(Button.DPAD_DOWN);</span>
+<span class="nc" id="L42">    var dpadLeftIndex = device.getComponentIndex(Button.DPAD_LEFT);</span>
+<span class="nc" id="L43">    var dpadRightIndex = device.getComponentIndex(Button.DPAD_RIGHT);</span>
+
+<span class="nc bnc" id="L45" title="All 4 branches missed.">    for (int i = 0; i &lt; nativeValues.length &amp;&amp; i &lt; device.getComponents().size(); i++) {</span>
+<span class="nc" id="L46">      var value = nativeValues[i];</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">      if (value == 0) {</span>
+<span class="nc" id="L48">        continue;</span>
+      }
+
+<span class="nc" id="L51">      allValues[i] = value;</span>
+
+<span class="nc" id="L53">      var component = device.getComponents().get(i);</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">      if (component == null) {</span>
+<span class="nc" id="L55">        continue;</span>
+      }
+
+<span class="nc bnc" id="L58" title="All 2 branches missed.">      if (component.getId().equals(Axis.AXIS_DPAD)) {</span>
+<span class="nc" id="L59">        allValues[i] = 0;</span>
+
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        if (value == DPAD_VALUE.UP) {</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">          if (dpadUpIndex != -1) allValues[dpadUpIndex] = 1;</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">        } else if (value == DPAD_VALUE.DOWN) {</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">          if (dpadDownIndex != -1) allValues[dpadDownIndex] = 1;</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        } else if (value == DPAD_VALUE.LEFT) {</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">          if (dpadLeftIndex != -1) allValues[dpadLeftIndex] = 1;</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        } else if (value == DPAD_VALUE.RIGHT) {</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">          if (dpadRightIndex != -1) allValues[dpadRightIndex] = 1;</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        } else if (value == DPAD_VALUE.UP_LEFT) {</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">          if (dpadUpIndex != -1) allValues[dpadUpIndex] = 1;</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">          if (dpadLeftIndex != -1) allValues[dpadLeftIndex] = 1;</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        } else if (value == DPAD_VALUE.UP_RIGHT) {</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">          if (dpadUpIndex != -1) allValues[dpadUpIndex] = 1;</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">          if (dpadRightIndex != -1) allValues[dpadRightIndex] = 1;</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        } else if (value == DPAD_VALUE.DOWN_LEFT) {</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">          if (dpadDownIndex != -1) allValues[dpadDownIndex] = 1;</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">          if (dpadLeftIndex != -1) allValues[dpadLeftIndex] = 1;</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        } else if (value == DPAD_VALUE.DOWN_RIGHT) {</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">          if (dpadDownIndex != -1) allValues[dpadDownIndex] = 1;</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">          if (dpadRightIndex != -1) allValues[dpadRightIndex] = 1;</span>
+        }
+      }
+    }
+
+<span class="nc" id="L85">    return allValues;</span>
+  }
+
+  /**
+   * The `DPAD_VALUE` class defines standard values for IOKit values.
+   */
+  private static class DPAD_VALUE {
+    public static final float UP_LEFT = 8;
+    public static final float UP = 1;
+    public static final float UP_RIGHT = 2;
+    public static final float RIGHT = 3;
+    public static final float DOWN_RIGHT = 4;
+    public static final float DOWN = 5;
+    public static final float DOWN_LEFT = 6;
+    public static final float LEFT = 7;
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

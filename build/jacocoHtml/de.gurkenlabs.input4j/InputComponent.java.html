@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InputComponent.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j</a> &gt; <span class="el_source">InputComponent.java</span></div><h1>InputComponent.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j;
+
+import de.gurkenlabs.input4j.components.Axis;
+import de.gurkenlabs.input4j.components.Button;
+
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+/**
+ * The {@code InputComponent} class represents a component of an input device, such as a button or axis.
+ * It holds information about the component's type, name, and whether it provides relative input.
+ * The input data for the component is set by the associated {@link InputDevice} when polling.
+ */
+public final class InputComponent {
+  private final InputDevice device;
+  private final ID id;
+  private final String originalName;
+  private final boolean relative;
+
+  private float data;
+
+  /**
+   * Creates a new instance of the InputComponent class.
+   *
+   * @param device the input device associated with this component
+   * @param id     the id of the component
+   */
+  public InputComponent(InputDevice device, ID id) {
+<span class="fc" id="L29">    this(device, id, false);</span>
+<span class="fc" id="L30">  }</span>
+
+  /**
+   * Creates a new instance of the InputComponent class.
+   *
+   * @param device   the input device associated with this component
+   * @param relative true if the component provides relative input, false otherwise
+   */
+  public InputComponent(InputDevice device, ID id, boolean relative) {
+<span class="fc" id="L39">    this(device, id, null, relative);</span>
+<span class="fc" id="L40">  }</span>
+
+  /**
+   * Creates a new instance of the InputComponent class.
+   *
+   * @param device       the input device associated with this component
+   * @param id           the id of the component
+   * @param originalName the name of the component
+   */
+  public InputComponent(InputDevice device, ID id, String originalName) {
+<span class="nc" id="L50">    this(device, id, originalName, false);</span>
+<span class="nc" id="L51">  }</span>
+
+  /**
+   * Creates a new instance of the InputComponent class.
+   *
+   * @param device       the input device associated with this component
+   * @param originalName the name of the component
+   * @param relative     true if the component provides relative input, false otherwise
+   */
+<span class="fc" id="L60">  public InputComponent(InputDevice device, ID id, String originalName, boolean relative) {</span>
+<span class="fc" id="L61">    this.device = device;</span>
+<span class="fc" id="L62">    this.id = id;</span>
+<span class="fc" id="L63">    this.originalName = originalName;</span>
+<span class="fc" id="L64">    this.relative = relative;</span>
+<span class="fc" id="L65">  }</span>
+
+  /**
+   * Gets the input data for a specific input component.
+   * The data is set by the {@link InputDevice} when polling.
+   *
+   * @return the input data for the specified component
+   */
+  public float getData() {
+<span class="fc" id="L74">    return this.data;</span>
+  }
+
+  /**
+   * Gets the type of this component.
+   *
+   * @return the type of this component
+   */
+  public ComponentType getType() {
+<span class="nc" id="L83">    return this.getId().type;</span>
+  }
+
+  public ID getId() {
+<span class="fc" id="L87">    return id;</span>
+  }
+
+  /**
+   * Gets the name of this component.
+   *
+   * @return the name of this component
+   */
+  public String getOriginalName() {
+<span class="nc" id="L96">    return originalName;</span>
+  }
+
+  /**
+   * Checks if this component is a button.
+   *
+   * @return true if this component is a button, false otherwise
+   */
+  public boolean isButton() {
+<span class="fc bfc" id="L105" title="All 2 branches covered.">    return id.type == ComponentType.BUTTON;</span>
+  }
+
+  /**
+   * Checks if this component is an axis.
+   *
+   * @return true if this component is an axis, false otherwise
+   */
+  public boolean isAxis() {
+<span class="fc" id="L114">    return id.type.isAxis();</span>
+  }
+
+  /**
+   * Checks if this component provides relative input.
+   *
+   * @return true if this component provides relative input, false otherwise
+   */
+  public boolean isRelative() {
+<span class="nc" id="L123">    return relative;</span>
+  }
+
+  /**
+   * Gets the input device associated with this component.
+   *
+   * @return the input device associated with this component
+   */
+  public InputDevice getDevice() {
+<span class="nc" id="L132">    return device;</span>
+  }
+
+  /**
+   * Sets the input data for this component.
+   *
+   * @param data the input data to set
+   */
+  public void setData(float data) {
+<span class="fc" id="L141">    this.data = data;</span>
+<span class="fc" id="L142">  }</span>
+
+  @Override
+  public String toString() {
+<span class="nc" id="L146">    return this.getId().name + &quot;: &quot; + this.getData();</span>
+  }
+
+  /**
+   * The {@code ID} class represents a unique identifier for input components.
+   * It is used to manage and reference different input components, such as buttons, axes, and other controls.
+   * The class ensures that each {@code ID} is unique and provides functionality to remap IDs for better accessibility.
+   *
+   * &lt;p&gt;Note: The {@code int} value needs to be unique. The {@link #getNextId(ComponentType, int)} method can be used to ensure this.&lt;/p&gt;
+   *
+   * &lt;p&gt;Example usage:&lt;/p&gt;
+   * &lt;pre&gt;{@code
+   * // Creating a new ID
+   * InputComponent.ID customID = new InputComponent.ID(100, &quot;CUSTOM_BUTTON&quot;);
+   *
+   * // Remapping an existing ID
+   * InputComponent.ID remappedID = new InputComponent.ID(InputComponent.Button.get(1), &quot;REMAPPED_BUTTON&quot;);
+   * }&lt;/pre&gt;
+   *
+   * &lt;p&gt;Remapping IDs for Controllers (see the predefined examples for XInput and DualShock4):&lt;/p&gt;
+   *
+   * &lt;p&gt;XInput:&lt;/p&gt;
+   * &lt;pre&gt;{@code
+   * public static final XInput A = new XInput(InputComponent.Button.get(0), &quot;A&quot;);
+   * }&lt;/pre&gt;
+   *
+   * &lt;p&gt;DualShock4:&lt;/p&gt;
+   * &lt;pre&gt;{@code
+   * public static final DualShock4 SQUARE = new DualShock4(InputComponent.Button.get(0), &quot;SQUARE&quot;);
+   * }&lt;/pre&gt;
+   */
+  public static class ID {
+    public final int id;
+    public final int nativeId;
+    public final ComponentType type;
+    public String name;
+
+<span class="fc" id="L183">    private static final List&lt;ID&gt; ids = new CopyOnWriteArrayList&lt;&gt;();</span>
+
+    /**
+     * If you want to make this ID accessible with a different field, you can use this constructor.
+     *
+     * @param otherId the ID to remap
+     */
+    public ID(ID otherId) {
+<span class="nc" id="L191">      this(otherId.type, otherId.id, otherId.name, 0);</span>
+<span class="nc" id="L192">    }</span>
+
+    public ID(ID otherId, int nativeId) {
+<span class="nc" id="L195">      this(otherId.type, otherId.id, otherId.name, nativeId);</span>
+<span class="nc" id="L196">    }</span>
+
+    public ID(ID otherId, String name) {
+<span class="nc" id="L199">      this(otherId.type, otherId.id, name, 0);</span>
+<span class="nc" id="L200">    }</span>
+
+    /**
+     * If you want to make this ID available with a different name, you can use this constructor.
+     *
+     * @param otherId the ID to remap
+     * @param name    the name of the new ID
+     */
+    public ID(ID otherId, String name, int nativeId) {
+<span class="nc" id="L209">      this(otherId.type, otherId.id, name, nativeId);</span>
+<span class="nc" id="L210">    }</span>
+
+    public ID(ComponentType type, int id, String name) {
+<span class="fc" id="L213">      this(type, id, name, 0);</span>
+<span class="fc" id="L214">    }</span>
+
+<span class="fc" id="L216">    public ID(ComponentType type, int id, String name, int nativeId) {</span>
+<span class="fc" id="L217">      this.type = type;</span>
+<span class="fc" id="L218">      this.id = id;</span>
+<span class="fc" id="L219">      this.name = name;</span>
+<span class="fc" id="L220">      this.nativeId = nativeId;</span>
+      // exclude remapped IDs, only add the original ID
+<span class="fc bfc" id="L222" title="All 2 branches covered.">      if (ids.stream().noneMatch(i -&gt; i.equals(this))) {</span>
+<span class="fc" id="L223">        ids.add(this);</span>
+      }
+<span class="fc" id="L225">    }</span>
+
+    @Override
+    public boolean equals(Object obj) {
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">      if (obj instanceof ID identifier) {</span>
+<span class="pc bpc" id="L230" title="1 of 4 branches missed.">        return identifier.type == this.type &amp;&amp; identifier.id == this.id;</span>
+      }
+<span class="nc" id="L232">      return false;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L237">      return 31 * type.hashCode() + id;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L242">      return this.name;</span>
+    }
+
+    public static int getNextAxisId() {
+<span class="nc" id="L246">      return getNextId(ComponentType.AXIS, Axis.MAX_DEFAULT_AXIS_ID);</span>
+    }
+
+    public static int getNextButtonId() {
+<span class="nc" id="L250">      return getNextId(ComponentType.BUTTON, Button.MAX_DEFAULT_BUTTON_ID);</span>
+    }
+
+    public static int getNextId(ComponentType type, int minId) {
+      // reserve the id range for the default buttons and axes
+<span class="nc bnc" id="L255" title="All 2 branches missed.">      return Math.max(ids.stream().filter(i -&gt; i.type == type).mapToInt(i -&gt; i.id).max().orElse(0), minId) + 1;</span>
+    }
+
+    public static List&lt;ID&gt; getAll() {
+<span class="nc" id="L259">      return ids;</span>
+    }
+
+    public static ID get(ComponentType type, int id){
+<span class="nc bnc" id="L263" title="All 4 branches missed.">      return ids.stream().filter(i -&gt; i.type == type &amp;&amp; i.id == id).findFirst().orElse(null);</span>
+    }
+
+    public static ID getButton(int id) {
+<span class="nc bnc" id="L267" title="All 4 branches missed.">      return ids.stream().filter(i -&gt; i.type.isButton() &amp;&amp; i.id == id).findFirst().orElse(null);</span>
+    }
+
+    public static ID getAxis(int id) {
+<span class="nc bnc" id="L271" title="All 4 branches missed.">      return ids.stream().filter(i -&gt; i.type.isAxis() &amp;&amp; i.id == id).findFirst().orElse(null);</span>
+    }
+
+    /**
+     * Gets an ID by its name.
+     * &lt;p&gt;
+     * IMPORTANT: Be careful, since this method only returns the first ID with the specified name. And the name might not be unique.
+     * &lt;/p&gt;
+     *
+     * @param name The name of the ID to get.
+     * @return The ID with the specified name, or null if no such ID exists.
+     */
+    public static ID get(String name) {
+<span class="nc" id="L284">      return ids.stream().filter(i -&gt; i.name.equals(name)).findFirst().orElse(null);</span>
+    }
+  }
+
+  /**
+   * Represents an event that is triggered when the value of an `InputComponent` changes.
+   *
+   * @param component The `InputComponent` whose value has changed
+   * @param oldValue  The previous value of the `InputComponent`
+   * @param newValue  The new value of the `InputComponent`
+   */
+<span class="fc" id="L295">  public record InputValueChangedEvent(InputComponent component, float oldValue, float newValue) {</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

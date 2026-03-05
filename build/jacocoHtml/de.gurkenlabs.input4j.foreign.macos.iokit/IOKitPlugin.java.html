@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IOKitPlugin.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.macos.iokit</a> &gt; <span class="el_source">IOKitPlugin.java</span></div><h1>IOKitPlugin.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.macos.iokit;
+
+import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
+import de.gurkenlabs.input4j.InputComponent;
+import de.gurkenlabs.input4j.InputDevice;
+
+import java.awt.*;
+import java.lang.foreign.Arena;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+
+import static java.lang.foreign.ValueLayout.ADDRESS;
+import static java.lang.foreign.ValueLayout.JAVA_INT;
+
+/**
+ * Plugin for managing IOHID devices on macOS.
+ * This class handles the initialization, polling, and closing of IOHID devices.
+ *
+ * &lt;p&gt;IOHID (Input/Output Human Interface Device) is a framework in macOS that provides
+ * support for communication with human interface devices such as keyboards, mice, game controllers,
+ * and other input devices. This plugin leverages the IOHID framework to manage these devices.&lt;/p&gt;
+ *
+ * &lt;p&gt;The class performs the following key functions:&lt;/p&gt;
+ * &lt;ul&gt;
+ *   &lt;li&gt;&lt;b&gt;Initialization:&lt;/b&gt; Initializes the HID manager and retrieves the list of supported HID devices.&lt;/li&gt;
+ *   &lt;li&gt;&lt;b&gt;Polling:&lt;/b&gt; Polls the HID devices to read their current state and input values.&lt;/li&gt;
+ *   &lt;li&gt;&lt;b&gt;Closing:&lt;/b&gt; Properly closes the HID manager and releases resources when the plugin is no longer needed.&lt;/li&gt;
+ * &lt;/ul&gt;
+ */
+<span class="nc" id="L38">public class IOKitPlugin extends AbstractInputDevicePlugin {</span>
+<span class="nc" id="L39">  private final Map&lt;String, IOHIDDevice&gt; nativeDevices = new ConcurrentHashMap&lt;&gt;();</span>
+  private Thread eventLoopThread;
+
+  private boolean devicesInitialized;
+
+  @Override
+  public void internalInitDevices(Frame owner) {
+<span class="nc" id="L46">    eventLoopThread = new Thread(() -&gt; {</span>
+<span class="nc" id="L47">      MemorySegment ioHIDManager = MemorySegment.NULL;</span>
+<span class="nc" id="L48">      try (Arena memoryArena = Arena.ofConfined()) {</span>
+<span class="nc" id="L49">        log.log(Level.FINE, &quot;Initializing HID manager...&quot;);</span>
+<span class="nc" id="L50">        ioHIDManager = MacOS.initHIDManager(hidInputValueCallbackPointer(memoryArena));</span>
+<span class="nc" id="L51">        var ioHIDDevices = MacOS.getSupportedHIDDevices(memoryArena, ioHIDManager);</span>
+
+<span class="nc bnc" id="L53" title="All 2 branches missed.">        for (var ioHIDDevice : ioHIDDevices) {</span>
+<span class="nc" id="L54">          log.log(Level.FINE, &quot;Found HID device: &quot; + ioHIDDevice.productName);</span>
+<span class="nc" id="L55">          var inputDevice = new InputDevice(Long.toString(ioHIDDevice.address), ioHIDDevice.productName, ioHIDDevice.manufacturer + &quot; (&quot; + ioHIDDevice.transport + &quot;)&quot;, this::pollIOHIDDevice, null);</span>
+<span class="nc" id="L56">          ioHIDDevice.inputDevice = inputDevice;</span>
+
+<span class="nc bnc" id="L58" title="All 2 branches missed.">          for (var element : ioHIDDevice.getElements()) {</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">            if (element.getUsage() == IOHIDElementUsage.UNDEFINED) {</span>
+<span class="nc" id="L60">              continue;</span>
+            }
+
+<span class="nc" id="L63">            var component = new InputComponent(inputDevice, element.getIdentifier(), element.getName());</span>
+<span class="nc" id="L64">            inputDevice.addComponent(component);</span>
+<span class="nc" id="L65">          }</span>
+
+<span class="nc" id="L67">          IOKitVirtualComponentHandler.prepareVirtualComponents(inputDevice, inputDevice.getComponents());</span>
+<span class="nc" id="L68">          nativeDevices.put(inputDevice.getID(), ioHIDDevice);</span>
+<span class="nc" id="L69">        }</span>
+
+<span class="nc" id="L71">        devicesInitialized = true;</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        if (!nativeDevices.isEmpty()) {</span>
+<span class="nc" id="L73">          log.log(Level.FINE, &quot;Starting event loop for HID manager&quot;);</span>
+          // Start the event loop in a separate thread
+<span class="nc" id="L75">          MacOS.runEventLoop(memoryArena, ioHIDManager);</span>
+        }
+
+<span class="nc" id="L78">        this.setDevices(this.nativeDevices.values().stream().map(d -&gt; d.inputDevice).toList());</span>
+<span class="nc" id="L79">      } catch (Throwable e) {</span>
+<span class="nc" id="L80">        log.log(Level.SEVERE, &quot;Failed to initialize IOKit devices&quot;, e);</span>
+      } finally {
+<span class="nc bnc" id="L82" title="All 2 branches missed.">        if (!ioHIDManager.equals(MemorySegment.NULL)) {</span>
+<span class="nc" id="L83">          var closeReturn = MacOS.IOHIDManagerClose(ioHIDManager);</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">          if (closeReturn != IOReturn.kIOReturnSuccess) {</span>
+<span class="nc" id="L85">            log.log(Level.WARNING, &quot;Failed to close IOHIDManager with error &quot; + IOReturn.toString(closeReturn));</span>
+          }
+        }
+      }
+<span class="nc" id="L89">    });</span>
+
+<span class="nc" id="L91">    eventLoopThread.start();</span>
+
+    // Wait for devices to be initialized or timeout after 3 seconds to prevent blocking the main thread
+<span class="nc" id="L94">    int waited = 0;</span>
+<span class="nc bnc" id="L95" title="All 4 branches missed.">    while (waited &lt; 3000 &amp;&amp; !devicesInitialized) {</span>
+      try {
+<span class="nc" id="L97">        Thread.sleep(100);</span>
+<span class="nc" id="L98">        waited += 100;</span>
+<span class="nc" id="L99">      } catch (InterruptedException e) {</span>
+<span class="nc" id="L100">        log.log(Level.SEVERE, &quot;Initialization interrupted&quot;, e);</span>
+<span class="nc" id="L101">        throw new RuntimeException(e);</span>
+<span class="nc" id="L102">      }</span>
+    }
+
+<span class="nc bnc" id="L105" title="All 2 branches missed.">    if (devicesInitialized) {</span>
+<span class="nc" id="L106">      log.log(Level.FINE, &quot;Devices initialized successfully&quot;);</span>
+    } else {
+<span class="nc" id="L108">      log.log(Level.WARNING, &quot;Device initialization timed out&quot;);</span>
+    }
+<span class="nc" id="L110">  }</span>
+
+  @Override
+  public void close() {
+<span class="nc" id="L114">    super.close();</span>
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">    if (eventLoopThread != null) {</span>
+<span class="nc" id="L117">      eventLoopThread.interrupt();</span>
+    }
+
+<span class="nc" id="L120">    this.nativeDevices.clear();</span>
+<span class="nc" id="L121">  }</span>
+
+  @Override
+  protected Collection&lt;InputDevice&gt; refreshInputDevices() {
+    // TODO: implement refresh support
+<span class="nc" id="L126">    return this.getAll();</span>
+  }
+
+  static float normalizeInputValue(int elementValue, IOHIDElement element, boolean isAxis) {
+<span class="nc" id="L130">    float value = elementValue;</span>
+<span class="nc bnc" id="L131" title="All 4 branches missed.">    if (isAxis &amp;&amp; element.usage != IOHIDElementUsage.HAT_SWITCH) {</span>
+<span class="nc" id="L132">      int midpoint = Math.round((element.min + element.max) / 2.0f);</span>
+<span class="nc bnc" id="L133" title="All 4 branches missed.">      if (value == 0 || Math.abs(elementValue - midpoint) &lt;= 2) {</span>
+<span class="nc" id="L134">        value = 0;</span>
+      } else {
+        // Ensure value is within the range [min, max]
+        // Then normalize the value to the range [-1, 1]
+<span class="nc" id="L138">        value = Math.max(element.min, Math.min(element.max, value));</span>
+<span class="nc" id="L139">        value = (value - element.min) / (float) (element.max - element.min) * 2 - 1;</span>
+      }
+    }
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">    if (element.type == IOHIDElementType.BUTTON) {</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">      value = value == 0 ? 0 : 1;</span>
+    }
+
+<span class="nc" id="L147">    return value;</span>
+  }
+
+  private float[] pollIOHIDDevice(InputDevice inputDevice) {
+<span class="nc" id="L151">    log.log(Level.FINE, &quot;Polling IOHIDDevice for input device: &quot; + inputDevice.getName());</span>
+<span class="nc" id="L152">    var values = new float[inputDevice.getComponents().size()];</span>
+
+    // find native IOHIDDevice and poll elements
+<span class="nc" id="L155">    var ioHIDDevice = this.nativeDevices.getOrDefault(inputDevice.getID(), null);</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">    if (ioHIDDevice == null) {</span>
+<span class="nc" id="L157">      log.log(Level.WARNING, &quot;IOHIDDevice not found for input device &quot; + inputDevice.getName());</span>
+<span class="nc" id="L158">      return values;</span>
+    }
+
+<span class="nc bnc" id="L161" title="All 2 branches missed.">    for (int i = 0; i &lt; inputDevice.getComponents().size(); i++) {</span>
+<span class="nc" id="L162">      var component = inputDevice.getComponents().get(i);</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">      var element = ioHIDDevice.getElements().stream().filter(x -&gt; x.getIdentifier() == component.getId()).findFirst().orElse(null);</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">      if (element == null) {</span>
+<span class="nc" id="L165">        log.log(Level.FINE, &quot;Native element not found for component ID: &quot; + component.getId());</span>
+<span class="nc" id="L166">        continue;</span>
+      }
+
+<span class="nc" id="L169">      var elementValue = element.currentValue;</span>
+<span class="nc" id="L170">      log.log(Level.FINEST, &quot;Element value for component ID &quot; + component.getId() + &quot;: &quot; + elementValue);</span>
+<span class="nc" id="L171">      var value = normalizeInputValue(elementValue, element, component.isAxis());</span>
+<span class="nc" id="L172">      values[i] = value;</span>
+    }
+
+<span class="nc" id="L175">    return IOKitVirtualComponentHandler.handlePolledValues(inputDevice, values);</span>
+  }
+
+  /**
+   * This is called out of native code when an IOHIDElement  provides a value.
+   */
+  private void hidInputValueCallback(MemorySegment context, int result, MemorySegment sender, MemorySegment ioHIDValueRef) {
+<span class="nc" id="L182">    var element = MacOS.IOHIDValueGetElement(ioHIDValueRef);</span>
+<span class="nc" id="L183">    var value = MacOS.IOHIDValueGetIntegerValue(ioHIDValueRef);</span>
+<span class="nc" id="L184">    var timestamp = MacOS.IOHIDValueGetTimeStamp(ioHIDValueRef);</span>
+    // find element from the list in this instance according to the address of the element
+<span class="nc bnc" id="L186" title="All 2 branches missed.">    var ioHIDElement = this.nativeDevices.values().stream().flatMap(x -&gt; x.getElements().stream()).filter(x -&gt; x.address == element.address()).findFirst().orElse(null);</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">    if (ioHIDElement == null) {</span>
+<span class="nc" id="L188">      log.log(Level.WARNING, &quot;IOHIDElement not found for address &quot; + element.address());</span>
+<span class="nc" id="L189">      return;</span>
+    }
+
+<span class="nc" id="L192">    ioHIDElement.currentValue = value;</span>
+<span class="nc" id="L193">  }</span>
+
+  private MemorySegment hidInputValueCallbackPointer(Arena memoryArena) throws Throwable {
+    // Create a method handle to the Java function as a callback
+<span class="nc" id="L197">    MethodHandle enumDeviceMethodHandle = MethodHandles.lookup()</span>
+<span class="nc" id="L198">      .bind(this, &quot;hidInputValueCallback&quot;, MethodType.methodType(void.class, MemorySegment.class, int.class, MemorySegment.class, MemorySegment.class));</span>
+
+<span class="nc" id="L200">    return Linker.nativeLinker().upcallStub(</span>
+<span class="nc" id="L201">      enumDeviceMethodHandle, FunctionDescriptor.ofVoid(ADDRESS, JAVA_INT, ADDRESS, ADDRESS), memoryArena);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

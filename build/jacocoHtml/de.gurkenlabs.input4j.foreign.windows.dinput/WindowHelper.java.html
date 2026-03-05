@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WindowHelper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.dinput</a> &gt; <span class="el_source">WindowHelper.java</span></div><h1>WindowHelper.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.dinput;
+
+import java.awt.*;
+import java.lang.foreign.Arena;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.MethodHandle;
+
+import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
+import static java.lang.foreign.ValueLayout.ADDRESS;
+import static java.lang.foreign.ValueLayout.JAVA_LONG;
+
+/**
+ * The `WindowHelper` class provides utility methods for interacting with Windows OS window handles (HWND).
+ * It uses the `User32` library to find window handles based on window titles.
+ */
+<span class="nc" id="L17">public final class WindowHelper {</span>
+  private static final MethodHandle findWindowA;
+
+  static {
+<span class="nc" id="L21">    System.loadLibrary(&quot;User32&quot;);</span>
+
+    // Initialize the MethodHandle for the FindWindowA function from User32.dll
+<span class="nc" id="L24">    findWindowA = downcallHandle(&quot;FindWindowA&quot;, FunctionDescriptor.of(JAVA_LONG, ADDRESS, ADDRESS));</span>
+<span class="nc" id="L25">  }</span>
+
+  /**
+   * Retrieves the window handle (HWND) for the specified AWT Frame.
+   *
+   * @param window The AWT Frame for which to find the window handle.
+   * @return The window handle (HWND) as a long value.
+   */
+  public static long getHWND(Frame window) {
+<span class="nc" id="L34">    var currentTitle = window.getTitle();</span>
+
+    // temporarily set unique window name to ensure that the right window is found
+<span class="nc" id="L37">    var windowSearchTitle = System.nanoTime() + &quot; @&quot; + ProcessHandle.current().pid();</span>
+<span class="nc" id="L38">    window.setTitle(windowSearchTitle);</span>
+<span class="nc" id="L39">    try (var memorySession = Arena.ofConfined()) {</span>
+      // Allocate memory for the window title (LPSTR)
+<span class="nc" id="L41">      MemorySegment lpWindowName = memorySession.allocateFrom(window.getTitle());</span>
+
+      // Call FindWindow with className = NULL (null pointer in Java)
+<span class="nc" id="L44">      return (long) findWindowA.invoke(MemorySegment.NULL, lpWindowName);</span>
+<span class="nc" id="L45">    } catch (Throwable e) {</span>
+<span class="nc" id="L46">      throw new RuntimeException(e);</span>
+    } finally {
+      // Restore the original window title
+<span class="nc" id="L49">      window.setTitle(currentTitle);</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

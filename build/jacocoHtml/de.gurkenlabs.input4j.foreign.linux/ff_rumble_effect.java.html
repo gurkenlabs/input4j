@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ff_rumble_effect.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.linux</a> &gt; <span class="el_source">ff_rumble_effect.java</span></div><h1>ff_rumble_effect.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.linux;
+
+import java.lang.foreign.GroupLayout;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.VarHandle;
+
+import static java.lang.foreign.ValueLayout.JAVA_SHORT;
+
+/**
+ * struct ff_rumble_effect - parameters for a rumble force feedback effect.
+ *
+ * &lt;p&gt;
+ * This structure defines the intensity parameters for a rumble effect.
+ * Rumble effects simulate gamepad controller vibration with two motors:
+ * a strong motor for heavy vibrations and a weak motor for light vibrations.
+ * &lt;/p&gt;
+ */
+<span class="nc" id="L19">class ff_rumble_effect {</span>
+  /**
+   * Magnitude of the strong motor (0-65535).
+   * The strong motor is typically the larger weight in a gamepad.
+   */
+  public short strong_magnitude;
+
+  /**
+   * Magnitude of the weak motor (0-65535).
+   * The weak motor is typically the smaller weight in a gamepad.
+   */
+  public short weak_magnitude;
+
+<span class="nc" id="L32">  static final GroupLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L33">      JAVA_SHORT.withName(&quot;strong_magnitude&quot;),</span>
+<span class="nc" id="L34">      JAVA_SHORT.withName(&quot;weak_magnitude&quot;)</span>
+<span class="nc" id="L35">  ).withName(&quot;ff_rumble_effect&quot;);</span>
+
+<span class="nc" id="L37">  static final VarHandle VH_strong_magnitude = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;strong_magnitude&quot;));</span>
+<span class="nc" id="L38">  static final VarHandle VH_weak_magnitude = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;weak_magnitude&quot;));</span>
+
+  public static ff_rumble_effect read(MemorySegment segment) {
+<span class="nc" id="L41">    var effect = new ff_rumble_effect();</span>
+<span class="nc" id="L42">    effect.strong_magnitude = (short) VH_strong_magnitude.get(segment, 0);</span>
+<span class="nc" id="L43">    effect.weak_magnitude = (short) VH_weak_magnitude.get(segment, 0);</span>
+<span class="nc" id="L44">    return effect;</span>
+  }
+
+  public void write(MemorySegment segment) {
+<span class="nc" id="L48">    VH_strong_magnitude.set(segment, 0, strong_magnitude);</span>
+<span class="nc" id="L49">    VH_weak_magnitude.set(segment, 0, weak_magnitude);</span>
+<span class="nc" id="L50">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

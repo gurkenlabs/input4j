@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LinuxComponentType.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.linux</a> &gt; <span class="el_source">LinuxComponentType.java</span></div><h1>LinuxComponentType.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.linux;
+
+import de.gurkenlabs.input4j.ComponentType;
+
+import java.util.Arrays;
+
+<span class="nc" id="L7">public enum LinuxComponentType {</span>
+<span class="nc" id="L8">  UNKNOWN(-1),</span>
+<span class="nc" id="L9">  KEY_ESC(1),</span>
+<span class="nc" id="L10">  KEY_1(2),</span>
+<span class="nc" id="L11">  KEY_2(3),</span>
+<span class="nc" id="L12">  KEY_3(4),</span>
+<span class="nc" id="L13">  KEY_4(5),</span>
+<span class="nc" id="L14">  KEY_5(6),</span>
+<span class="nc" id="L15">  KEY_6(7),</span>
+<span class="nc" id="L16">  KEY_7(8),</span>
+<span class="nc" id="L17">  KEY_8(9),</span>
+<span class="nc" id="L18">  KEY_9(10),</span>
+<span class="nc" id="L19">  KEY_0(11),</span>
+<span class="nc" id="L20">  KEY_MINUS(12),</span>
+<span class="nc" id="L21">  KEY_EQUAL(13),</span>
+<span class="nc" id="L22">  KEY_BACKSPACE(14),</span>
+<span class="nc" id="L23">  KEY_TAB(15),</span>
+<span class="nc" id="L24">  KEY_Q(16),</span>
+<span class="nc" id="L25">  KEY_W(17),</span>
+<span class="nc" id="L26">  KEY_E(18),</span>
+<span class="nc" id="L27">  KEY_R(19),</span>
+<span class="nc" id="L28">  KEY_T(20),</span>
+<span class="nc" id="L29">  KEY_Y(21),</span>
+<span class="nc" id="L30">  KEY_U(22),</span>
+<span class="nc" id="L31">  KEY_I(23),</span>
+<span class="nc" id="L32">  KEY_O(24),</span>
+<span class="nc" id="L33">  KEY_P(25),</span>
+<span class="nc" id="L34">  KEY_LEFTBRACE(26),</span>
+<span class="nc" id="L35">  KEY_RIGHTBRACE(27),</span>
+<span class="nc" id="L36">  KEY_ENTER(28),</span>
+<span class="nc" id="L37">  KEY_LEFTCTRL(29),</span>
+<span class="nc" id="L38">  KEY_A(30),</span>
+<span class="nc" id="L39">  KEY_S(31),</span>
+<span class="nc" id="L40">  KEY_D(32),</span>
+<span class="nc" id="L41">  KEY_F(33),</span>
+<span class="nc" id="L42">  KEY_G(34),</span>
+<span class="nc" id="L43">  KEY_H(35),</span>
+<span class="nc" id="L44">  KEY_J(36),</span>
+<span class="nc" id="L45">  KEY_K(37),</span>
+<span class="nc" id="L46">  KEY_L(38),</span>
+<span class="nc" id="L47">  KEY_SEMICOLON(39),</span>
+<span class="nc" id="L48">  KEY_APOSTROPHE(40),</span>
+<span class="nc" id="L49">  KEY_GRAVE(41),</span>
+<span class="nc" id="L50">  KEY_LEFTSHIFT(42),</span>
+<span class="nc" id="L51">  KEY_BACKSLASH(43),</span>
+<span class="nc" id="L52">  KEY_Z(44),</span>
+<span class="nc" id="L53">  KEY_X(45),</span>
+<span class="nc" id="L54">  KEY_C(46),</span>
+<span class="nc" id="L55">  KEY_V(47),</span>
+<span class="nc" id="L56">  KEY_B(48),</span>
+<span class="nc" id="L57">  KEY_N(49),</span>
+<span class="nc" id="L58">  KEY_M(50),</span>
+<span class="nc" id="L59">  KEY_COMMA(51),</span>
+<span class="nc" id="L60">  KEY_DOT(52),</span>
+<span class="nc" id="L61">  KEY_SLASH(53),</span>
+<span class="nc" id="L62">  KEY_RIGHTSHIFT(54),</span>
+<span class="nc" id="L63">  KEY_KPASTERISK(55),</span>
+<span class="nc" id="L64">  KEY_LEFTALT(56),</span>
+<span class="nc" id="L65">  KEY_SPACE(57),</span>
+<span class="nc" id="L66">  KEY_CAPSLOCK(58),</span>
+<span class="nc" id="L67">  KEY_F1(59),</span>
+<span class="nc" id="L68">  KEY_F2(60),</span>
+<span class="nc" id="L69">  KEY_F3(61),</span>
+<span class="nc" id="L70">  KEY_F4(62),</span>
+<span class="nc" id="L71">  KEY_F5(63),</span>
+<span class="nc" id="L72">  KEY_F6(64),</span>
+<span class="nc" id="L73">  KEY_F7(65),</span>
+<span class="nc" id="L74">  KEY_F8(66),</span>
+<span class="nc" id="L75">  KEY_F9(67),</span>
+<span class="nc" id="L76">  KEY_F10(68),</span>
+<span class="nc" id="L77">  KEY_NUMLOCK(69),</span>
+<span class="nc" id="L78">  KEY_SCROLLLOCK(70),</span>
+<span class="nc" id="L79">  KEY_KP7(71),</span>
+<span class="nc" id="L80">  KEY_KP8(72),</span>
+<span class="nc" id="L81">  KEY_KP9(73),</span>
+<span class="nc" id="L82">  KEY_KPMINUS(74),</span>
+<span class="nc" id="L83">  KEY_KP4(75),</span>
+<span class="nc" id="L84">  KEY_KP5(76),</span>
+<span class="nc" id="L85">  KEY_KP6(77),</span>
+<span class="nc" id="L86">  KEY_KPPLUS(78),</span>
+<span class="nc" id="L87">  KEY_KP1(79),</span>
+<span class="nc" id="L88">  KEY_KP2(80),</span>
+<span class="nc" id="L89">  KEY_KP3(81),</span>
+<span class="nc" id="L90">  KEY_KP0(82),</span>
+<span class="nc" id="L91">  KEY_KPDOT(83),</span>
+<span class="nc" id="L92">  KEY_ZENKAKUHANKAKU(85),</span>
+<span class="nc" id="L93">  KEY_102ND(86),</span>
+<span class="nc" id="L94">  KEY_F11(87),</span>
+<span class="nc" id="L95">  KEY_F12(88),</span>
+<span class="nc" id="L96">  KEY_RO(89),</span>
+<span class="nc" id="L97">  KEY_KATAKANA(90),</span>
+<span class="nc" id="L98">  KEY_HIRAGANA(91),</span>
+<span class="nc" id="L99">  KEY_HENKAN(92),</span>
+<span class="nc" id="L100">  KEY_KATAKANAHIRAGANA(93),</span>
+<span class="nc" id="L101">  KEY_MUHENKAN(94),</span>
+<span class="nc" id="L102">  KEY_KPJPCOMMA(95),</span>
+<span class="nc" id="L103">  KEY_KPENTER(96),</span>
+<span class="nc" id="L104">  KEY_RIGHTCTRL(97),</span>
+<span class="nc" id="L105">  KEY_KPSLASH(98),</span>
+<span class="nc" id="L106">  KEY_SYSRQ(99),</span>
+<span class="nc" id="L107">  KEY_RIGHTALT(100),</span>
+<span class="nc" id="L108">  KEY_LINEFEED(101),</span>
+<span class="nc" id="L109">  KEY_HOME(102),</span>
+<span class="nc" id="L110">  KEY_UP(103),</span>
+<span class="nc" id="L111">  KEY_PAGEUP(104),</span>
+<span class="nc" id="L112">  KEY_LEFT(105),</span>
+<span class="nc" id="L113">  KEY_RIGHT(106),</span>
+<span class="nc" id="L114">  KEY_END(107),</span>
+<span class="nc" id="L115">  KEY_DOWN(108),</span>
+<span class="nc" id="L116">  KEY_PAGEDOWN(109),</span>
+<span class="nc" id="L117">  KEY_INSERT(110),</span>
+<span class="nc" id="L118">  KEY_DELETE(111),</span>
+<span class="nc" id="L119">  KEY_MACRO(112),</span>
+<span class="nc" id="L120">  KEY_MUTE(113),</span>
+<span class="nc" id="L121">  KEY_VOLUMEDOWN(114),</span>
+<span class="nc" id="L122">  KEY_VOLUMEUP(115),</span>
+<span class="nc" id="L123">  KEY_POWER(116),</span>
+<span class="nc" id="L124">  KEY_KPEQUAL(117),</span>
+<span class="nc" id="L125">  KEY_KPPLUSMINUS(118),</span>
+<span class="nc" id="L126">  KEY_PAUSE(119),</span>
+<span class="nc" id="L127">  KEY_SCALE(120),</span>
+<span class="nc" id="L128">  KEY_KPCOMMA(121),</span>
+<span class="nc" id="L129">  KEY_HANGEUL(122),</span>
+<span class="nc" id="L130">  KEY_HANJA(123),</span>
+<span class="nc" id="L131">  KEY_YEN(124),</span>
+<span class="nc" id="L132">  KEY_LEFTMETA(125),</span>
+<span class="nc" id="L133">  KEY_RIGHTMETA(126),</span>
+<span class="nc" id="L134">  KEY_COMPOSE(127),</span>
+<span class="nc" id="L135">  KEY_STOP(128),</span>
+<span class="nc" id="L136">  KEY_AGAIN(129),</span>
+<span class="nc" id="L137">  KEY_PROPS(130),</span>
+<span class="nc" id="L138">  KEY_UNDO(131),</span>
+<span class="nc" id="L139">  KEY_FRONT(132),</span>
+<span class="nc" id="L140">  KEY_COPY(133),</span>
+<span class="nc" id="L141">  KEY_OPEN(134),</span>
+<span class="nc" id="L142">  KEY_PASTE(135),</span>
+<span class="nc" id="L143">  KEY_FIND(136),</span>
+<span class="nc" id="L144">  KEY_CUT(137),</span>
+<span class="nc" id="L145">  KEY_HELP(138),</span>
+<span class="nc" id="L146">  KEY_MENU(139),</span>
+<span class="nc" id="L147">  KEY_CALC(140),</span>
+<span class="nc" id="L148">  KEY_SETUP(141),</span>
+<span class="nc" id="L149">  KEY_SLEEP(142),</span>
+<span class="nc" id="L150">  KEY_WAKEUP(143),</span>
+<span class="nc" id="L151">  KEY_FILE(144),</span>
+<span class="nc" id="L152">  KEY_SENDFILE(145),</span>
+<span class="nc" id="L153">  KEY_DELETEFILE(146),</span>
+<span class="nc" id="L154">  KEY_XFER(147),</span>
+<span class="nc" id="L155">  KEY_PROG1(148),</span>
+<span class="nc" id="L156">  KEY_PROG2(149),</span>
+<span class="nc" id="L157">  KEY_WWW(150),</span>
+<span class="nc" id="L158">  KEY_MSDOS(151),</span>
+<span class="nc" id="L159">  KEY_SCREENLOCK(152),</span>
+<span class="nc" id="L160">  KEY_DIRECTION(153),</span>
+<span class="nc" id="L161">  KEY_CYCLEWINDOWS(154),</span>
+<span class="nc" id="L162">  KEY_MAIL(155),</span>
+<span class="nc" id="L163">  KEY_BOOKMARKS(156),</span>
+<span class="nc" id="L164">  KEY_COMPUTER(157),</span>
+<span class="nc" id="L165">  KEY_BACK(158),</span>
+<span class="nc" id="L166">  KEY_FORWARD(159),</span>
+<span class="nc" id="L167">  KEY_CLOSECD(160),</span>
+<span class="nc" id="L168">  KEY_EJECTCD(161),</span>
+<span class="nc" id="L169">  KEY_EJECTCLOSECD(162),</span>
+<span class="nc" id="L170">  KEY_NEXTSONG(163),</span>
+<span class="nc" id="L171">  KEY_PLAYPAUSE(164),</span>
+<span class="nc" id="L172">  KEY_PREVIOUSSONG(165),</span>
+<span class="nc" id="L173">  KEY_STOPCD(166),</span>
+<span class="nc" id="L174">  KEY_RECORD(167),</span>
+<span class="nc" id="L175">  KEY_REWIND(168),</span>
+<span class="nc" id="L176">  KEY_PHONE(169),</span>
+<span class="nc" id="L177">  KEY_ISO(170),</span>
+<span class="nc" id="L178">  KEY_CONFIG(171),</span>
+<span class="nc" id="L179">  KEY_HOMEPAGE(172),</span>
+<span class="nc" id="L180">  KEY_REFRESH(173),</span>
+<span class="nc" id="L181">  KEY_EXIT(174),</span>
+<span class="nc" id="L182">  KEY_MOVE(175),</span>
+<span class="nc" id="L183">  KEY_EDIT(176),</span>
+<span class="nc" id="L184">  KEY_SCROLLUP(177),</span>
+<span class="nc" id="L185">  KEY_SCROLLDOWN(178),</span>
+<span class="nc" id="L186">  KEY_KPLEFTPAREN(179),</span>
+<span class="nc" id="L187">  KEY_KPRIGHTPAREN(180),</span>
+<span class="nc" id="L188">  KEY_NEW(181),</span>
+<span class="nc" id="L189">  KEY_REDO(182),</span>
+<span class="nc" id="L190">  KEY_F13(183),</span>
+<span class="nc" id="L191">  KEY_F14(184),</span>
+<span class="nc" id="L192">  KEY_F15(185),</span>
+<span class="nc" id="L193">  KEY_F16(186),</span>
+<span class="nc" id="L194">  KEY_F17(187),</span>
+<span class="nc" id="L195">  KEY_F18(188),</span>
+<span class="nc" id="L196">  KEY_F19(189),</span>
+<span class="nc" id="L197">  KEY_F20(190),</span>
+<span class="nc" id="L198">  KEY_F21(191),</span>
+<span class="nc" id="L199">  KEY_F22(192),</span>
+<span class="nc" id="L200">  KEY_F23(193),</span>
+<span class="nc" id="L201">  KEY_F24(194),</span>
+<span class="nc" id="L202">  KEY_PLAYCD(200),</span>
+<span class="nc" id="L203">  KEY_PAUSECD(201),</span>
+<span class="nc" id="L204">  KEY_PROG3(202),</span>
+<span class="nc" id="L205">  KEY_PROG4(203),</span>
+<span class="nc" id="L206">  KEY_DASHBOARD(204),</span>
+<span class="nc" id="L207">  KEY_SUSPEND(205),</span>
+<span class="nc" id="L208">  KEY_CLOSE(206),</span>
+<span class="nc" id="L209">  KEY_PLAY(207),</span>
+<span class="nc" id="L210">  KEY_FASTFORWARD(208),</span>
+<span class="nc" id="L211">  KEY_BASSBOOST(209),</span>
+<span class="nc" id="L212">  KEY_PRINT(210),</span>
+<span class="nc" id="L213">  KEY_HP(211),</span>
+<span class="nc" id="L214">  KEY_CAMERA(212),</span>
+<span class="nc" id="L215">  KEY_SOUND(213),</span>
+<span class="nc" id="L216">  KEY_QUESTION(214),</span>
+<span class="nc" id="L217">  KEY_EMAIL(215),</span>
+<span class="nc" id="L218">  KEY_CHAT(216),</span>
+<span class="nc" id="L219">  KEY_SEARCH(217),</span>
+<span class="nc" id="L220">  KEY_CONNECT(218),</span>
+<span class="nc" id="L221">  KEY_FINANCE(219),</span>
+<span class="nc" id="L222">  KEY_SPORT(220),</span>
+<span class="nc" id="L223">  KEY_SHOP(221),</span>
+<span class="nc" id="L224">  KEY_ALTERASE(222),</span>
+<span class="nc" id="L225">  KEY_CANCEL(223),</span>
+<span class="nc" id="L226">  KEY_BRIGHTNESSDOWN(224),</span>
+<span class="nc" id="L227">  KEY_BRIGHTNESSUP(225),</span>
+<span class="nc" id="L228">  KEY_MEDIA(226),</span>
+<span class="nc" id="L229">  KEY_SWITCHVIDEOMODE(227),</span>
+<span class="nc" id="L230">  KEY_KBDILLUMTOGGLE(228),</span>
+<span class="nc" id="L231">  KEY_KBDILLUMDOWN(229),</span>
+<span class="nc" id="L232">  KEY_KBDILLUMUP(230),</span>
+<span class="nc" id="L233">  KEY_SEND(231),</span>
+<span class="nc" id="L234">  KEY_REPLY(232),</span>
+<span class="nc" id="L235">  KEY_FORWARDMAIL(233),</span>
+<span class="nc" id="L236">  KEY_SAVE(234),</span>
+<span class="nc" id="L237">  KEY_DOCUMENTS(235),</span>
+<span class="nc" id="L238">  KEY_BATTERY(236),</span>
+<span class="nc" id="L239">  KEY_BLUETOOTH(237),</span>
+<span class="nc" id="L240">  KEY_WLAN(238),</span>
+<span class="nc" id="L241">  KEY_UWB(239),</span>
+<span class="nc" id="L242">  KEY_UNKNOWN(240),</span>
+<span class="nc" id="L243">  KEY_VIDEO_NEXT(241),</span>
+<span class="nc" id="L244">  KEY_VIDEO_PREV(242),</span>
+<span class="nc" id="L245">  KEY_BRIGHTNESS_CYCLE(243),</span>
+<span class="nc" id="L246">  KEY_BRIGHTNESS_ZERO(244),</span>
+<span class="nc" id="L247">  KEY_DISPLAY_OFF(245),</span>
+<span class="nc" id="L248">  KEY_WIMAX(246),</span>
+<span class="nc" id="L249">  KEY_RFKILL(247),</span>
+<span class="nc" id="L250">  KEY_MICMUTE(248),</span>
+<span class="nc" id="L251">  BTN_0(0x100),</span>
+<span class="nc" id="L252">  BTN_1(0x101),</span>
+<span class="nc" id="L253">  BTN_2(0x102),</span>
+<span class="nc" id="L254">  BTN_3(0x103),</span>
+<span class="nc" id="L255">  BTN_4(0x104),</span>
+<span class="nc" id="L256">  BTN_5(0x105),</span>
+<span class="nc" id="L257">  BTN_6(0x106),</span>
+<span class="nc" id="L258">  BTN_7(0x107),</span>
+<span class="nc" id="L259">  BTN_8(0x108),</span>
+<span class="nc" id="L260">  BTN_9(0x109),</span>
+<span class="nc" id="L261">  BTN_LEFT(0x110),</span>
+<span class="nc" id="L262">  BTN_RIGHT(0x111),</span>
+<span class="nc" id="L263">  BTN_MIDDLE(0x112),</span>
+<span class="nc" id="L264">  BTN_SIDE(0x113),</span>
+<span class="nc" id="L265">  BTN_EXTRA(0x114),</span>
+<span class="nc" id="L266">  BTN_FORWARD(0x115),</span>
+<span class="nc" id="L267">  BTN_BACK(0x116),</span>
+<span class="nc" id="L268">  BTN_TRIGGER(0x120),</span>
+<span class="nc" id="L269">  BTN_THUMB(0x121),</span>
+<span class="nc" id="L270">  BTN_THUMB2(0x122),</span>
+<span class="nc" id="L271">  BTN_TOP(0x123),</span>
+<span class="nc" id="L272">  BTN_TOP2(0x124),</span>
+<span class="nc" id="L273">  BTN_PINKIE(0x125),</span>
+<span class="nc" id="L274">  BTN_BASE(0x126),</span>
+<span class="nc" id="L275">  BTN_BASE2(0x127),</span>
+<span class="nc" id="L276">  BTN_BASE3(0x128),</span>
+<span class="nc" id="L277">  BTN_BASE4(0x129),</span>
+<span class="nc" id="L278">  BTN_BASE5(0x12A),</span>
+<span class="nc" id="L279">  BTN_BASE6(0x12B),</span>
+<span class="nc" id="L280">  BTN_DEAD(0x12F),</span>
+<span class="nc" id="L281">  BTN_SOUTH(0x130),</span>
+<span class="nc" id="L282">  BTN_EAST(0x131),</span>
+<span class="nc" id="L283">  BTN_C(0x132),</span>
+<span class="nc" id="L284">  BTN_NORTH(0x133),</span>
+<span class="nc" id="L285">  BTN_WEST(0x134),</span>
+<span class="nc" id="L286">  BTN_Z(0x135),</span>
+<span class="nc" id="L287">  BTN_TL(0x136),</span>
+<span class="nc" id="L288">  BTN_TR(0x137),</span>
+<span class="nc" id="L289">  BTN_TL2(0x138),</span>
+<span class="nc" id="L290">  BTN_TR2(0x139),</span>
+<span class="nc" id="L291">  BTN_SELECT(0x13A),</span>
+<span class="nc" id="L292">  BTN_START(0x13B),</span>
+<span class="nc" id="L293">  BTN_MODE(0x13C),</span>
+<span class="nc" id="L294">  BTN_THUMBL(0x13D),</span>
+<span class="nc" id="L295">  BTN_THUMBR(0x13E),</span>
+<span class="nc" id="L296">  BTN_TRIGGER_HAPPY(0x2c0),</span>
+<span class="nc" id="L297">  BTN_TRIGGER_HAPPY1(0x2c0),</span>
+<span class="nc" id="L298">  BTN_TRIGGER_HAPPY2(0x2c1),</span>
+<span class="nc" id="L299">  BTN_TRIGGER_HAPPY3(0x2c2),</span>
+<span class="nc" id="L300">  BTN_TRIGGER_HAPPY4(0x2c3),</span>
+<span class="nc" id="L301">  BTN_TRIGGER_HAPPY5(0x2c4),</span>
+<span class="nc" id="L302">  BTN_TRIGGER_HAPPY6(0x2c5),</span>
+<span class="nc" id="L303">  BTN_TRIGGER_HAPPY7(0x2c6),</span>
+<span class="nc" id="L304">  BTN_TRIGGER_HAPPY8(0x2c7),</span>
+<span class="nc" id="L305">  BTN_TRIGGER_HAPPY9(0x2c8),</span>
+<span class="nc" id="L306">  BTN_TRIGGER_HAPPY10(0x2c9),</span>
+<span class="nc" id="L307">  BTN_TRIGGER_HAPPY11(0x2ca),</span>
+<span class="nc" id="L308">  BTN_TRIGGER_HAPPY12(0x2cb),</span>
+<span class="nc" id="L309">  BTN_TRIGGER_HAPPY13(0x2cc),</span>
+<span class="nc" id="L310">  BTN_TRIGGER_HAPPY14(0x2cd),</span>
+<span class="nc" id="L311">  BTN_TRIGGER_HAPPY15(0x2ce),</span>
+<span class="nc" id="L312">  BTN_TRIGGER_HAPPY16(0x2cf),</span>
+<span class="nc" id="L313">  BTN_TRIGGER_HAPPY17(0x2d0),</span>
+<span class="nc" id="L314">  BTN_TRIGGER_HAPPY18(0x2d1),</span>
+<span class="nc" id="L315">  BTN_TRIGGER_HAPPY19(0x2d2),</span>
+<span class="nc" id="L316">  BTN_TRIGGER_HAPPY20(0x2d3),</span>
+<span class="nc" id="L317">  BTN_TRIGGER_HAPPY21(0x2d4),</span>
+<span class="nc" id="L318">  BTN_TRIGGER_HAPPY22(0x2d5),</span>
+<span class="nc" id="L319">  BTN_TRIGGER_HAPPY23(0x2d6),</span>
+<span class="nc" id="L320">  BTN_TRIGGER_HAPPY24(0x2d7),</span>
+<span class="nc" id="L321">  BTN_TRIGGER_HAPPY25(0x2d8),</span>
+<span class="nc" id="L322">  BTN_TRIGGER_HAPPY26(0x2d9),</span>
+<span class="nc" id="L323">  BTN_TRIGGER_HAPPY27(0x2da),</span>
+<span class="nc" id="L324">  BTN_TRIGGER_HAPPY28(0x2db),</span>
+<span class="nc" id="L325">  BTN_TRIGGER_HAPPY29(0x2dc),</span>
+<span class="nc" id="L326">  BTN_TRIGGER_HAPPY30(0x2dd),</span>
+<span class="nc" id="L327">  BTN_TRIGGER_HAPPY31(0x2de),</span>
+<span class="nc" id="L328">  BTN_TRIGGER_HAPPY32(0x2df),</span>
+<span class="nc" id="L329">  BTN_TRIGGER_HAPPY33(0x2e0),</span>
+<span class="nc" id="L330">  BTN_TRIGGER_HAPPY34(0x2e1),</span>
+<span class="nc" id="L331">  BTN_TRIGGER_HAPPY35(0x2e2),</span>
+<span class="nc" id="L332">  BTN_TRIGGER_HAPPY36(0x2e3),</span>
+<span class="nc" id="L333">  BTN_TRIGGER_HAPPY37(0x2e4),</span>
+<span class="nc" id="L334">  BTN_TRIGGER_HAPPY38(0x2e5),</span>
+<span class="nc" id="L335">  BTN_TRIGGER_HAPPY39(0x2e6),</span>
+<span class="nc" id="L336">  BTN_TRIGGER_HAPPY40(0x2e7),</span>
+<span class="nc" id="L337">  ABS_X(0x00, true),</span>
+<span class="nc" id="L338">  ABS_Y(0x01, true),</span>
+<span class="nc" id="L339">  ABS_Z(0x02, true),</span>
+<span class="nc" id="L340">  ABS_RX(0x03, true),</span>
+<span class="nc" id="L341">  ABS_RY(0x04, true),</span>
+<span class="nc" id="L342">  ABS_RZ(0x05, true),</span>
+<span class="nc" id="L343">  ABS_THROTTLE(0x06, true),</span>
+<span class="nc" id="L344">  ABS_RUDDER(0x07, true),</span>
+<span class="nc" id="L345">  ABS_WHEEL(0x08, true),</span>
+<span class="nc" id="L346">  ABS_GAS(0x09, true),</span>
+<span class="nc" id="L347">  ABS_BRAKE(0x0A, true),</span>
+<span class="nc" id="L348">  ABS_HAT0X(0x10, true),</span>
+<span class="nc" id="L349">  ABS_HAT0Y(0x11, true),</span>
+<span class="nc" id="L350">  ABS_HAT1X(0x12, true),</span>
+<span class="nc" id="L351">  ABS_HAT1Y(0x13, true),</span>
+<span class="nc" id="L352">  ABS_HAT2X(0x14, true),</span>
+<span class="nc" id="L353">  ABS_HAT2Y(0x15, true),</span>
+<span class="nc" id="L354">  ABS_HAT3X(0x16, true),</span>
+<span class="nc" id="L355">  ABS_HAT3Y(0x17, true),</span>
+<span class="nc" id="L356">  REL_X(0x00, true, true),</span>
+<span class="nc" id="L357">  REL_Y(0x01, true, true),</span>
+<span class="nc" id="L358">  REL_Z(0x02, true, true),</span>
+<span class="nc" id="L359">  REL_WHEEL(0x08, true, true),</span>
+<span class="nc" id="L360">  REL_HWHEEL(0x06, true, true),</span>
+<span class="nc" id="L361">  REL_DIAL(0x07, true, true),</span>
+<span class="nc" id="L362">  REL_MISC(0x09, true, true);</span>
+
+  /**
+   * Cache the values array to avoid creating a new array each time values() is called.
+   */
+<span class="nc" id="L367">  private static final LinuxComponentType[] values = values();</span>
+
+  private final int code;
+  private final boolean axis;
+  private final boolean relative;
+
+  LinuxComponentType(int code) {
+<span class="nc" id="L374">    this(code, false);</span>
+<span class="nc" id="L375">  }</span>
+
+  LinuxComponentType(int code, boolean axis) {
+<span class="nc" id="L378">    this(code, axis, false);</span>
+<span class="nc" id="L379">  }</span>
+
+<span class="nc" id="L381">  LinuxComponentType(int code, boolean axis, boolean relative) {</span>
+<span class="nc" id="L382">    this.code = code;</span>
+<span class="nc" id="L383">    this.axis = axis;</span>
+<span class="nc" id="L384">    this.relative = relative;</span>
+<span class="nc" id="L385">  }</span>
+
+  public int getCode() {
+<span class="nc" id="L388">    return code;</span>
+  }
+
+  public static LinuxComponentType fromCode(int nativeCode, boolean axis, boolean relative) {
+<span class="nc" id="L392">    return Arrays.stream(LinuxComponentType.values)</span>
+<span class="nc bnc" id="L393" title="All 8 branches missed.">            .filter(type -&gt; type.code == nativeCode &amp;&amp; (type.axis == axis &amp;&amp; (!relative || type.relative)))</span>
+<span class="nc" id="L394">            .findFirst()</span>
+<span class="nc" id="L395">            .orElse(UNKNOWN);</span>
+  }
+
+  public ComponentType getComponentType(int nativeCode, boolean axis, boolean relative) {
+<span class="nc" id="L399">    var type = fromCode(nativeCode, axis, relative);</span>
+<span class="nc bnc" id="L400" title="All 2 branches missed.">    if (type == UNKNOWN) {</span>
+<span class="nc" id="L401">      return ComponentType.UNKNOWN;</span>
+    }
+
+<span class="nc bnc" id="L404" title="All 2 branches missed.">    if (type.name().startsWith(&quot;KEY&quot;)) {</span>
+<span class="nc" id="L405">      return ComponentType.KEY;</span>
+<span class="nc bnc" id="L406" title="All 2 branches missed.">    }else if (type.name().startsWith(&quot;BTN&quot;)) {</span>
+<span class="nc" id="L407">      return ComponentType.BUTTON;</span>
+<span class="nc bnc" id="L408" title="All 2 branches missed.">    } else if (type.name().startsWith(&quot;ABS_HAT&quot;)) {</span>
+<span class="nc" id="L409">      return ComponentType.AXIS;</span>
+    }
+
+<span class="nc bnc" id="L412" title="All 2 branches missed.">    return switch (type) {</span>
+<span class="nc" id="L413">      case ABS_X, ABS_RX, ABS_Y, ABS_Z, ABS_RY, ABS_RZ -&gt; ComponentType.AXIS;</span>
+<span class="nc" id="L414">      default -&gt; ComponentType.UNKNOWN;</span>
+    };
+  }
+
+  public boolean isAxis() {
+<span class="nc bnc" id="L419" title="All 4 branches missed.">    return this.name().startsWith(&quot;ABS&quot;) || this.name().startsWith(&quot;REL&quot;);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

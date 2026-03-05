@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LinuxVirtualComponentHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.linux</a> &gt; <span class="el_source">LinuxVirtualComponentHandler.java</span></div><h1>LinuxVirtualComponentHandler.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.linux;
+
+import de.gurkenlabs.input4j.InputComponent;
+import de.gurkenlabs.input4j.InputDevice;
+import de.gurkenlabs.input4j.components.Button;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+final class LinuxVirtualComponentHandler {
+  private LinuxVirtualComponentHandler() {
+  }
+
+  /**
+   * Prepares virtual components for the specified input device by adding additional components
+   * for D-Pad if necessary.
+   *
+   * @param device     the input device
+   * @param components the collection of input components
+   */
+  static void prepareVirtualComponents(final InputDevice device, final Collection&lt;InputComponent&gt; components) {
+<span class="nc" id="L22">    var allComponents = new ArrayList&lt;&gt;(components);</span>
+
+    // in Linux, the D-Pad is mapped to two buttons for LEFT/RIGHT and UP/DOWN respectively.
+    // We need separate button components that reflect the D-Pad directions individually
+<span class="nc bnc" id="L26" title="All 2 branches missed.">    if (components.stream().anyMatch(x -&gt; x.getId().name.equals(LinuxEventComponent.ID_DPAD_UP_DOWN))) {</span>
+<span class="nc" id="L27">      allComponents.add(new InputComponent(device, Button.DPAD_UP));</span>
+<span class="nc" id="L28">      allComponents.add(new InputComponent(device, Button.DPAD_DOWN));</span>
+    }
+
+<span class="nc bnc" id="L31" title="All 2 branches missed.">    if (components.stream().anyMatch(x -&gt; x.getId().name.equals(LinuxEventComponent.ID_DPAD_LEFT_RIGHT))) {</span>
+<span class="nc" id="L32">      allComponents.add(new InputComponent(device, Button.DPAD_LEFT));</span>
+<span class="nc" id="L33">      allComponents.add(new InputComponent(device, Button.DPAD_RIGHT));</span>
+    }
+
+<span class="nc" id="L36">    device.setComponents(allComponents);</span>
+<span class="nc" id="L37">  }</span>
+
+  static float[] handlePolledValues(final InputDevice device, final float[] nativeValues) {
+<span class="nc" id="L40">    var allValues = new float[device.getComponents().size()];</span>
+<span class="nc" id="L41">    var dpadUpIndex = device.getComponentIndex(Button.DPAD_UP);</span>
+<span class="nc" id="L42">    var dpadDownIndex = device.getComponentIndex(Button.DPAD_DOWN);</span>
+<span class="nc" id="L43">    var dpadLeftIndex = device.getComponentIndex(Button.DPAD_LEFT);</span>
+<span class="nc" id="L44">    var dpadRightIndex = device.getComponentIndex(Button.DPAD_RIGHT);</span>
+
+<span class="nc bnc" id="L46" title="All 4 branches missed.">    for (int i = 0; i &lt; nativeValues.length &amp;&amp; i &lt; device.getComponents().size(); i++) {</span>
+<span class="nc" id="L47">      var value = nativeValues[i];</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">      if (value == 0) {</span>
+<span class="nc" id="L49">        continue;</span>
+      }
+
+<span class="nc" id="L52">      allValues[i] = value;</span>
+
+<span class="nc" id="L54">      var component = device.getComponents().get(i);</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">      if (component == null) {</span>
+<span class="nc" id="L56">        continue;</span>
+      }
+
+<span class="nc bnc" id="L59" title="All 2 branches missed.">      if (component.getId().name.equals(LinuxEventComponent.ID_DPAD_UP_DOWN)) {</span>
+<span class="nc" id="L60">        allValues[i] = 0;</span>
+
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        if (value == DPAD_VALUE.UP) {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">          if (dpadUpIndex != -1) allValues[dpadUpIndex] = 1;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        } else if (value == DPAD_VALUE.DOWN) {</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">          if (dpadDownIndex != -1) allValues[dpadDownIndex] = 1;</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        } else if (value == 0) {</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">          if (dpadUpIndex != -1) allValues[dpadUpIndex] = 0;</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">          if (dpadDownIndex != -1) allValues[dpadDownIndex] = 0;</span>
+        }
+      }
+
+<span class="nc bnc" id="L72" title="All 2 branches missed.">      if (component.getId().name.equals(LinuxEventComponent.ID_DPAD_LEFT_RIGHT)) {</span>
+<span class="nc" id="L73">        allValues[i] = 0;</span>
+
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        if (value == DPAD_VALUE.LEFT) {</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">          if (dpadLeftIndex != -1) allValues[dpadLeftIndex] = 1;</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        } else if (value == DPAD_VALUE.RIGHT) {</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">          if (dpadRightIndex != -1) allValues[dpadRightIndex] = 1;</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        } else if (value == 0) {</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">          if (dpadLeftIndex != -1) allValues[dpadLeftIndex] = 0;</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">          if (dpadRightIndex != -1) allValues[dpadRightIndex] = 0;</span>
+        }
+      }
+    }
+
+<span class="nc" id="L86">    return allValues;</span>
+  }
+
+  private static class DPAD_VALUE {
+    public static final float UP = -1f;
+    public static final float DOWN = 1f;
+    public static final float LEFT = -1f;
+    public static final float RIGHT = 1f;
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

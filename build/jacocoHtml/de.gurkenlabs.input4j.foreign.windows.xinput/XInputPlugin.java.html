@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XInputPlugin.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.xinput</a> &gt; <span class="el_source">XInputPlugin.java</span></div><h1>XInputPlugin.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.xinput;
+
+import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
+import de.gurkenlabs.input4j.InputComponent;
+import de.gurkenlabs.input4j.InputDevice;
+import de.gurkenlabs.input4j.components.XInput;
+import de.gurkenlabs.input4j.foreign.NativeHelper;
+
+import java.awt.*;
+import java.lang.foreign.Arena;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.lang.invoke.MethodHandle;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+
+/**
+ * The {@code XInputPlugin} class is responsible for managing XInput devices.
+ * It initializes, polls, and handles rumble functionality for XInput devices.
+ */
+<span class="nc" id="L25">public final class XInputPlugin extends AbstractInputDevicePlugin {</span>
+  private static final int MAX_XINPUT_DEVICES = 4;
+  private static final MethodHandle xInputGetState;
+  private static final MethodHandle xInputSetState;
+  private static final MethodHandle xInputGetCapabilities;
+
+<span class="nc" id="L31">  private final Arena memoryArena = Arena.ofConfined();</span>
+<span class="nc" id="L32">  private final MemorySegment stateSegment = memoryArena.allocate(XINPUT_STATE.$LAYOUT);</span>
+
+<span class="nc" id="L34">  private final Map&lt;String, XINPUT_GAMEPAD&gt; nativeDevices = new ConcurrentHashMap&lt;&gt;();</span>
+
+  static {
+<span class="nc" id="L37">    System.loadLibrary(&quot;XInput1_4&quot;);</span>
+
+<span class="nc" id="L39">    xInputGetState = NativeHelper.downcallHandle(</span>
+      &quot;XInputGetState&quot;,
+<span class="nc" id="L41">      FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)</span>
+    );
+
+<span class="nc" id="L44">    xInputSetState = NativeHelper.downcallHandle(</span>
+      &quot;XInputSetState&quot;,
+<span class="nc" id="L46">      FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)</span>
+    );
+
+<span class="nc" id="L49">    xInputGetCapabilities = NativeHelper.downcallHandle(</span>
+      &quot;XInputGetCapabilities&quot;,
+<span class="nc" id="L51">      FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)</span>
+    );
+<span class="nc" id="L53">  }</span>
+
+  /**
+   * Initializes the XInput devices and adds them to the collection of devices.
+   *
+   * @param owner The frame owner.
+   */
+  @Override
+  public void internalInitDevices(Frame owner) {
+<span class="nc" id="L62">    this.setDevices(refreshInputDevices());</span>
+<span class="nc" id="L63">  }</span>
+
+  /**
+   * Closes the plugin and clears the collection of devices.
+   */
+  @Override
+  public void close() {
+<span class="nc" id="L70">    super.close();</span>
+
+<span class="nc" id="L72">    this.nativeDevices.clear();</span>
+<span class="nc" id="L73">    this.memoryArena.close();</span>
+<span class="nc" id="L74">  }</span>
+
+  @Override
+  protected Collection&lt;InputDevice&gt; refreshInputDevices() {
+    // Initialize XInput devices
+<span class="nc" id="L79">    var inputDevices = new ArrayList&lt;InputDevice&gt;();</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">    for (int i = 0; i &lt; MAX_XINPUT_DEVICES; i++) {</span>
+<span class="nc" id="L81">      var deviceId = Integer.toString(i);</span>
+<span class="nc" id="L82">      var state = getState(i);</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">      if (state == null) {</span>
+<span class="nc" id="L84">        this.nativeDevices.remove(deviceId);</span>
+<span class="nc" id="L85">        continue;</span>
+      }
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">      if (this.nativeDevices.containsKey(deviceId)) {</span>
+<span class="nc" id="L89">        var existingDevice = this.getAll().stream().filter(device -&gt; device.getID().equals(deviceId)).findFirst();</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">        if (existingDevice.isPresent()) {</span>
+<span class="nc" id="L91">          inputDevices.add(existingDevice.get());</span>
+<span class="nc" id="L92">          continue;</span>
+        }
+      }
+
+<span class="nc" id="L96">      state.Gamepad.userIndex = i;</span>
+<span class="nc" id="L97">      var inputDevice = initInputDevice(state.Gamepad);</span>
+<span class="nc" id="L98">      inputDevices.add(inputDevice);</span>
+<span class="nc" id="L99">      this.nativeDevices.put(inputDevice.getID(), state.Gamepad);</span>
+    }
+
+<span class="nc" id="L102">    return inputDevices;</span>
+  }
+
+  /**
+   * Normalizes the trigger value to a float between 0.0 and 1.0, considering a specified threshold.
+   *
+   * @param triggerValue The raw trigger value (0 to 255).
+   * @return The normalized trigger value as a float between 0.0 and 1.0.
+   */
+  static float normalizeTrigger(byte triggerValue) {
+<span class="nc bnc" id="L112" title="All 2 branches missed.">    if (Byte.toUnsignedInt(triggerValue) &lt; XINPUT_GAMEPAD.XINPUT_GAMEPAD_TRIGGER_THRESHOLD) {</span>
+<span class="nc" id="L113">      return 0.0f;</span>
+    }
+<span class="nc" id="L115">    return Byte.toUnsignedInt(triggerValue) / 255f;</span>
+  }
+
+  /**
+   * Normalizes a signed short value to a float between -1.0 and 1.0.
+   *
+   * @param shortValue The signed short value.
+   * @param deadzone   The deadzone values are used to filter out small movements of the thumbsticks that are within a certain threshold.
+   *                   This helps to avoid unintentional movements due to slight pressure or drift.
+   * @return The normalized float value.
+   */
+  static float normalizeSignedShort(short shortValue, int deadzone) {
+<span class="nc bnc" id="L127" title="All 2 branches missed.">    if (Math.abs(shortValue) &lt; deadzone) {</span>
+<span class="nc" id="L128">      return 0.0f;</span>
+    }
+
+<span class="nc bnc" id="L131" title="All 2 branches missed.">    if (shortValue == Short.MIN_VALUE) {</span>
+<span class="nc" id="L132">      return -1.0f;</span>
+    }
+<span class="nc bnc" id="L134" title="All 2 branches missed.">    if (shortValue == Short.MAX_VALUE) {</span>
+<span class="nc" id="L135">      return 1.0f;</span>
+    }
+<span class="nc" id="L137">    return (float) shortValue / Short.MAX_VALUE;</span>
+  }
+
+  private InputDevice initInputDevice(XINPUT_GAMEPAD gamepad) {
+<span class="nc" id="L141">    var type = &quot;XInput Device&quot;;</span>
+<span class="nc" id="L142">    var capabilities = getCapabilities(gamepad.userIndex);</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">    if (capabilities != null) {</span>
+<span class="nc" id="L144">      type = capabilities.getTypeName();</span>
+    }
+
+    // Prepare components list based on the gamepad fields and XInputButton
+<span class="nc" id="L148">    var components = new ArrayList&lt;InputComponent&gt;();</span>
+
+<span class="nc" id="L150">    var instanceName = type + &quot; (&quot; + gamepad.userIndex + &quot;)&quot;;</span>
+<span class="nc" id="L151">    var device = new InputDevice(Integer.toString(gamepad.userIndex), instanceName, null, this::pollXInputDevice, this::rumbleXInputDevice);</span>
+
+    // order is important here, as the order of the components is used to map the polled data
+<span class="nc" id="L154">    components.add(new InputComponent(device, XInput.DPAD_UP));</span>
+<span class="nc" id="L155">    components.add(new InputComponent(device, XInput.DPAD_DOWN));</span>
+<span class="nc" id="L156">    components.add(new InputComponent(device, XInput.DPAD_LEFT));</span>
+<span class="nc" id="L157">    components.add(new InputComponent(device, XInput.DPAD_RIGHT));</span>
+<span class="nc" id="L158">    components.add(new InputComponent(device, XInput.START));</span>
+<span class="nc" id="L159">    components.add(new InputComponent(device, XInput.BACK));</span>
+<span class="nc" id="L160">    components.add(new InputComponent(device, XInput.LEFT_THUMB));</span>
+<span class="nc" id="L161">    components.add(new InputComponent(device, XInput.RIGHT_THUMB));</span>
+<span class="nc" id="L162">    components.add(new InputComponent(device, XInput.LEFT_SHOULDER));</span>
+<span class="nc" id="L163">    components.add(new InputComponent(device, XInput.RIGHT_SHOULDER));</span>
+<span class="nc" id="L164">    components.add(new InputComponent(device, XInput.A));</span>
+<span class="nc" id="L165">    components.add(new InputComponent(device, XInput.B));</span>
+<span class="nc" id="L166">    components.add(new InputComponent(device, XInput.X));</span>
+<span class="nc" id="L167">    components.add(new InputComponent(device, XInput.Y));</span>
+
+<span class="nc" id="L169">    components.add(new InputComponent(device, XInput.LEFT_TRIGGER));</span>
+<span class="nc" id="L170">    components.add(new InputComponent(device, XInput.RIGHT_TRIGGER));</span>
+<span class="nc" id="L171">    components.add(new InputComponent(device, XInput.LEFT_THUMB_X));</span>
+<span class="nc" id="L172">    components.add(new InputComponent(device, XInput.LEFT_THUMB_Y));</span>
+<span class="nc" id="L173">    components.add(new InputComponent(device, XInput.RIGHT_THUMB_X));</span>
+<span class="nc" id="L174">    components.add(new InputComponent(device, XInput.RIGHT_THUMB_Y));</span>
+
+<span class="nc" id="L176">    device.setComponents(components);</span>
+
+<span class="nc" id="L178">    log.log(Level.FINE, &quot;Found XInput device: &quot; + gamepad.userIndex);</span>
+<span class="nc" id="L179">    return device;</span>
+  }
+
+  /**
+   * Sets the vibration intensity for the specified input device.
+   *
+   * @param inputDevice The input device.
+   * @param intensity   The vibration intensity for the left and right motors.
+   */
+  private void rumbleXInputDevice(InputDevice inputDevice, float[] intensity) {
+<span class="nc" id="L189">    var motorSpeedLeft = 0f;</span>
+<span class="nc" id="L190">    var motorSpeedRight = 0f;</span>
+<span class="nc bnc" id="L191" title="All 4 branches missed.">    if (intensity != null &amp;&amp; intensity.length &gt; 0) {</span>
+<span class="nc" id="L192">      motorSpeedLeft = Math.clamp(intensity[0], 0, 1);</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">      motorSpeedRight = intensity.length &gt; 1 ? Math.clamp(intensity[1], 0, 1) : motorSpeedLeft;</span>
+    }
+
+    // Set the vibration for each motor (example for two motors)
+<span class="nc" id="L197">    setVibration(Integer.parseInt(inputDevice.getName()),</span>
+      (short) (motorSpeedLeft * XINPUT_VIBRATION.MAX_VIBRATION),
+      (short) (motorSpeedRight * XINPUT_VIBRATION.MAX_VIBRATION));
+<span class="nc" id="L200">  }</span>
+
+  /**
+   * Polls the input device state and returns the current state of its components.
+   *
+   * @param inputDevice The input device.
+   * @return The current state of the input device's components.
+   */
+  private float[] pollXInputDevice(InputDevice inputDevice) {
+<span class="nc" id="L209">    this.refreshDevices();</span>
+<span class="nc" id="L210">    var polledValues = new float[inputDevice.getComponents().size()];</span>
+
+<span class="nc" id="L212">    var deviceId = Integer.parseInt(inputDevice.getID());</span>
+<span class="nc" id="L213">    var state = getState(deviceId);</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">    if (state == null) {</span>
+<span class="nc" id="L215">      return new float[0];</span>
+    }
+
+<span class="nc" id="L218">    int i = 0;</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">    for (; i &lt; XInputButton.values.length; i++) {</span>
+<span class="nc" id="L220">      var button = XInputButton.values[i];</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">      polledValues[i] = button.isPressed(state.Gamepad.wButtons) ? 1 : 0;</span>
+    }
+
+<span class="nc" id="L224">    polledValues[i++] = normalizeTrigger(state.Gamepad.bLeftTrigger);</span>
+<span class="nc" id="L225">    polledValues[i++] = normalizeTrigger(state.Gamepad.bRightTrigger);</span>
+<span class="nc" id="L226">    polledValues[i++] = normalizeSignedShort(state.Gamepad.sThumbLX, XINPUT_GAMEPAD.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);</span>
+<span class="nc" id="L227">    polledValues[i++] = normalizeSignedShort(state.Gamepad.sThumbLY, XINPUT_GAMEPAD.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);</span>
+<span class="nc" id="L228">    polledValues[i++] = normalizeSignedShort(state.Gamepad.sThumbRX, XINPUT_GAMEPAD.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);</span>
+<span class="nc" id="L229">    polledValues[i] = normalizeSignedShort(state.Gamepad.sThumbRY, XINPUT_GAMEPAD.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);</span>
+
+<span class="nc" id="L231">    return polledValues;</span>
+  }
+
+  private XINPUT_CAPABILITIES getCapabilities(int userIndex) {
+    try {
+<span class="nc" id="L236">      var capabilitiesSegment = this.memoryArena.allocate(XINPUT_CAPABILITIES.$LAYOUT);</span>
+
+<span class="nc" id="L238">      int result = (int) xInputGetCapabilities.invoke(userIndex, 0, capabilitiesSegment);</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">      if (result == Result.ERROR_SUCCESS) {</span>
+<span class="nc" id="L240">        return XINPUT_CAPABILITIES.read(capabilitiesSegment);</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">      } else if (result == Result.ERROR_DEVICE_NOT_CONNECTED) {</span>
+<span class="nc" id="L242">        return null;</span>
+      } else {
+<span class="nc" id="L244">        log.log(Level.WARNING, &quot;XInputGetCapabilities failed for userIndex &quot; + userIndex + &quot; with error result &quot; + Result.toString(result));</span>
+<span class="nc" id="L245">        return null;</span>
+      }
+<span class="nc" id="L247">    } catch (Throwable e) {</span>
+<span class="nc" id="L248">      log.log(Level.SEVERE, e.getMessage(), e);</span>
+<span class="nc" id="L249">      return null;</span>
+    }
+  }
+
+  /**
+   * Gets the state of the XInput device for the specified user index.
+   *
+   * @param userIndex The user index.
+   * @return The state of the XInput device, or {@code null} if the device is not connected.
+   */
+  private synchronized XINPUT_STATE getState(int userIndex) {
+    try {
+<span class="nc" id="L261">      int result = (int) xInputGetState.invoke(userIndex, this.stateSegment);</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">      if (result == Result.ERROR_SUCCESS) {</span>
+<span class="nc" id="L263">        return XINPUT_STATE.read(this.stateSegment);</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">      } else if (result == Result.ERROR_DEVICE_NOT_CONNECTED) {</span>
+<span class="nc" id="L265">        return null;</span>
+      } else {
+<span class="nc" id="L267">        log.log(Level.WARNING, &quot;XInputGetState failed for userIndex &quot; + userIndex + &quot; with error result &quot; + Result.toString(result));</span>
+<span class="nc" id="L268">        return null;</span>
+      }
+<span class="nc" id="L270">    } catch (Throwable e) {</span>
+<span class="nc" id="L271">      log.log(Level.SEVERE, e.getMessage(), e);</span>
+<span class="nc" id="L272">      return null;</span>
+    }
+  }
+
+  /**
+   * Sets the vibration for the XInput device for the specified user index.
+   *
+   * @param userIndex        The user index.
+   * @param wLeftMotorSpeed  The speed of the left motor.
+   * @param wRightMotorSpeed The speed of the right motor.
+   */
+  private void setVibration(int userIndex, short wLeftMotorSpeed, short wRightMotorSpeed) {
+    try {
+<span class="nc" id="L285">      var vibration = new XINPUT_VIBRATION();</span>
+<span class="nc" id="L286">      vibration.wLeftMotorSpeed = wLeftMotorSpeed;</span>
+<span class="nc" id="L287">      vibration.wRightMotorSpeed = wRightMotorSpeed;</span>
+
+<span class="nc" id="L289">      var segment = this.memoryArena.allocate(XINPUT_VIBRATION.$LAYOUT);</span>
+<span class="nc" id="L290">      vibration.write(segment);</span>
+<span class="nc" id="L291">      int result = (int) xInputSetState.invoke(userIndex, segment);</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">      if (result != Result.ERROR_SUCCESS) {</span>
+<span class="nc" id="L293">        log.log(Level.WARNING, &quot;XInputSetState failed for userIndex &quot; + userIndex + &quot; with result &quot; + Result.toString(result));</span>
+      }
+<span class="nc" id="L295">    } catch (Throwable e) {</span>
+<span class="nc" id="L296">      log.log(Level.SEVERE, e.getMessage(), e);</span>
+<span class="nc" id="L297">    }</span>
+<span class="nc" id="L298">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

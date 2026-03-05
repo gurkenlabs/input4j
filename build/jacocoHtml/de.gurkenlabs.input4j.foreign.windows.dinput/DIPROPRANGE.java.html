@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DIPROPRANGE.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.dinput</a> &gt; <span class="el_source">DIPROPRANGE.java</span></div><h1>DIPROPRANGE.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.dinput;
+
+import java.lang.foreign.GroupLayout;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.VarHandle;
+
+import static java.lang.foreign.ValueLayout.JAVA_INT;
+
+<span class="nc" id="L10">class DIPROPRANGE {</span>
+  public DIPROPHEADER diph;
+
+  public int lMin;
+
+  public int lMax;
+
+<span class="nc" id="L17">  static final GroupLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L18">          DIPROPHEADER.$LAYOUT.withName(&quot;diph&quot;),</span>
+<span class="nc" id="L19">          JAVA_INT.withName(&quot;lMin&quot;),</span>
+<span class="nc" id="L20">          JAVA_INT.withName(&quot;lMax&quot;)</span>
+<span class="nc" id="L21">  ).withName(&quot;DIPROPRANGE&quot;);</span>
+
+<span class="nc" id="L23">  static final VarHandle VH_lMin = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;lMin&quot;));</span>
+<span class="nc" id="L24">  static final VarHandle VH_lMax = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;lMax&quot;));</span>
+
+  public static DIPROPRANGE read(MemorySegment segment) {
+<span class="nc" id="L27">    var data = new DIPROPRANGE();</span>
+<span class="nc" id="L28">    data.diph = DIPROPHEADER.read(segment);</span>
+<span class="nc" id="L29">    data.lMin = (int) VH_lMin.get(segment, 0);</span>
+<span class="nc" id="L30">    data.lMax = (int) VH_lMax.get(segment, 0);</span>
+
+<span class="nc" id="L32">    return data;</span>
+  }
+
+  public void write(MemorySegment segment) {
+<span class="nc" id="L36">    diph.write(segment);</span>
+<span class="nc" id="L37">    VH_lMin.set(segment, 0, lMin);</span>
+<span class="nc" id="L38">    VH_lMax.set(segment, 0, lMax);</span>
+<span class="nc" id="L39">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

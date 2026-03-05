@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>input_event.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.linux</a> &gt; <span class="el_source">input_event.java</span></div><h1>input_event.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.linux;
+
+import java.lang.foreign.GroupLayout;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.VarHandle;
+
+import static java.lang.foreign.ValueLayout.JAVA_INT;
+import static java.lang.foreign.ValueLayout.JAVA_SHORT;
+
+/*
+ * The event structure itself
+ */
+<span class="nc" id="L14">class input_event {</span>
+  public timeval time;
+  public short type;
+  public short code;
+  public int value;
+
+<span class="nc" id="L20">  static final GroupLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L21">          timeval.$LAYOUT.withName(&quot;time&quot;),</span>
+<span class="nc" id="L22">          JAVA_SHORT.withName(&quot;type&quot;),</span>
+<span class="nc" id="L23">          JAVA_SHORT.withName(&quot;code&quot;),</span>
+<span class="nc" id="L24">          JAVA_INT.withName(&quot;value&quot;)</span>
+<span class="nc" id="L25">  ).withName(&quot;input_event&quot;);</span>
+
+<span class="nc" id="L27">  static final VarHandle VH_type = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;type&quot;));</span>
+<span class="nc" id="L28">  static final VarHandle VH_code = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;code&quot;));</span>
+<span class="nc" id="L29">  static final VarHandle VH_value = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;value&quot;));</span>
+
+  public static input_event read(MemorySegment segment) {
+<span class="nc" id="L32">    var inputEvent = new input_event();</span>
+<span class="nc" id="L33">    inputEvent.time = timeval.read(segment);</span>
+<span class="nc" id="L34">    inputEvent.type = (short) VH_type.get(segment, 0);</span>
+<span class="nc" id="L35">    inputEvent.code = (short) VH_code.get(segment, 0);</span>
+<span class="nc" id="L36">    inputEvent.value = (int) VH_value.get(segment, 0);</span>
+
+<span class="nc" id="L38">    return inputEvent;</span>
+  }
+
+  public void write(MemorySegment segment) {
+<span class="nc" id="L42">    time.write(segment);</span>
+<span class="nc" id="L43">    VH_type.set(segment, 0, type);</span>
+<span class="nc" id="L44">    VH_code.set(segment, 0, code);</span>
+<span class="nc" id="L45">    VH_value.set(segment, 0, value);</span>
+<span class="nc" id="L46">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

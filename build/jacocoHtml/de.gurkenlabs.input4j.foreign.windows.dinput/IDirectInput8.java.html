@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IDirectInput8.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.dinput</a> &gt; <span class="el_source">IDirectInput8.java</span></div><h1>IDirectInput8.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.dinput;
+
+import java.lang.foreign.Arena;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+
+import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
+import static java.lang.foreign.ValueLayout.ADDRESS;
+import static java.lang.foreign.ValueLayout.JAVA_INT;
+
+<span class="nc" id="L14">final class IDirectInput8 {</span>
+<span class="nc" id="L15">  static GUID IID_IDirectInput8W = new GUID(0xBF798031, (short) 0x483A, (short) 0x4DA2, (byte) 0xAA, (byte) 0x99, (byte) 0x5D, (byte) 0x64, (byte) 0xED, (byte) 0x36, (byte) 0x97, (byte) 0x00);</span>
+
+  static final int DIEDFL_ALLDEVICES = 0x00000000;
+
+<span class="nc" id="L19">  static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L20">          ADDRESS.withName(&quot;lpVtbl&quot;)</span>
+<span class="nc" id="L21">  ).withName(&quot;IDirectInput8W&quot;);</span>
+
+<span class="nc" id="L23">  private static final VarHandle VH_lpVtbl = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;lpVtbl&quot;));</span>
+
+  public MemorySegment vtable;
+
+  private MemorySegment vtablePointerSegment;
+
+  private MethodHandle release;
+  private MethodHandle enumDevices;
+  private MethodHandle createDevice;
+
+  public static IDirectInput8 read(MemorySegment segment, Arena memoryArena) {
+<span class="nc" id="L34">    var directInput = new IDirectInput8();</span>
+<span class="nc" id="L35">    var pointer = (MemorySegment) VH_lpVtbl.get(segment, 0);</span>
+
+<span class="nc" id="L37">    directInput.vtablePointerSegment = MemorySegment.ofAddress(pointer.address()).reinterpret(IDirectInput8.$LAYOUT.byteSize(), memoryArena, null);</span>
+
+    // Dereference the pointer for the memory segment of the virtual table
+<span class="nc" id="L40">    directInput.vtable = MemorySegment.ofAddress(directInput.vtablePointerSegment.get(ADDRESS, 0).address()).reinterpret(Vtable.$LAYOUT.byteSize(), memoryArena, null);</span>
+
+    // init API method handles
+<span class="nc" id="L43">    var releasePointer = (MemorySegment) Vtable.VH_Release.get(directInput.vtable, 0);</span>
+<span class="nc" id="L44">    directInput.release = downcallHandle(releasePointer, Vtable.releaseDescriptor);</span>
+
+<span class="nc" id="L46">    var enumDevicesPointer = (MemorySegment) Vtable.VH_EnumDevices.get(directInput.vtable, 0);</span>
+<span class="nc" id="L47">    directInput.enumDevices = downcallHandle(enumDevicesPointer, Vtable.enumDevicesDescriptor);</span>
+
+<span class="nc" id="L49">    var createDevicePointer = (MemorySegment) Vtable.VH_CreateDevice.get(directInput.vtable, 0);</span>
+<span class="nc" id="L50">    directInput.createDevice = downcallHandle(createDevicePointer, Vtable.createDeviceDescriptor);</span>
+
+<span class="nc" id="L52">    return directInput;</span>
+  }
+
+  /**
+   * Enumerates available devices.
+   *
+   * @param dwDevType  Device type filter.
+   *                   To restrict the enumeration to a particular type of device, set this parameter to a {@link DI8DEVTYPE} value.
+   * @param lpCallback Address of a callback function to be called once for each device enumerated.
+   * @param dwFlags    Flag value that specifies the scope of the enumeration (e.g. {@code DIEDFL_ALLDEVICES}).
+   * @return If the method succeeds, the return value is DI_OK. If the method fails, the return value can be one of the
+   * following error values: DIERR_INVALIDPARAM, DIERR_NOTINITIALIZED.
+   * @throws Throwable If the native invokation fails this can throw
+   */
+  public int EnumDevices(int dwDevType, MemorySegment lpCallback, int dwFlags) throws Throwable {
+<span class="nc" id="L67">    return (int) enumDevices.invokeExact(this.vtablePointerSegment, dwDevType, lpCallback, MemorySegment.NULL, dwFlags);</span>
+  }
+
+  /**
+   * Creates and initializes an instance of a device based on a given globally unique identifier (GUID), and obtains an IDirectInputDevice8 Interface interface.
+   *
+   * @param rguid                 Reference to the GUID for the desired input device.
+   * @param lplpDirectInputDevice Address of a variable to receive the IDirectInputDevice8 interface pointer if successful.
+   * @return If the method succeeds, the return value is DI_OK. If the method fails, the return value can be one of the
+   * following: DIERR_DEVICENOTREG, DIERR_INVALIDPARAM, DIERR_NOINTERFACE, DIERR_NOTINITIALIZED, DIERR_OUTOFMEMORY.
+   * @throws Throwable If the native invokation fails this can throw
+   */
+  public int CreateDevice(MemorySegment rguid, MemorySegment lplpDirectInputDevice) throws Throwable {
+<span class="nc" id="L80">    return (int) createDevice.invokeExact(this.vtablePointerSegment, rguid, lplpDirectInputDevice, MemorySegment.NULL);</span>
+  }
+
+  /**
+   * Releases the reference to the DirectInput object.
+   * &lt;p&gt;
+   * This method calls the native `Release` function of the DirectInput 8 COM interface,
+   * which decreases the reference count of the object. When the reference count reaches zero,
+   * the object is freed.
+   *
+   * @throws Throwable If the native invocation fails, this can throw an exception.
+   */
+  public void Release() throws Throwable {
+<span class="nc" id="L93">    release.invokeExact(this.vtablePointerSegment);</span>
+<span class="nc" id="L94">  }</span>
+
+<span class="nc" id="L96">  static class Vtable {</span>
+<span class="nc" id="L97">    static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L98">            ADDRESS.withName(&quot;QueryInterface&quot;),</span>
+<span class="nc" id="L99">            ADDRESS.withName(&quot;AddRef&quot;),</span>
+<span class="nc" id="L100">            ADDRESS.withName(&quot;Release&quot;),</span>
+<span class="nc" id="L101">            ADDRESS.withName(&quot;CreateDevice&quot;),</span>
+<span class="nc" id="L102">            ADDRESS.withName(&quot;EnumDevices&quot;),</span>
+<span class="nc" id="L103">            ADDRESS.withName(&quot;GetDeviceStatus&quot;),</span>
+<span class="nc" id="L104">            ADDRESS.withName(&quot;RunControlPanel&quot;),</span>
+<span class="nc" id="L105">            ADDRESS.withName(&quot;Initialize&quot;),</span>
+<span class="nc" id="L106">            ADDRESS.withName(&quot;FindDevice&quot;),</span>
+<span class="nc" id="L107">            ADDRESS.withName(&quot;EnumDevicesBySemantics&quot;),</span>
+<span class="nc" id="L108">            ADDRESS.withName(&quot;ConfigureDevices&quot;)</span>
+<span class="nc" id="L109">    ).withName(&quot;IDirectInput8WVtbl&quot;);</span>
+
+<span class="nc" id="L111">    private static final FunctionDescriptor releaseDescriptor = FunctionDescriptor.ofVoid(ADDRESS);</span>
+<span class="nc" id="L112">    private static final FunctionDescriptor enumDevicesDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, ADDRESS, ADDRESS, JAVA_INT);</span>
+<span class="nc" id="L113">    private static final FunctionDescriptor createDeviceDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS, ADDRESS);</span>
+
+<span class="nc" id="L115">    private static final VarHandle VH_Release = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;Release&quot;));</span>
+<span class="nc" id="L116">    private static final VarHandle VH_EnumDevices = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;EnumDevices&quot;));</span>
+<span class="nc" id="L117">    private static final VarHandle VH_CreateDevice = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;CreateDevice&quot;));</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

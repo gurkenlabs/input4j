@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DI8DEVTYPE.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.dinput</a> &gt; <span class="el_source">DI8DEVTYPE.java</span></div><h1>DI8DEVTYPE.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.dinput;
+
+import java.util.Arrays;
+
+/**
+ * The `DI8DEVTYPE` enum represents various types of DirectInput devices.
+ * Each enum constant corresponds to a specific device type code.
+ */
+<span class="nc" id="L9">enum DI8DEVTYPE {</span>
+<span class="nc" id="L10">  DI8DEVTYPE_DEVICE(0x11),</span>
+<span class="nc" id="L11">  DI8DEVTYPE_MOUSE(0x12),</span>
+<span class="nc" id="L12">  DI8DEVTYPE_KEYBOARD(0x13),</span>
+<span class="nc" id="L13">  DI8DEVTYPE_JOYSTICK(0x14),</span>
+<span class="nc" id="L14">  DI8DEVTYPE_GAMEPAD(0x15),</span>
+<span class="nc" id="L15">  DI8DEVTYPE_DRIVING(0x16),</span>
+<span class="nc" id="L16">  DI8DEVTYPE_FLIGHT(0x17),</span>
+<span class="nc" id="L17">  DI8DEVTYPE_1STPERSON(0x18),</span>
+<span class="nc" id="L18">  DI8DEVTYPE_DEVICECTRL(0x19),</span>
+<span class="nc" id="L19">  DI8DEVTYPE_SCREENPOINTER(0x1A),</span>
+<span class="nc" id="L20">  DI8DEVTYPE_REMOTE(0x1B),</span>
+<span class="nc" id="L21">  DI8DEVTYPE_SUPPLEMENTAL(0x1C);</span>
+
+  /**
+   * Cache the values array to avoid creating a new array each time values() is called.
+   */
+<span class="nc" id="L26">  static final DI8DEVTYPE[] values = values();</span>
+  private final int devType;
+
+<span class="nc" id="L29">  DI8DEVTYPE(int devType) {</span>
+<span class="nc" id="L30">    this.devType = devType;</span>
+<span class="nc" id="L31">  }</span>
+
+  /**
+   * Converts a device type description code to its corresponding {@link DI8DEVTYPE} enum constant.
+   *
+   * @param dwDevType The device type description code.
+   * @return The corresponding {@link DI8DEVTYPE} enum constant, or {@code null} if no match is found.
+   */
+  public static DI8DEVTYPE fromDwDevType(int dwDevType) {
+    //  The least-significant byte of the device type description code specifies the device type.
+<span class="nc" id="L41">    var devType = (dwDevType &amp; 0xFF);</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">    return Arrays.stream(values).filter(x -&gt; x.devType == devType).findFirst().orElse(null);</span>
+  }
+
+  /**
+   * Gets the device type code associated with this enum constant.
+   *
+   * @return The device type code.
+   */
+  public int getDevType() {
+<span class="nc" id="L51">    return devType;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

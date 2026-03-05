@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IDirectInputDevice8.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.dinput</a> &gt; <span class="el_source">IDirectInputDevice8.java</span></div><h1>IDirectInputDevice8.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.dinput;
+
+import de.gurkenlabs.input4j.InputDevice;
+
+import java.lang.foreign.*;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.VarHandle;
+import java.util.List;
+
+import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
+import static java.lang.foreign.ValueLayout.*;
+
+final class IDirectInputDevice8 {
+  public final static int DIDFT_AXIS = 0x00000003;
+  public final static int DIDFT_BUTTON = 0x0000000C;
+
+  public final static int DIDFT_POV = 0x00000010;
+
+  public final static int DIDFT_RELAXIS = 0x00000001;
+
+  public final static int DIDF_ABSAXIS = 0x00000001;
+  public final static int DIDF_RELAXIS = 0x00000002;
+
+  public final static int DIEFT_ALL = 0x00000000;
+
+  public final static int DIEFT_FFATTACK				  = 0x00000200;
+  public final static int DIEFT_FFFADE					 = 0x00000400;
+  public final static int DIEFT_SATURATION				= 0x00000800;
+  public final static int DIEFT_POSNEGCOEFFICIENTS	 = 0x00001000;
+  public final static int DIEFT_POSNEGSATURATION		= 0x00002000;
+  public final static int DIEFT_DEADBAND				  = 0x00004000;
+  public final static int DIEFT_STARTDELAY				= 0x00008000;
+
+  public final static int DIEFF_OBJECTIDS			 = 0x00000001;
+  public final static int DIEFF_OBJECTOFFSETS		 = 0x00000002;
+  public final static int DIEFF_CARTESIAN			 = 0x00000010;
+  public final static int DIEFF_POLAR				 = 0x00000020;
+  public final static int DIEFF_SPHERICAL			 = 0x00000040;
+
+  /**
+   * Exclusive cooperative level. The application has exclusive access to the device.
+   * Other applications cannot acquire the device while it is acquired at this level.
+   */
+  public final static int DISCL_EXCLUSIVE = 0x00000001;
+
+  /**
+   * Non-exclusive cooperative level. The application shares access to the device with other applications.
+   * Multiple applications can acquire the device at this level.
+   */
+  public final static int DISCL_NONEXCLUSIVE = 0x00000002;
+
+  /**
+   * Foreground cooperative level. The device is acquired only when the application is in the foreground.
+   * The device is automatically unacquired when the application moves to the background.
+   */
+  public final static int DISCL_FOREGROUND = 0x00000004;
+
+  /**
+   * Background cooperative level. The device can be acquired even when the application is in the background.
+   * This allows the application to continue receiving input while not in focus.
+   */
+  public final static int DISCL_BACKGROUND = 0x00000008;
+
+  /**
+   * No Windows key cooperative level. The Windows key is disabled while the device is acquired.
+   * This prevents the user from accidentally switching out of the application.
+   */
+  public final static int DISCL_NOWINKEY = 0x00000010;
+
+  final static int DIPROPRANGE_NOMIN = -2147483648;
+
+  final static int DIPROPRANGE_NOMAX = 2147483647;
+
+<span class="nc" id="L74">  final static MemorySegment DIPROP_BUFFERSIZE = MemorySegment.ofAddress(1L);</span>
+<span class="nc" id="L75">  static final MemorySegment DIPROP_AXISMODE = MemorySegment.ofAddress(2L);</span>
+<span class="nc" id="L76">  static final MemorySegment DIPROP_GRANULARITY = MemorySegment.ofAddress(3L);</span>
+<span class="nc" id="L77">  static final MemorySegment DIPROP_RANGE = MemorySegment.ofAddress(4L);</span>
+<span class="nc" id="L78">  static final MemorySegment DIPROP_DEADZONE = MemorySegment.ofAddress(5L);</span>
+<span class="nc" id="L79">  static final MemorySegment DIPROP_SATURATION = MemorySegment.ofAddress(6L);</span>
+<span class="nc" id="L80">  static final MemorySegment DIPROP_FFGAIN = MemorySegment.ofAddress(7L);</span>
+
+<span class="nc" id="L82">  static final GroupLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L83">          ADDRESS.withName(&quot;lpVtbl&quot;)</span>
+<span class="nc" id="L84">  ).withName(&quot;IDirectInputDevice8A&quot;);</span>
+
+<span class="nc" id="L86">  private static final VarHandle VH_lpVtbl = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;lpVtbl&quot;));</span>
+
+  public MemorySegment vtable;
+  final DIDEVICEINSTANCE deviceInstance;
+
+  List&lt;DIDEVICEOBJECTINSTANCE&gt; deviceObjects;
+
+  final InputDevice inputDevice;
+  int nativeComponentCount;
+  private MemorySegment vtablePointerSegment;
+
+  private MethodHandle enumObjects;
+  private MethodHandle acquire;
+  private MethodHandle unacquire;
+  private MethodHandle poll;
+  private MethodHandle setDataFormat;
+  private MethodHandle setCooperativeLevel;
+  private MethodHandle setProperty;
+  private MethodHandle getDeviceState;
+  private MethodHandle getDeviceData;
+  private MethodHandle getProperty;
+
+<span class="nc" id="L108">  IDirectInputDevice8(DIDEVICEINSTANCE deviceInstance, InputDevice inputDevice) {</span>
+<span class="nc" id="L109">    this.deviceInstance = deviceInstance;</span>
+<span class="nc" id="L110">    this.inputDevice = inputDevice;</span>
+<span class="nc" id="L111">  }</span>
+
+  public void create(MemorySegment segment, Arena memoryArena) {
+<span class="nc" id="L114">    var pointer = (MemorySegment) VH_lpVtbl.get(segment, 0);</span>
+
+<span class="nc" id="L116">    this.vtablePointerSegment = MemorySegment.ofAddress(pointer.address()).reinterpret(IDirectInputDevice8.$LAYOUT.byteSize(), memoryArena, null);</span>
+
+    // Dereference the pointer for the memory segment of the virtual table
+<span class="nc" id="L119">    this.vtable = MemorySegment.ofAddress(this.vtablePointerSegment.get(ADDRESS, 0).address()).reinterpret(Vtable.$LAYOUT.byteSize(), memoryArena, null);</span>
+
+    // init API method handles
+<span class="nc" id="L122">    var enumDevicesPointer = (MemorySegment) Vtable.VH_EnumObjects.get(this.vtable, 0);</span>
+<span class="nc" id="L123">    this.enumObjects = downcallHandle(enumDevicesPointer, Vtable.enumObjectsDescriptor);</span>
+
+<span class="nc" id="L125">    var acquirePointer = (MemorySegment) Vtable.VH_Acquire.get(this.vtable, 0);</span>
+<span class="nc" id="L126">    this.acquire = downcallHandle(acquirePointer, Vtable.acquireDescriptor);</span>
+
+<span class="nc" id="L128">    var unacquirePointer = (MemorySegment) Vtable.VH_Unacquire.get(this.vtable, 0);</span>
+<span class="nc" id="L129">    this.unacquire = downcallHandle(unacquirePointer, Vtable.unacquireDescriptor);</span>
+
+<span class="nc" id="L131">    var pollPointer = (MemorySegment) Vtable.VH_Poll.get(this.vtable, 0);</span>
+<span class="nc" id="L132">    this.poll = downcallHandle(pollPointer, Vtable.pollDescriptor);</span>
+
+<span class="nc" id="L134">    var setDataFormatPointer = (MemorySegment) Vtable.VH_SetDataFormat.get(this.vtable, 0);</span>
+<span class="nc" id="L135">    this.setDataFormat = downcallHandle(setDataFormatPointer, Vtable.setDataFormatDescriptor);</span>
+
+<span class="nc" id="L137">    var setCooperativeLevelPointer = (MemorySegment) Vtable.VH_SetCooperativeLevel.get(this.vtable, 0);</span>
+<span class="nc" id="L138">    this.setCooperativeLevel = downcallHandle(setCooperativeLevelPointer, Vtable.setCooperativeLevelDescriptor);</span>
+
+<span class="nc" id="L140">    var setPropertyPointer = (MemorySegment) Vtable.VH_SetProperty.get(this.vtable, 0);</span>
+<span class="nc" id="L141">    this.setProperty = downcallHandle(setPropertyPointer, Vtable.setPropertyDescriptor);</span>
+
+<span class="nc" id="L143">    var getDeviceStatePointer = (MemorySegment) Vtable.VH_GetDeviceState.get(this.vtable, 0);</span>
+<span class="nc" id="L144">    this.getDeviceState = downcallHandle(getDeviceStatePointer, Vtable.getDeviceStateDescriptor);</span>
+
+<span class="nc" id="L146">    var getDeviceDataPointer = (MemorySegment) Vtable.VH_GetDeviceData.get(this.vtable, 0);</span>
+<span class="nc" id="L147">    this.getDeviceData = downcallHandle(getDeviceDataPointer, Vtable.getDeviceDataDescriptor);</span>
+
+<span class="nc" id="L149">    var getPropertyPointer = (MemorySegment) Vtable.VH_GetProperty.get(this.vtable, 0);</span>
+<span class="nc" id="L150">    this.getProperty = downcallHandle(getPropertyPointer, Vtable.getPropertyDescriptor);</span>
+<span class="nc" id="L151">  }</span>
+
+  /**
+   * Enumerates the objects associated with the device (such as buttons or axes) and invokes the provided callback.
+   *
+   * @param lpCallback A {@link MemorySegment} containing a pointer to the callback function that will be invoked for each device object.
+   * @param dwFlags Flags that control how the enumeration of objects is done.
+   * @return An integer indicating the result of the operation. Non-zero values indicate errors.
+   * @throws Throwable If an exception occurs while enumerating the objects.
+   */
+  public int EnumObjects(MemorySegment lpCallback, int dwFlags) throws Throwable {
+<span class="nc" id="L162">    return (int) enumObjects.invokeExact(this.vtablePointerSegment, lpCallback, MemorySegment.NULL, dwFlags);</span>
+  }
+
+  /**
+   * Acquires the device, which allows the application to receive input from the device.
+   * This method must be called before polling or receiving input data from the device.
+   *
+   * @return If the method succeeds, the return value is {@link Result#DI_OK}.
+   * If the method fails, the return value can be one of the following error values:
+   * {@link Result#DIERR_INVALIDPARAM}, {@link Result#DIERR_NOTINITIALIZED}, {@link Result#DIERR_OTHERAPPHASPRIO}
+   * @throws Throwable If an exception occurs while acquiring the device.
+   */
+  public int Acquire() throws Throwable {
+<span class="nc" id="L175">    return (int) acquire.invokeExact(this.vtablePointerSegment);</span>
+  }
+
+  /**
+   * Releases the device, making it stop accepting input.
+   *
+   * @throws Throwable If an exception occurs while unacquiring the device.
+   */
+  public void Unacquire() throws Throwable {
+<span class="nc" id="L184">    unacquire.invokeExact(this.vtablePointerSegment);</span>
+<span class="nc" id="L185">  }</span>
+
+  /**
+   * Polls the device to retrieve the latest input data.
+   * This method is typically called in a loop to continually fetch the input state from the device.
+   *
+   * @return A {@code int} indicating the result of the operation. A value of {@link Result#DI_OK} indicates success.
+   *         Error codes such as {@link Result#DIERR_INPUTLOST} or {@link Result#DIERR_NOTACQUIRED} may be returned.
+   * @throws Throwable If an exception occurs while polling the device.
+   */
+  public int Poll() throws Throwable {
+<span class="nc" id="L196">    return (int) poll.invokeExact(this.vtablePointerSegment);</span>
+  }
+
+  /**
+   * Sets the data format for the device, which defines the structure of the data returned by the device.
+   * This method is called to specify the type and layout of the input data.
+   *
+   * @param lpdf A {@link MemorySegment} containing a pointer to a {@link DIDATAFORMAT} structure that defines the data format.
+   * @return A {@code int} indicating the result of the operation. A value of {@link Result#DI_OK} indicates success.
+   *         Possible error codes include {@link Result#DIERR_INVALIDPARAM} if the format is incorrect.
+   * @throws Throwable If an exception occurs while setting the data format.
+   */
+  public int SetDataFormat(MemorySegment lpdf) throws Throwable {
+<span class="nc" id="L209">    return (int) setDataFormat.invokeExact(this.vtablePointerSegment, lpdf);</span>
+  }
+
+  /**
+   * Sets the cooperative level for the device, which defines how the device interacts with other applications.
+   * The cooperative level also determines the device's access to input data (exclusive vs. shared access).
+   *
+   * @param hwnd A {@code long} representing the window handle (HWND) of the application acquiring the device.
+   * @param dwFlags Flags specifying the cooperative level, such as:
+   *                {@link #DISCL_FOREGROUND}, {@link #DISCL_BACKGROUND}, and {@link #DISCL_EXCLUSIVE}.
+   *                These flags determine whether the device is accessed exclusively or shared with other applications.
+   * @return A {@code int} indicating the result of the operation. A value of {@link Result#DI_OK} indicates success.
+   *         Possible error codes include {@link Result#DIERR_INVALIDPARAM} or {@link Result#DIERR_NOTACQUIRED}.
+   * @throws Throwable If an exception occurs while setting the cooperative level.
+   */
+  public int SetCooperativeLevel(long hwnd, int dwFlags) throws Throwable {
+<span class="nc" id="L225">    return (int) setCooperativeLevel.invokeExact(this.vtablePointerSegment, hwnd, dwFlags);</span>
+  }
+
+  /**
+   * Sets a property for the device, such as sensitivity or other device-specific properties.
+   * This method allows modifying configuration parameters of the device.
+   *
+   * @param rguidProp A {@link MemorySegment} containing the GUID of the property to set.
+   * @param pdiph A {@link MemorySegment} containing the property data.
+   * @return A {@code int} indicating the result of the operation. A value of {@link Result#DI_OK} indicates success.
+   *         Possible error codes include {@link Result#DIERR_INVALIDPARAM} or others.
+   * @throws Throwable If an exception occurs while setting the property.
+   */
+  public int SetProperty(MemorySegment rguidProp, MemorySegment pdiph) throws Throwable {
+<span class="nc" id="L239">    return (int) setProperty.invokeExact(this.vtablePointerSegment, rguidProp, pdiph);</span>
+  }
+
+  /**
+   * Retrieves the current state of the device, including the state of buttons, axes, and other input controls.
+   * This method provides a snapshot of the device state.
+   *
+   * @param cbData The size of the buffer that will hold the device state data.
+   * @param lpvData A {@link MemorySegment} that receives the device state data, typically structured as a series of input events.
+   * @return A {@code int} indicating the result of the operation. A value of {@link Result#DI_OK} indicates success.
+   *         Error codes such as {@link Result#DIERR_INPUTLOST} or {@link Result#DIERR_NOTACQUIRED} may be returned.
+   * @throws Throwable If an exception occurs while getting the device state.
+   */
+  public int GetDeviceState(int cbData, MemorySegment lpvData) throws Throwable {
+<span class="nc" id="L253">    return (int) getDeviceState.invokeExact(this.vtablePointerSegment, cbData, lpvData);</span>
+  }
+
+  /**
+   * Retrieves input data from the device, such as button presses or axis movements.
+   * This method processes and stores the input events in the specified buffer.
+   *
+   * @param rgdod A {@link MemorySegment} containing a structure that will hold the device input data.
+   * @param pdwInOut A {@link MemorySegment} specifying the size of the input data buffer.
+   * @return A {@code int} indicating the result of the operation. A value of {@link Result#DI_OK} indicates success.
+   *         Possible error codes include {@link Result#DIERR_INPUTLOST}, {@link Result#DIERR_NOTACQUIRED}, or others.
+   * @throws Throwable If an exception occurs while retrieving the device data.
+   */
+  public int GetDeviceData(MemorySegment rgdod, MemorySegment pdwInOut) throws Throwable {
+<span class="nc" id="L267">    return (int) getDeviceData.invokeExact(this.vtablePointerSegment, (int) DIDEVICEOBJECTDATA.$LAYOUT.byteSize(), rgdod, pdwInOut, 0);</span>
+  }
+
+  /**
+   * Retrieves a property from the device, such as configuration settings.
+   * This method fetches the current configuration or state of a specific property.
+   *
+   * @param rguidProp A {@link MemorySegment} containing the GUID of the property to retrieve.
+   * @param pdiph A {@link MemorySegment} that will hold the retrieved property data.
+   * @return A {@code int} indicating the result of the operation. A value of {@link Result#DI_OK} indicates success.
+   *         Possible error codes include {@link Result#DIERR_INVALIDPARAM} or others.
+   * @throws Throwable If an exception occurs while getting the property.
+   */
+  public int GetProperty(MemorySegment rguidProp, MemorySegment pdiph) throws Throwable {
+<span class="nc" id="L281">    return (int) getProperty.invokeExact(this.vtablePointerSegment, rguidProp, pdiph);</span>
+  }
+
+<span class="nc" id="L284">  static class Vtable {</span>
+<span class="nc" id="L285">    static final GroupLayout $LAYOUT = MemoryLayout.structLayout(</span>
+<span class="nc" id="L286">            ADDRESS.withName(&quot;QueryInterface&quot;),</span>
+<span class="nc" id="L287">            ADDRESS.withName(&quot;AddRef&quot;),</span>
+<span class="nc" id="L288">            ADDRESS.withName(&quot;Release&quot;),</span>
+<span class="nc" id="L289">            ADDRESS.withName(&quot;GetCapabilities&quot;),</span>
+<span class="nc" id="L290">            ADDRESS.withName(&quot;EnumObjects&quot;),</span>
+<span class="nc" id="L291">            ADDRESS.withName(&quot;GetProperty&quot;),</span>
+<span class="nc" id="L292">            ADDRESS.withName(&quot;SetProperty&quot;),</span>
+<span class="nc" id="L293">            ADDRESS.withName(&quot;Acquire&quot;),</span>
+<span class="nc" id="L294">            ADDRESS.withName(&quot;Unacquire&quot;),</span>
+<span class="nc" id="L295">            ADDRESS.withName(&quot;GetDeviceState&quot;),</span>
+<span class="nc" id="L296">            ADDRESS.withName(&quot;GetDeviceData&quot;),</span>
+<span class="nc" id="L297">            ADDRESS.withName(&quot;SetDataFormat&quot;),</span>
+<span class="nc" id="L298">            ADDRESS.withName(&quot;SetEventNotification&quot;),</span>
+<span class="nc" id="L299">            ADDRESS.withName(&quot;SetCooperativeLevel&quot;),</span>
+<span class="nc" id="L300">            ADDRESS.withName(&quot;GetObjectInfo&quot;),</span>
+<span class="nc" id="L301">            ADDRESS.withName(&quot;GetDeviceInfo&quot;),</span>
+<span class="nc" id="L302">            ADDRESS.withName(&quot;RunControlPanel&quot;),</span>
+<span class="nc" id="L303">            ADDRESS.withName(&quot;Initialize&quot;),</span>
+<span class="nc" id="L304">            ADDRESS.withName(&quot;CreateEffect&quot;),</span>
+<span class="nc" id="L305">            ADDRESS.withName(&quot;EnumEffects&quot;),</span>
+<span class="nc" id="L306">            ADDRESS.withName(&quot;GetEffectInfo&quot;),</span>
+<span class="nc" id="L307">            ADDRESS.withName(&quot;GetForceFeedbackState&quot;),</span>
+<span class="nc" id="L308">            ADDRESS.withName(&quot;SendForceFeedbackCommand&quot;),</span>
+<span class="nc" id="L309">            ADDRESS.withName(&quot;EnumCreatedEffectObjects&quot;),</span>
+<span class="nc" id="L310">            ADDRESS.withName(&quot;Escape&quot;),</span>
+<span class="nc" id="L311">            ADDRESS.withName(&quot;Poll&quot;),</span>
+<span class="nc" id="L312">            ADDRESS.withName(&quot;SendDeviceData&quot;),</span>
+<span class="nc" id="L313">            ADDRESS.withName(&quot;EnumEffectsInFile&quot;),</span>
+<span class="nc" id="L314">            ADDRESS.withName(&quot;WriteEffectToFile&quot;),</span>
+<span class="nc" id="L315">            ADDRESS.withName(&quot;BuildActionMap&quot;),</span>
+<span class="nc" id="L316">            ADDRESS.withName(&quot;SetActionMap&quot;),</span>
+<span class="nc" id="L317">            ADDRESS.withName(&quot;GetImageInfo&quot;)</span>
+<span class="nc" id="L318">    ).withName(&quot;IDirectInputDevice8AVtbl&quot;);</span>
+
+<span class="nc" id="L320">    private static final FunctionDescriptor enumObjectsDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS, JAVA_INT);</span>
+<span class="nc" id="L321">    private static final FunctionDescriptor acquireDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS);</span>
+<span class="nc" id="L322">    private static final FunctionDescriptor unacquireDescriptor = FunctionDescriptor.ofVoid(ADDRESS);</span>
+<span class="nc" id="L323">    private static final FunctionDescriptor pollDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS);</span>
+<span class="nc" id="L324">    private static final FunctionDescriptor setDataFormatDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS);</span>
+<span class="nc" id="L325">    private static final FunctionDescriptor setCooperativeLevelDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_LONG, JAVA_INT);</span>
+<span class="nc" id="L326">    private static final FunctionDescriptor setPropertyDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS);</span>
+<span class="nc" id="L327">    private static final FunctionDescriptor getDeviceStateDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, ADDRESS);</span>
+<span class="nc" id="L328">    private static final FunctionDescriptor getDeviceDataDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, ADDRESS, ADDRESS, JAVA_INT);</span>
+<span class="nc" id="L329">    private static final FunctionDescriptor getPropertyDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS);</span>
+
+<span class="nc" id="L331">    private static final VarHandle VH_EnumObjects = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;EnumObjects&quot;));</span>
+<span class="nc" id="L332">    private static final VarHandle VH_Acquire = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;Acquire&quot;));</span>
+<span class="nc" id="L333">    private static final VarHandle VH_Unacquire = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;Unacquire&quot;));</span>
+<span class="nc" id="L334">    private static final VarHandle VH_Poll = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;Poll&quot;));</span>
+<span class="nc" id="L335">    private static final VarHandle VH_SetDataFormat = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;SetDataFormat&quot;));</span>
+<span class="nc" id="L336">    private static final VarHandle VH_SetCooperativeLevel = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;SetCooperativeLevel&quot;));</span>
+<span class="nc" id="L337">    private static final VarHandle VH_SetProperty = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;SetProperty&quot;));</span>
+<span class="nc" id="L338">    private static final VarHandle VH_GetDeviceState = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;GetDeviceState&quot;));</span>
+<span class="nc" id="L339">    private static final VarHandle VH_GetDeviceData = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;GetDeviceData&quot;));</span>
+<span class="nc" id="L340">    private static final VarHandle VH_GetProperty = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement(&quot;GetProperty&quot;));</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

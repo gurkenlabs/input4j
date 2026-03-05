@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DI8DEVOBJECTTYPE.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.windows.dinput</a> &gt; <span class="el_source">DI8DEVOBJECTTYPE.java</span></div><h1>DI8DEVOBJECTTYPE.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.windows.dinput;
+
+import java.util.Arrays;
+
+/**
+ * The `DI8DEVOBJECTTYPE` enum represents various types of DirectInput device objects.
+ * Each enum constant corresponds to a specific object type GUID.
+ */
+<span class="nc" id="L9">enum DI8DEVOBJECTTYPE {</span>
+<span class="nc" id="L10">  XAxis(DIDEVICEOBJECTINSTANCE.GUID_XAxis),</span>
+<span class="nc" id="L11">  YAxis(DIDEVICEOBJECTINSTANCE.GUID_YAxis),</span>
+<span class="nc" id="L12">  ZAxis(DIDEVICEOBJECTINSTANCE.GUID_ZAxis),</span>
+<span class="nc" id="L13">  RxAxis(DIDEVICEOBJECTINSTANCE.GUID_RxAxis),</span>
+<span class="nc" id="L14">  RyAxis(DIDEVICEOBJECTINSTANCE.GUID_RyAxis),</span>
+<span class="nc" id="L15">  RzAxis(DIDEVICEOBJECTINSTANCE.GUID_RzAxis),</span>
+<span class="nc" id="L16">  Slider(DIDEVICEOBJECTINSTANCE.GUID_Slider),</span>
+<span class="nc" id="L17">  Button(DIDEVICEOBJECTINSTANCE.GUID_Button),</span>
+<span class="nc" id="L18">  Key(DIDEVICEOBJECTINSTANCE.GUID_Key),</span>
+<span class="nc" id="L19">  POV(DIDEVICEOBJECTINSTANCE.GUID_POV),</span>
+<span class="nc" id="L20">  Unknown(DIDEVICEOBJECTINSTANCE.GUID_Unknown);</span>
+
+  /**
+   * Cache the values array to avoid creating a new array each time values() is called.
+   */
+<span class="nc" id="L25">  static final DI8DEVOBJECTTYPE[] values = values();</span>
+
+  private final GUID typeGuid;
+
+<span class="nc" id="L29">  DI8DEVOBJECTTYPE(GUID typeGuid) {</span>
+<span class="nc" id="L30">    this.typeGuid = typeGuid;</span>
+<span class="nc" id="L31">  }</span>
+
+  /**
+   * Converts a GUID to its corresponding {@link DI8DEVOBJECTTYPE} enum constant.
+   *
+   * @param typeGuid The GUID of the device object type.
+   * @return The corresponding {@link DI8DEVOBJECTTYPE} enum constant, or {@code null} if no match is found.
+   */
+  public static DI8DEVOBJECTTYPE from(GUID typeGuid) {
+    //  The least-significant byte of the device type description code specifies the device type.
+<span class="nc" id="L41">    return Arrays.stream(DI8DEVOBJECTTYPE.values).filter(x -&gt; x.typeGuid.equals(typeGuid)).findFirst().orElse(null);</span>
+  }
+
+  /**
+   * Gets the GUID associated with this enum constant.
+   *
+   * @return The GUID of the device object type.
+   */
+  public GUID getTypeGuid() {
+<span class="nc" id="L50">    return typeGuid;</span>
+  }
+
+  /**
+   * Converts a POV value to a normalized float value.
+   *
+   * @param value The POV value.
+   * @return The normalized float value.
+   */
+  public static float getPOV(int value) {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">    if ((value &amp; 0xFFFF) == 0xFFFF)</span>
+<span class="nc" id="L61">      return 0.0f;</span>
+    // DirectInput returns POV directions in hundredths of degree clockwise from north
+<span class="nc" id="L63">    int slice = 360 * 100 / 16;</span>
+<span class="nc bnc" id="L64" title="All 4 branches missed.">    if (value &gt;= 0 &amp;&amp; value &lt; slice)</span>
+<span class="nc" id="L65">      return 0.25f;</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">    else if (value &lt; 3 * slice)</span>
+<span class="nc" id="L67">      return 0.375f;</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">    else if (value &lt; 5 * slice)</span>
+<span class="nc" id="L69">      return 0.50f;</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">    else if (value &lt; 7 * slice)</span>
+<span class="nc" id="L71">      return 0.625f;</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">    else if (value &lt; 9 * slice)</span>
+<span class="nc" id="L73">      return 0.75f;</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">    else if (value &lt; 11 * slice)</span>
+<span class="nc" id="L75">      return 0.875f;</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">    else if (value &lt; 13 * slice)</span>
+<span class="nc" id="L77">      return 1.0f;</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">    else if (value &lt; 15 * slice)</span>
+<span class="nc" id="L79">      return 0.125f;</span>
+    else
+<span class="nc" id="L81">      return 0.25f;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IOHIDElement.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">input4j</a> &gt; <a href="index.source.html" class="el_package">de.gurkenlabs.input4j.foreign.macos.iokit</a> &gt; <span class="el_source">IOHIDElement.java</span></div><h1>IOHIDElement.java</h1><pre class="source lang-java linenums">package de.gurkenlabs.input4j.foreign.macos.iokit;
+
+import de.gurkenlabs.input4j.ComponentType;
+import de.gurkenlabs.input4j.InputComponent;
+import de.gurkenlabs.input4j.components.Axis;
+import de.gurkenlabs.input4j.components.Button;
+
+/**
+ * Represents an IOHIDElement, which is a control element of an IOHIDDevice on macOS.
+ * This class encapsulates the properties and values of an HID element.
+ */
+<span class="nc" id="L12">class IOHIDElement {</span>
+  /**
+   * The memory address of the HID element.
+   * Corresponds to the `IOHIDElementRef` in native C.
+   */
+  long address;
+
+  /**
+   * The name of the HID element.
+   * Corresponds to the `kIOHIDElementNameKey` in native C.
+   */
+  String name;
+
+  /**
+   * The type of the HID element.
+   * Corresponds to the `kIOHIDElementTypeKey` in native C.
+   */
+  IOHIDElementType type;
+
+  /**
+   * The usage of the HID element, which defines the element's specific function.
+   * Corresponds to the `kIOHIDElementUsageKey` in native C.
+   */
+  IOHIDElementUsage usage;
+
+  /**
+   * The usage page of the HID element, which groups related usages together.
+   * Corresponds to the `kIOHIDElementUsagePageKey` in native C.
+   */
+  IOHIDElementUsagePage usagePage;
+
+  /**
+   * The minimum value that the HID element can report.
+   * Corresponds to the `kIOHIDElementMinKey` in native C.
+   */
+  int min;
+
+  /**
+   * The maximum value that the HID element can report.
+   * Corresponds to the `kIOHIDElementMaxKey` in native C.
+   */
+  int max;
+
+  /**
+   * The physical minimum value that the HID element can report.
+   * Corresponds to the `kIOHIDElementPhysicalMinKey` in native C.
+   */
+  int physicalMin;
+
+  /**
+   * The physical maximum value that the HID element can report.
+   * Corresponds to the `kIOHIDElementPhysicalMaxKey` in native C.
+   */
+  int physicalMax;
+
+  /**
+   * The unit of measurement for the HID element's value.
+   * Corresponds to the `kIOHIDElementUnitKey` in native C.
+   */
+  int unit;
+
+  /**
+   * The unit exponent for the HID element's value.
+   * Corresponds to the `kIOHIDElementUnitExponentKey` in native C.
+   */
+  int unitExponent;
+
+  /**
+   * The size of the report for the HID element.
+   * Corresponds to the `kIOHIDElementReportSizeKey` in native C.
+   */
+  int reportSize;
+
+  int currentValue;
+
+  String getName() {
+<span class="nc bnc" id="L88" title="All 2 branches missed.">    if (this.name != null) {</span>
+<span class="nc" id="L89">      return this.name;</span>
+    }
+
+<span class="nc bnc" id="L92" title="All 4 branches missed.">    if (this.getUsage() != null &amp;&amp; this.getUsage() != IOHIDElementUsage.UNDEFINED) {</span>
+<span class="nc" id="L93">      return this.getUsage().toString();</span>
+    }
+
+<span class="nc" id="L96">    return &quot;&quot;;</span>
+  }
+
+  /**
+   * Returns the usage of the HID element.
+   * If the element is not a button and the usage is less than 32, returns `IOHIDElementUsage.UNDEFINED`.
+   *
+   * @return the usage of the HID element
+   */
+  IOHIDElementUsage getUsage() {
+<span class="nc bnc" id="L106" title="All 4 branches missed.">    if (this.type != IOHIDElementType.BUTTON &amp;&amp; this.usage.getUsage() &lt; IOHIDElementUsage.BUTTON_32.getUsage()) {</span>
+<span class="nc" id="L107">      return IOHIDElementUsage.UNDEFINED;</span>
+    }
+<span class="nc" id="L109">    return this.usage;</span>
+  }
+
+  @Override
+  public String toString() {
+<span class="nc" id="L114">    return &quot; name: '&quot; + getName() + &quot;'&quot; +</span>
+<span class="nc" id="L115">            &quot;, usage: &quot; + getUsage() +</span>
+            &quot;, type: &quot; + type + &quot; (&quot; + usagePage + &quot;)&quot; +
+            &quot;, min: '&quot; + min +
+            &quot;, max: '&quot; + max;
+  }
+
+  /**
+   * Returns the identifier of the HID element.
+   *
+   * @return the identifier of the HID element
+   */
+  public InputComponent.ID getIdentifier() {
+<span class="nc bnc" id="L127" title="All 41 branches missed.">    return switch (this.getUsage()) {</span>
+<span class="nc" id="L128">      case BUTTON_1 -&gt; Button.BUTTON_0;</span>
+<span class="nc" id="L129">      case BUTTON_2 -&gt; Button.BUTTON_1;</span>
+<span class="nc" id="L130">      case BUTTON_3 -&gt; Button.BUTTON_2;</span>
+<span class="nc" id="L131">      case BUTTON_4 -&gt; Button.BUTTON_3;</span>
+<span class="nc" id="L132">      case BUTTON_5 -&gt; Button.BUTTON_4;</span>
+<span class="nc" id="L133">      case BUTTON_6 -&gt; Button.BUTTON_5;</span>
+<span class="nc" id="L134">      case BUTTON_7 -&gt; Button.BUTTON_6;</span>
+<span class="nc" id="L135">      case BUTTON_8 -&gt; Button.BUTTON_7;</span>
+<span class="nc" id="L136">      case BUTTON_9 -&gt; Button.BUTTON_8;</span>
+<span class="nc" id="L137">      case BUTTON_10 -&gt; Button.BUTTON_9;</span>
+<span class="nc" id="L138">      case BUTTON_11 -&gt; Button.BUTTON_10;</span>
+<span class="nc" id="L139">      case BUTTON_12 -&gt; Button.BUTTON_11;</span>
+<span class="nc" id="L140">      case BUTTON_13 -&gt; Button.BUTTON_12;</span>
+<span class="nc" id="L141">      case BUTTON_14 -&gt; Button.BUTTON_13;</span>
+<span class="nc" id="L142">      case BUTTON_15 -&gt; Button.BUTTON_14;</span>
+<span class="nc" id="L143">      case BUTTON_16 -&gt; Button.BUTTON_15;</span>
+<span class="nc" id="L144">      case BUTTON_17 -&gt; Button.BUTTON_16;</span>
+<span class="nc" id="L145">      case BUTTON_18 -&gt; Button.BUTTON_17;</span>
+<span class="nc" id="L146">      case BUTTON_19 -&gt; Button.BUTTON_18;</span>
+<span class="nc" id="L147">      case BUTTON_20 -&gt; Button.BUTTON_19;</span>
+<span class="nc" id="L148">      case BUTTON_21 -&gt; Button.BUTTON_20;</span>
+<span class="nc" id="L149">      case BUTTON_22 -&gt; Button.BUTTON_21;</span>
+<span class="nc" id="L150">      case BUTTON_23 -&gt; Button.BUTTON_22;</span>
+<span class="nc" id="L151">      case BUTTON_24 -&gt; Button.BUTTON_23;</span>
+<span class="nc" id="L152">      case BUTTON_25 -&gt; Button.BUTTON_24;</span>
+<span class="nc" id="L153">      case BUTTON_26 -&gt; Button.BUTTON_25;</span>
+<span class="nc" id="L154">      case BUTTON_27 -&gt; Button.BUTTON_26;</span>
+<span class="nc" id="L155">      case BUTTON_28 -&gt; Button.BUTTON_27;</span>
+<span class="nc" id="L156">      case BUTTON_29 -&gt; Button.BUTTON_28;</span>
+<span class="nc" id="L157">      case BUTTON_30 -&gt; Button.BUTTON_29;</span>
+<span class="nc" id="L158">      case BUTTON_31 -&gt; Button.BUTTON_30;</span>
+<span class="nc" id="L159">      case BUTTON_32 -&gt; Button.BUTTON_31;</span>
+<span class="nc" id="L160">      case X -&gt; Axis.AXIS_X;</span>
+<span class="nc" id="L161">      case Y -&gt; Axis.AXIS_Y;</span>
+<span class="nc" id="L162">      case Z -&gt; Axis.AXIS_Z;</span>
+<span class="nc" id="L163">      case RX -&gt; Axis.AXIS_RX;</span>
+<span class="nc" id="L164">      case RY -&gt; Axis.AXIS_RY;</span>
+<span class="nc" id="L165">      case RZ -&gt; Axis.AXIS_RZ;</span>
+<span class="nc" id="L166">      case SLIDER -&gt; Axis.AXIS_SLIDER;</span>
+<span class="nc" id="L167">      case HAT_SWITCH -&gt; Axis.AXIS_DPAD;</span>
+<span class="nc" id="L168">      default -&gt; new InputComponent.ID(ComponentType.UNKNOWN, InputComponent.ID.getNextId(ComponentType.UNKNOWN, 0), this.usage.name());</span>
+    };
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
