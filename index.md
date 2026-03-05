@@ -77,7 +77,31 @@ device.onAxisChanged(XInput.Axis.LEFT_X, value ->
   </div>
 </div>
 
-<div class="section" id="features">
+<div class="section section-alt" id="features">
+  <div class="container">
+    <h2 class="section-title">Features</h2>
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-value">100%</div>
+        <div class="stat-label">Java Native</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">0</div>
+        <div class="stat-label">Native Dependencies</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">3</div>
+        <div class="stat-label">Platforms</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">MIT</div>
+        <div class="stat-label">Open Source</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
   <div class="container">
     <h2 class="section-title">Why Use input4j?</h2>
     <div class="cards">
@@ -133,30 +157,6 @@ device.onAxisChanged(XInput.Axis.LEFT_X, value ->
         <div class="card-icon">🍎</div>
         <h3 class="card-title">macOS</h3>
         <p class="card-text">IOKit HID framework integration for reliable gamepad detection on Apple Silicon and Intel Macs.</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="section section-alt">
-  <div class="container">
-    <h2 class="section-title">Features</h2>
-    <div class="stats">
-      <div class="stat-card">
-        <div class="stat-value">100%</div>
-        <div class="stat-label">Java Native</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">0</div>
-        <div class="stat-label">Native Dependencies</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">3</div>
-        <div class="stat-label">Platforms</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">MIT</div>
-        <div class="stat-label">Open Source</div>
       </div>
     </div>
   </div>
