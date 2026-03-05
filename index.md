@@ -69,9 +69,10 @@ description: A lightweight, cross-platform Java library for unified input device
     <h1 class="hero-title">input4j</h1>
     <p class="hero-subtitle">Lightweight, cross-platform Java library for unified gamepad and joystick input handling</p>
     <div class="hero-badges">
-      <span class="badge" aria-label="Windows">🪟</span>
-      <span class="badge" aria-label="Linux">🐧</span>
-      <span class="badge" aria-label="macOS">🍎</span>
+      <span class="badge" aria-label="Windows">🪟 Windows</span>
+      <span class="badge" aria-label="Linux">🐧 Linux</span>
+      <span class="badge" aria-label="macOS">🍎 macOS</span>
+      <br>
       <span class="badge" aria-label="Java 22+">Java 22+</span>
       <span class="badge" aria-label="No Native Dependencies">No Native Dependencies</span>
       <span class="badge" aria-label="MIT License">MIT License</span>
@@ -79,7 +80,7 @@ description: A lightweight, cross-platform Java library for unified input device
     <div class="hero-actions">
       <a href="#quickstart" class="btn btn-primary">Get Started</a>
       <a href="https://github.com/gurkenlabs/input4j" class="btn btn-secondary" target="_blank" rel="noopener">View on GitHub</a>
-      <a href="/guides" class="btn btn-ghost">Read Guides</a>
+      <a href="{{ '/guides' | relative_url }}" class="btn btn-ghost">Read Guides</a>
     </div>
   </div>
 </div>
