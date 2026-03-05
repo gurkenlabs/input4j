@@ -1,5 +1,6 @@
 title: input4j
 description: Lightweight, cross-platform Java input device library
-theme: jekyll-theme-cayman
+url: "https://gurkenlabs.github.io"
+baseurl: "/input4j"
 include:
   - assets

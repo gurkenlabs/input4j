@@ -37,7 +37,7 @@ title: input4j
   </div>
 </div>
 
-<div class="features-section" id="getting-started">
+<div class="features-section" id="features">
   <div class="container">
     <h2 class="section-title">Why input4j?</h2>
     <div class="features-grid">
@@ -65,7 +65,7 @@ title: input4j
   </div>
 </div>
 
-<div class="quick-start-section">
+<div class="quick-start-section" id="getting-started">
   <div class="container">
     <h2 class="section-title">Quick Start</h2>
     <div class="code-snippet">

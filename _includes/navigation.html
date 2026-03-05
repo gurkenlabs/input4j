@@ -2,21 +2,21 @@
   <div class="nav-container">
     <div class="nav-logo">
       <span class="logo-icon">🎮</span>
-      <span class="logo-text">input4j</span>
+      <a href="{{ '/' | relative_url }}" class="nav-logo-link">input4j</a>
     </div>
     
     <ul class="nav-menu">
       <li class="nav-item">
-        <a href="/" class="nav-link active">Home</a>
+        <a href="{{ '/' | relative_url }}" class="nav-link{% if page.url == '/' %} active{% endif %}">Home</a>
       </li>
       <li class="nav-item">
-        <a href="#getting-started" class="nav-link">Getting Started</a>
+        <a href="{{ '#getting-started' | relative_url }}" class="nav-link">Getting Started</a>
       </li>
       <li class="nav-item">
-        <a href="#features" class="nav-link">Features</a>
+        <a href="{{ '#features' | relative_url }}" class="nav-link">Features</a>
       </li>
       <li class="nav-item">
-        <a href="/guides" class="nav-link">Guides</a>
+        <a href="{{ '/guides' | relative_url }}" class="nav-link">Guides</a>
       </li>
       <li class="nav-item">
         <a href="https://github.com/gurkenlabs/input4j" class="nav-link">GitHub</a>
@@ -39,16 +39,16 @@
   <div class="nav-mobile" id="mobileNav">
     <ul class="mobile-menu">
       <li class="mobile-item">
-        <a href="/" class="mobile-link">Home</a>
+        <a href="{{ '/' | relative_url }}" class="mobile-link">Home</a>
       </li>
       <li class="mobile-item">
-        <a href="#getting-started" class="mobile-link">Getting Started</a>
+        <a href="{{ '#getting-started' | relative_url }}" class="mobile-link">Getting Started</a>
       </li>
       <li class="mobile-item">
-        <a href="#features" class="mobile-link">Features</a>
+        <a href="{{ '#features' | relative_url }}" class="mobile-link">Features</a>
       </li>
       <li class="mobile-item">
-        <a href="/guides" class="mobile-link">Guides</a>
+        <a href="{{ '/guides' | relative_url }}" class="mobile-link">Guides</a>
       </li>
       <li class="mobile-item">
         <a href="https://github.com/gurkenlabs/input4j" class="mobile-link">GitHub</a>
