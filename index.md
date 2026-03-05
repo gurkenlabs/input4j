@@ -12,7 +12,7 @@ description: A lightweight, cross-platform Java library for unified input device
       <span class="badge">Windows</span>
       <span class="badge">Linux</span>
       <span class="badge">macOS</span>
-      <span class="badge">Java 21+</span>
+      <span class="badge">Java 22+</span>
       <span class="badge">No Native Dependencies</span>
       <span class="badge">MIT License</span>
     </div>
@@ -89,7 +89,7 @@ device.onAxisChanged(XInput.Axis.LEFT_X, value ->
       <div class="card">
         <div class="card-icon">⚡</div>
         <h3 class="card-title">Modern Java API</h3>
-        <p class="card-text">Leverages the Foreign Function & Memory API (Java 21+) for high-performance native access without JNI complexity.</p>
+        <p class="card-text">Leverages the Foreign Function & Memory API (Java 22+) for high-performance native access without JNI complexity.</p>
       </div>
       <div class="card">
         <div class="card-icon">🎮</div>

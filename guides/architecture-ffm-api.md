@@ -64,7 +64,7 @@ keywords: FFM API architecture, Java native input, JNI alternative, MemorySegmen
 
     <div class="guide-section" id="ffm-basics">
       <h2>FFM API Basics</h2>
-      <p>The Foreign Function & Memory API (incubator in Java 21, standard in Java 22+) provides two key capabilities:</p>
+      <p>The Foreign Function & Memory API (standard in Java 22+) provides two key capabilities:</p>
       
       <div class="feature-list">
         <div class="feature-item">

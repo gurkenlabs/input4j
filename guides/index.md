@@ -80,7 +80,7 @@ sudo usermod -a -G input $USER
       
       <div class="faq-item">
         <h4>What Java version is required?</h4>
-        <p>input4j requires <strong>Java 21</strong> or later because it uses the Foreign Function & Memory API (FFM API) for native system calls. The FFM API was finalized as a standard feature in Java 22, but has been available as an incubating feature since Java 21.</p>
+        <p>input4j requires <strong>Java 22</strong> or later because it uses the Foreign Function & Memory API (FFM API) for native system calls. The FFM API was standardized in Java 22.</p>
         <p>Make sure you're using a JDK distribution that includes the FFM API, such as:</p>
         <ul>
           <li>Oracle JDK 21+</li>
