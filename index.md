@@ -72,7 +72,7 @@ description: A lightweight, cross-platform Java library for unified input device
         <span class="code-lang">Gradle</span>
         <button class="code-copy" onclick="copyCode(this)">Copy</button>
       </div>
-      <pre><code>dependencies {
+      <pre><code class="language-gradle">dependencies {
     implementation 'de.gurkenlabs:input4j:1.0.0'
 }</code></pre>
     </div>
@@ -82,7 +82,7 @@ description: A lightweight, cross-platform Java library for unified input device
         <span class="code-lang">Maven</span>
         <button class="code-copy" onclick="copyCode(this)">Copy</button>
       </div>
-      <pre><code>&lt;dependency&gt;
+      <pre><code class="language-markup">&lt;dependency&gt;
     &lt;groupId&gt;de.gurkenlabs&lt;/groupId&gt;
     &lt;artifactId&gt;input4j&lt;/artifactId&gt;
     &lt;version&gt;1.0.0&lt;/version&gt;
@@ -94,7 +94,7 @@ description: A lightweight, cross-platform Java library for unified input device
         <span class="code-lang">Java - Initialize</span>
         <button class="code-copy" onclick="copyCode(this)">Copy</button>
       </div>
-      <pre><code>try (var devices = InputDevices.init()) {
+      <pre><code class="language-java">try (var devices = InputDevices.init()) {
     for (var device : devices.getAll()) {
         System.out.println("Found: " + device.getName());
     }
@@ -106,7 +106,7 @@ description: A lightweight, cross-platform Java library for unified input device
         <span class="code-lang">Java - Handle Events</span>
         <button class="code-copy" onclick="copyCode(this)">Copy</button>
       </div>
-      <pre><code>device.onButtonPressed(XInput.Button.A, () -> 
+      <pre><code class="language-java">device.onButtonPressed(XInput.Button.A, () -> 
     System.out.println("A pressed!"));
 
 device.onAxisChanged(XInput.Axis.LEFT_X, value -> 
