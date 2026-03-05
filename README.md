@@ -4,12 +4,19 @@
 [![License](https://img.shields.io/github/license/gurkenlabs/input4j)](LICENSE)
 [![Java](https://img.shields.io/badge/java-22+-orange)]()
 
-**Input4j** is a cutting-edge, pure Java input library leveraging the **Foreign Function & Memory API** (FFM API), offering cross-platform support, high performance, flexible controller and gamepad input handling, and future-proofing without the need for additional native artifacts, making it the **best choice for Java developers**.
+**Input4j** is a modern Java input library built on the **Foreign Function & Memory API (FFM)**.  
+It provides fast, cross-platform controller and gamepad input without requiring JNI or native binaries.
 
-Join the revolution in Java input handling with Input4j and experience unparalleled performance and ease of use!
+## 🚀 Features
+- 🎮 Game controller input support
+- ⚡ Native performance via Java FFM API
+- 🧩 No JNI required
+- 🖥 Cross-platform (Windows / Linux / macOS)
+- 📦 Available on Maven Central
+- 🧪 Lightweight and dependency-free
 
-## 🚀 Key Features
-- **Cross-Platform Input handling**: Fully compatible with Windows, Linux, and OSX (in progress).
+## Why input4j?
+- **Cross-Platform Input handling**: Fully compatible with Windows, Linux, and OSX.
 - **Performance**: Optimized for high performance with minimal overhead.
 - **Flexible Input Handling**: Supports both polling and event-based input mechanisms.
 - **Simplicity**: Easy to integrate and use with straightforward APIs.
@@ -25,14 +32,24 @@ It is a more modern and efficient JNI alternative and an easy way to interact wi
 - Ease of Use: A more straightforward and modern API makes it easier to write and maintain code.
 - Future-Proof: Built on the latest Java technologies, ensuring long-term support and compatibility with future Java versions.
 
-
 ## 📦️ Installation
+
+### Gradle
 Add the following dependency to your `build.gradle` file to start using Input4j:
 
 ```groovy
 dependencies {
   implementation 'de.gurkenlabs:input4j:1.0.0'
 }
+```
+### Maven
+
+```xml
+<dependency>
+  <groupId>de.gurkenlabs</groupId>
+  <artifactId>input4j</artifactId>
+  <version>1.0.0</version>
+</dependency>
 ```
 
 ## 💻 Quick start guide
@@ -71,6 +88,12 @@ try (var devices = InputDevices.init()) {
   }
 }
 ```
+
+### Used By
+
+input4j is the input system used by the
+[LITIENGINE](https://litiengine.com) Java game engine.
+
 
 ## 🔌 Technical Details
 
