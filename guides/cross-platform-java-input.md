@@ -306,7 +306,7 @@ public class ModernInput {
             <h3>Add Dependency</h3>
             <div class="code-block">
               <pre><code class="language-groovy">dependencies {
-    implementation 'de.gurkenlabs:input4j:1.0.0'
+    implementation 'de.gurkenlabs:input4j:1.1.1'
 }</code></pre>
             </div>
           </div>
