@@ -104,13 +104,29 @@ a:hover {
   color: var(--accent);
 }
 
+.nav-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+}
+
 .logo-text {
   font-weight: 800;
+  background: linear-gradient(180deg, #ffffff 0%, #c9d1d9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
 }
 
 .logo-accent {
   color: var(--accent);
   font-weight: 800;
+  background: linear-gradient(180deg, #58a6ff 0%, #1f6feb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 1px 0 rgba(31, 111, 235, 0.3);
 }
 
 .nav-menu {
@@ -228,10 +244,26 @@ a:hover {
   background: radial-gradient(ellipse at top, #1f2937 0%, var(--bg-primary) 70%);
 }
 
+.hero-logo {
+  width: 128px;
+  height: 128px;
+  margin-bottom: var(--space-lg);
+  border-radius: 16px;
+  filter: drop-shadow(0 0 20px rgba(88, 166, 255, 0.6)) drop-shadow(0 0 40px rgba(88, 166, 255, 0.3));
+  transition: filter 0.3s ease;
+}
+
+.hero-logo:hover {
+  filter: drop-shadow(0 0 30px rgba(88, 166, 255, 0.8)) drop-shadow(0 0 60px rgba(88, 166, 255, 0.4));
+}
+
 .hero-title {
   font-size: 3rem;
   font-weight: 800;
-  color: var(--text-primary);
+  background: linear-gradient(180deg, #ffffff 0%, #c9d1d9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: var(--space-md);
   line-height: 1.2;
 }

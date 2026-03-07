@@ -41,7 +41,8 @@
     </div>
     
     <div class="footer-bottom">
-      <p>&copy; 2024 input4j. Licensed under MIT License.</p>
+      <p>&copy; <span id="year"></span> input4j. Licensed under MIT License.</p>
     </div>
   </div>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </footer>

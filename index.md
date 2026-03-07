@@ -14,7 +14,7 @@ description: A lightweight, cross-platform Java library for unified input device
     {
       "@type": "HowToStep",
       "name": "Add input4j dependency",
-      "text": "Add input4j to your project using Gradle or Maven. For Gradle, add 'implementation de.gurkenlabs:input4j:1.0.0' to your dependencies. For Maven, add the dependency XML to your pom.xml.",
+      "text": "Add input4j to your project using Gradle or Maven. For Gradle, add 'implementation de.gurkenlabs:input4j:1.1.1' to your dependencies. For Maven, add the dependency XML to your pom.xml.",
       "url": "https://gurkenlabs.github.io/input4j/#quickstart",
       "position": 1
     },
@@ -66,7 +66,8 @@ description: A lightweight, cross-platform Java library for unified input device
 
 <div class="hero">
   <div class="container">
-    <h1 class="hero-title">input4j</h1>
+    <img src="{{ '/assets/input4j_logo_x256.png' | relative_url }}" alt="input4j logo" class="hero-logo">
+    <h1 class="hero-title">input<span class="logo-accent">4j</span></h1>
     <p class="hero-subtitle">Lightweight, cross-platform Java library for unified gamepad and joystick input handling</p>
     <div class="hero-badges">
       <span class="badge" aria-label="Windows">🪟 Windows</span>
@@ -96,7 +97,7 @@ description: A lightweight, cross-platform Java library for unified input device
         <button class="code-copy" onclick="copyCode(this)">Copy</button>
       </div>
       <pre><code class="language-gradle">dependencies {
-    implementation 'de.gurkenlabs:input4j:1.0.0'
+    implementation 'de.gurkenlabs:input4j:1.1.1'
 }</code></pre>
     </div>
     
@@ -108,7 +109,7 @@ description: A lightweight, cross-platform Java library for unified input device
       <pre><code class="language-markup">&lt;dependency&gt;
     &lt;groupId&gt;de.gurkenlabs&lt;/groupId&gt;
     &lt;artifactId&gt;input4j&lt;/artifactId&gt;
-    &lt;version&gt;1.0.0&lt;/version&gt;
+    &lt;version&gt;1.1.1&lt;/version&gt;
 &lt;/dependency&gt;</code></pre>
     </div>
     
