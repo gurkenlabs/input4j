@@ -2,6 +2,7 @@
 layout: default
 title: input4j - Cross-Platform Java Gamepad & Joystick Library
 description: A lightweight, cross-platform Java library for unified input device handling. Supports Windows, Linux, and macOS with no native dependencies.
+keywords: input4j, java gamepad input, java controller library, java joystick input, java game controller api, gamepad java, joystick java, game controller java, xinput java, directinput java, evdev java
 ---
 
 <script type="application/ld+json">
@@ -69,6 +70,7 @@ description: A lightweight, cross-platform Java library for unified input device
     <img src="{{ '/assets/input4j_logo_x256.png' | relative_url }}" alt="input4j logo" class="hero-logo">
     <h1 class="hero-title">input<span class="logo-accent">4j</span></h1>
     <p class="hero-subtitle">Lightweight, cross-platform Java library for unified gamepad and joystick input handling</p>
+    <p class="hero-subtitle" style="font-size: 1rem; color: var(--text-secondary); margin-top: -8px; margin-bottom: var(--space-lg);">The modern solution for <strong>java gamepad input</strong> and <strong>java joystick input</strong> - no native dependencies required.</p>
     <div class="hero-badges">
       <span class="badge" aria-label="Windows">🪟 Windows</span>
       <span class="badge" aria-label="Linux">🐧 Linux</span>
@@ -81,7 +83,7 @@ description: A lightweight, cross-platform Java library for unified input device
     <div class="hero-actions">
       <a href="#quickstart" class="btn btn-primary">Get Started</a>
       <a href="https://github.com/gurkenlabs/input4j" class="btn btn-secondary" target="_blank" rel="noopener">View on GitHub</a>
-      <a href="{{ '/guides' | relative_url }}" class="btn btn-ghost">Read Guides</a>
+      <a href="{{ '/docs' | relative_url }}" class="btn btn-ghost">Read Docs</a>
     </div>
   </div>
 </div>
@@ -180,12 +182,12 @@ device.onAxisChanged(XInput.Axis.LEFT_X, value ->
       <div class="card">
         <div class="card-icon" aria-label="Unified Input API">🎮</div>
         <h3 class="card-title">Unified Input API</h3>
-        <p class="card-text">Single consistent API for gamepads, joysticks, and other input devices. Supports XInput, DirectInput, evdev, and IOKit/HID.</p>
+        <p class="card-text">Single consistent <strong>java game controller API</strong> for gamepads, joysticks, and other input devices. Supports XInput, DirectInput, evdev, and IOKit/HID - the ultimate <strong>java controller library</strong> solution.</p>
       </div>
       <div class="card">
         <div class="card-icon" aria-label="No Native Dependencies">🔌</div>
         <h3 class="card-title">No Native Dependencies</h3>
-        <p class="card-text">No .dll, .so, or .dylib files to manage. Simply add the JAR and start coding. Perfect for distribution.</p>
+        <p class="card-text">No .dll, .so, or .dylib files to manage. Simply add the JAR and start coding. Perfect for distribution. The cleanest way to add <strong>java joystick input</strong> to your game.</p>
       </div>
       <div class="card">
         <div class="card-icon" aria-label="Event-Based & Polling">📡</div>

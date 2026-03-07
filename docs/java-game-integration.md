@@ -19,8 +19,8 @@ keywords: Java game gamepad, game controller Java, input handling game Java, Jav
     {
       "@type": "ListItem",
       "position": 2,
-      "name": "Guides",
-      "item": "https://gurkenlabs.github.io/input4j/guides/"
+      "name": "Docs",
+      "item": "https://gurkenlabs.github.io/input4j/docs/"
     },
     {
       "@type": "ListItem",
@@ -62,14 +62,14 @@ keywords: Java game gamepad, game controller Java, input handling game Java, Jav
     <div class="guide-section" id="setup">
       <h2>Setting up input4j</h2>
       <p>First, add input a dependency to your project:</p>
-4j as      
+<p>For Gradle projects:</p>      
       <div class="code-block">
         <div class="code-header">
           <span class="code-lang">Gradle</span>
           <button class="code-copy" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code class="language-gradle">dependencies {
-    implementation 'de.gurkenlabs:input4j:1.0.0'
+    implementation 'de.gurkenlabs:input4j:1.1.1'
 }</code></pre>
       </div>
       
@@ -83,7 +83,7 @@ keywords: Java game gamepad, game controller Java, input handling game Java, Jav
         <pre><code class="language-markup">&lt;dependency&gt;
     &lt;groupId&gt;de.gurkenlabs&lt;/groupId&gt;
     &lt;artifactId&gt;input4j&lt;/artifactId&gt;
-    &lt;version&gt;1.0.0&lt;/version&gt;
+    &lt;version&gt;1.1.1&lt;/version&gt;
 &lt;/dependency&gt;</code></pre>
       </div>
     </div>

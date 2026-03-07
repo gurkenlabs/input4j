@@ -19,8 +19,8 @@ keywords: FFM API architecture, Java native input, JNI alternative, MemorySegmen
     {
       "@type": "ListItem",
       "position": 2,
-      "name": "Guides",
-      "item": "https://gurkenlabs.github.io/input4j/guides/"
+      "name": "Docs",
+      "item": "https://gurkenlabs.github.io/input4j/docs/"
     },
     {
       "@type": "ListItem",

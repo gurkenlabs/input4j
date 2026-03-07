@@ -1,8 +1,8 @@
 ---
 layout: default
-title: Guides
+title: Docs
 description: Complete documentation for input4j - cross-platform Java gamepad and joystick input library. Learn how to use the Foreign Function & Memory API for native input handling.
-keywords: input4j guide, Java gamepad tutorial, game controller Java, FFM API input, cross-platform Java input, XInput Java, DirectInput Java, evdev Java
+keywords: input4j guide, Java gamepad tutorial, game controller Java, FFM API input, cross-platform Java input, XInput Java, DirectInput Java, evdev Java, java gamepad input, java controller library, java joystick input, java game controller api
 ---
 
 <script type="application/ld+json">
@@ -84,8 +84,8 @@ keywords: input4j guide, Java gamepad tutorial, game controller Java, FFM API in
     {
       "@type": "ListItem",
       "position": 2,
-      "name": "Guides",
-      "item": "https://gurkenlabs.github.io/input4j/guides/"
+      "name": "Docs",
+      "item": "https://gurkenlabs.github.io/input4j/docs/"
     }
   ]
 }
@@ -100,27 +100,52 @@ keywords: input4j guide, Java gamepad tutorial, game controller Java, FFM API in
 
 <div class="section">
   <div class="container">
+    <h2 class="section-title">What is input4j?</h2>
+    <p class="section-subtitle">input4j is a modern <strong>java gamepad input</strong> library that provides unified game controller support across Windows, Linux, and macOS. It's the ideal <strong>java controller library</strong> for game developers who want to add <strong>java joystick input</strong> support without the complexity of native dependencies.</p>
+    
+    <div class="cards" style="margin-top: var(--space-xl);">
+      <div class="card">
+        <div class="card-icon">🎮</div>
+        <h3 class="card-title">Java Game Controller API</h3>
+        <p class="card-text">A clean, intuitive API for handling gamepad and joystick input in Java. Works with Xbox, PlayStation, and generic USB controllers.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h3 class="card-title">No Native Dependencies</h3>
+        <p class="card-text">Built on Java's Foreign Function & Memory API (FFM API), eliminating the need for JNI, DLLs, or SO files. Just add the JAR and start coding.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌍</div>
+        <h3 class="card-title">Cross-Platform</h3>
+        <p class="card-text">Single API that works on Windows (XInput/DirectInput), Linux (evdev), and macOS (IOKit/HID). No platform-specific code needed.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container">
     <h2 class="section-title">Guides</h2>
     <div class="cards">
       <div class="card">
         <div class="card-icon">🌐</div>
         <h3 class="card-title">Cross-platform Java Input Without JNI</h3>
         <p class="card-text">Learn how input4j uses the Foreign Function & Memory API (FFM API) to provide cross-platform gamepad and joystick input handling without native dependencies or JNI complexity.</p>
-        <a href="{{ '/guides/cross-platform-java-input' | relative_url }}" class="btn btn-primary" style="margin-top: var(--space-md);">Read Guide</a>
+        <a href="{{ '/docs/cross-platform-java-input' | relative_url }}" class="btn btn-primary" style="margin-top: var(--space-md);">Read Guide</a>
       </div>
       
       <div class="card">
         <div class="card-icon">🎮</div>
         <h3 class="card-title">How to use input4j in your Java Game</h3>
         <p class="card-text">A practical step-by-step guide to integrating gamepad controller support into your Java game. Covers event-based and polling input handling, controller mapping, and force feedback vibration.</p>
-        <a href="{{ '/guides/java-game-integration' | relative_url }}" class="btn btn-primary" style="margin-top: var(--space-md);">Read Guide</a>
+        <a href="{{ '/docs/java-game-integration' | relative_url }}" class="btn btn-primary" style="margin-top: var(--space-md);">Read Guide</a>
       </div>
       
       <div class="card">
         <div class="card-icon">🏗️</div>
         <h3 class="card-title">Internal Architecture & FFM API</h3>
         <p class="card-text">Deep dive into input4j's internal architecture and implementation. Learn how the Foreign Function & Memory API enables native system calls without JNI or native libraries.</p>
-        <a href="{{ '/guides/architecture-ffm-api' | relative_url }}" class="btn btn-primary" style="margin-top: var(--space-md);">Read Guide</a>
+        <a href="{{ '/docs/architecture-ffm-api' | relative_url }}" class="btn btn-primary" style="margin-top: var(--space-md);">Read Guide</a>
       </div>
     </div>
   </div>

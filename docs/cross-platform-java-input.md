@@ -19,8 +19,8 @@ keywords: Java FFM API, Foreign Function Memory API, gamepad input Java, XInput 
     {
       "@type": "ListItem",
       "position": 2,
-      "name": "Guides",
-      "item": "https://gurkenlabs.github.io/input4j/guides/"
+      "name": "Docs",
+      "item": "https://gurkenlabs.github.io/input4j/docs/"
     },
     {
       "@type": "ListItem",
