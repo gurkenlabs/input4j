@@ -147,6 +147,13 @@ keywords: input4j guide, Java gamepad tutorial, game controller Java, FFM API in
         <p class="card-text">Deep dive into input4j's internal architecture and implementation. Learn how the Foreign Function & Memory API enables native system calls without JNI or native libraries.</p>
         <a href="{{ '/docs/architecture-ffm-api' | relative_url }}" class="btn btn-primary" style="margin-top: var(--space-md);">Read Guide</a>
       </div>
+
+      <div class="card">
+        <div class="card-icon">🕹️</div>
+        <h3 class="card-title">Case Study: LITIENGINE Replaces JInput with Input4j</h3>
+        <p class="card-text">Learn how LITIENGINE migrated from JInput to Input4j for gamepad support. See the benefits, code examples, and how game engines use input4j.</p>
+        <a href="{{ '/docs/litiengine-input4j-migration' | relative_url }}" class="btn btn-primary" style="margin-top: var(--space-md);">Read Guide</a>
+      </div>
     </div>
   </div>
 </div>
