@@ -4,3 +4,29 @@ url: "https://gurkenlabs.github.io"
 baseurl: "/input4j"
 include:
   - assets
+
+# Markdown Configuration
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+
+# Sass Configuration
+sass:
+  style: compressed
+
+# Build Optimizations
+future: true
+show_drafts: false
+
+# Exclude build artifacts from the output site
+exclude:
+  - bin/
+  - build/
+  - .gradle/
+  - .idea/
+  - .settings/
+  - Gemfile
+  - Gemfile.lock
+  - "*.gradle"
+  - "*.class"
