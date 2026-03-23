@@ -1,11 +1,13 @@
 package de.gurkenlabs.input4j.foreign.windows.xinput;
 
+import de.gurkenlabs.input4j.InputDevice;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class XInputPluginTests {
   @Test
@@ -61,5 +63,22 @@ public class XInputPluginTests {
 
     // Test case 7: Negative value outside deadzone
     assertEquals(-0.5f, XInputPlugin.normalizeSignedShort((short) -16384, 1000), 0.01);
+  }
+
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void testResolveDeviceId() {
+    var device = new InputDevice("0", "Gamepad (0)", null, _ -> new float[]{}, (_, _) -> {});
+    assertEquals(0, XInputPlugin.resolveDeviceId(device));
+
+    var device2 = new InputDevice("3", "XInput Device (3)", null, _ -> new float[]{}, (_, _) -> {});
+    assertEquals(3, XInputPlugin.resolveDeviceId(device2));
+  }
+
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void testResolveDeviceIdThrowsForNonNumericName() {
+    var device = new InputDevice("Gamepad (0)", "Gamepad (0)", null, _ -> new float[]{}, (_, _) -> {});
+    assertThrows(NumberFormatException.class, () -> XInputPlugin.resolveDeviceId(device));
   }
 }
