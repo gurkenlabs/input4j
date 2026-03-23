@@ -194,9 +194,20 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
     }
 
     // Set the vibration for each motor (example for two motors)
-    setVibration(Integer.parseInt(inputDevice.getName()),
+    setVibration(resolveDeviceId(inputDevice),
       (short) (motorSpeedLeft * XINPUT_VIBRATION.MAX_VIBRATION),
       (short) (motorSpeedRight * XINPUT_VIBRATION.MAX_VIBRATION));
+  }
+
+  /**
+   * Resolves the numeric device ID from the input device's identifier.
+   *
+   * @param inputDevice The input device.
+   * @return The numeric device ID.
+   * @throws NumberFormatException If the device identifier is not a valid integer.
+   */
+  static int resolveDeviceId(InputDevice inputDevice) {
+    return Integer.parseInt(inputDevice.getID());
   }
 
   /**
@@ -209,8 +220,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
     this.refreshDevices();
     var polledValues = new float[inputDevice.getComponents().size()];
 
-    var deviceId = Integer.parseInt(inputDevice.getID());
-    var state = getState(deviceId);
+    var state = getState(resolveDeviceId(inputDevice));
     if (state == null) {
       return new float[0];
     }
