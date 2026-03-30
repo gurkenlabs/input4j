@@ -15,6 +15,12 @@ class MacOS {
   private static final int kCFStringEncodingUTF8 = 0x08000100;
   private static final int kCFNumberIntType = 9;
 
+  // IOHID Report Types
+  // See: kIOHIDReportType (Apple Developer Documentation)
+  static final int kIOHIDReportTypeInput = 0;
+  static final int kIOHIDReportTypeOutput = 1;
+  static final int kIOHIDReportTypeFeature = 2;
+
   private final static String kIOHIDTransportKey = "Transport";
   private final static String kIOHIDVendorIDKey = "VendorID";
   private final static String kIOHIDProductIDKey = "ProductID";
@@ -62,6 +68,10 @@ class MacOS {
   private static final MethodHandle IOHIDElementGetUnit;
   private static final MethodHandle IOHIDElementGetUnitExponent;
   private static final MethodHandle IOHIDElementGetReportSize;
+  private static final MethodHandle IOHIDDeviceSetReport;
+  // Reserved for future use (e.g., reading device state, force feedback query)
+  @SuppressWarnings("unused")
+  private static final MethodHandle IOHIDDeviceGetReport;
 
   static {
     System.load("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation");
@@ -106,6 +116,9 @@ class MacOS {
     IOHIDElementGetUnit = downcallHandle("IOHIDElementGetUnit", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetUnitExponent = downcallHandle("IOHIDElementGetUnitExponent", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetReportSize = downcallHandle("IOHIDElementGetReportSize", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
+
+    IOHIDDeviceSetReport = downcallHandle("IOHIDDeviceSetReport", FunctionDescriptor.of(JAVA_INT, JAVA_LONG, JAVA_INT, ADDRESS, JAVA_LONG));
+    IOHIDDeviceGetReport = downcallHandle("IOHIDDeviceGetReport", FunctionDescriptor.of(JAVA_INT, JAVA_LONG, JAVA_INT, ADDRESS, JAVA_LONG));
   }
 
   /**
@@ -341,5 +354,43 @@ class MacOS {
     }
 
     return null;
+  }
+
+  /**
+   * Sets a report on the HID device.
+   *
+   * @param device  The HID device address.
+   * @param reportType The report type (kIOHIDReportTypeOutput for output reports).
+   * @param report   The report data.
+   * @param reportLength The length of the report.
+   * @return The result of the operation.
+   * @throws RuntimeException if an error occurs during the invocation.
+   * @see IOHIDDeviceSetReport (Apple Developer Documentation)
+   */
+  static int IOHIDDeviceSetReport(long device, int reportType, MemorySegment report, long reportLength) {
+    try {
+      return (int) IOHIDDeviceSetReport.invoke(device, reportType, report, reportLength);
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  /**
+   * Gets a report from the HID device.
+   *
+   * @param device      The HID device address.
+   * @param reportType  The report type (kIOHIDReportTypeInput for input reports).
+   * @param report      The buffer to store the report.
+   * @param reportLength The length of the report buffer.
+   * @return The result of the operation.
+   * @throws RuntimeException if an error occurs during the invocation.
+   * @see IOHIDDeviceGetReport (Apple Developer Documentation)
+   */
+  static int IOHIDDeviceGetReport(long device, int reportType, MemorySegment report, long reportLength) {
+    try {
+      return (int) IOHIDDeviceGetReport.invoke(device, reportType, report, reportLength);
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
   }
 }

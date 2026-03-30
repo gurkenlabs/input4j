@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 import static java.lang.foreign.ValueLayout.ADDRESS;
+import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
 
 /**
@@ -52,7 +53,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
         for (var ioHIDDevice : ioHIDDevices) {
           log.log(Level.FINE, "Found HID device: " + ioHIDDevice.productName);
-          var inputDevice = new InputDevice(Long.toString(ioHIDDevice.address), ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", this::pollIOHIDDevice, null);
+          var inputDevice = new InputDevice(Long.toString(ioHIDDevice.address), ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", this::pollIOHIDDevice, this::rumbleIOHIDDevice);
           ioHIDDevice.inputDevice = inputDevice;
 
           for (var element : ioHIDDevice.getElements()) {
@@ -199,5 +200,90 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
     return Linker.nativeLinker().upcallStub(
       enumDeviceMethodHandle, FunctionDescriptor.ofVoid(ADDRESS, JAVA_INT, ADDRESS, ADDRESS), memoryArena);
+  }
+
+  /** Threshold below which rumble is stopped (values 0.0-1.0). */
+  private static final float RUMBLE_THRESHOLD = 0.01f;
+
+  /**
+   * Determines if the given intensity values should trigger a rumble stop (are below threshold).
+   * Package-private for testing.
+   *
+   * @param intensity The intensity values.
+   * @return true if the intensity is null, empty, or all values are below threshold.
+   */
+  static boolean shouldStopRumble(float[] intensity) {
+    return intensity == null || intensity.length == 0
+        || (intensity.length > 0 && intensity[0] < RUMBLE_THRESHOLD
+            && (intensity.length == 1 || intensity[1] < RUMBLE_THRESHOLD));
+  }
+
+  /**
+   * Converts intensity values (0.0-1.0) to byte values (0-255).
+   * Package-private for testing.
+   *
+   * @param leftMotor The left motor intensity.
+   * @param rightMotor The right motor intensity.
+   * @return int array with [0] = leftValue, [1] = rightValue.
+   */
+  static int[] intensityToBytes(float leftMotor, float rightMotor) {
+    float left = Math.clamp(leftMotor, 0f, 1f);
+    float right = Math.clamp(rightMotor, 0f, 1f);
+    return new int[] {(int) (left * 255f), (int) (right * 255f)};
+  }
+
+  /**
+   * Sets the rumble (haptic feedback) intensity for the IOHID device.
+   *
+   * @param inputDevice The input device.
+   * @param intensity  The intensity values. intensity[0] is the left/strong motor,
+   *               intensity[1] (optional) is the right/weak motor.
+   *               Values should be in range 0.0 to 1.0.
+   */
+  private void rumbleIOHIDDevice(InputDevice inputDevice, float[] intensity) {
+    var ioHIDDevice = this.nativeDevices.getOrDefault(inputDevice.getID(), null);
+    if (ioHIDDevice == null) {
+      log.log(Level.WARNING, "IOHIDDevice not found for input device " + inputDevice.getName());
+      return;
+    }
+
+    // Get the controller-specific rumble profile
+    var profile = ControllerRumbleProfile.fromVendorProduct(ioHIDDevice.vendorId, ioHIDDevice.productId);
+
+    // Check if intensity is too low to bother
+    if (shouldStopRumble(intensity)) {
+      // Send stop rumble (all zeros)
+      sendRumbleReport(ioHIDDevice.address, profile, 0, 0);
+      return;
+    }
+
+    float leftMotor = intensity[0];
+    float rightMotor = intensity.length > 1 ? intensity[1] : leftMotor;
+
+    // Convert to unsigned byte values (0-255)
+    int[] motorValues = intensityToBytes(leftMotor, rightMotor);
+
+    sendRumbleReport(ioHIDDevice.address, profile, motorValues[0], motorValues[1]);
+  }
+
+  private void sendRumbleReport(long deviceAddress, ControllerRumbleProfile profile, int leftMotor, int rightMotor) {
+    try (Arena arena = Arena.ofConfined()) {
+      var report = arena.allocate(JAVA_BYTE, profile.getReportSize());
+
+      // Set the report ID at the appropriate position (typically byte 0)
+      report.set(JAVA_BYTE, 0, profile.getReportId());
+
+      // Set left and right motor values at profile-specific offsets
+      // Use & 0xFF to treat as unsigned byte (0-255)
+      report.set(JAVA_BYTE, profile.getLeftMotorOffset(), (byte) (leftMotor & 0xFF));
+      report.set(JAVA_BYTE, profile.getRightMotorOffset(), (byte) (rightMotor & 0xFF));
+
+      int result = MacOS.IOHIDDeviceSetReport(deviceAddress, MacOS.kIOHIDReportTypeOutput, report, profile.getReportSize());
+      if (result != IOReturn.kIOReturnSuccess) {
+        log.log(Level.FINE, "Failed to send rumble report with error: " + IOReturn.toString(result));
+      }
+    } catch (Exception e) {
+      log.log(Level.WARNING, "Failed to send rumble report", e);
+    }
   }
 }
