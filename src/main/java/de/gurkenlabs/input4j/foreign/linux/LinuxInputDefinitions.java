@@ -4,6 +4,7 @@ package de.gurkenlabs.input4j.foreign.linux;
  * native definitions from input-event-codes.h and input.h.
  */
 class LinuxInputDefinitions {
+  private LinuxInputDefinitions() {}
   public static final int EV_VERSION = 0x010001;
   public static final int EV_SYN = 0x00;
   public static final int EV_KEY = 0x01;

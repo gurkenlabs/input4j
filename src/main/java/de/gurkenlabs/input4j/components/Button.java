@@ -7,6 +7,8 @@ import de.gurkenlabs.input4j.InputComponent;
  * Predefined button component identifiers for standard gamepad controllers.
  */
 public final class Button {
+  private Button() {}
+
   /** Maximum default button ID value. */
   public static int MAX_DEFAULT_BUTTON_ID = 35;
   /** Button 0. */

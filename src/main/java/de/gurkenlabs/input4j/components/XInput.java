@@ -3,6 +3,8 @@ package de.gurkenlabs.input4j.components;
 import de.gurkenlabs.input4j.InputComponent;
 
 public class XInput {
+  private XInput() {}
+
   public static final InputComponent.ID A = new InputComponent.ID(Button.BUTTON_0, "A");
   public static final InputComponent.ID B = new InputComponent.ID(Button.BUTTON_1, "B");
   public static final InputComponent.ID X = new InputComponent.ID(Button.BUTTON_2, "X");
