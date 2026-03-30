@@ -13,9 +13,9 @@ package de.gurkenlabs.input4j.foreign.macos.iokit;
  *   <li>8BitDo Controllers: Various formats (see specific models)</li>
  * </ul>
  *
- * @see CoreFoundation Framework (Apple Developer Documentation)
- * @see IOHID Manager (Apple Developer Documentation)
- * @see USB HID Specification (USB-IF)  
+ * @see <a href="https://developer.apple.com/documentation/corefoundation">CoreFoundation Framework</a>
+ * @see <a href="https://developer.apple.com/documentation/iokit">IOHID Manager</a>
+ * @see <a href="https://www.usb.org/hid">USB HID Specification</a>
  */
 public enum ControllerRumbleProfile {
   /** Generic gamepad using standard 3-byte format (Report ID 0x00) */
@@ -54,18 +54,38 @@ public enum ControllerRumbleProfile {
     this.rightMotorOffset = rightMotorOffset;
   }
 
+  /**
+   * Returns the HID report ID for this controller profile.
+   *
+   * @return The report ID byte.
+   */
   public byte getReportId() {
     return reportId;
   }
 
+  /**
+   * Returns the size of the HID output report for this controller profile.
+   *
+   * @return The report size in bytes.
+   */
   public int getReportSize() {
     return reportSize;
   }
 
+  /**
+   * Returns the byte offset for the left/strong motor in the report.
+   *
+   * @return The left motor offset.
+   */
   public int getLeftMotorOffset() {
     return leftMotorOffset;
   }
 
+  /**
+   * Returns the byte offset for the right/weak motor in the report.
+   *
+   * @return The right motor offset.
+   */
   public int getRightMotorOffset() {
     return rightMotorOffset;
   }
