@@ -3,23 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% if page.title %}{{ page.title }} - input4j{% else %}input4j - Cross-Platform Java Gamepad & Joystick Library{% endif %}</title>
+  <title>{% if page.title %}{{ page.title }} - input4j{% else %}input4j - Java Gamepad & Controller Library{% endif %}</title>
   <meta name="description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
-  <meta name="keywords" content="Java input library, gamepad API, joystick input, cross-platform Java, XInput, DirectInput, evdev, IOKit, HID, game controller, Java 22, Foreign Function API">
+  <meta name="keywords" content="java gamepad, java controller, java joystick, gamepad library, controller input, XInput java, DirectInput java, cross-platform java, java game controller, gamepad support, JInput alternative, no JNI, evdev, IOKit, HID">
   <meta name="author" content="gurkenlabs">
   <meta name="robots" content="index, follow">
+  <meta name="format-detection" content="telephone=no">
   
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="{{ site.url }}{{ page.url }}">
-  <meta property="og:title" content="{% if page.title %}{{ page.title }} - {% endif %}{{ site.title }}">
-  <meta property="og:description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
+  <meta property="og:title" content="{% if page.og_title %}{{ page.og_title }}{% elsif page.title %}{{ page.title }}{% else %}{{ site.title }}{% endif %}">
+  <meta property="og:description" content="{% if page.description %}{{ page.description | truncate: 65 }}{% else %}Cross-platform Java gamepad and controller input library.{% endif %}">
+  <meta property="og:image" content="{{ '/assets/input4j_logo.png' | absolute_url }}">
   <meta property="og:site_name" content="{{ site.title }}">
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="{% if page.title %}{{ page.title }} - {% endif %}{{ site.title }}">
-  <meta name="twitter:description" content="{% if page.description %}{{ page.description }}{% else %}{{ site.description }}{% endif %}">
+  <meta name="twitter:title" content="{% if page.title %}{{ page.title }} - input4j{% else %}{{ site.title }}{% endif %}">
+  <meta name="twitter:description" content="{% if page.description %}{{ page.description }}{% else %}Cross-platform Java gamepad and controller input library with zero native dependencies for Windows, Linux, and macOS.{% endif %}">
+  <meta name="twitter:image" content="{{ '/assets/input4j_logo.png' | absolute_url }}">
+  <meta name="twitter:site" content="@gurkenlabs">
+  <meta name="twitter:creator" content="@gurkenlabs">
   
   <!-- Canonical -->
   <link rel="canonical" href="{{ site.url }}{{ page.url }}">

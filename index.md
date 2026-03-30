@@ -1,8 +1,9 @@
 ---
 layout: default
-title: input4j - Cross-Platform Java Gamepad & Joystick Library
-description: A lightweight, cross-platform Java library for unified input device handling. Supports Windows, Linux, and macOS with no native dependencies.
-keywords: input4j, java gamepad input, java controller library, java joystick input, java game controller api, gamepad java, joystick java, game controller java, xinput java, directinput java, evdev java
+title: Java Gamepad and Controller Input Library
+og_title: Java Gamepad & Controller Library
+description: "input4j is a lightweight, cross-platform Java gamepad and controller input library. Supports Windows, Linux, and macOS with zero native dependencies."
+keywords: java gamepad, java controller, java joystick, gamepad library, controller input java, XInput java, DirectInput java, cross-platform java, java game controller, JInput alternative, no JNI
 ---
 
 <script type="application/ld+json">
