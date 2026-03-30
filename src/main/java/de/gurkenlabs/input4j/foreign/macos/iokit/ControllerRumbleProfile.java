@@ -99,32 +99,28 @@ public enum ControllerRumbleProfile {
    */
   public static ControllerRumbleProfile fromVendorProduct(int vendorId, int productId) {
     return switch (vendorId) {
-      case 0x045E -> { // Microsoft
-        yield switch (productId) {
+      case 0x045E -> // Microsoft
+        switch (productId) {
           case 0x02DD, 0x02E0 -> XBOX_ONE; // Xbox One
           case 0x0B00, 0x0B05 -> XBOX_SERIES_X; // Xbox Series X
           default -> GENERIC;
         };
-      }
-      case 0x054C -> { // Sony
-        yield switch (productId) {
+      case 0x054C -> // Sony
+        switch (productId) {
           case 0x09CC -> DUALSHOCK_4;
           case 0x0CE6 -> DUALSENSE;
           default -> GENERIC;
         };
-      }
-      case 0x057E -> { // Nintendo
-        yield switch (productId) {
+      case 0x057E -> // Nintendo
+        switch (productId) {
           case 0x2009 -> NINTENDO_PRO_CONTROLLER;
           default -> GENERIC;
         };
-      }
-      case 0x2DC8 -> { // 8BitDo
-        yield switch (productId) {
+      case 0x2DC8 -> // 8BitDo
+        switch (productId) {
           case 0x6002 -> EIGHTBITDO_SN30_PRO_PLUS; // SN30 Pro+
           default -> EIGHTBITDO_GENERIC; // Most 8BitDo controllers use standard HID
         };
-      }
       default -> GENERIC;
     };
   }
