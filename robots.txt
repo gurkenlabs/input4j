@@ -4,6 +4,22 @@ Allow: /
 
 Sitemap: https://gurkenlabs.github.io/input4j/sitemap.xml
 
+# AI crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
 # Disallow access to build files
 Disallow: /build/
 Disallow: /.gradle/

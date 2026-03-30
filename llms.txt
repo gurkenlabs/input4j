@@ -1,0 +1,23 @@
+# input4j
+
+> Lightweight, cross-platform Java library for unified gamepad and joystick input handling.
+
+input4j is a pure Java input library that provides a unified API for gamepad, joystick, and controller input across Windows, Linux, and macOS. It uses the Foreign Function & Memory API (Java 22+) and requires zero native dependencies.
+
+## Key Pages
+
+- [Home](https://gurkenlabs.github.io/input4j/): Project overview, quick start guide, and feature highlights
+- [Documentation](https://gurkenlabs.github.io/input4j/docs): Complete usage documentation
+- [Cross-Platform Java Input](https://gurkenlabs.github.io/input4j/docs/cross-platform-java-input): FFM API guide for native input without JNI
+- [Java Game Integration](https://gurkenlabs.github.io/input4j/docs/java-game-integration): Integrating input4j into Java games
+- [FFM API Architecture](https://gurkenlabs.github.io/input4j/docs/architecture-ffm-api): Internal architecture and platform implementations
+- [LITIENGINE Case Study](https://gurkenlabs.github.io/input4j/docs/litiengine-input4j-migration): Real-world migration from JInput
+
+## Technical Details
+
+- **Language**: Java 22+
+- **Platforms**: Windows (XInput, DirectInput), Linux (evdev), macOS (IOKit HID)
+- **Dependencies**: None (pure Java via FFM API)
+- **License**: MIT
+- **Maven**: `de.gurkenlabs:input4j:1.1.1`
+- **Source**: https://github.com/gurkenlabs/input4j

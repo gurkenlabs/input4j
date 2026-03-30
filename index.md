@@ -69,7 +69,7 @@ keywords: java gamepad, java controller, java joystick, gamepad library, control
 <div class="hero">
   <div class="container">
     <img src="{{ '/assets/input4j_logo_x256.png' | relative_url }}" alt="input4j logo" class="hero-logo">
-    <h1 class="hero-title">input<span class="logo-accent">4j</span></h1>
+    <h1 class="hero-title">input<span class="logo-accent">4j</span><span class="sr-only"> - Java Gamepad and Controller Input Library</span></h1>
     <p class="hero-subtitle">Lightweight, cross-platform Java library for unified gamepad and joystick input handling</p>
     <p class="hero-subtitle" style="font-size: 1rem; color: var(--text-secondary); margin-top: -8px; margin-bottom: var(--space-lg);">The modern solution for <strong>java gamepad input</strong> and <strong>java joystick input</strong> - no native dependencies required.</p>
     <div class="hero-badges">
@@ -86,6 +86,12 @@ keywords: java gamepad, java controller, java joystick, gamepad library, control
       <a href="https://github.com/gurkenlabs/input4j" class="btn btn-secondary" target="_blank" rel="noopener">View on GitHub</a>
       <a href="{{ '/docs' | relative_url }}" class="btn btn-ghost">Read Docs</a>
     </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="container">
+    <p>input4j is a <strong>Java gamepad library</strong> that provides a unified <strong>controller input</strong> API for gamepads, joysticks, and other HID devices. Built on the Foreign Function &amp; Memory API, it replaces legacy solutions like JInput with a modern, dependency-free approach. Whether you need <strong>XInput for Xbox controllers on Windows</strong>, <strong>evdev on Linux</strong>, or <strong>IOKit HID on macOS</strong>, input4j handles platform-specific details behind a single consistent interface. It supports both event-based callbacks and polling, making it ideal for game loops, simulations, and interactive applications.</p>
   </div>
 </div>
 
