@@ -26,3 +26,5 @@ replay_pid*
 /.idea
 /.gradle
 /build
+/*.classpath
+/.settings
