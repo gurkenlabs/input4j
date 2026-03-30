@@ -7,6 +7,7 @@ import java.lang.foreign.SymbolLookup;
 import java.lang.invoke.MethodHandle;
 
 public final class NativeHelper {
+  private NativeHelper() {}
 
   public static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc) {
     return SymbolLookup.loaderLookup().find(name)

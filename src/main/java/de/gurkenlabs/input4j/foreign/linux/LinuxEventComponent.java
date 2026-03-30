@@ -7,8 +7,8 @@ import de.gurkenlabs.input4j.components.Axis;
 import de.gurkenlabs.input4j.components.Button;
 
 final class LinuxEventComponent {
-  final static String ID_DPAD_LEFT_RIGHT = "DPAD_LEFT_RIGHT";
-  final static String ID_DPAD_UP_DOWN = "DPAD_UP_DOWN";
+  static final String ID_DPAD_LEFT_RIGHT = "DPAD_LEFT_RIGHT";
+  static final String ID_DPAD_UP_DOWN = "DPAD_UP_DOWN";
 
   final LinuxComponentType linuxComponentType;
   final ComponentType componentType;

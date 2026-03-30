@@ -12,6 +12,8 @@ import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
 import static java.lang.foreign.ValueLayout.*;
 
 class MacOS {
+  private MacOS() {}
+
   private static final int kCFStringEncodingUTF8 = 0x08000100;
   private static final int kCFNumberIntType = 9;
 
@@ -21,15 +23,15 @@ class MacOS {
   static final int kIOHIDReportTypeOutput = 1;
   static final int kIOHIDReportTypeFeature = 2;
 
-  private final static String kIOHIDTransportKey = "Transport";
-  private final static String kIOHIDVendorIDKey = "VendorID";
-  private final static String kIOHIDProductIDKey = "ProductID";
-  private final static String kIOHIDManufacturerKey = "Manufacturer";
-  private final static String kIOHIDProductKey = "Product";
-  private final static String kIOHIDPrimaryUsageKey = "PrimaryUsage";
-  private final static String kIOHIDPrimaryUsagePageKey = "PrimaryUsagePage";
+  private static final String kIOHIDTransportKey = "Transport";
+  private static final String kIOHIDVendorIDKey = "VendorID";
+  private static final String kIOHIDProductIDKey = "ProductID";
+  private static final String kIOHIDManufacturerKey = "Manufacturer";
+  private static final String kIOHIDProductKey = "Product";
+  private static final String kIOHIDPrimaryUsageKey = "PrimaryUsage";
+  private static final String kIOHIDPrimaryUsagePageKey = "PrimaryUsagePage";
 
-  private final static String kCFRunLoopDefaultMode = "kCFRunLoopDefaultMode";
+  private static final String kCFRunLoopDefaultMode = "kCFRunLoopDefaultMode";
 
   private static final MethodHandle CFRelease;
   private static final MethodHandle CFStringCreateWithCString;

@@ -7,6 +7,8 @@ import de.gurkenlabs.input4j.InputComponent;
  * Predefined axis component identifiers for standard gamepad controllers.
  */
 public class Axis {
+  private Axis() {}
+
   /** Maximum default axis ID value. */
   public static final int MAX_DEFAULT_AXIS_ID = 7;
   /** Left stick X-axis (horizontal). */

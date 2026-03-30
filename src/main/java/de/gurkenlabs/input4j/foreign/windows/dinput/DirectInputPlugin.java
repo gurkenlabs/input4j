@@ -111,7 +111,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
             MemorySegment.NULL);
 
     if (directInputCreateResult != Result.DI_OK) {
-      log.log(Level.SEVERE, "Could not create DirectInput8: " + Result.toString(directInputCreateResult));
+      log.log(Level.SEVERE, "Could not create DirectInput8: {0}", Result.toString(directInputCreateResult));
       return;
     }
 
@@ -123,7 +123,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
     // 1. enumerate input devices
     var enumDevicesResult = this.directInput.EnumDevices(DI8DEVCLASS_GAMECTRL, enumDevicesPointer(), IDirectInput8.DIEDFL_ALLDEVICES);
     if (enumDevicesResult != Result.DI_OK) {
-      log.log(Level.SEVERE, "Could not enumerate DirectInput devices: " + Result.toString(enumDevicesResult));
+      log.log(Level.SEVERE, "Could not enumerate DirectInput devices: {0}", Result.toString(enumDevicesResult));
       return;
     }
 
@@ -133,13 +133,13 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
 
       try {
 
-        log.log(Level.FINE, "Found input device: " + device.inputDevice.getName());
+        log.log(Level.FINE, "Found input device: {0}", device.inputDevice.getName());
 
         var deviceAddress = this.memoryArena.allocate(JAVA_LONG.byteSize());
         var deviceGuidMemorySegment = device.deviceInstance.guidInstance.write(this.memoryArena);
 
         if (this.directInput.CreateDevice(deviceGuidMemorySegment, deviceAddress) != Result.DI_OK) {
-          log.log(Level.WARNING, "Device " + device.inputDevice.getName() + " could not be created");
+          log.log(Level.WARNING, "Device {0} could not be created", device.inputDevice.getName());
           continue;
         }
 
@@ -148,7 +148,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
         // 3. enumerate the components
         var enumObjectsResult = device.EnumObjects(enumObjectsPointer(), IDirectInputDevice8.DIDFT_BUTTON | IDirectInputDevice8.DIDFT_AXIS | IDirectInputDevice8.DIDFT_POV);
         if (enumObjectsResult != Result.DI_OK) {
-          log.log(Level.WARNING, "Could not enumerate the device instance objects for " + device.inputDevice.getName() + ": " + Result.toString(enumObjectsResult));
+          log.log(Level.WARNING, "Could not enumerate the device instance objects for {0}: {1}", new Object[] {device.inputDevice.getName(), Result.toString(enumObjectsResult)});
           continue;
         }
 
@@ -157,7 +157,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
         var dataFormat = defineDataFormat(deviceObjects, this.memoryArena);
         var setDataFormatResult = device.SetDataFormat(dataFormat);
         if (setDataFormatResult != Result.DI_OK) {
-          log.log(Level.WARNING, "Could not set the data format for direct input device " + device.inputDevice.getName() + ": " + Result.toString(setDataFormatResult));
+          log.log(Level.WARNING, "Could not set the data format for direct input device {0}: {1}", new Object[] {device.inputDevice.getName(), Result.toString(setDataFormatResult)});
           continue;
         }
 
@@ -172,19 +172,19 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
         }
 
         if (setCooperativeLevelResult != Result.DI_OK) {
-          log.log(Level.WARNING, "Could not set the cooperative level for direct input device " + device.inputDevice.getName() + ": " + Result.toString(setCooperativeLevelResult));
+          log.log(Level.WARNING, "Could not set the cooperative level for direct input device {0}: {1}", new Object[] {device.inputDevice.getName(), Result.toString(setCooperativeLevelResult)});
           continue;
         }
 
         var setBufferSizeResult = device.SetProperty(IDirectInputDevice8.DIPROP_BUFFERSIZE, getDataBufferPropertyNative(this.memoryArena));
         if (setBufferSizeResult != Result.DI_OK) {
-          log.log(Level.WARNING, "Could not set the buffer size for direct input device " + device.inputDevice.getName() + ": " + Result.toString(setBufferSizeResult));
+          log.log(Level.WARNING, "Could not set the buffer size for direct input device {0}: {1}", new Object[] {device.inputDevice.getName(), Result.toString(setBufferSizeResult)});
           continue;
         }
 
         var acquireResult = device.Acquire();
         if (acquireResult != Result.DI_OK) {
-          log.log(Level.WARNING, "Could not acquire direct input device " + device.inputDevice.getName() + ": " + Result.toString(acquireResult));
+          log.log(Level.WARNING, "Could not acquire direct input device {0}: {1}", new Object[] {device.inputDevice.getName(), Result.toString(acquireResult)});
           continue;
         }
 
@@ -202,7 +202,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
     // find native DirectInputDevice and poll it
     var directInputDevice = this.nativeDevices.getOrDefault(inputDevice.getID(), null);
     if (directInputDevice == null) {
-      log.log(Level.WARNING, "DirectInput device not found for input device " + inputDevice.getName());
+      log.log(Level.WARNING, "DirectInput device not found for input device {0}", inputDevice.getName());
       return new float[0];
     }
     var componentCount = directInputDevice.nativeComponentCount;
@@ -220,7 +220,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
       if (pollResult == Result.DIERR_INPUTLOST || pollResult == Result.DIERR_NOTACQUIRED) {
         var acquireResult = directInputDevice.Acquire();
         if (acquireResult != Result.DI_OK) {
-          log.log(Level.WARNING, "Attempt to re-acquire failed for device " + directInputDevice.inputDevice.getName() + ": " + Result.toString(acquireResult));
+          log.log(Level.WARNING, "Attempt to re-acquire failed for device {0}: {1}", new Object[] {directInputDevice.inputDevice.getName(), Result.toString(acquireResult)});
           return polledValues;
         } else {
           pollResult = directInputDevice.Poll();
@@ -228,7 +228,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
       }
 
       if (pollResult != Result.DI_OK && pollResult != DI_NOEFFECT) {
-        log.log(Level.WARNING, "Could not poll device " + inputDevice.getName() + ": " + Result.toString(pollResult));
+        log.log(Level.WARNING, "Could not poll device {0}: {1}", new Object[] {inputDevice.getName(), Result.toString(pollResult)});
         return polledValues;
       }
 
@@ -237,7 +237,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
 
       var getDeviceStateResult = directInputDevice.GetDeviceState((int) (componentCount * JAVA_INT.byteSize()), deviceStateResultSegment);
       if (getDeviceStateResult != Result.DI_OK) {
-        log.log(Level.WARNING, "Could not get device state " + inputDevice.getName() + ": " + Result.toString(getDeviceStateResult));
+        log.log(Level.WARNING, "Could not get device state {0}: {1}", new Object[] {inputDevice.getName(), Result.toString(getDeviceStateResult)});
       }
 
       for (int i = 0; i < componentCount; i++) {
@@ -387,12 +387,12 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
     try {
       getProperties(deviceObjectInstance);
     } catch (Throwable throwable) {
-      log.warning("Could not get properties of device object " + name);
+      log.log(Level.WARNING, "Could not get properties of device object {0}", name);
     }
 
     var component = new InputComponent(this.currentDevice.inputDevice, deviceObjectInstance.getIdentifier(), name, deviceObjectInstance.isRelative());
     this.currentComponents.put(deviceObjectInstance, component);
-    log.log(Level.FINE, "\t\t" + deviceObjectType + " (" + name + ") - " + deviceObjectInstance.dwOfs);
+    log.log(Level.FINE, "\t\t{0} ({1}) - {2}", new Object[] {deviceObjectType, name, deviceObjectInstance.dwOfs});
     return true;
   }
 

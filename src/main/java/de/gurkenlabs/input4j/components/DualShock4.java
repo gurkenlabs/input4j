@@ -6,6 +6,8 @@ import de.gurkenlabs.input4j.InputComponent;
  * Predefined component identifiers for Sony DualShock 4 controllers.
  */
 public class DualShock4 {
+  private DualShock4() {}
+
   /** Square button. */
   public static final InputComponent.ID SQUARE = new InputComponent.ID(Button.BUTTON_0, "SQUARE");
   /** Cross button. */

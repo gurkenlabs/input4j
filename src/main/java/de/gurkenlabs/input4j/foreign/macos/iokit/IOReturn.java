@@ -5,6 +5,8 @@ package de.gurkenlabs.input4j.foreign.macos.iokit;
  * These constants represent different result codes that can be returned by IOKit functions.
  */
 class IOReturn {
+  private IOReturn() {}
+
   static final int kIOReturnSuccess = 0;
   static final int kIOReturnError = 0xE00002BC;
   static final int kIOReturnNoMemory = 0xE00002BD;

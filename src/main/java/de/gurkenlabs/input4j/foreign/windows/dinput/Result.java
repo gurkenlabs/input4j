@@ -6,6 +6,7 @@ package de.gurkenlabs.input4j.foreign.windows.dinput;
  * that can be returned by DirectInput functions.
  */
 class Result {
+  private Result() {}
   /**
    * Operation completed successfully.
    */

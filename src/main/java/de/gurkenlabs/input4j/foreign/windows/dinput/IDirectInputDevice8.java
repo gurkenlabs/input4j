@@ -11,67 +11,67 @@ import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
 import static java.lang.foreign.ValueLayout.*;
 
 final class IDirectInputDevice8 {
-  public final static int DIDFT_AXIS = 0x00000003;
-  public final static int DIDFT_BUTTON = 0x0000000C;
+  public static final int DIDFT_AXIS = 0x00000003;
+  public static final int DIDFT_BUTTON = 0x0000000C;
 
-  public final static int DIDFT_POV = 0x00000010;
+  public static final int DIDFT_POV = 0x00000010;
 
-  public final static int DIDFT_RELAXIS = 0x00000001;
+  public static final int DIDFT_RELAXIS = 0x00000001;
 
-  public final static int DIDF_ABSAXIS = 0x00000001;
-  public final static int DIDF_RELAXIS = 0x00000002;
+  public static final int DIDF_ABSAXIS = 0x00000001;
+  public static final int DIDF_RELAXIS = 0x00000002;
 
-  public final static int DIEFT_ALL = 0x00000000;
+  public static final int DIEFT_ALL = 0x00000000;
 
-  public final static int DIEFT_FFATTACK				  = 0x00000200;
-  public final static int DIEFT_FFFADE					 = 0x00000400;
-  public final static int DIEFT_SATURATION				= 0x00000800;
-  public final static int DIEFT_POSNEGCOEFFICIENTS	 = 0x00001000;
-  public final static int DIEFT_POSNEGSATURATION		= 0x00002000;
-  public final static int DIEFT_DEADBAND				  = 0x00004000;
-  public final static int DIEFT_STARTDELAY				= 0x00008000;
+  public static final int DIEFT_FFATTACK				  = 0x00000200;
+  public static final int DIEFT_FFFADE					 = 0x00000400;
+  public static final int DIEFT_SATURATION				= 0x00000800;
+  public static final int DIEFT_POSNEGCOEFFICIENTS	 = 0x00001000;
+  public static final int DIEFT_POSNEGSATURATION		= 0x00002000;
+  public static final int DIEFT_DEADBAND				  = 0x00004000;
+  public static final int DIEFT_STARTDELAY				= 0x00008000;
 
-  public final static int DIEFF_OBJECTIDS			 = 0x00000001;
-  public final static int DIEFF_OBJECTOFFSETS		 = 0x00000002;
-  public final static int DIEFF_CARTESIAN			 = 0x00000010;
-  public final static int DIEFF_POLAR				 = 0x00000020;
-  public final static int DIEFF_SPHERICAL			 = 0x00000040;
+  public static final int DIEFF_OBJECTIDS			 = 0x00000001;
+  public static final int DIEFF_OBJECTOFFSETS		 = 0x00000002;
+  public static final int DIEFF_CARTESIAN			 = 0x00000010;
+  public static final int DIEFF_POLAR				 = 0x00000020;
+  public static final int DIEFF_SPHERICAL			 = 0x00000040;
 
   /**
    * Exclusive cooperative level. The application has exclusive access to the device.
    * Other applications cannot acquire the device while it is acquired at this level.
    */
-  public final static int DISCL_EXCLUSIVE = 0x00000001;
+  public static final int DISCL_EXCLUSIVE = 0x00000001;
 
   /**
    * Non-exclusive cooperative level. The application shares access to the device with other applications.
    * Multiple applications can acquire the device at this level.
    */
-  public final static int DISCL_NONEXCLUSIVE = 0x00000002;
+  public static final int DISCL_NONEXCLUSIVE = 0x00000002;
 
   /**
    * Foreground cooperative level. The device is acquired only when the application is in the foreground.
    * The device is automatically unacquired when the application moves to the background.
    */
-  public final static int DISCL_FOREGROUND = 0x00000004;
+  public static final int DISCL_FOREGROUND = 0x00000004;
 
   /**
    * Background cooperative level. The device can be acquired even when the application is in the background.
    * This allows the application to continue receiving input while not in focus.
    */
-  public final static int DISCL_BACKGROUND = 0x00000008;
+  public static final int DISCL_BACKGROUND = 0x00000008;
 
   /**
    * No Windows key cooperative level. The Windows key is disabled while the device is acquired.
    * This prevents the user from accidentally switching out of the application.
    */
-  public final static int DISCL_NOWINKEY = 0x00000010;
+  public static final int DISCL_NOWINKEY = 0x00000010;
 
-  final static int DIPROPRANGE_NOMIN = -2147483648;
+  static final int DIPROPRANGE_NOMIN = -2147483648;
 
-  final static int DIPROPRANGE_NOMAX = 2147483647;
+  static final int DIPROPRANGE_NOMAX = 2147483647;
 
-  final static MemorySegment DIPROP_BUFFERSIZE = MemorySegment.ofAddress(1L);
+  static final MemorySegment DIPROP_BUFFERSIZE = MemorySegment.ofAddress(1L);
   static final MemorySegment DIPROP_AXISMODE = MemorySegment.ofAddress(2L);
   static final MemorySegment DIPROP_GRANULARITY = MemorySegment.ofAddress(3L);
   static final MemorySegment DIPROP_RANGE = MemorySegment.ofAddress(4L);

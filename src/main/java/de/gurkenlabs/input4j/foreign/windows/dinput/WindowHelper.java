@@ -15,6 +15,8 @@ import static java.lang.foreign.ValueLayout.JAVA_LONG;
  * It uses the `User32` library to find window handles based on window titles.
  */
 public final class WindowHelper {
+  private WindowHelper() {}
+
   private static final MethodHandle findWindowA;
 
   static {
