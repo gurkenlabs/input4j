@@ -29,7 +29,7 @@ import java.util.logging.Level;
  * </ul>
  */
 public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
-  private final Arena memoryArena = Arena.ofConfined();
+  private final Arena memoryArena = Arena.ofShared();
   private final Map<String, LinuxEventDevice> nativeDevices = new ConcurrentHashMap<>();
 
   @Override
@@ -249,9 +249,9 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
         continue;
       }
 
-      var componentIndex = getComponentIndexByNativeId(inputEvent, inputDevice);
-      if (componentIndex == Linux.ERROR) {
-        log.log(Level.SEVERE, "Failed to find component for " + inputEvent.type + " " + inputEvent.code);
+      int componentIndex = linuxEventDevice.componentList.indexOf(nativeComponent);
+      if (componentIndex == -1) {
+        log.log(Level.SEVERE, "Failed to find component index for " + inputEvent.type + " " + inputEvent.code);
         continue;
       }
 
