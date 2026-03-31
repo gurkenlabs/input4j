@@ -29,7 +29,7 @@ import java.util.logging.Level;
  * </ul>
  */
 public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
-  private final Arena memoryArena = Arena.ofConfined();
+  private final Arena memoryArena = Arena.ofShared();
   private final Map<String, LinuxEventDevice> nativeDevices = new ConcurrentHashMap<>();
 
   @Override
