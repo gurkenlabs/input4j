@@ -1,13 +1,17 @@
 package de.gurkenlabs.input4j.foreign.windows.xinput;
 
 import de.gurkenlabs.input4j.InputDevice;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class XInputPluginTests {
   @Test
@@ -80,5 +84,69 @@ public class XInputPluginTests {
   void testResolveDeviceIdThrowsForNonNumericName() {
     var device = new InputDevice("Gamepad (0)", "Gamepad (0)", null, _ -> new float[]{}, (_, _) -> {});
     assertThrows(NumberFormatException.class, () -> XInputPlugin.resolveDeviceId(device));
+  }
+
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void testSharedArenaAllowsCrossThreadAccess() throws InterruptedException {
+    try (var plugin = new XInputPlugin()) {
+      var workerThreadSuccess = new AtomicBoolean(false);
+      var workerThreadError = new AtomicBoolean(false);
+      var latch = new CountDownLatch(1);
+
+      // Worker thread accesses plugin methods that use shared memory arena
+      Thread workerThread = new Thread(() -> {
+        try {
+          // This tests that methods using the memory arena don't throw WrongThreadException
+          // Even without a device connected, we can verify the plugin doesn't throw
+          plugin.refreshInputDevices();
+          workerThreadSuccess.set(true);
+        } catch (Exception e) {
+          workerThreadError.set(true);
+        } finally {
+          latch.countDown();
+        }
+      });
+
+      workerThread.start();
+      latch.await();
+
+      assertTrue(workerThreadSuccess.get(), "Worker thread should access shared arena memory");
+      assertFalse(workerThreadError.get(), "Worker thread should not throw WrongThreadException");
+    }
+  }
+
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void testRumbleCanBeCalledFromDifferentThread() throws InterruptedException {
+    try (var plugin = new XInputPlugin()) {
+      plugin.internalInitDevices(null);
+
+      var workerThreadSuccess = new AtomicBoolean(false);
+      var workerThreadError = new AtomicBoolean(false);
+      var latch = new CountDownLatch(1);
+
+      Thread workerThread = new Thread(() -> {
+        try {
+          var devices = plugin.getAll();
+          if (!devices.isEmpty()) {
+            InputDevice device = devices.iterator().next();
+            device.rumble(new float[] {0.5f, 0.5f});
+          }
+          // Even if no devices, we verified no WrongThreadException was thrown
+          workerThreadSuccess.set(true);
+        } catch (Exception e) {
+          workerThreadError.set(true);
+        } finally {
+          latch.countDown();
+        }
+      });
+
+      workerThread.start();
+      latch.await();
+
+      assertTrue(workerThreadSuccess.get(), "Worker thread should complete without WrongThreadException");
+      assertFalse(workerThreadError.get(), "Worker thread should not throw WrongThreadException");
+    }
   }
 }

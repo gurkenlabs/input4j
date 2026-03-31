@@ -28,7 +28,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
   private static final MethodHandle xInputSetState;
   private static final MethodHandle xInputGetCapabilities;
 
-  private final Arena memoryArena = Arena.ofConfined();
+  private final Arena memoryArena = Arena.ofShared();
   private final MemorySegment stateSegment = memoryArena.allocate(XINPUT_STATE.$LAYOUT);
 
   private final Map<String, XINPUT_GAMEPAD> nativeDevices = new ConcurrentHashMap<>();

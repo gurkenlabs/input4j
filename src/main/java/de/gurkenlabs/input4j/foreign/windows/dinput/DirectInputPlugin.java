@@ -43,7 +43,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
    */
   private final Map<DIDEVICEOBJECTINSTANCE, InputComponent> currentComponents = new HashMap<>();
 
-  private final Arena memoryArena = Arena.ofConfined();
+  private final Arena memoryArena = Arena.ofShared();
 
   static {
     System.loadLibrary("Kernel32");
