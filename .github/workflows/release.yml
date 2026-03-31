@@ -16,9 +16,6 @@ on:
           - patch
           - minor
           - major
-  schedule:
-    # Midnight every day
-    - cron: "0 0 * * *"
 permissions:
   contents: write
 
