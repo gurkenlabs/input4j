@@ -63,4 +63,23 @@ public class LinuxEventComponentTests {
     assertEquals(Button.BUTTON_0, id);
     assertEquals(2, id.nativeId);
   }
+
+  @Test
+  public void testEqualsWithNonStandardCodes() {
+    LinuxEventComponent component1 = new LinuxEventComponent(LinuxComponentType.BTN_SOUTH, false, false, 1, 999);
+    LinuxEventComponent component2 = new LinuxEventComponent(LinuxComponentType.BTN_SOUTH, false, false, 1, 999);
+    LinuxEventComponent component3 = new LinuxEventComponent(LinuxComponentType.BTN_SOUTH, false, false, 1, 888);
+
+    assertEquals(component1, component2);
+    assertNotEquals(component1, component3);
+  }
+
+  @Test
+  public void testGetIdentifierWithNonStandardCodes() {
+    LinuxEventComponent component = new LinuxEventComponent(LinuxComponentType.BTN_SOUTH, false, false, 1, 999);
+    InputComponent.ID id = component.getIdentifier();
+
+    assertEquals(Button.BUTTON_0, id);
+    assertEquals(999, id.nativeId);
+  }
 }
