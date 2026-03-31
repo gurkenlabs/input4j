@@ -5,6 +5,7 @@ package de.gurkenlabs.input4j.foreign.windows.xinput;
  * These constants represent different result codes that can be returned by XInput functions.
  */
 class Result {
+  private Result() {}
   /**
    * The operation completed successfully.
    */

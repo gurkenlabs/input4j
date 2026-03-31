@@ -13,6 +13,8 @@ import static de.gurkenlabs.input4j.foreign.NativeHelper.downcallHandle;
 import static java.lang.foreign.ValueLayout.*;
 
 class Linux {
+  private Linux() {}
+
   private static final Logger log = Logger.getLogger(Linux.class.getName());
   final static int ERROR = -1;
   final static int EAGAIN = 11;
@@ -149,7 +151,7 @@ class Linux {
     MemorySegment inputEventMemorySegment = memoryArena.allocate(input_event.$LAYOUT);
     int result = invoke("read", memoryArena, fd, inputEventMemorySegment, input_event.$LAYOUT.byteSize());
     if (result == ERROR) {
-      log.log(Level.FINE, "No more events to read from device (" + fd + ")");
+      log.log(Level.FINE, "No more events to read from device ({0})", fd);
       return null;
     }
 
@@ -167,7 +169,7 @@ class Linux {
     var nameMemorySegment = memoryArena.allocateFrom(JAVA_CHAR, new char[NAME_BUFFER_SIZE]);
     var result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGNAME, nameMemorySegment);
     if (result == ERROR) {
-      log.log(Level.SEVERE, "Failed to get device name for device (" + fd + ")");
+      log.log(Level.SEVERE, "Failed to get device name for device ({0})", fd);
       return null;
     }
 
@@ -185,7 +187,7 @@ class Linux {
     var versionMemorySegment = memoryArena.allocate(JAVA_INT);
     var result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGVERSION, versionMemorySegment);
     if (result == ERROR) {
-      log.log(Level.SEVERE, "Failed to get device version for device (" + fd + ")");
+      log.log(Level.SEVERE, "Failed to get device version for device ({0})", fd);
       return 0;
     }
 
@@ -203,7 +205,7 @@ class Linux {
     var inputIdMemorySegment = memoryArena.allocate(input_id.$LAYOUT);
     var result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGID, inputIdMemorySegment);
     if (result == ERROR) {
-      log.log(Level.SEVERE, "Failed to get device id for device (" + fd + ")");
+      log.log(Level.SEVERE, "Failed to get device id for device ({0})", fd);
       return null;
     }
 
@@ -214,7 +216,7 @@ class Linux {
     MemorySegment absInfoSegment = memoryArena.allocate(input_absinfo.$LAYOUT);
     int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGABS(absAxis), absInfoSegment);
     if (result == ERROR) {
-      log.log(Level.SEVERE, "Failed to get abs info for axis (" + absAxis + ")");
+      log.log(Level.SEVERE, "Failed to get abs info for axis ({0})", absAxis);
       return null;
     }
     return input_absinfo.read(absInfoSegment);
@@ -224,7 +226,7 @@ class Linux {
     MemorySegment numEffectsSegment = memoryArena.allocate(JAVA_INT);
     int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGEFFECTS, numEffectsSegment);
     if (result == ERROR) {
-      log.log(Level.SEVERE, "Failed to get number of device effects (" + fd + ")");
+      log.log(Level.SEVERE, "Failed to get number of device effects ({0})", fd);
       return ERROR;
     }
     return numEffectsSegment.get(JAVA_INT, 0);
@@ -243,7 +245,7 @@ class Linux {
     effect.write(effectSegment);
     int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCSFF, effectSegment);
     if (result == ERROR) {
-      log.log(Level.SEVERE, "Failed to upload effect to device (" + fd + ")");
+      log.log(Level.SEVERE, "Failed to upload effect to device ({0})", fd);
       return ERROR;
     }
     return (int) ff_effect.VH_id.get(effectSegment, 0);
@@ -260,7 +262,7 @@ class Linux {
   static int removeEffect(Arena memoryArena, int fd, int effectId) {
     int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCRMFF, effectId);
     if (result == ERROR) {
-      log.log(Level.SEVERE, "Failed to remove effect (" + effectId + ") from device (" + fd + ")");
+      log.log(Level.SEVERE, "Failed to remove effect ({0}) from device ({1})", new Object[] {effectId, fd});
       return ERROR;
     }
     return result;
@@ -283,7 +285,7 @@ class Linux {
     event.write(eventSegment);
     int result = invoke(HANDLE_WRITE, memoryArena, fd, eventSegment, input_event.$LAYOUT.byteSize());
     if (result == ERROR) {
-      log.log(Level.WARNING, "Failed to write event to device (" + fd + ")");
+      log.log(Level.WARNING, "Failed to write event to device ({0})", fd);
       return ERROR;
     }
     return result;
@@ -328,7 +330,7 @@ class Linux {
     MemorySegment bitsMemorySegment = memoryArena.allocate(MemoryLayout.sequenceLayout(len, JAVA_BYTE));
     int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCGBIT(evtype, len), bitsMemorySegment);
     if (result == ERROR) {
-      log.log(Level.SEVERE, "Failed to get key states for device (" + fd + ") and evtype " + evtype);
+      log.log(Level.SEVERE, "Failed to get key states for device ({0}) and evtype {1}", new Object[] {fd, evtype});
       return null;
     }
 
@@ -344,7 +346,7 @@ class Linux {
     var capturedState = memoryArena.allocate(Linker.Option.captureStateLayout());
     var methodHandle = handles.get(handleName);
     if (methodHandle == null) {
-      log.log(Level.SEVERE, "Could not find method handle for '" + handleName + "'");
+      log.log(Level.SEVERE, "Could not find method handle for ''{0}''", handleName);
       return ERROR;
     }
 
@@ -372,7 +374,7 @@ class Linux {
           return result;
         }
 
-        log.log(Level.SEVERE, "Could not invoke '" + handleName + "' - " + getErrorString(errorNo) + "(" + errorNo + ")");
+        log.log(Level.SEVERE, "Could not invoke ''{0}'' - {1}({2})", new Object[] {handleName, getErrorString(errorNo), errorNo});
       }
 
       return result;
