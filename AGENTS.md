@@ -62,6 +62,60 @@ Input4j is a pure Java input library using the Foreign Function & Memory API (FF
 
 ---
 
+## Project Structure
+
+```
+src/main/java/de/gurkenlabs/input4j/
+├── InputDevices.java                # Main entry point with InputLibrary enum
+├── InputDevice.java                 # Device representation
+├── InputComponent.java              # Component (button/axis)
+├── InputDevicePlugin.java           # Plugin interface
+├── InputDeviceListener.java         # Event callbacks
+├── AbstractInputDevicePlugin.java   # Base plugin implementation
+├── ComponentType.java              # Component type enum
+├── components/                      # Predefined button/axis definitions
+│   ├── Axis.java                    # Standard axis IDs
+│   ├── Button.java                  # Standard button IDs
+│   ├── XInput.java                  # Xbox controller mappings
+│   └── DualShock4.java              # PS4 controller mappings
+├── foreign/                         # Native implementations
+│   ├── NativeHelper.java            # FFM downcall handle utilities
+│   ├── util/
+│   │   └── PlatformDetector.java   # OS detection
+│   ├── windows/
+│   │   ├── xinput/                  # XInput (Xbox controllers)
+│   │   │   ├── XInputPlugin.java
+│   │   │   ├── XINPUT_STATE.java
+│   │   │   ├── XINPUT_GAMEPAD.java
+│   │   │   ├── XINPUT_CAPABILITIES.java
+│   │   │   └── XINPUT_VIBRATION.java
+│   │   └── dinput/                  # DirectInput (legacy)
+│   │       ├── DirectInputPlugin.java
+│   │       ├── IDirectInput8.java
+│   │       └── DIDEVICEINSTANCE.java
+│   ├── linux/                       # evdev (/dev/input/event*)
+│   │   ├── LinuxEventDevicePlugin.java
+│   │   ├── LinuxEventDevice.java
+│   │   └── input_event.java
+│   └── macos/iokit/                 # IOKit (HID devices)
+│       ├── IOKitPlugin.java
+│       └── IOHIDDevice.java
+└── examples/
+```
+
+---
+
+## Platform-Specific APIs
+
+| Platform | API | Header/Source | Plugin Class |
+|----------|-----|--------------|--------------|
+| Windows | XInput | `xinput.h` | `XInputPlugin` |
+| Windows | DirectInput | `dinput.h` | `DirectInputPlugin` |
+| Linux | evdev | `/dev/input/event*` | `LinuxEventDevicePlugin` |
+| macOS | IOKit | `IOHIDManager` | `IOKitPlugin` |
+
+---
+
 ## Code Style Guidelines
 
 ### General Principles
@@ -81,6 +135,7 @@ Input4j is a pure Java input library using the Foreign Function & Memory API (FF
 | Fields | camelCase | `identifier`, `pollCallback` |
 | Constants | UPPER_SNAKE_CASE | `MAX_DEFAULT_AXIS_ID` |
 | Packages | lowercase | `de.gurkenlabs.input4j.foreign.windows` |
+| Native struct layouts | UPPER_SNAKE_CASE | `$LAYOUT`, `VH_fieldName` |
 
 ### Import Organization
 
@@ -89,18 +144,6 @@ Imports are organized in the following order (enforced by Spotless):
 2. External library imports
 3. `de.gurkenlabs.*` imports
 4. Static imports
-
-```java
-import java.awt.Frame;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Consumer;
-
-import de.gurkenlabs.input4j.InputDevice;
-import de.gurkenlabs.input4j.InputDeviceListener;
-
-import static org.junit.jupiter.api.Assertions.*;
-```
 
 ### Java Records
 
@@ -117,15 +160,6 @@ public record InputValueChangedEvent(InputComponent component, float oldValue, f
 - Use `@param`, `@return`, and `@throws` tags appropriately
 - Include `{@link}` references for related classes
 
-```java
-/**
- * Initializes the input device provider with the default platform library.
- *
- * @return The initialized input device provider or null if initialization fails.
- */
-public static InputDevicePlugin init() { ... }
-```
-
 ### Error Handling
 
 - Use `IllegalArgumentException` for invalid arguments
@@ -133,114 +167,10 @@ public static InputDevicePlugin init() { ... }
 - Log errors with `java.util.logging.Logger` before returning null or throwing
 - Return empty `Optional` instead of null for optional results
 
-```java
-private static final Logger log = Logger.getLogger(InputDevices.class.getName());
-
-public void setAccuracy(int accuracy) {
-  if (accuracy < 0) {
-    throw new IllegalArgumentException("Accuracy must be non-negative");
-  }
-  this.accuracy = accuracy;
-}
-```
-
 ### Thread Safety
 
 - Use `ConcurrentHashMap`, `CopyOnWriteArrayList`, and `ConcurrentHashMap.newKeySet()` for thread-safe collections
 - Use final fields wherever possible
-
-```java
-private final List<InputComponent> components = new CopyOnWriteArrayList<>();
-private final Collection<InputDeviceListener> listeners = ConcurrentHashMap.newKeySet();
-```
-
-### FFM API (Foreign Function & Memory)
-
-The FFM API (java.lang.foreign) enables Java programs to interoperate with native code without JNI. It became permanent in Java 22 (JEP 454).
-
-#### Core Concepts
-
-| Concept | Description |
-|---------|-------------|
-| **Linker** | Bridge between Java and native code. Use `Linker.nativeLinker()` |
-| **SymbolLookup** | Locates native functions in libraries. Use `linker.defaultLookup()` |
-| **MemorySegment** | Represents a region of native memory |
-| **Arena** | Manages lifecycle of memory allocations |
-| **MemoryLayout** | Describes the layout of native data structures |
-| **FunctionDescriptor** | Describes native function signatures |
-| **MethodHandle** | Invokeable handle for calling native functions |
-
-#### Working with Native Functions
-
-```java
-Linker linker = Linker.nativeLinker();
-SymbolLookup stdlib = linker.defaultLookup();
-
-// Describe the native function signature
-FunctionDescriptor desc = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS);
-
-// Create downcall handle
-MemorySegment strlenAddr = stdlib.find("strlen").get();
-MethodHandle strlen = linker.downcallHandle(strlenAddr, desc);
-
-// Call the native function
-try (Arena arena = Arena.ofConfined()) {
-  MemorySegment str = arena.allocateFrom("Hello");
-  int len = (int) strlen.invokeExact(str);
-}
-```
-
-#### Native Memory Management
-
-- Always use `Arena` to manage memory lifecycle
-- Use try-with-resources for automatic cleanup
-- Prefer `Arena.ofConfined()` for single-threaded, `Arena.ofShared()` for multi-threaded
-
-```java
-try (Arena arena = Arena.ofConfined()) {
-  MemorySegment segment = arena.allocate(1024);
-  // Use segment...
-} // Automatically freed
-```
-
-#### Working with Structs
-
-Use `MemoryLayout` for structured native data:
-
-```java
-StructLayout layout = MemoryLayout.structLayout(
-    ValueLayout.JAVA_INT.withName("x"),
-    ValueLayout.JAVA_INT.withName("y")
-);
-
-int x = segment.get(layout, "x");
-segment.set(layout, "x", 42, ValueLayout.JAVA_INT);
-```
-
-#### Restricted Methods
-
-FFM includes restricted methods that can crash the JVM if misused. Enable native access in build.gradle:
-
-```groovy
-test {
-  jvmArgs += '--enable-native-access=ALL-UNNAMED'
-}
-tasks.withType(JavaExec).configureEach {
-  jvmArgs += '--enable-native-access=ALL-UNNAMED'
-}
-```
-
-#### Native Helper Usage
-
-Use `NativeHelper` for creating downcall handles:
-
-```java
-public final class NativeHelper {
-  public static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc) { ... }
-  public static MethodHandle downcallHandle(MemorySegment address, FunctionDescriptor fdesc) { ... }
-  public static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc, String captureCallState) { ... }
-}
-```
 
 ### Test Conventions
 
@@ -263,45 +193,148 @@ class InputDeviceTests {
 
 ---
 
-## Project Structure
+## FFM API (Foreign Function & Memory)
 
+The FFM API (java.lang.foreign) enables Java programs to interoperate with native code without JNI. It became permanent in Java 22 (JEP 454).
+
+### Native Helper Usage
+
+Use `NativeHelper` for creating downcall handles:
+
+```java
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.ValueLayout;
+import java.lang.invoke.MethodHandle;
+
+import de.gurkenlabs.input4j.foreign.NativeHelper;
+
+MethodHandle handle = NativeHelper.downcallHandle(
+    "XInputGetState",
+    FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+);
 ```
-src/
-├── main/java/de/gurkenlabs/input4j/
-│   ├── InputDevices.java          # Main entry point
-│   ├── InputDevice.java           # Device representation
-│   ├── InputComponent.java        # Component (button/axis)
-│   ├── components/                # Predefined button/axis definitions
-│   │   ├── Axis.java
-│   │   ├── Button.java
-│   │   ├── XInput.java
-│   │   └── DualShock4.java
-│   └── foreign/                   # Native implementations
-│       ├── NativeHelper.java      # FFM utilities
-│       ├── linux/
-│       ├── windows/
-│       │   ├── dinput/           # DirectInput
-│       │   └── xinput/           # XInput
-│       └── macos/
-└── test/java/                     # Test sources mirror main structure
+
+### Defining Native Struct Layouts
+
+Use `MemoryLayout` for structured native data with the `$LAYOUT` naming convention:
+
+```java
+import java.lang.foreign.MemoryLayout;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.lang.invoke.VarHandle;
+
+final class XINPUT_STATE {
+  int dwPacketNumber;
+  XINPUT_GAMEPAD Gamepad;
+
+  static final MemoryLayout $LAYOUT = MemoryLayout.structLayout(
+      ValueLayout.JAVA_INT.withName("dwPacketNumber"),
+      XINPUT_GAMEPAD.$LAYOUT.withName("Gamepad")
+  );
+
+  private static final VarHandle VH_dwPacketNumber = 
+      $LAYOUT.varHandle(ValueLayout.PathElement.groupElement("dwPacketNumber"));
+  private static final long GamepadOffset = 
+      $LAYOUT.byteOffset(MemoryLayout.PathElement.groupElement("Gamepad"));
+
+  static XINPUT_STATE read(MemorySegment segment) {
+    var state = new XINPUT_STATE();
+    state.dwPacketNumber = (int) VH_dwPacketNumber.get(segment, 0);
+    state.Gamepad = XINPUT_GAMEPAD.read(segment.asSlice(GamepadOffset));
+    return state;
+  }
+}
+```
+
+### Native Memory Management
+
+- Always use `Arena` to manage memory lifecycle
+- Use try-with-resources for automatic cleanup
+- Prefer `Arena.ofConfined()` for single-threaded, `Arena.ofShared()` for multi-threaded
+
+### Restricted Methods
+
+FFM includes restricted methods. Enable native access in build.gradle:
+
+```groovy
+test {
+  jvmArgs += '--enable-native-access=ALL-UNNAMED'
+}
+tasks.withType(JavaExec).configureEach {
+  jvmArgs += '--enable-native-access=ALL-UNNAMED'
+}
 ```
 
 ---
 
 ## Common Tasks
 
-### Adding a new platform plugin
+### Adding a New Platform Plugin
 
 1. Create a new class implementing `InputDevicePlugin` in `src/main/java/de/gurkenlabs/input4j/foreign/<platform>/`
-2. Add the plugin class to `InputDevices.InputLibrary` enum
-3. Add corresponding tests in `src/test/java/`
-
-### Adding a new predefined button/axis
-
-1. Create or extend a class in `src/main/java/de/gurkenlabs/input4j/components/`
-2. Use `InputComponent.ID` constructor to define button/axis IDs
-3. Add static final fields for each button/axis
+2. Add the plugin class to `InputDevices.InputLibrary` enum:
 
 ```java
-public static final XInput A = new XInput(InputComponent.Button.get(0), "A");
+public enum InputLibrary {
+  PLATFORM_DEFAULT,
+  WIN_DIRECTINPUT,
+  WIN_XINPUT,
+  LINUX_INPUT,
+  MACOS_IOKIT;
+
+  public String getPlugin() {
+    return switch (this) {
+      case PLATFORM_DEFAULT -> InputLibrary.defaultForCurrentOs().getPlugin();
+      case WIN_DIRECTINPUT -> "de.gurkenlabs.input4j.foreign.windows.dinput.DirectInputPlugin";
+      case WIN_XINPUT -> "de.gurkenlabs.input4j.foreign.windows.xinput.XInputPlugin";
+      case LINUX_INPUT -> "de.gurkenlabs.input4j.foreign.linux.LinuxEventDevicePlugin";
+      case MACOS_IOKIT -> "de.gurkenlabs.input4j.foreign.macos.iokit.IOKitPlugin";
+    };
+  }
+}
 ```
+
+3. Add corresponding tests in `src/test/java/`
+
+### Adding a New Predefined Button/Axis
+
+1. Create or extend a class in `src/main/java/de/gurkenlabs/input4j/components/`
+2. Use `InputComponent.ID` constructor to define button/axis IDs:
+
+```java
+public static final InputComponent.ID A = new InputComponent.ID(Button.BUTTON_0, "A");
+public static final InputComponent.ID LEFT_THUMB_X = new InputComponent.ID(Axis.AXIS_X, "LEFT_THUMB_X");
+```
+
+### Defining Native Struct Layouts
+
+1. Create a new class in the appropriate platform package
+2. Define fields matching the native struct
+3. Add static `$LAYOUT` field using `MemoryLayout.structLayout()`
+4. Add `VarHandle` for each field using `withName()` for clarity
+5. Implement `read()` and `write()` methods
+
+### Platform Detection
+
+Use `PlatformDetector` to detect the current OS:
+
+```java
+import de.gurkenlabs.input4j.foreign.util.PlatformDetector;
+
+InputDevices.InputLibrary library = PlatformDetector.detect();
+```
+
+---
+
+## Key Interfaces and Classes
+
+| Class | Purpose |
+|-------|---------|
+| `InputDevices` | Main entry point, initializes plugins |
+| `InputDevicePlugin` | Interface for platform plugins |
+| `InputDevice` | Represents a controller/gamepad |
+| `InputComponent` | Individual button or axis |
+| `InputDeviceListener` | Event callbacks for device changes |
+| `NativeHelper` | FFM utility for native function calls |
+| `PlatformDetector` | OS detection utility |
