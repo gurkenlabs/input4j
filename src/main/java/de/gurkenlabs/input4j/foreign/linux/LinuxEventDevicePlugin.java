@@ -249,9 +249,9 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
         continue;
       }
 
-      var componentIndex = getComponentIndexByNativeId(inputEvent, inputDevice);
-      if (componentIndex == Linux.ERROR) {
-        log.log(Level.SEVERE, "Failed to find component for " + inputEvent.type + " " + inputEvent.code);
+      int componentIndex = linuxEventDevice.componentList.indexOf(nativeComponent);
+      if (componentIndex == -1) {
+        log.log(Level.SEVERE, "Failed to find component index for " + inputEvent.type + " " + inputEvent.code);
         continue;
       }
 
