@@ -39,6 +39,7 @@ public final class InputDevice implements Closeable {
   private final String displayName;
   private final ControllerType controllerType;
   private final List<InputComponent> components = new CopyOnWriteArrayList<>();
+  private final Map<InputComponent.ID, InputComponent> componentIndex = new ConcurrentHashMap<>();
   private final Collection<InputDeviceListener> listeners = ConcurrentHashMap.newKeySet();
   private final Map<InputComponent.ID, Collection<Runnable>> buttonPressedListeners = new ConcurrentHashMap<>();
   private final Map<InputComponent.ID, Collection<Runnable>> buttonReleasedListeners = new ConcurrentHashMap<>();
@@ -210,7 +211,7 @@ public final class InputDevice implements Closeable {
       return Optional.empty();
     }
 
-    return components.stream().filter(c -> c.getId().equals(id)).findFirst();
+    return Optional.ofNullable(componentIndex.get(id));
   }
 
   /**
@@ -236,7 +237,11 @@ public final class InputDevice implements Closeable {
    */
   public void setComponents(List<InputComponent> components) {
     this.components.clear();
-    this.components.addAll(components);
+    this.componentIndex.clear();
+    for (var component : components) {
+      this.components.add(component);
+      this.componentIndex.put(component.getId(), component);
+    }
   }
 
   /**
@@ -246,12 +251,12 @@ public final class InputDevice implements Closeable {
    * @param component the input component to add
    */
   public void addComponent(InputComponent component) {
-    Optional<InputComponent> existingComponent = components.stream()
-      .filter(c -> c.equals(component))
-      .findFirst();
-
-    existingComponent.ifPresent(components::remove);
+    var existingComponent = componentIndex.get(component.getId());
+    if (existingComponent != null) {
+      components.remove(existingComponent);
+    }
     components.add(component);
+    componentIndex.put(component.getId(), component);
   }
 
   /**
