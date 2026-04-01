@@ -37,6 +37,7 @@ public final class InputDevice implements Closeable {
   private final int vendorId;
   private final int productId;
   private final String displayName;
+  private final ControllerType controllerType;
   private final List<InputComponent> components = new CopyOnWriteArrayList<>();
   private final Collection<InputDeviceListener> listeners = ConcurrentHashMap.newKeySet();
   private final Map<InputComponent.ID, Collection<Runnable>> buttonPressedListeners = new ConcurrentHashMap<>();
@@ -80,6 +81,7 @@ public final class InputDevice implements Closeable {
     this.vendorId = vendorId;
     this.productId = productId;
     this.displayName = displayName;
+    this.controllerType = ControllerDatabase.getControllerType(vendorId, productId);
     this.pollCallback = pollCallback;
     this.rumbleCallback = rumbleCallback;
     this.setAccuracy(InputDevices.configure().getAccuracy());
@@ -153,7 +155,7 @@ public final class InputDevice implements Closeable {
    * @return the controller type
    */
   public ControllerType getControllerType() {
-    return ControllerDatabase.getControllerType(vendorId, productId);
+    return controllerType;
   }
 
   /**

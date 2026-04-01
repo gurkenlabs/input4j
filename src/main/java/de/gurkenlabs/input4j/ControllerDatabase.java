@@ -43,10 +43,14 @@ public final class ControllerDatabase {
   /** Known vendor ID for Razer. */
   public static final int VENDOR_RAZER = 0x1532;
 
-  private static final Map<Integer, ControllerInfo> BUILT_IN = buildBuiltInDatabase();
+  private static final Map<Integer, ControllerInfo> BUILT_IN = BuiltInHolder.INSTANCE;
   private static final Map<Integer, ControllerInfo> CUSTOM = new ConcurrentHashMap<>();
 
   private ControllerDatabase() {}
+
+  private static class BuiltInHolder {
+    static final Map<Integer, ControllerInfo> INSTANCE = buildBuiltInDatabase();
+  }
 
   /**
    * Record containing controller information.
