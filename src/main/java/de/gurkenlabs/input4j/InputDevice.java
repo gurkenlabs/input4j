@@ -352,6 +352,7 @@ public final class InputDevice implements Closeable {
     this.listeners.clear();
     this.buttonPressedListeners.clear();
     this.buttonReleasedListeners.clear();
+    this.componentIndex.clear();
   }
 
   /**
