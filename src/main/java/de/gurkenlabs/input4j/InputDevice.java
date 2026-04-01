@@ -34,6 +34,9 @@ public final class InputDevice implements Closeable {
   private final String identifier;
   private final String name;
   private final String productName;
+  private final int vendorId;
+  private final int productId;
+  private final String displayName;
   private final List<InputComponent> components = new CopyOnWriteArrayList<>();
   private final Collection<InputDeviceListener> listeners = ConcurrentHashMap.newKeySet();
   private final Map<InputComponent.ID, Collection<Runnable>> buttonPressedListeners = new ConcurrentHashMap<>();
@@ -55,9 +58,28 @@ public final class InputDevice implements Closeable {
    * @param rumbleCallback the function to be called when setting rumble intensity
    */
   public InputDevice(String identifier, String name, String productName, Function<InputDevice, float[]> pollCallback, BiConsumer<InputDevice, float[]> rumbleCallback) {
+    this(identifier, name, productName, -1, -1, null, pollCallback, rumbleCallback);
+  }
+
+  /**
+   * Creates a new instance of the InputDevice class.
+   *
+   * @param identifier     the identifier of the input device
+   * @param name           the name of the instance of the input device
+   * @param productName    the name of the product of the input device
+   * @param vendorId       the USB vendor ID, or -1 if not available
+   * @param productId      the USB product ID, or -1 if not available
+   * @param displayName    the user-friendly display name, or null to use productName
+   * @param pollCallback   the function to be called when polling for input data from the device
+   * @param rumbleCallback the function to be called when setting rumble intensity
+   */
+  public InputDevice(String identifier, String name, String productName, int vendorId, int productId, String displayName, Function<InputDevice, float[]> pollCallback, BiConsumer<InputDevice, float[]> rumbleCallback) {
     this.identifier = identifier;
     this.name = name;
     this.productName = productName;
+    this.vendorId = vendorId;
+    this.productId = productId;
+    this.displayName = displayName;
     this.pollCallback = pollCallback;
     this.rumbleCallback = rumbleCallback;
     this.setAccuracy(InputDevices.configure().getAccuracy());
@@ -92,6 +114,64 @@ public final class InputDevice implements Closeable {
    */
   public String getProductName() {
     return productName;
+  }
+
+  /**
+   * Gets the USB vendor ID of the input device.
+   *
+   * @return the vendor ID, or -1 if not available
+   */
+  public int getVendorId() {
+    return vendorId;
+  }
+
+  /**
+   * Gets the USB product ID of the input device.
+   *
+   * @return the product ID, or -1 if not available
+   */
+  public int getProductId() {
+    return productId;
+  }
+
+  /**
+   * Checks if vendor and product information is available for this device.
+   *
+   * @return true if vendor and product IDs are available, false otherwise
+   */
+  public boolean hasVendorInfo() {
+    return vendorId != -1 && productId != -1;
+  }
+
+  /**
+   * Gets the controller type based on vendor and product IDs.
+   * <p>
+   * This queries the {@link ControllerDatabase} to determine the controller type.
+   * Returns {@link ControllerType#GENERIC} if the device is not recognized or
+   * if vendor information is not available.
+   *
+   * @return the controller type
+   */
+  public ControllerType getControllerType() {
+    return ControllerDatabase.getControllerType(vendorId, productId);
+  }
+
+  /**
+   * Gets the user-friendly display name of the input device.
+   * <p>
+   * This returns the canonical display name from the controller database if available,
+   * otherwise falls back to the product name, and finally the device name.
+   *
+   * @return the display name
+   */
+  public String getDisplayName() {
+    if (displayName != null && !displayName.isBlank()) {
+      return displayName;
+    }
+    if (productName != null && !productName.isBlank()) {
+      return productName;
+    }
+    return name;
   }
 
   /**
