@@ -148,7 +148,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
     var components = new ArrayList<InputComponent>();
 
     var instanceName = type + " (" + gamepad.userIndex + ")";
-    var device = new InputDevice(Integer.toString(gamepad.userIndex), instanceName, null, this::pollXInputDevice, this::rumbleXInputDevice);
+    var device = new InputDevice(Integer.toString(gamepad.userIndex), instanceName, null, -1, -1, null, this::pollXInputDevice, this::rumbleXInputDevice);
 
     // order is important here, as the order of the components is used to map the polled data
     components.add(new InputComponent(device, XInput.DPAD_UP));

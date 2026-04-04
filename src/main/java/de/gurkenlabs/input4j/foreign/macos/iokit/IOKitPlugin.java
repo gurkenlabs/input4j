@@ -1,6 +1,7 @@
 package de.gurkenlabs.input4j.foreign.macos.iokit;
 
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
+import de.gurkenlabs.input4j.ControllerDatabase;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
 
@@ -53,7 +54,8 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
         for (var ioHIDDevice : ioHIDDevices) {
           log.log(Level.FINE, "Found HID device: " + ioHIDDevice.productName);
-          var inputDevice = new InputDevice(Long.toString(ioHIDDevice.address), ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", this::pollIOHIDDevice, this::rumbleIOHIDDevice);
+          String displayName = ControllerDatabase.getDisplayName(ioHIDDevice.vendorId, ioHIDDevice.productId);
+          var inputDevice = new InputDevice(Long.toString(ioHIDDevice.address), ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", ioHIDDevice.vendorId, ioHIDDevice.productId, displayName, this::pollIOHIDDevice, this::rumbleIOHIDDevice);
           ioHIDDevice.inputDevice = inputDevice;
 
           for (var element : ioHIDDevice.getElements()) {

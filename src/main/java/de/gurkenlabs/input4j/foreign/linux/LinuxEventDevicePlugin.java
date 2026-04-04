@@ -151,7 +151,11 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
         log.log(Level.FINE, "Device supports force feedback: " + device.name + " with " + device.maxEffects + " effects");
       }
 
-      var inputDevice = new InputDevice(eventDeviceFile.getAbsolutePath(), device.name, device.name, this::pollLinuxEventDevice, this::rumbleLinuxEventDevice);
+      int vendorId = device.id != null ? Short.toUnsignedInt(device.id.vendor) : -1;
+      int productId = device.id != null ? Short.toUnsignedInt(device.id.product) : -1;
+      String displayName = de.gurkenlabs.input4j.ControllerDatabase.getDisplayName(vendorId, productId);
+
+      var inputDevice = new InputDevice(eventDeviceFile.getAbsolutePath(), device.name, device.name, vendorId, productId, displayName, this::pollLinuxEventDevice, this::rumbleLinuxEventDevice);
       device.inputDevice = inputDevice;
 
       // Check for available event types
