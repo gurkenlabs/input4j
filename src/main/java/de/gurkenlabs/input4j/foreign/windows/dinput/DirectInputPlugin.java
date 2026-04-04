@@ -2,6 +2,7 @@ package de.gurkenlabs.input4j.foreign.windows.dinput;
 
 
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
+import de.gurkenlabs.input4j.ControllerDatabase;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
 
@@ -363,9 +364,27 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
     var name = new String(deviceInstance.tszInstanceName).trim();
     var product = new String(deviceInstance.tszProductName).trim();
 
-    // var type = DI8DEVTYPE.fromDwDevType(deviceInstance.dwDevType);
-    // Note: DirectInput doesn't expose vendor/product IDs directly; would require additional HID property calls
-    var inputDevice = new InputDevice(deviceInstance.guidInstance.toString(), name, product, -1, -1, null, this::pollDirectInputDevice, null);
+    // Extract vendor and product IDs from guidProduct.
+    // DirectInput encodes VID/PID in the guidProduct GUID:
+    // - Data1 lower 16 bits = Vendor ID
+    // - Data1 upper 16 bits = Product ID
+    // This is derived from the HID device's USB vendor/product IDs.
+    int vendorId = -1;
+    int productId = -1;
+    String displayName = null;
+
+    if (deviceInstance.guidProduct != null) {
+      int combined = deviceInstance.guidProduct.Data1;
+      if (combined != 0) {
+        vendorId = combined & 0xFFFF;
+        productId = (combined >> 16) & 0xFFFF;
+        if (vendorId != 0) {
+          displayName = ControllerDatabase.getDisplayName(vendorId, productId);
+        }
+      }
+    }
+
+    var inputDevice = new InputDevice(deviceInstance.guidInstance.toString(), name, product, vendorId, productId, displayName, this::pollDirectInputDevice, null);
     this.nativeDevices.put(inputDevice.getID(), new IDirectInputDevice8(deviceInstance, inputDevice));
 
     return true;
