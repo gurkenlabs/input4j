@@ -1,4 +1,4 @@
-# 🎮 Input4j - The pure Java input library
+# 🎮 Input4j - The pure Java controller and gamepad library
 [![Maven Central](https://img.shields.io/maven-central/v/de.gurkenlabs/input4j)](https://search.maven.org/artifact/de.gurkenlabs/input4j)
 [![Build](https://img.shields.io/github/actions/workflow/status/gurkenlabs/input4j/build.yml)](https://github.com/gurkenlabs/input4j/actions)
 [![License](https://img.shields.io/github/license/gurkenlabs/input4j)](LICENSE)
