@@ -1,6 +1,5 @@
 package de.gurkenlabs.input4j.examples;
 
-import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
 import de.gurkenlabs.input4j.InputDevicePlugin;
 import de.gurkenlabs.input4j.InputDevices;
@@ -10,16 +9,9 @@ import java.awt.*;
 import java.io.IOException;
 
 public class ControllerTestApp extends JFrame {
-  private static final Color BUTTON_PRESSED = new Color(76, 175, 80);
-  private static final Color BUTTON_RELEASED = new Color(200, 200, 200);
-  private static final Color AXIS_POSITIVE = new Color(66, 165, 245);
-  private static final Color AXIS_NEGATIVE = new Color(239, 83, 80);
-
   private JComboBox<InputDevice> deviceSelector;
   private JLabel deviceInfoLabel;
-  private JPanel buttonsPanel;
-  private JPanel axesPanel;
-  private JPanel dpadPanel;
+  private GamepadVisualizer visualizer;
   private JSlider rumbleSlider;
   private JLabel pollRateLabel;
   private JTextPane consolePane;
@@ -29,7 +21,6 @@ public class ControllerTestApp extends JFrame {
 
   private InputDevicePlugin plugin;
   private InputDevice currentDevice;
-  private final java.util.Map<String, JLabel> buttonLabels = new java.util.HashMap<>();
   private final java.util.Map<String, JProgressBar> axisBars = new java.util.HashMap<>();
   private Timer pollTimer;
   private long lastPollTime;
@@ -42,7 +33,7 @@ public class ControllerTestApp extends JFrame {
   public ControllerTestApp() {
     setTitle("Input4j Controller Test");
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    setMinimumSize(new Dimension(600, 500));
+    setMinimumSize(new Dimension(800, 450));
 
     plugin = InputDevices.init();
     if (plugin == null) {
@@ -114,15 +105,13 @@ public class ControllerTestApp extends JFrame {
   private JPanel createMainPanel() {
     var panel = new JPanel(new BorderLayout(10, 10));
 
-    var visualPanel = new JPanel(new GridLayout(2, 1, 10, 10));
-    buttonsPanel = createButtonsPanel();
-    axesPanel = createAxesPanel();
-    visualPanel.add(buttonsPanel);
-    visualPanel.add(axesPanel);
+    visualizer = new GamepadVisualizer();
+    var visualizerWrapper = new JPanel(new GridLayout());
+    visualizerWrapper.add(visualizer);
 
     var consolePanel = createConsolePanel();
 
-    panel.add(visualPanel, BorderLayout.CENTER);
+    panel.add(visualizerWrapper, BorderLayout.CENTER);
     panel.add(consolePanel, BorderLayout.EAST);
     return panel;
   }
@@ -130,11 +119,13 @@ public class ControllerTestApp extends JFrame {
   private JPanel createConsolePanel() {
     var panel = new JPanel(new BorderLayout());
     panel.setBorder(BorderFactory.createTitledBorder("Event Log"));
-    panel.setPreferredSize(new Dimension(280, 0));
+    panel.setPreferredSize(new Dimension(250, 0));
 
     consolePane = new JTextPane();
     consolePane.setEditable(false);
     consolePane.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 11));
+    consolePane.setOpaque(true);
+    consolePane.setBackground(Color.WHITE);
 
     var scrollPane = new JScrollPane(consolePane);
     scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
@@ -150,101 +141,6 @@ public class ControllerTestApp extends JFrame {
     panel.add(btnPanel, BorderLayout.NORTH);
     panel.add(scrollPane, BorderLayout.CENTER);
     return panel;
-  }
-
-  private JPanel createButtonsPanel() {
-    var panel = new JPanel(new BorderLayout());
-    panel.setBorder(BorderFactory.createTitledBorder("Buttons"));
-
-    var gridPanel = new JPanel(new GridLayout(4, 4, 5, 5));
-
-    String[] buttonOrder = {"A", "B", "X", "Y", "LEFT_SHOULDER", "RIGHT_SHOULDER", "BACK", "START", "LEFT_THUMB", "RIGHT_THUMB", "DPAD_UP", "DPAD_DOWN", "DPAD_LEFT", "DPAD_RIGHT"};
-    for (String name : buttonOrder) {
-      var label = new JLabel(trimName(name), SwingConstants.CENTER);
-      label.setOpaque(true);
-      label.setBackground(BUTTON_RELEASED);
-      label.setForeground(Color.BLACK);
-      label.setFont(label.getFont().deriveFont(Font.BOLD, 14));
-      label.setPreferredSize(new Dimension(60, 40));
-      buttonLabels.put(name, label);
-      gridPanel.add(label);
-    }
-
-    for (int i = 0; i < 8; i++) {
-      gridPanel.add(Box.createGlue());
-    }
-
-    panel.add(gridPanel, BorderLayout.CENTER);
-    return panel;
-  }
-
-  private String trimName(String name) {
-    return name.replace("LEFT_", "L").replace("RIGHT_", "R").replace("THUMB", "").replace("SHOULDER", "B").replace("DPAD_", "");
-  }
-
-  private JPanel createAxesPanel() {
-    var panel = new JPanel(new BorderLayout());
-    panel.setBorder(BorderFactory.createTitledBorder("Axes"));
-
-    dpadPanel = createDpadPanel();
-
-    var axesGridPanel = new JPanel(new GridLayout(4, 1, 5, 5));
-
-    String[] axisOrder = {"LEFT_THUMB_X", "LEFT_THUMB_Y", "RIGHT_THUMB_X", "RIGHT_THUMB_Y", "LEFT_TRIGGER", "RIGHT_TRIGGER"};
-    for (String name : axisOrder) {
-      var isTrigger = name.contains("TRIGGER");
-      var bar = new JProgressBar(isTrigger ? 0 : -100, 100);
-      bar.setValue(0);
-      bar.setStringPainted(true);
-      bar.setFont(bar.getFont().deriveFont(10f));
-      axisBars.put(name, bar);
-
-      var label = new JLabel(shortenAxisName(name) + ":", SwingConstants.LEFT);
-      label.setPreferredSize(new Dimension(55, 20));
-      label.setMinimumSize(new Dimension(55, 20));
-
-      var rowPanel = new JPanel(new BorderLayout(2, 0));
-      rowPanel.add(label, BorderLayout.WEST);
-      rowPanel.add(bar, BorderLayout.CENTER);
-
-      axesGridPanel.add(rowPanel);
-    }
-
-    var centerPanel = new JPanel(new BorderLayout(10, 0));
-    centerPanel.add(dpadPanel, BorderLayout.WEST);
-    centerPanel.add(axesGridPanel, BorderLayout.CENTER);
-
-    panel.add(centerPanel, BorderLayout.CENTER);
-    return panel;
-  }
-
-  private String shortenAxisName(String name) {
-    return name.replace("LEFT_", "L").replace("RIGHT_", "R").replace("_THUMB", "").replace("_TRIGGER", "");
-  }
-
-  private JPanel createDpadPanel() {
-    var panel = new JPanel(new GridLayout(3, 3, 2, 2));
-    panel.setPreferredSize(new Dimension(100, 100));
-
-    String[] layout = {"DPAD_LEFT", "DPAD_UP", "DPAD_RIGHT", "", "DPAD_DOWN", ""};
-    for (int i = 0; i < 6; i++) {
-      var btn = new JPanel();
-      btn.setBackground(BUTTON_RELEASED);
-      btn.setPreferredSize(new Dimension(30, 30));
-      if (!layout[i].isEmpty()) {
-        buttonLabels.put(layout[i], new JLabel(layout[i].replace("DPAD_", ""), SwingConstants.CENTER));
-        buttonLabels.get(layout[i]).setOpaque(true);
-        buttonLabels.get(layout[i]).setBackground(BUTTON_RELEASED);
-        buttonLabels.get(layout[i]).setForeground(Color.BLACK);
-        panel.add(buttonLabels.get(layout[i]));
-      } else {
-        panel.add(btn);
-      }
-    }
-
-    var wrapper = new JPanel();
-    wrapper.add(panel);
-    return wrapper;
   }
 
   private JPanel createBottomPanel() {
@@ -343,16 +239,13 @@ public class ControllerTestApp extends JFrame {
   }
 
   private void updateUI(InputDevice device) {
+    visualizer.updateFromDevice(device);
+
     for (var component : device.getComponents()) {
       String name = component.getId().name;
       float data = component.getData();
 
       if (component.isButton()) {
-        var label = buttonLabels.get(name);
-        if (label != null) {
-          label.setBackground(data > 0 ? BUTTON_PRESSED : BUTTON_RELEASED);
-        }
-
         Float lastButton = lastButtonValues.get(name);
         if (lastButton == null) {
           lastButton = 0f;
@@ -367,15 +260,9 @@ public class ControllerTestApp extends JFrame {
           updateConsole();
         }
       } else if (component.isAxis()) {
-        var bar = axisBars.get(name);
-        if (bar != null) {
-          updateAxisBar(bar, data);
-        }
         logAxisEvent(name, data);
       }
     }
-
-    updateDPad(device);
   }
 
   private void logAxisEvent(String name, float data) {
@@ -402,38 +289,6 @@ public class ControllerTestApp extends JFrame {
     }
     consolePane.setText(sb.toString());
     consolePane.setCaretPosition(consolePane.getDocument().getLength());
-  }
-
-  private void updateAxisBar(JProgressBar bar, float data) {
-    int value = (int) (data * 100);
-    bar.setValue(value);
-
-    if (data > 0.1f) {
-      bar.setForeground(AXIS_POSITIVE);
-    } else if (data < -0.1f) {
-      bar.setForeground(AXIS_NEGATIVE);
-    } else {
-      bar.setForeground(null);
-    }
-  }
-
-  private void updateDPad(InputDevice device) {
-    String[] dpadButtons = {"DPAD_UP", "DPAD_DOWN", "DPAD_LEFT", "DPAD_RIGHT"};
-    for (String name : dpadButtons) {
-      var data = getComponentValue(device, name);
-      updateDPadButton(name, data > 0);
-    }
-  }
-
-  private void updateDPadButton(String name, boolean pressed) {
-    var label = buttonLabels.get(name);
-    if (label != null) {
-      label.setBackground(pressed ? BUTTON_PRESSED : BUTTON_RELEASED);
-    }
-  }
-
-  private float getComponentValue(InputDevice device, String name) {
-    return device.getComponent(name).map(InputComponent::getData).orElse(0f);
   }
 
   @Override
