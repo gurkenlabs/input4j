@@ -79,6 +79,31 @@ final class IDirectInputDevice8 {
   static final MemorySegment DIPROP_SATURATION = MemorySegment.ofAddress(6L);
   static final MemorySegment DIPROP_FFGAIN = MemorySegment.ofAddress(7L);
 
+  public static final int DIGFFS_ACTIVE = 0x00000001;
+  public static final int DIGFFS_EMPTY = 0x00000002;
+  public static final int DIGFFS_STOPPED = 0x00000004;
+  public static final int DIGFFS_PAUSED = 0x00000008;
+
+  public static final int DISFFC_RESET = 0x00000001;
+  public static final int DISFFC_STOPALL = 0x00000002;
+  public static final int DISFFC_PAUSEALL = 0x00000004;
+  public static final int DISFFC_CONTINUEALL = 0x00000008;
+  public static final int DISFFC_SETACTUATORSON = 0x00000010;
+  public static final int DISFFC_SETACTUATORSOFF = 0x00000020;
+
+  public static final GUID GUID_ConstantForce = new GUID(0x00000001, (short) 0x0000, (short) 0x0000, new byte[]{(byte) 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46});
+  public static final GUID GUID_RampForce = new GUID(0x00000002, (short) 0x0000, (short) 0x0000, new byte[]{(byte) 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46});
+  public static final GUID GUID_Square = new GUID(0x00000003, (short) 0x0000, (short) 0x0000, new byte[]{(byte) 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46});
+  public static final GUID GUID_Sine = new GUID(0x00000004, (short) 0x0000, (short) 0x0000, new byte[]{(byte) 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46});
+  public static final GUID GUID_Triangle = new GUID(0x00000005, (short) 0x0000, (short) 0x0000, new byte[]{(byte) 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46});
+  public static final GUID GUID_SawtoothUp = new GUID(0x00000006, (short) 0x0000, (short) 0x0000, new byte[]{(byte) 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46});
+  public static final GUID GUID_SawtoothDown = new GUID(0x00000007, (short) 0x0000, (short) 0x0000, new byte[]{(byte) 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46});
+  public static final GUID GUID_Spring = new GUID(0x00000008, (short) 0x0000, (short) 0x0000, new byte[]{(byte) 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46});
+  public static final GUID GUID_Damper = new GUID(0x00000009, (short) 0x0000, (short) 0x0000, new byte[]{(byte) 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46});
+  public static final GUID GUID_Inertia = new GUID(0x0000000A, (short) 0x0000, (short) 0x0000, new byte[]{(byte) 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46});
+  public static final GUID GUID_Friction = new GUID(0x0000000B, (short) 0x0000, (short) 0x0000, new byte[]{(byte) 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46});
+  public static final GUID GUID_CustomForce = new GUID(0x0000000C, (short) 0x0000, (short) 0x0000, new byte[]{(byte) 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46});
+
   static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
           ADDRESS.withName("lpVtbl")
   ).withName("IDirectInputDevice8A");
@@ -104,6 +129,9 @@ final class IDirectInputDevice8 {
   private MethodHandle getDeviceState;
   private MethodHandle getDeviceData;
   private MethodHandle getProperty;
+  private MethodHandle createEffect;
+  private MethodHandle getForceFeedbackState;
+  private MethodHandle sendForceFeedbackCommand;
 
   IDirectInputDevice8(DIDEVICEINSTANCE deviceInstance, InputDevice inputDevice) {
     this.deviceInstance = deviceInstance;
@@ -148,6 +176,15 @@ final class IDirectInputDevice8 {
 
     var getPropertyPointer = (MemorySegment) Vtable.VH_GetProperty.get(this.vtable, 0);
     this.getProperty = downcallHandle(getPropertyPointer, Vtable.getPropertyDescriptor);
+
+    var createEffectPointer = (MemorySegment) Vtable.VH_CreateEffect.get(this.vtable, 0);
+    this.createEffect = downcallHandle(createEffectPointer, Vtable.createEffectDescriptor);
+
+    var getForceFeedbackStatePointer = (MemorySegment) Vtable.VH_GetForceFeedbackState.get(this.vtable, 0);
+    this.getForceFeedbackState = downcallHandle(getForceFeedbackStatePointer, Vtable.getForceFeedbackStateDescriptor);
+
+    var sendForceFeedbackCommandPointer = (MemorySegment) Vtable.VH_SendForceFeedbackCommand.get(this.vtable, 0);
+    this.sendForceFeedbackCommand = downcallHandle(sendForceFeedbackCommandPointer, Vtable.sendForceFeedbackCommandDescriptor);
   }
 
   /**
@@ -281,6 +318,45 @@ final class IDirectInputDevice8 {
     return (int) getProperty.invokeExact(this.vtablePointerSegment, rguidProp, pdiph);
   }
 
+  /**
+   * Creates a force feedback effect for this device.
+   *
+   * @param rguid GUID identifying the effect type to create
+   * @param peff Pointer to a DIEFFECT structure describing the effect
+   * @param ppeff Pointer to a memory location that receives the effect interface pointer
+   * @param punkOuter Outer unknown for aggregation (NULL for no aggregation)
+   * @return DI_OK if successful, error code otherwise
+   * @throws Throwable If an exception occurs while creating the effect
+   */
+  public int CreateEffect(GUID rguid, MemorySegment peff, MemorySegment ppeff, MemorySegment punkOuter) throws Throwable {
+    try (var arena = Arena.ofConfined()) {
+      var guidSegment = rguid.write(arena);
+      return (int) createEffect.invokeExact(this.vtablePointerSegment, guidSegment.address(), peff, ppeff, punkOuter);
+    }
+  }
+
+  /**
+   * Retrieves the current state of the force feedback system.
+   *
+   * @param pdwState Pointer to a variable that receives the state flags
+   * @return DI_OK if successful, error code otherwise
+   * @throws Throwable If an exception occurs while getting the force feedback state
+   */
+  public int GetForceFeedbackState(MemorySegment pdwState) throws Throwable {
+    return (int) getForceFeedbackState.invokeExact(this.vtablePointerSegment, pdwState);
+  }
+
+  /**
+   * Sends a command to the force feedback system.
+   *
+   * @param dwFlags Command flags indicating the operation to perform
+   * @return DI_OK if successful, error code otherwise
+   * @throws Throwable If an exception occurs while sending the command
+   */
+  public int SendForceFeedbackCommand(int dwFlags) throws Throwable {
+    return (int) sendForceFeedbackCommand.invokeExact(this.vtablePointerSegment, dwFlags);
+  }
+
   static class Vtable {
     static final GroupLayout $LAYOUT = MemoryLayout.structLayout(
             ADDRESS.withName("QueryInterface"),
@@ -327,8 +403,14 @@ final class IDirectInputDevice8 {
     private static final FunctionDescriptor getDeviceStateDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, ADDRESS);
     private static final FunctionDescriptor getDeviceDataDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT, ADDRESS, ADDRESS, JAVA_INT);
     private static final FunctionDescriptor getPropertyDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS, ADDRESS);
+    private static final FunctionDescriptor createEffectDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_LONG, ADDRESS, ADDRESS, ADDRESS);
+    private static final FunctionDescriptor getForceFeedbackStateDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, ADDRESS);
+    private static final FunctionDescriptor sendForceFeedbackCommandDescriptor = FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT);
 
     private static final VarHandle VH_EnumObjects = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("EnumObjects"));
+    private static final VarHandle VH_CreateEffect = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("CreateEffect"));
+    private static final VarHandle VH_GetForceFeedbackState = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("GetForceFeedbackState"));
+    private static final VarHandle VH_SendForceFeedbackCommand = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("SendForceFeedbackCommand"));
     private static final VarHandle VH_Acquire = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Acquire"));
     private static final VarHandle VH_Unacquire = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Unacquire"));
     private static final VarHandle VH_Poll = $LAYOUT.varHandle(MemoryLayout.PathElement.groupElement("Poll"));

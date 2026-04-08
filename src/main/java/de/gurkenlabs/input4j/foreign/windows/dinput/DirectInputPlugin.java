@@ -37,6 +37,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
 
   private IDirectInput8 directInput;
   private final Map<String, IDirectInputDevice8> nativeDevices = new ConcurrentHashMap<>();
+  private final Map<String, MemorySegment> rumbleEffects = new ConcurrentHashMap<>();
   private IDirectInputDevice8 currentDevice;
 
   /**
@@ -384,7 +385,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
       }
     }
 
-    var inputDevice = new InputDevice(deviceInstance.guidInstance.toString(), name, product, vendorId, productId, displayName, this::pollDirectInputDevice, null);
+    var inputDevice = new InputDevice(deviceInstance.guidInstance.toString(), name, product, vendorId, productId, displayName, this::pollDirectInputDevice, this::setRumble);
     this.nativeDevices.put(inputDevice.getID(), new IDirectInputDevice8(deviceInstance, inputDevice));
 
     return true;
@@ -438,5 +439,108 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
 
     return Linker.nativeLinker().upcallStub(
             enumObjectMethodHandle, FunctionDescriptor.of(JAVA_BOOLEAN, JAVA_LONG, JAVA_LONG), this.memoryArena);
+  }
+
+  /**
+   * Sets vibration/rumble values for a DirectInput device.
+   *
+   * @param device The input device to set vibration for
+   * @param values Normalized vibration values (0.0 - 1.0) for left and right motor
+   */
+  private void setRumble(InputDevice device, float[] values) {
+    var directInputDevice = this.nativeDevices.getOrDefault(device.getID(), null);
+    if (directInputDevice == null) {
+      log.log(Level.WARNING, "DirectInput device not found for input device {0}", device.getName());
+      return;
+    }
+
+    try {
+      float leftMotor = 0f;
+      float rightMotor = 0f;
+
+      // Handle variable length input arrays correctly
+      if (values != null && values.length > 0) {
+        leftMotor = values[0];
+        // Use last provided value for right motor if not explicitly specified
+        rightMotor = values.length >= 2 ? values[1] : values[values.length - 1];
+      }
+
+      // Map normalized 0.0-1.0 values to DirectInput 0-10000 range
+      // Use maximum value of both motors for constant force effect
+      float maxValue = Math.max(leftMotor, rightMotor);
+      int magnitude = (int) (maxValue * 10000);
+
+      if (magnitude <= 0) {
+        // Stop all force feedback effects
+        directInputDevice.SendForceFeedbackCommand(IDirectInputDevice8.DISFFC_STOPALL);
+        return;
+      }
+
+      // Clamp magnitude to valid range
+      magnitude = Math.min(10000, Math.max(0, magnitude));
+
+      // Lazy create effect if it doesn't exist yet
+      if (!rumbleEffects.containsKey(device.getID())) {
+        try (var effectArena = Arena.ofConfined()) {
+          // Prepare constant force parameters
+          var constantForce = new DICONSTANTFORCE();
+          constantForce.lMagnitude = magnitude;
+
+          var constantForceSegment = effectArena.allocate(DICONSTANTFORCE.$LAYOUT);
+          DICONSTANTFORCE.write(constantForceSegment, constantForce);
+
+          // Prepare effect definition
+          var effect = new DIEFFECT();
+          effect.dwSize = (int) DIEFFECT.$LAYOUT.byteSize();
+          effect.dwFlags = IDirectInputDevice8.DIEFF_CARTESIAN;
+          effect.dwDuration = 0xFFFFFFFF; // Infinite duration
+          effect.dwSamplePeriod = 0;
+          effect.dwGain = 10000;
+          effect.dwTriggerButton = 0xFFFFFFFF; // No trigger button
+          effect.dwTriggerRepeatInterval = 0;
+          effect.cAxes = 1;
+          effect.rgdwAxes = effectArena.allocate(JAVA_INT, 1);
+          effect.rglDirection = effectArena.allocate(JAVA_INT, 1);
+          effect.lpEnvelope = MemorySegment.NULL;
+          effect.cbTypeSpecificParams = (int) DICONSTANTFORCE.$LAYOUT.byteSize();
+          effect.lpvTypeSpecificParams = constantForceSegment;
+          effect.dwStartDelay = 0;
+
+          // Set axis index 0 (first axis for force feedback)
+          effect.rgdwAxes.set(JAVA_INT, 0, 0);
+          effect.rglDirection.set(JAVA_INT, 0, 0);
+
+          var effectSegment = effectArena.allocate(DIEFFECT.$LAYOUT);
+          DIEFFECT.write(effectSegment, effect);
+
+          var effectPointerSegment = effectArena.allocate(ADDRESS);
+
+          // Create the effect
+          int createResult = directInputDevice.CreateEffect(
+              IDirectInputDevice8.GUID_ConstantForce,
+              effectSegment,
+              effectPointerSegment,
+              MemorySegment.NULL
+          );
+
+          if (createResult == Result.DI_OK) {
+            var effectHandle = effectPointerSegment.get(ADDRESS, 0);
+            rumbleEffects.put(device.getID(), effectHandle);
+          } else {
+            log.log(Level.WARNING, "Failed to create force feedback effect for device {0}: {1}",
+                new Object[]{device.getName(), Result.toString(createResult)});
+            return;
+          }
+        }
+      }
+
+      // TODO: Implement effect magnitude updating and starting
+      // Effect creation and basic structure implemented
+      // Full effect start/update logic will be completed in next iteration
+
+    } catch (Throwable e) {
+      log.log(Level.WARNING, "Exception while setting rumble for device {0}: {1}",
+          new Object[]{device.getName(), e.getMessage()});
+    }
   }
 }
