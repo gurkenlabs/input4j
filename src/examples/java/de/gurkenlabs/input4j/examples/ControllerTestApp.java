@@ -1,5 +1,8 @@
 package de.gurkenlabs.input4j.examples;
 
+import com.github.weisj.darklaf.LafManager;
+import com.github.weisj.darklaf.theme.DarculaTheme;
+import com.github.weisj.darklaf.theme.HighContrastDarkTheme;
 import de.gurkenlabs.input4j.InputDevice;
 import de.gurkenlabs.input4j.InputDevicePlugin;
 import de.gurkenlabs.input4j.InputDevices;
@@ -7,8 +10,11 @@ import de.gurkenlabs.input4j.InputDevices;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ControllerTestApp extends JFrame {
+  private static final Logger LOGGER = Logger.getLogger(ControllerTestApp.class.getName());
   private JComboBox<InputDevice> deviceSelector;
   private JLabel deviceInfoLabel;
   private GamepadVisualizer visualizer;
@@ -27,6 +33,12 @@ public class ControllerTestApp extends JFrame {
   private int pollCount;
 
   public static void main(String[] args) {
+    try {
+      LafManager.installTheme(new HighContrastDarkTheme());
+    } catch (Exception e) {
+      LOGGER.log(Level.WARNING, "Failed to install Darklaf theme, falling back to default", e);
+    }
+
     SwingUtilities.invokeLater(() -> new ControllerTestApp().setVisible(true));
   }
 
@@ -125,7 +137,6 @@ public class ControllerTestApp extends JFrame {
     consolePane.setEditable(false);
     consolePane.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 11));
     consolePane.setOpaque(true);
-    consolePane.setBackground(Color.WHITE);
 
     var scrollPane = new JScrollPane(consolePane);
     scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);

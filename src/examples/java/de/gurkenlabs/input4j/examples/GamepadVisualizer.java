@@ -24,7 +24,7 @@ public class GamepadVisualizer extends JPanel {
 
   public GamepadVisualizer() {
     setPreferredSize(new Dimension(W, H));
-    setBackground(new Color(240, 240, 240));
+    setOpaque(false);
   }
 
   public void updateFromDevice(InputDevice device) {
