@@ -21,6 +21,16 @@ java {
   targetCompatibility = JavaVersion.VERSION_22
 }
 
+sourceSets {
+  examples {
+    java {
+      srcDirs += 'src/examples/java'
+    }
+    compileClasspath += sourceSets.main.output
+    runtimeClasspath += sourceSets.main.output
+  }
+}
+
 tasks.withType(JavaCompile).configureEach {
   options.compilerArgs.addAll(['--release', '22'])
 }
@@ -28,6 +38,8 @@ tasks.withType(JavaCompile).configureEach {
 dependencies {
   testImplementation libs.junit.jupiter
   testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+  examplesImplementation "de.gurkenlabs:input4j:${project.version}"
+  examplesImplementation "com.github.weisj:darklaf-core:3.1.0"
 }
 
 test {
@@ -46,14 +58,25 @@ jacocoTestReport {
 }
 
 tasks.register('remoteDebug', JavaExec) {
-  mainClass = 'de.gurkenlabs.input4j.examples.ExamplePollAllInputDevicesManually'  // replace with your main class
-  classpath = sourceSets.main.runtimeClasspath
+  group = 'examples'
+  description = 'Debug example applications'
+  mainClass = 'de.gurkenlabs.input4j.examples.ExamplePollAllInputDevicesManually'
+  classpath = sourceSets.examples.runtimeClasspath
   args = ['run']
 
   jvmArgs = [
     '-Xdebug',
     '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005'
   ]
+  jvmArgs += '--enable-native-access=ALL-UNNAMED'
+}
+
+tasks.register('runExamples', JavaExec) {
+  group = 'examples'
+  description = 'Run example applications'
+  mainClass = 'de.gurkenlabs.input4j.examples.ControllerTestApp'
+  classpath = sourceSets.examples.runtimeClasspath
+  jvmArgs += '--enable-native-access=ALL-UNNAMED'
 }
 
 tasks.withType(JavaExec).configureEach {
