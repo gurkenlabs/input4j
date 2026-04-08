@@ -2,6 +2,9 @@ package de.gurkenlabs.input4j.examples;
 
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
+import de.gurkenlabs.input4j.components.Axis;
+import de.gurkenlabs.input4j.components.Button;
+import de.gurkenlabs.input4j.components.XInput;
 
 import javax.swing.*;
 import java.awt.*;
@@ -29,35 +32,35 @@ public class GamepadVisualizer extends JPanel {
 
   public void updateFromDevice(InputDevice device) {
     if (device == null) { reset(); return; }
-    a = getBool(device, "A");
-    b = getBool(device, "B");
-    x = getBool(device, "X");
-    y = getBool(device, "Y");
-    lb = getBool(device, "LEFT_SHOULDER");
-    rb = getBool(device, "RIGHT_SHOULDER");
-    back = getBool(device, "BACK");
-    start = getBool(device, "START");
-    lstick = getBool(device, "LEFT_THUMB");
-    rstick = getBool(device, "RIGHT_THUMB");
-    dpadUp = getBool(device, "DPAD_UP");
-    dpadDown = getBool(device, "DPAD_DOWN");
-    dpadLeft = getBool(device, "DPAD_LEFT");
-    dpadRight = getBool(device, "DPAD_RIGHT");
-    lx = getAxis(device, "LEFT_THUMB_X");
-    ly = -getAxis(device, "LEFT_THUMB_Y");
-    rx = getAxis(device, "RIGHT_THUMB_X");
-    ry = -getAxis(device, "RIGHT_THUMB_Y");
-    lTrigger = getAxis(device, "LEFT_TRIGGER");
-    rTrigger = getAxis(device, "RIGHT_TRIGGER");
+    a = getBool(device, XInput.A);
+    b = getBool(device, XInput.B);
+    x = getBool(device, XInput.X);
+    y = getBool(device, XInput.Y);
+    lb = getBool(device, XInput.LEFT_SHOULDER);
+    rb = getBool(device, XInput.RIGHT_SHOULDER);
+    back = getBool(device, XInput.BACK);
+    start = getBool(device, XInput.START);
+    lstick = getBool(device, XInput.LEFT_THUMB);
+    rstick = getBool(device, XInput.RIGHT_THUMB);
+    dpadUp = getBool(device, Button.DPAD_UP);
+    dpadDown = getBool(device, Button.DPAD_DOWN);
+    dpadLeft = getBool(device, Button.DPAD_LEFT);
+    dpadRight = getBool(device, Button.DPAD_RIGHT);
+    lx = getAxis(device, XInput.LEFT_THUMB_X);
+    ly = -getAxis(device, XInput.LEFT_THUMB_Y);
+    rx = getAxis(device, XInput.RIGHT_THUMB_X);
+    ry = -getAxis(device, XInput.RIGHT_THUMB_Y);
+    lTrigger = getAxis(device, XInput.LEFT_TRIGGER);
+    rTrigger = getAxis(device, XInput.RIGHT_TRIGGER);
     repaint();
   }
 
-  private boolean getBool(InputDevice device, String name) {
-    return device.getComponent(name).map(c -> c.getData() > 0).orElse(false);
+  private boolean getBool(InputDevice device, InputComponent.ID id) {
+    return device.getComponent(id).map(c -> c.getData() > 0).orElse(false);
   }
 
-  private float getAxis(InputDevice device, String name) {
-    return device.getComponent(name).map(InputComponent::getData).orElse(0f);
+  private float getAxis(InputDevice device, InputComponent.ID id) {
+    return device.getComponent(id).map(InputComponent::getData).orElse(0f);
   }
 
   private void reset() {

@@ -131,15 +131,25 @@ public class ControllerTestApp extends JFrame {
   private JPanel createConsolePanel() {
     var panel = new JPanel(new BorderLayout());
     panel.setBorder(BorderFactory.createTitledBorder("Event Log"));
-    panel.setPreferredSize(new Dimension(250, 0));
+    panel.setPreferredSize(new Dimension(280, 0));
 
     consolePane = new JTextPane();
     consolePane.setEditable(false);
-    consolePane.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 11));
+
+    // Dark theme compatible console styling
+    consolePane.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+    consolePane.setBackground(new Color(22, 25, 27));
+    consolePane.setForeground(new Color(210, 215, 220));
+    consolePane.setCaretColor(new Color(180, 180, 180));
+    consolePane.setSelectedTextColor(new Color(255, 255, 255));
+    consolePane.setSelectionColor(new Color(50, 70, 90));
     consolePane.setOpaque(true);
+    consolePane.setBorder(BorderFactory.createEmptyBorder(4, 6, 4, 6));
 
     var scrollPane = new JScrollPane(consolePane);
     scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+    scrollPane.getViewport().setBackground(new Color(22, 25, 27));
+    scrollPane.setBorder(BorderFactory.createEmptyBorder());
 
     var btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 2));
     var clearBtn = new JButton("Clear");
