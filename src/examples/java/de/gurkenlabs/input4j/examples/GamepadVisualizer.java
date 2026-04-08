@@ -5,7 +5,6 @@ import de.gurkenlabs.input4j.InputDevice;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
 
 public class GamepadVisualizer extends JPanel {
   private static final Color BODY_STROKE = new Color(40, 40, 40);
@@ -187,12 +186,6 @@ public class GamepadVisualizer extends JPanel {
     int y = 85;
     drawSmallCircle(g, CENTER_X - 35, y, 7, back);
     drawSmallCircle(g, CENTER_X + 35, y, 7, start);
-
-    // Home Button
-    g.setColor(BUTTON_OFF);
-    g.fillOval(CENTER_X - 12, y - 5, 24, 24);
-    g.setColor(BODY_STROKE);
-    g.drawOval(CENTER_X - 12, y - 5, 24, 24);
   }
 
   private void drawSmallCircle(Graphics2D g, int cx, int cy, int r, boolean active) {
