@@ -200,4 +200,34 @@ class DirectInputDataStructTests {
       assertEquals(diPropRange.lMax, testDIPropRange.lMax);
     }
   }
+
+  @Test
+  void testStaticInitializationOrder() {
+    // This test verifies that the static initialization order bug has been fixed.
+    // Before the fix, instantiating any of these structs would throw NoClassDefFoundError / ExceptionInInitializerError.
+
+    // Testing all previously broken structs - each will trigger class initialization
+    assertDoesNotThrow(DIEFFECT::new, "DIEFFECT class initialization failed");
+    assertDoesNotThrow(DIPROPHEADER::new, "DIPROPHEADER class initialization failed");
+    assertDoesNotThrow(DIDEVICEOBJECTINSTANCE::new, "DIDEVICEOBJECTINSTANCE class initialization failed");
+    assertDoesNotThrow(DIDEVICEINSTANCE::new, "DIDEVICEINSTANCE class initialization failed");
+    assertDoesNotThrow(DIDATAFORMAT::new, "DIDATAFORMAT class initialization failed");
+
+    // Verify that dwSize fields are correctly initialized after construction
+    var dieffect = new DIEFFECT();
+    assertEquals(DIEFFECT.$LAYOUT.byteSize(), dieffect.dwSize);
+
+    var dipropheader = new DIPROPHEADER();
+    assertEquals(DIPROPHEADER.$LAYOUT.byteSize(), dipropheader.dwHeaderSize);
+
+    var diDeviceObjectInstance = new DIDEVICEOBJECTINSTANCE();
+    assertEquals(DIDEVICEOBJECTINSTANCE.$LAYOUT.byteSize(), diDeviceObjectInstance.dwSize);
+
+    var diDeviceInstance = new DIDEVICEINSTANCE();
+    assertEquals(DIDEVICEINSTANCE.$LAYOUT.byteSize(), diDeviceInstance.dwSize);
+
+    var diDataFormat = new DIDATAFORMAT();
+    assertEquals(DIDATAFORMAT.$LAYOUT.byteSize(), diDataFormat.dwSize);
+    assertEquals(DIOBJECTDATAFORMAT.$LAYOUT.byteSize(), diDataFormat.dwObjSize);
+  }
 }
