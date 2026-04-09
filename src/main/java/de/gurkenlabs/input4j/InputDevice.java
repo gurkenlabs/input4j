@@ -47,6 +47,7 @@ public final class InputDevice implements Closeable {
 
   private final Function<InputDevice, float[]> pollCallback;
   private final BiConsumer<InputDevice, float[]> rumbleCallback;
+  private final Function<InputDevice, BatteryInfo> batteryCallback;
   private float accuracyFactor;
   private boolean hasInputData;
 
@@ -60,7 +61,7 @@ public final class InputDevice implements Closeable {
    * @param rumbleCallback the function to be called when setting rumble intensity
    */
   public InputDevice(String identifier, String name, String productName, Function<InputDevice, float[]> pollCallback, BiConsumer<InputDevice, float[]> rumbleCallback) {
-    this(identifier, name, productName, -1, -1, null, pollCallback, rumbleCallback);
+    this(identifier, name, productName, -1, -1, null, pollCallback, rumbleCallback, null);
   }
 
   /**
@@ -76,6 +77,23 @@ public final class InputDevice implements Closeable {
    * @param rumbleCallback the function to be called when setting rumble intensity
    */
   public InputDevice(String identifier, String name, String productName, int vendorId, int productId, String displayName, Function<InputDevice, float[]> pollCallback, BiConsumer<InputDevice, float[]> rumbleCallback) {
+    this(identifier, name, productName, vendorId, productId, displayName, pollCallback, rumbleCallback, null);
+  }
+
+  /**
+   * Creates a new instance of the InputDevice class.
+   *
+   * @param identifier     the identifier of the input device
+   * @param name           the name of the instance of the input device
+   * @param productName    the name of the product of the input device
+   * @param vendorId       the USB vendor ID, or -1 if not available
+   * @param productId      the USB product ID, or -1 if not available
+   * @param displayName    the user-friendly display name, or null to use productName
+   * @param pollCallback   the function to be called when polling for input data from the device
+   * @param rumbleCallback the function to be called when setting rumble intensity
+   * @param batteryCallback the function to be called when querying battery information, or null if not supported
+   */
+  public InputDevice(String identifier, String name, String productName, int vendorId, int productId, String displayName, Function<InputDevice, float[]> pollCallback, BiConsumer<InputDevice, float[]> rumbleCallback, Function<InputDevice, BatteryInfo> batteryCallback) {
     this.identifier = identifier;
     this.name = name;
     this.productName = productName;
@@ -85,6 +103,7 @@ public final class InputDevice implements Closeable {
     this.controllerType = ControllerDatabase.getControllerType(vendorId, productId);
     this.pollCallback = pollCallback;
     this.rumbleCallback = rumbleCallback;
+    this.batteryCallback = batteryCallback;
     this.setAccuracy(InputDevices.configure().getAccuracy());
   }
 
@@ -175,6 +194,22 @@ public final class InputDevice implements Closeable {
       return productName;
     }
     return name;
+  }
+
+  /**
+   * Gets the battery information for this input device.
+   * <p>
+   * Battery information is only available for some controllers.
+   * Currently supported on Windows via XInput (Xbox controllers).
+   * Returns empty Optional if battery information is not available or not supported.
+   *
+   * @return an Optional containing the battery information, or empty if not available
+   */
+  public Optional<BatteryInfo> getBatteryInfo() {
+    if (batteryCallback == null) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(batteryCallback.apply(this));
   }
 
   /**
