@@ -1,19 +1,25 @@
 package de.gurkenlabs.input4j.foreign.linux;
 
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
+import de.gurkenlabs.input4j.BatteryInfo;
+import de.gurkenlabs.input4j.BatteryLevel;
+import de.gurkenlabs.input4j.BatteryType;
 import de.gurkenlabs.input4j.ComponentType;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
 
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.lang.foreign.Arena;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 
 /**
  * The {@code LinuxEventDevicePlugin} class is responsible for managing Linux event devices.
@@ -155,7 +161,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       int productId = device.id != null ? Short.toUnsignedInt(device.id.product) : -1;
       String displayName = de.gurkenlabs.input4j.ControllerDatabase.getDisplayName(vendorId, productId);
 
-      var inputDevice = new InputDevice(eventDeviceFile.getAbsolutePath(), device.name, device.name, vendorId, productId, displayName, this::pollLinuxEventDevice, this::rumbleLinuxEventDevice);
+      var inputDevice = new InputDevice(eventDeviceFile.getAbsolutePath(), device.name, device.name, vendorId, productId, displayName, this::pollLinuxEventDevice, this::rumbleLinuxEventDevice, this::getBatteryInfo);
       device.inputDevice = inputDevice;
 
       // Check for available event types
@@ -382,5 +388,113 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     linuxEventDevice.currentEffectId = -1;
     linuxEventDevice.currentStrongMagnitude = 0f;
     linuxEventDevice.currentWeakMagnitude = 0f;
+  }
+
+  private BatteryInfo getBatteryInfo(InputDevice inputDevice) {
+    var device = nativeDevices.get(inputDevice.getID());
+    if (device == null || device.id == null) {
+      return null;
+    }
+
+    int vendorId = Short.toUnsignedInt(device.id.vendor);
+    int productId = Short.toUnsignedInt(device.id.product);
+
+    String batteryPath = findBatteryPath(vendorId, productId);
+    if (batteryPath == null) {
+      return null;
+    }
+
+    try {
+      int percentage = readBatteryPercentage(batteryPath);
+      if (percentage < 0) {
+        return null;
+      }
+
+      return BatteryInfo.fromPercentage(BatteryType.UNKNOWN, false, percentage);
+    } catch (Exception e) {
+      log.log(Level.FINE, "Failed to read battery for device " + device.name, e);
+      return null;
+    }
+  }
+
+  private String findBatteryPath(int vendorId, int productId) {
+    File powerSupplyDir = new File("/sys/class/power_supply");
+    if (!powerSupplyDir.exists() || !powerSupplyDir.isDirectory()) {
+      return null;
+    }
+
+    String vendorHex = String.format("%04x", vendorId);
+    String productHex = String.format("%04x", productId);
+
+    File[] entries = powerSupplyDir.listFiles();
+    if (entries == null) {
+      return null;
+    }
+
+    for (File entry : entries) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+
+      try {
+        String type = readSysfsFile(entry, "type");
+        if (type == null || !type.equalsIgnoreCase("Battery")) {
+          continue;
+        }
+
+        String vendor = readSysfsFile(entry, "vendor");
+        String manufacturer = readSysfsFile(entry, "manufacturer");
+        String model = readSysfsFile(entry, "model_name");
+
+        boolean match = false;
+        if (vendor != null && vendor.toLowerCase().contains(vendorHex)) {
+          match = true;
+        }
+        if (manufacturer != null && manufacturer.toLowerCase().contains(vendorHex)) {
+          match = true;
+        }
+        if (model != null && model.toLowerCase().contains(productHex)) {
+          match = true;
+        }
+
+        if (match) {
+          return entry.getAbsolutePath();
+        }
+      } catch (IOException e) {
+        continue;
+      }
+    }
+
+    return null;
+  }
+
+  private String readSysfsFile(File dir, String filename) throws IOException {
+    File file = new File(dir, filename);
+    if (file.exists()) {
+      return Files.readString(file.toPath()).trim();
+    }
+    return null;
+  }
+
+  private int readBatteryPercentage(String batteryPath) throws IOException {
+    File capacityFile = new File(batteryPath, "capacity");
+    if (capacityFile.exists()) {
+      String content = Files.readString(capacityFile.toPath()).trim();
+      return Integer.parseInt(content);
+    }
+
+    File capacityLevelFile = new File(batteryPath, "capacity_level");
+    if (capacityLevelFile.exists()) {
+      String level = Files.readString(capacityLevelFile.toPath()).trim().toLowerCase();
+      return switch (level) {
+        case "full" -> 100;
+        case "high", "normal" -> 75;
+        case "low" -> 25;
+        case "critical" -> 10;
+        default -> -1;
+      };
+    }
+
+    return -1;
   }
 }

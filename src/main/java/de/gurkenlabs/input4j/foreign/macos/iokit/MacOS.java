@@ -395,4 +395,19 @@ class MacOS {
       throw new RuntimeException(t);
     }
   }
+
+  /**
+   * Gets the battery percentage for the HID device.
+   * Returns -1 if battery information is not available.
+   *
+   * @param device The HID device.
+   * @return Battery percentage (0-100) or -1 if unavailable.
+   */
+  static int getBatteryPercentage(IOHIDDevice device, Arena memoryArena) {
+    try {
+      return getIntProperty(memoryArena, "BatteryPercent", device);
+    } catch (Throwable t) {
+      return -1;
+    }
+  }
 }

@@ -3,6 +3,7 @@ package de.gurkenlabs.input4j.examples;
 import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.DarculaTheme;
 import com.github.weisj.darklaf.theme.HighContrastDarkTheme;
+import de.gurkenlabs.input4j.BatteryInfo;
 import de.gurkenlabs.input4j.InputDevice;
 import de.gurkenlabs.input4j.InputDevicePlugin;
 import de.gurkenlabs.input4j.InputDevices;
@@ -17,6 +18,7 @@ public class ControllerTestApp extends JFrame {
   private static final Logger LOGGER = Logger.getLogger(ControllerTestApp.class.getName());
   private JComboBox<InputDevice> deviceSelector;
   private JLabel deviceInfoLabel;
+  private JLabel batteryLabel;
   private GamepadVisualizer visualizer;
   private JSlider rumbleSlider;
   private JLabel pollRateLabel;
@@ -106,9 +108,13 @@ public class ControllerTestApp extends JFrame {
     deviceInfoLabel = new JLabel("No device selected");
     deviceInfoLabel.setFont(deviceInfoLabel.getFont().deriveFont(Font.ITALIC));
 
+    batteryLabel = new JLabel();
+    batteryLabel.setFont(batteryLabel.getFont().deriveFont(Font.BOLD));
+
     var infoPanel = new JPanel(new BorderLayout());
     infoPanel.add(deviceSelector, BorderLayout.NORTH);
-    infoPanel.add(deviceInfoLabel, BorderLayout.SOUTH);
+    infoPanel.add(deviceInfoLabel, BorderLayout.CENTER);
+    infoPanel.add(batteryLabel, BorderLayout.EAST);
 
     panel.add(infoPanel, BorderLayout.NORTH);
     return panel;
@@ -231,9 +237,48 @@ public class ControllerTestApp extends JFrame {
     if (device != null) {
       deviceInfoLabel.setText(String.format("%s (VID: %04X, PID: %04X)", device.getDisplayName(),
           device.getVendorId(), device.getProductId()));
+      updateBatteryLabel(device);
     } else {
       deviceInfoLabel.setText("No device selected");
+      batteryLabel.setText("");
     }
+  }
+
+  private void updateBatteryLabel(InputDevice device) {
+    var batteryInfo = device.getBatteryInfo().orElse(null);
+    if (batteryInfo == null || !batteryInfo.isAvailable()) {
+      batteryLabel.setText("");
+      return;
+    }
+
+    String icon;
+    Color color;
+    switch (batteryInfo.level()) {
+      case FULL:
+        icon = "\uD83D\uDD0B";
+        color = new Color(76, 175, 80);
+        break;
+      case MEDIUM:
+        icon = "\uD83D\uDD0B";
+        color = new Color(255, 193, 7);
+        break;
+      case LOW:
+        icon = "\uD83D\uDEA8";
+        color = new Color(255, 152, 0);
+        break;
+      case EMPTY:
+        icon = "\uD83D\uDEA8";
+        color = new Color(244, 67, 54);
+        break;
+      default:
+        batteryLabel.setText("");
+        return;
+    }
+
+    int percentage = batteryInfo.getPercentage();
+    String text = percentage >= 0 ? String.format("%s %d%%", icon, percentage) : icon;
+    batteryLabel.setText(text);
+    batteryLabel.setForeground(color);
   }
 
   private void startPolling() {
@@ -256,6 +301,10 @@ public class ControllerTestApp extends JFrame {
       double fps = 30_000_000_000.0 / (now - lastPollTime);
       lastPollTime = now;
       pollRateLabel.setText(String.format("Poll rate: %.1f fps", fps));
+    }
+
+    if (pollCount % 60 == 0 && currentDevice != null) {
+      updateBatteryLabel(currentDevice);
     }
   }
 

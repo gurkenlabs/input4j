@@ -1,6 +1,9 @@
 package de.gurkenlabs.input4j.foreign.macos.iokit;
 
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
+import de.gurkenlabs.input4j.BatteryInfo;
+import de.gurkenlabs.input4j.BatteryLevel;
+import de.gurkenlabs.input4j.BatteryType;
 import de.gurkenlabs.input4j.ControllerDatabase;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
@@ -40,11 +43,13 @@ import static java.lang.foreign.ValueLayout.JAVA_INT;
 public class IOKitPlugin extends AbstractInputDevicePlugin {
   private final Map<String, IOHIDDevice> nativeDevices = new ConcurrentHashMap<>();
   private Thread eventLoopThread;
+  private Arena batteryArena;
 
   private boolean devicesInitialized;
 
   @Override
   public void internalInitDevices(Frame owner) {
+    batteryArena = Arena.ofShared();
     eventLoopThread = new Thread(() -> {
       MemorySegment ioHIDManager = MemorySegment.NULL;
       try (Arena memoryArena = Arena.ofConfined()) {
@@ -55,7 +60,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
         for (var ioHIDDevice : ioHIDDevices) {
           log.log(Level.FINE, "Found HID device: " + ioHIDDevice.productName);
           String displayName = ControllerDatabase.getDisplayName(ioHIDDevice.vendorId, ioHIDDevice.productId);
-          var inputDevice = new InputDevice(Long.toString(ioHIDDevice.address), ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", ioHIDDevice.vendorId, ioHIDDevice.productId, displayName, this::pollIOHIDDevice, this::rumbleIOHIDDevice);
+          var inputDevice = new InputDevice(Long.toString(ioHIDDevice.address), ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", ioHIDDevice.vendorId, ioHIDDevice.productId, displayName, this::pollIOHIDDevice, this::rumbleIOHIDDevice, this::getBatteryInfo);
           ioHIDDevice.inputDevice = inputDevice;
 
           for (var element : ioHIDDevice.getElements()) {
@@ -287,5 +292,32 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     } catch (Exception e) {
       log.log(Level.WARNING, "Failed to send rumble report", e);
     }
+  }
+
+  private BatteryInfo getBatteryInfo(InputDevice inputDevice) {
+    var ioHIDDevice = nativeDevices.get(inputDevice.getID());
+    if (ioHIDDevice == null) {
+      return null;
+    }
+
+    int batteryPercent = MacOS.getBatteryPercentage(ioHIDDevice, batteryArena);
+
+    if (batteryPercent < 0) {
+      return null;
+    }
+
+    BatteryLevel level;
+
+    if (batteryPercent >= 75) {
+      level = BatteryLevel.FULL;
+    } else if (batteryPercent >= 50) {
+      level = BatteryLevel.MEDIUM;
+    } else if (batteryPercent >= 25) {
+      level = BatteryLevel.LOW;
+    } else {
+      level = BatteryLevel.EMPTY;
+    }
+
+    return new BatteryInfo(BatteryType.UNKNOWN, level, false);
   }
 }

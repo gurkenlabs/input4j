@@ -1,6 +1,9 @@
 package de.gurkenlabs.input4j.foreign.windows.xinput;
 
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
+import de.gurkenlabs.input4j.BatteryInfo;
+import de.gurkenlabs.input4j.BatteryLevel;
+import de.gurkenlabs.input4j.BatteryType;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
 import de.gurkenlabs.input4j.components.XInput;
@@ -27,6 +30,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
   private static final MethodHandle xInputGetState;
   private static final MethodHandle xInputSetState;
   private static final MethodHandle xInputGetCapabilities;
+  private static final MethodHandle xInputGetBatteryInformation;
 
   private final Arena memoryArena = Arena.ofShared();
   private final MemorySegment stateSegment = memoryArena.allocate(XINPUT_STATE.$LAYOUT);
@@ -48,6 +52,11 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
 
     xInputGetCapabilities = NativeHelper.downcallHandle(
       "XInputGetCapabilities",
+      FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
+    );
+
+    xInputGetBatteryInformation = NativeHelper.downcallHandle(
+      "XInputGetBatteryInformation",
       FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)
     );
   }
@@ -148,7 +157,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
     var components = new ArrayList<InputComponent>();
 
     var instanceName = type + " (" + gamepad.userIndex + ")";
-    var device = new InputDevice(Integer.toString(gamepad.userIndex), instanceName, null, -1, -1, null, this::pollXInputDevice, this::rumbleXInputDevice);
+    var device = new InputDevice(Integer.toString(gamepad.userIndex), instanceName, null, -1, -1, null, this::pollXInputDevice, this::rumbleXInputDevice, this::getBatteryInfo);
 
     // order is important here, as the order of the components is used to map the polled data
     components.add(new InputComponent(device, XInput.DPAD_UP));
@@ -305,5 +314,75 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);
     }
+  }
+
+  /**
+   * Gets the battery information for the XInput device.
+   *
+   * @param inputDevice The input device.
+   * @return The battery information, or null if the device is not connected or query fails.
+   */
+  BatteryInfo getBatteryInfo(InputDevice inputDevice) {
+    int userIndex = resolveDeviceId(inputDevice);
+    try {
+      var batterySegment = this.memoryArena.allocate(XINPUT_BATTERY_INFORMATION.$LAYOUT);
+      int result = (int) xInputGetBatteryInformation.invoke(
+          userIndex,
+          XINPUT_BATTERY_INFORMATION.BATTERY_DEVTYPE_GAMEPAD,
+          batterySegment);
+
+      if (result == Result.ERROR_SUCCESS) {
+        var batteryInfo = XINPUT_BATTERY_INFORMATION.read(batterySegment);
+        return convertBatteryInfo(batteryInfo);
+      } else if (result == Result.ERROR_DEVICE_NOT_CONNECTED) {
+        return null;
+      } else {
+        log.log(Level.WARNING, "XInputGetBatteryInformation failed for userIndex " + userIndex + " with result " + Result.toString(result));
+        return null;
+      }
+    } catch (Throwable e) {
+      log.log(Level.SEVERE, e.getMessage(), e);
+      return null;
+    }
+  }
+
+  private BatteryInfo convertBatteryInfo(XINPUT_BATTERY_INFORMATION xinputBattery) {
+    BatteryType type;
+    switch (xinputBattery.BatteryType) {
+      case XINPUT_BATTERY_INFORMATION.BATTERY_TYPE_WIRED:
+        type = BatteryType.WIRED;
+        break;
+      case XINPUT_BATTERY_INFORMATION.BATTERY_TYPE_DISCONNECTED:
+        type = BatteryType.DISCONNECTED;
+        break;
+      case XINPUT_BATTERY_INFORMATION.BATTERY_TYPE_ALKALINE:
+        type = BatteryType.ALKALINE;
+        break;
+      case XINPUT_BATTERY_INFORMATION.BATTERY_TYPE_NIMH:
+        type = BatteryType.NIMH;
+        break;
+      default:
+        type = BatteryType.UNKNOWN;
+    }
+
+    BatteryLevel level;
+    switch (xinputBattery.BatteryLevel) {
+      case XINPUT_BATTERY_INFORMATION.BATTERY_LEVEL_EMPTY:
+        level = BatteryLevel.EMPTY;
+        break;
+      case XINPUT_BATTERY_INFORMATION.BATTERY_LEVEL_LOW:
+        level = BatteryLevel.LOW;
+        break;
+      case XINPUT_BATTERY_INFORMATION.BATTERY_LEVEL_MEDIUM:
+        level = BatteryLevel.MEDIUM;
+        break;
+      case XINPUT_BATTERY_INFORMATION.BATTERY_LEVEL_FULL:
+        level = BatteryLevel.FULL;
+        break;
+      default:
+        level = BatteryLevel.UNKNOWN;
+    }
+
+    return new BatteryInfo(type, level, false);
   }
 }
