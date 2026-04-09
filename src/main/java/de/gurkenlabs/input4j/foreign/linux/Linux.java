@@ -20,7 +20,6 @@ class Linux {
   final static int EAGAIN = 11;
 
   final static int O_RDONLY = 0;
-  // TODO: if we want to rumble, we need to open the device in read/write mode
   final static int O_RDWR = 2;
   final static int O_NONBLOCK = 0x800;
 
