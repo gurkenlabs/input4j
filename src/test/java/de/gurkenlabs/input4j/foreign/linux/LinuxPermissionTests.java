@@ -31,7 +31,7 @@ public class LinuxPermissionTests {
       int fd = Linux.openRdwr(arena, "/nonexistent/path/to/test", outErrno);
 
       assertEquals(Linux.ERROR, fd, "Opening nonexistent path should fail");
-      assertEquals(Linux.EACCES, outErrno[0], "Should get EACCES for nonexistent path");
+      assertEquals(Linux.ENOENT, outErrno[0], "Should get ENOENT for nonexistent path");
     }
   }
 

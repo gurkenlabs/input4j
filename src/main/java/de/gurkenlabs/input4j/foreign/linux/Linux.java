@@ -19,6 +19,7 @@ class Linux {
   final static int ERROR = -1;
   final static int EAGAIN = 11;
   final static int EACCES = 13;
+  final static int ENOENT = 2;
 
   final static int O_RDONLY = 0;
   final static int O_RDWR = 2;
