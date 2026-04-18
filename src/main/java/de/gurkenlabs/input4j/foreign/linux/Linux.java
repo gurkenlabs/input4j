@@ -18,6 +18,8 @@ class Linux {
   private static final Logger log = Logger.getLogger(Linux.class.getName());
   final static int ERROR = -1;
   final static int EAGAIN = 11;
+  final static int EACCES = 13;
+  final static int ENOENT = 2;
 
   final static int O_RDONLY = 0;
   final static int O_RDWR = 2;
@@ -112,21 +114,26 @@ class Linux {
     return invoke(HANDLE_OPEN, memoryArena, filenameMemorySegment, O_RDONLY | O_NONBLOCK);
   }
 
-  /**
-   * Open a file descriptor for the given file name in read/write mode.
-   *
-   * <p>
-   * This is required for force feedback support as writing to the device
-   * is needed to play/stop effects.
-   * </p>
-   *
-   * @param memoryArena the memory arena to allocate memory from
-   * @param fileName    the file name to open
-   * @return the file descriptor or -1 if an error occurred
-   */
+/**
+    * Open a file descriptor for the given file name in read/write mode.
+    *
+    * <p>
+    * This is required for force feedback support as writing to the device
+    * is needed to play/stop effects.
+    * </p>
+    *
+    * @param memoryArena the memory arena to allocate memory from
+    * @param fileName    the file name to open
+    * @return the file descriptor or -1 if an error occurred
+    */
   static int openRdwr(Arena memoryArena, String fileName) {
     var filenameMemorySegment = memoryArena.allocateFrom(fileName);
     return invoke(HANDLE_OPEN, memoryArena, filenameMemorySegment, O_RDWR | O_NONBLOCK);
+  }
+
+  static int openRdwr(Arena memoryArena, String fileName, int[] outErrno) {
+    var filenameMemorySegment = memoryArena.allocateFrom(fileName);
+    return invoke(HANDLE_OPEN, memoryArena, outErrno, filenameMemorySegment, O_RDWR | O_NONBLOCK);
   }
 
   /**
@@ -345,6 +352,10 @@ class Linux {
   }
 
   private static int invoke(String handleName, Arena memoryArena, Object... args) {
+    return invoke(handleName, memoryArena, null, args);
+  }
+
+  private static int invoke(String handleName, Arena memoryArena, int[] outErrno, Object... args) {
     var capturedState = memoryArena.allocate(Linker.Option.captureStateLayout());
     var methodHandle = handles.get(handleName);
     if (methodHandle == null) {
@@ -370,13 +381,22 @@ class Linux {
 
       if (result == ERROR) {
         var errorNo = getErrorNo(capturedState);
+        if (outErrno != null) {
+          outErrno[0] = errorNo;
+        }
 
         // we are using non-blocking mode, so we can ignore EAGAIN because it is not an error, just a signal that we're done reading
-        if(errorNo == EAGAIN) {
+        if (errorNo == EAGAIN) {
           return result;
         }
 
-        log.log(Level.SEVERE, "Could not invoke ''{0}'' - {1}({2})", new Object[] {handleName, getErrorString(errorNo), errorNo});
+        // EACCES is expected when user lacks write permissions - log at FINE level
+        if (errorNo == EACCES) {
+          log.log(Level.INFO, "Could not invoke ''{0}'' - {1}({2}) - likely not in input group or device requires root access",
+              new Object[] {handleName, getErrorString(errorNo), errorNo});
+        } else {
+          log.log(Level.SEVERE, "Could not invoke ''{0}'' - {1}({2})", new Object[] {handleName, getErrorString(errorNo), errorNo});
+        }
       }
 
       return result;
@@ -385,6 +405,10 @@ class Linux {
     }
 
     return ERROR;
+  }
+
+  private static int invokeWithErrno(String handleName, Arena memoryArena, int[] outErrno, Object... args) {
+    return invoke(handleName, memoryArena, outErrno, args);
   }
 
   private static int getErrorNo(MemorySegment capturedState) {

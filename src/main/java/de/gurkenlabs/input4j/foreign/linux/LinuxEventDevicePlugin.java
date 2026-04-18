@@ -138,8 +138,12 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     for (var eventDeviceFile : eventDeviceFiles) {
       LinuxEventDevice device = new LinuxEventDevice(this.memoryArena, eventDeviceFile.getAbsolutePath(), true);
       if (device.fd == Linux.ERROR) {
-        log.log(Level.SEVERE, "Failed to open " + eventDeviceFile.getAbsolutePath());
+        log.log(Level.INFO, "Could not open device (permission denied): " + eventDeviceFile.getAbsolutePath());
         continue;
+      }
+
+      if (device.openedReadOnly) {
+        log.log(Level.INFO, "Device opened read-only (no force feedback): " + device.filename);
       }
 
       // ignore some devices since they are not useful for input
@@ -182,7 +186,8 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       }
 
       LinuxVirtualComponentHandler.prepareVirtualComponents(device.inputDevice, inputDevice.getComponents());
-      log.log(Level.INFO, "Found input device: " + device.filename + " - " + device.name + " with " + device.componentList.size() + " components");
+      String accessMode = device.supportsForceFeedback ? "full" : "read-only";
+      log.log(Level.INFO, "Found input device: " + device.filename + " - " + device.name + " (" + accessMode + ") with " + device.componentList.size() + " components");
       this.nativeDevices.put(inputDevice.getID(), device);
     }
   }

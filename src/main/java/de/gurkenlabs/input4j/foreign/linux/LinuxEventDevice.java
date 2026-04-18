@@ -37,6 +37,7 @@ class LinuxEventDevice {
   final List<LinuxEventComponent> componentList = new ArrayList<>();
   final boolean supportsForceFeedback;
   final int maxEffects;
+  boolean openedReadOnly = false;
 
   InputDevice inputDevice;
   float[] currentValues;
@@ -51,6 +52,7 @@ class LinuxEventDevice {
     this.filename = filename;
 
     this.fd = Linux.open(memoryArena, this.filename);
+    this.openedReadOnly = (this.fd != Linux.ERROR);
     if (this.fd == Linux.ERROR) {
       this.name = null;
       this.id = null;
@@ -62,18 +64,32 @@ class LinuxEventDevice {
       this.id = Linux.getEventDeviceId(memoryArena, this.fd);
       this.version = Linux.getEventDeviceVersion(memoryArena, this.fd);
       this.maxEffects = Linux.getNumEffects(memoryArena, this.fd);
-      this.supportsForceFeedback = this.maxEffects > 0;
+      // Force feedback requires write access - read-only disables it
+      this.supportsForceFeedback = !this.openedReadOnly && this.maxEffects > 0;
     }
   }
 
   public LinuxEventDevice(Arena memoryArena, String filename, boolean forceRumble) {
     this.filename = filename;
 
+    int openedFd = Linux.ERROR;
+    boolean isReadOnly = false;
+
     if (forceRumble) {
-      this.fd = Linux.openRdwr(memoryArena, this.filename);
+      int[] lastErrno = new int[1];
+      openedFd = Linux.openRdwr(memoryArena, this.filename, lastErrno);
+      if (openedFd == Linux.ERROR && lastErrno[0] == Linux.EACCES) {
+        log.log(Level.INFO, "No write access for ''{0}'', retrying read-only", this.filename);
+        openedFd = Linux.open(memoryArena, this.filename);
+        isReadOnly = (openedFd != Linux.ERROR);
+      }
     } else {
-      this.fd = Linux.open(memoryArena, this.filename);
+      openedFd = Linux.open(memoryArena, this.filename);
+      isReadOnly = (openedFd != Linux.ERROR);
     }
+
+    this.fd = openedFd;
+    this.openedReadOnly = isReadOnly;
 
     if (this.fd == Linux.ERROR) {
       this.name = null;
@@ -86,7 +102,8 @@ class LinuxEventDevice {
       this.id = Linux.getEventDeviceId(memoryArena, this.fd);
       this.version = Linux.getEventDeviceVersion(memoryArena, this.fd);
       this.maxEffects = Linux.getNumEffects(memoryArena, this.fd);
-      this.supportsForceFeedback = this.maxEffects > 0;
+      // Force feedback requires write access - read-only disables it
+      this.supportsForceFeedback = !isReadOnly && this.maxEffects > 0;
     }
   }
 
