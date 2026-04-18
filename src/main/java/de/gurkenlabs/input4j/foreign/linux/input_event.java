@@ -9,10 +9,19 @@ import static java.lang.foreign.ValueLayout.JAVA_INT;
 import static java.lang.foreign.ValueLayout.JAVA_SHORT;
 
 /*
- * The event structure itself
+ * The event structure itself.
+ *
+ * <p>
+ * Corresponds to {@code struct input_event} from {@code linux/input.h}.
+ * The {@code time} field contains a timestamp for the event. When writing events
+ * to the device (e.g., for force feedback), the kernel ignores zero timestamps
+ * or replaces them with the current time, so initializing to zero is safe
+ * and the preferred approach for user-space generated events.
+ *
+ * @see <a href="https://www.kernel.org/doc/html/latest/input/uinput.html">uinput module</a>
  */
 class input_event {
-  public timeval time;
+  public timeval time = new timeval();
   public short type;
   public short code;
   public int value;

@@ -124,6 +124,31 @@ public class LinuxDataStructTests {
   }
 
   @Test
+  public void testInputEventTimeInitialized() {
+    var inputEvent = new input_event();
+    assertNotNull(inputEvent.time, "time field should be initialized and not null");
+    assertEquals(0, inputEvent.time.tv_sec, "time.tv_sec should default to 0");
+    assertEquals(0, inputEvent.time.tv_usec, "time.tv_usec should default to 0");
+  }
+
+  @Test
+  public void testInputEventWriteWithoutExplicitTimeSet() {
+    try (var memorySession = Arena.ofConfined()) {
+      var inputEvent = new input_event();
+      inputEvent.type = 1;
+      inputEvent.code = 50;
+      inputEvent.value = 100;
+
+      var segment = memorySession.allocate(input_event.$LAYOUT);
+      assertDoesNotThrow(() -> inputEvent.write(segment));
+
+      var inputEventFromMemory = input_event.read(segment);
+      assertEquals(0, inputEventFromMemory.time.tv_sec);
+      assertEquals(0, inputEventFromMemory.time.tv_usec);
+    }
+  }
+
+  @Test
   @EnabledOnOs(OS.LINUX)
   void testTimevalLayoutSize() {
     String osArch = System.getProperty("os.arch", "").toLowerCase();
