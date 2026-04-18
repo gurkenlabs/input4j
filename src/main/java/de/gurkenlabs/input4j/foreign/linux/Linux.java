@@ -3,7 +3,7 @@ package de.gurkenlabs.input4j.foreign.linux;
 import java.lang.foreign.*;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.VarHandle;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -159,6 +159,9 @@ class Linux {
 
   /**
    * Get the name of the event device.
+   *
+   * <p>Uses UTF-8 encoding (FFM API default) which matches how Linux stores device names in
+   * /dev/input/event*.
    *
    * @param memoryArena the memory arena to allocate memory from
    * @param fd          the file descriptor of the event device
@@ -388,9 +391,21 @@ class Linux {
     return (int) errnoHandle.get(capturedState, 0);
   }
 
+  /**
+   * Converts an error number to a human-readable string.
+   *
+   * <p>Uses UTF-8 explicitly instead of the system default charset. This is required because the
+   * FFM API (java.lang.foreign) only supports StandardCharsets, and on systems with non-standard
+   * default charsets (e.g., windows-31j), using defaultCharset() would throw an
+   * IllegalArgumentException. Linux kernel device names and strerror() output are UTF-8 encoded
+   * on modern systems regardless of the JVM's default charset setting.
+   *
+   * @param errorNo the error number from errno
+   * @return the error message string, or null if conversion fails
+   */
   private static String getErrorString(int errorNo) {
     try {
-      return ((MemorySegment) strerror.invoke(errorNo)).reinterpret(Long.MAX_VALUE).getString(0, Charset.defaultCharset());
+      return ((MemorySegment) strerror.invoke(errorNo)).reinterpret(Long.MAX_VALUE).getString(0, StandardCharsets.UTF_8);
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);
     }
