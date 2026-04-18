@@ -91,9 +91,10 @@ try (var devices = InputDevices.init()) {
 
 ### Used By
 
-input4j is the input system used by the
-[LITIENGINE](https://litiengine.com) Java game engine.
+Input4j is the input system used by the following projects:
 
+- **[LITIENGINE](https://litiengine.com)** - Java 2D game engine with comprehensive library and dedicated map editor for tile-based games
+- **[openDoJa](https://github.com/GrenderG/openDoJa)** - DoJa 5.1 runtime for running i-appli games on modern computers
 
 ## 🔌 Technical Details
 
