@@ -64,7 +64,8 @@ class LinuxEventDevice {
       this.id = Linux.getEventDeviceId(memoryArena, this.fd);
       this.version = Linux.getEventDeviceVersion(memoryArena, this.fd);
       this.maxEffects = Linux.getNumEffects(memoryArena, this.fd);
-      this.supportsForceFeedback = this.maxEffects > 0;
+      // Force feedback requires write access - read-only disables it
+      this.supportsForceFeedback = !this.openedReadOnly && this.maxEffects > 0;
     }
   }
 
@@ -101,7 +102,8 @@ class LinuxEventDevice {
       this.id = Linux.getEventDeviceId(memoryArena, this.fd);
       this.version = Linux.getEventDeviceVersion(memoryArena, this.fd);
       this.maxEffects = Linux.getNumEffects(memoryArena, this.fd);
-      this.supportsForceFeedback = this.maxEffects > 0;
+      // Force feedback requires write access - read-only disables it
+      this.supportsForceFeedback = !isReadOnly && this.maxEffects > 0;
     }
   }
 

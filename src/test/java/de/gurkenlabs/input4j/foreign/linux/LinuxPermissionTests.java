@@ -67,12 +67,36 @@ public class LinuxPermissionTests {
 
   @Test
   @EnabledOnOs(OS.LINUX)
-  void testLinuxEventDeviceOpenedReadOnlyFalse() {
+  void testLinuxEventDeviceSupportsForceFeedbackDisabledWhenReadOnly() {
     try (var arena = Arena.ofShared()) {
       LinuxEventDevice device = new LinuxEventDevice(arena, "/nonexistent/device");
 
-      assertEquals(Linux.ERROR, device.fd, "Nonexistent device should fail to open");
-      assertFalse(device.openedReadOnly, "openedReadOnly should be false for failed open");
+      // When device fails to open, supportsForceFeedback should be false
+      assertEquals(Linux.ERROR, device.fd);
+      assertFalse(device.supportsForceFeedback, "supportsForceFeedback should be false when device fails to open");
+    }
+  }
+
+  @Test
+  @EnabledOnOs(OS.LINUX)
+  void testLinuxEventDeviceForceRumbleFalseConstructor() {
+    File dev = new File("/dev/input");
+    File[] eventDevices = dev.listFiles((d, name) -> name.startsWith("event"));
+
+    if (eventDevices == null || eventDevices.length == 0) {
+      return;
+    }
+
+    try (var arena = Arena.ofShared()) {
+      // forceRumble=false always opens read-only
+      LinuxEventDevice device = new LinuxEventDevice(arena, eventDevices[0].getAbsolutePath(), false);
+
+      if (device.fd != Linux.ERROR) {
+        // When opened read-only (forceRumble=false), supportsForceFeedback should be false
+        // even if the device has force feedback capability
+        assertTrue(device.openedReadOnly, "openedReadOnly should be true when forceRumble=false");
+        assertFalse(device.supportsForceFeedback, "supportsForceFeedback should be false when read-only");
+      }
     }
   }
 }
