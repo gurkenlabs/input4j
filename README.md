@@ -147,4 +147,4 @@ ls -la /dev/input/event*
 getent group input
 ```
 
-> **Note:** Input4j uses the modern evdev API (`/dev/input/event*`) rather than the legacy joystick API (`/dev/input/js*`). Both require the same permissions, but evdev provides more detailed input information. This is the standard approach used by SDL2 and other modern Linux input libraries.
+> **Note:** Input4j uses the modern evdev API (`/dev/input/event*`) rather than the legacy joystick API (`/dev/input/js*`). Both require the same permissions, but evdev provides more detailed input information. Without write access, it falls back to read-only mode (rumble unavailable). This is the standard approach used by SDL2 and other modern Linux input libraries.
