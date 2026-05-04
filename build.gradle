@@ -39,7 +39,7 @@ dependencies {
   testImplementation libs.junit.jupiter
   testRuntimeOnly "org.junit.platform:junit-platform-launcher"
   examplesImplementation "de.gurkenlabs:input4j:${project.version}"
-  examplesImplementation "com.github.weisj:darklaf-core:3.1.0"
+  examplesImplementation "com.github.weisj:darklaf-core:3.1.1"
 }
 
 test {
