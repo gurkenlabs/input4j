@@ -200,19 +200,22 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
         return;
       }
 
+      int vendorId = device.id != null ? Short.toUnsignedInt(device.id.vendor) : -1;
+      int productId = device.id != null ? Short.toUnsignedInt(device.id.product) : -1;
+      String deviceName = device.name;
+
       for (int i = 0; i < max; i++) {
         if (LinuxEventDevice.isBitSet(components, i)) {
           LinuxEventComponent nativeComponent;
           if (eventType == LinuxEventDevice.EV_ABS) {
-            // Get the absolute axis information if available (contains min, max, flat, fuzz, etc.)
             input_absinfo absInfo = Linux.getAbsInfo(memoryArena, device.fd, i);
             if (absInfo == null) {
-              nativeComponent = new LinuxEventComponent(eventType, i);
+              nativeComponent = new LinuxEventComponent(eventType, i, vendorId, productId, deviceName);
             } else {
-              nativeComponent = new LinuxEventComponent(eventType, i, absInfo);
+              nativeComponent = new LinuxEventComponent(eventType, i, absInfo, vendorId, productId, deviceName);
             }
           } else {
-            nativeComponent = new LinuxEventComponent(eventType, i);
+            nativeComponent = new LinuxEventComponent(eventType, i, vendorId, productId, deviceName);
           }
 
           device.componentList.add(nativeComponent);

@@ -6,7 +6,13 @@ import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.components.Axis;
 import de.gurkenlabs.input4j.components.Button;
 
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 final class LinuxEventComponent {
+  private static final Logger log = Logger.getLogger(LinuxEventComponent.class.getName());
+
   static final String ID_DPAD_LEFT_RIGHT = "DPAD_LEFT_RIGHT";
   static final String ID_DPAD_UP_DOWN = "DPAD_UP_DOWN";
 
@@ -21,13 +27,25 @@ final class LinuxEventComponent {
   final int nativeType;
   final int nativeCode;
 
+  final int vendorId;
+  final int productId;
+  final String deviceName;
+
   InputComponent inputComponent;
 
+  LinuxEventComponent(LinuxComponentType linuxComponentType, boolean axis, boolean relative, int nativeType, int nativeCode, int vendorId, int productId, String deviceName) {
+    this(linuxComponentType, axis, relative, nativeType, nativeCode, Integer.MIN_VALUE, Integer.MAX_VALUE, 0, 0, vendorId, productId, deviceName);
+  }
+
   LinuxEventComponent(LinuxComponentType linuxComponentType, boolean axis, boolean relative, int nativeType, int nativeCode) {
-    this(linuxComponentType, axis, relative, nativeType, nativeCode, Integer.MIN_VALUE, Integer.MAX_VALUE, 0, 0);
+    this(linuxComponentType, axis, relative, nativeType, nativeCode, Integer.MIN_VALUE, Integer.MAX_VALUE, 0, 0, -1, -1, null);
   }
 
   LinuxEventComponent(LinuxComponentType linuxComponentType, boolean axis, boolean relative, int nativeType, int nativeCode, int min, int max, int flat, int fuzz) {
+    this(linuxComponentType, axis, relative, nativeType, nativeCode, min, max, flat, fuzz, -1, -1, null);
+  }
+
+  LinuxEventComponent(LinuxComponentType linuxComponentType, boolean axis, boolean relative, int nativeType, int nativeCode, int min, int max, int flat, int fuzz, int vendorId, int productId, String deviceName) {
     this.linuxComponentType = linuxComponentType;
     this.axis = axis;
     this.relative = relative;
@@ -40,17 +58,23 @@ final class LinuxEventComponent {
     this.max = max;
     this.flat = flat;
     this.fuzz = fuzz;
+    this.vendorId = vendorId;
+    this.productId = productId;
+    this.deviceName = deviceName;
   }
 
-  LinuxEventComponent(int nativeType, int nativeCode) {
+  LinuxEventComponent(int nativeType, int nativeCode, int vendorId, int productId, String deviceName) {
     this(LinuxComponentType.fromCode(nativeCode, nativeType == LinuxEventDevice.EV_ABS, nativeType == LinuxEventDevice.EV_REL),
             nativeType == LinuxEventDevice.EV_ABS,
             nativeType == LinuxEventDevice.EV_REL,
             nativeType,
-            nativeCode);
+            nativeCode,
+            vendorId,
+            productId,
+            deviceName);
   }
 
-  LinuxEventComponent(int nativeType, int nativeCode, input_absinfo absInfo) {
+  LinuxEventComponent(int nativeType, int nativeCode, input_absinfo absInfo, int vendorId, int productId, String deviceName) {
     this(LinuxComponentType.fromCode(nativeCode, nativeType == LinuxEventDevice.EV_ABS, nativeType == LinuxEventDevice.EV_REL),
             nativeType == LinuxEventDevice.EV_ABS,
             nativeType == LinuxEventDevice.EV_REL,
@@ -59,7 +83,18 @@ final class LinuxEventComponent {
             absInfo.minimum,
             absInfo.maximum,
             absInfo.flat,
-            absInfo.fuzz);
+            absInfo.fuzz,
+            vendorId,
+            productId,
+            deviceName);
+  }
+
+  LinuxEventComponent(int nativeType, int nativeCode) {
+    this(nativeType, nativeCode, -1, -1, null);
+  }
+
+  LinuxEventComponent(int nativeType, int nativeCode, input_absinfo absInfo) {
+    this(nativeType, nativeCode, absInfo, -1, -1, null);
   }
 
   @Override
@@ -95,6 +130,20 @@ final class LinuxEventComponent {
   }
 
   public InputComponent.ID getIdentifier() {
+    if (deviceName != null) {
+      if (componentType == ComponentType.BUTTON || componentType == ComponentType.AXIS) {
+        Optional<InputComponent.ID> mappedId;
+        if (componentType == ComponentType.BUTTON) {
+          mappedId = LinuxInputMappings.getButtonMapping(vendorId, productId, deviceName, nativeCode);
+        } else {
+          mappedId = LinuxInputMappings.getAxisMapping(vendorId, productId, deviceName, nativeCode);
+        }
+        if (mappedId.isPresent()) {
+          return mappedId.get();
+        }
+      }
+    }
+
     return switch (linuxComponentType) {
       case BTN_SOUTH -> new InputComponent.ID(Button.BUTTON_0, this.nativeCode);
       case BTN_EAST -> new InputComponent.ID(Button.BUTTON_1, this.nativeCode);
@@ -123,7 +172,7 @@ final class LinuxEventComponent {
               new InputComponent.ID(ComponentType.AXIS, InputComponent.ID.getNextAxisId(), ID_DPAD_UP_DOWN, this.nativeCode);
       default -> {
         var name = this.linuxComponentType.name();
-        yield switch (this.componentType) {
+        var id = switch (this.componentType) {
           case AXIS ->
                   new InputComponent.ID(ComponentType.AXIS, InputComponent.ID.getNextAxisId(), name, this.nativeCode);
           case BUTTON ->
@@ -133,6 +182,9 @@ final class LinuxEventComponent {
           default ->
                   new InputComponent.ID(ComponentType.UNKNOWN, InputComponent.ID.getNextId(ComponentType.UNKNOWN, 0), name, this.nativeCode);
         };
+        log.log(Level.FINE, "No mapping for device {0} (VID={1}, PID={2}) event code {3} ({4}), using dynamic ID: {5}",
+            new Object[] {deviceName, vendorId, productId, nativeCode, linuxComponentType.name(), id.toString()});
+        yield id;
       }
     };
   }
