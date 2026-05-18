@@ -1,5 +1,11 @@
 package de.gurkenlabs.input4j.foreign.linux;
 
+/**
+ * Linux input event codes from {@code input-event-codes.h}.
+ * Values match the Linux kernel UAPI definitions.
+ *
+ * @see <a href="https://elixir.bootlin.com/linux/latest/source/include/uapi/linux/input-event-codes.h">input-event-codes.h</a>
+ */
 public final class LinuxEventCode {
   public static final int BTN_0 = 0x100;
   public static final int BTN_1 = 0x101;
@@ -12,19 +18,20 @@ public final class LinuxEventCode {
   public static final int BTN_8 = 0x108;
   public static final int BTN_9 = 0x109;
 
-  public static final int BTN_SOUTH = 0x13a;
-  public static final int BTN_EAST = 0x13b;
-  public static final int BTN_WEST = 0x13c;
-  public static final int BTN_NORTH = 0x13d;
+  public static final int BTN_SOUTH = 0x130;
+  public static final int BTN_EAST = 0x131;
+  public static final int BTN_WEST = 0x134;
+  public static final int BTN_NORTH = 0x133;
 
-  public static final int BTN_TL = 0x13e;
-  public static final int BTN_TR = 0x13f;
-  public static final int BTN_SELECT = 0x136;
-  public static final int BTN_START = 0x137;
-  public static final int BTN_MODE = 0x13f;
+  public static final int BTN_TL = 0x136;
+  public static final int BTN_TR = 0x137;
+  public static final int BTN_SELECT = 0x13a;
+  public static final int BTN_START = 0x13b;
+  public static final int BTN_MODE = 0x13c;
   public static final int BTN_THUMBL = 0x13d;
   public static final int BTN_THUMBR = 0x13e;
 
+  public static final int BTN_TRIGGER_HAPPY = 0x2c0;
   public static final int BTN_TRIGGER_HAPPY1 = 0x2c0;
   public static final int BTN_TRIGGER_HAPPY2 = 0x2c1;
   public static final int BTN_TRIGGER_HAPPY3 = 0x2c2;

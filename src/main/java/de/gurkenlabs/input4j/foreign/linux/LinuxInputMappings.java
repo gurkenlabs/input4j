@@ -10,9 +10,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Registry for Linux evdev button and axis mappings.
+ *
+ * <p>Maps Linux input event codes to standardized {@link de.gurkenlabs.input4j.InputComponent.ID}
+ * values based on vendor ID, product ID, and device name patterns. Supports both specific device
+ * mappings and generic fallbacks using prefix patterns (e.g., {@code "GameSir%"}).
+ *
+ * <p>Built-in mappings are loaded automatically on class initialization. Custom mappings can be
+ * registered via {@link #registerButtonMapping} and {@link #registerAxisMapping}.
+ */
 public final class LinuxInputMappings {
 
   private static final Logger log = Logger.getLogger(LinuxInputMappings.class.getName());
@@ -22,6 +33,15 @@ public final class LinuxInputMappings {
 
   private LinuxInputMappings() {}
 
+  /**
+   * Registers a button mapping for a specific device.
+   *
+   * @param vendorId the USB vendor ID, or -1 to match any vendor
+   * @param productId the USB product ID, or -1 to match any product
+   * @param deviceNamePattern a device name pattern; if it ends with {@code %}, matches by prefix
+   * @param linuxEventCode the Linux input event code (e.g., {@code BTN_0})
+   * @param buttonId the standardized button ID to map to
+   */
   public static void registerButtonMapping(int vendorId, int productId,
       String deviceNamePattern, int linuxEventCode, InputComponent.ID buttonId) {
     MappingKey key = new MappingKey(vendorId, productId, deviceNamePattern, linuxEventCode);
@@ -31,6 +51,15 @@ public final class LinuxInputMappings {
         new Object[] {vendorId, productId, deviceNamePattern, linuxEventCode, buttonId});
   }
 
+  /**
+   * Registers an axis mapping for a specific device.
+   *
+   * @param vendorId the USB vendor ID, or -1 to match any vendor
+   * @param productId the USB product ID, or -1 to match any product
+   * @param deviceNamePattern a device name pattern; if it ends with {@code %}, matches by prefix
+   * @param linuxEventCode the Linux input event code (e.g., {@code ABS_X})
+   * @param axisId the standardized axis ID to map to
+   */
   public static void registerAxisMapping(int vendorId, int productId,
       String deviceNamePattern, int linuxEventCode, InputComponent.ID axisId) {
     MappingKey key = new MappingKey(vendorId, productId, deviceNamePattern, linuxEventCode);
@@ -40,39 +69,64 @@ public final class LinuxInputMappings {
         new Object[] {vendorId, productId, deviceNamePattern, linuxEventCode, axisId});
   }
 
+  /**
+   * Registers a button mapping for a controller type (e.g., XBOX, PLAYSTATION).
+   * Uses a device name pattern based on the controller type name.
+   *
+   * @param controllerType the controller type
+   * @param linuxEventCode the Linux input event code
+   * @param buttonId the standardized button ID to map to
+   */
   public static void registerButtonMappingForType(ControllerType controllerType,
       int linuxEventCode, InputComponent.ID buttonId) {
     registerButtonMapping(-1, -1, "%" + controllerType.name() + "%", linuxEventCode, buttonId);
   }
 
+  /**
+   * Looks up a button mapping for the given device and event code.
+   * When multiple mappings match, the most specific one is selected based on
+   * specificity scoring: exact VID/PID match ranks higher than wildcards,
+   * and exact device name match ranks higher than prefix patterns.
+   * If multiple mappings have the same score, the result is non-deterministic.
+   *
+   * @param vendorId the USB vendor ID
+   * @param productId the USB product ID
+   * @param deviceName the device name
+   * @param linuxEventCode the Linux input event code
+   * @return the mapped button ID, or empty if no mapping matches
+   */
   public static Optional<InputComponent.ID> getButtonMapping(int vendorId,
       int productId, String deviceName, int linuxEventCode) {
-    for (Map.Entry<MappingKey, ButtonMapping> entry : BUTTON_MAPPINGS.entrySet()) {
-      MappingKey k = entry.getKey();
-
-      if (k.linuxEventCode != linuxEventCode) {
-        continue;
-      }
-
-      if (k.vendorId != -1 && k.vendorId != vendorId) {
-        continue;
-      }
-
-      if (k.productId != -1 && k.productId != productId) {
-        continue;
-      }
-
-      if (matchesDeviceName(deviceName, k.deviceNamePattern)) {
-        return Optional.of(entry.getValue().buttonId);
-      }
-    }
-
-    return Optional.empty();
+    return findBestMatch(BUTTON_MAPPINGS, vendorId, productId, deviceName, linuxEventCode,
+        entry -> entry.getValue().buttonId);
   }
 
+  /**
+   * Looks up an axis mapping for the given device and event code.
+   * When multiple mappings match, the most specific one is selected based on
+   * specificity scoring: exact VID/PID match ranks higher than wildcards,
+   * and exact device name match ranks higher than prefix patterns.
+   * If multiple mappings have the same score, the result is non-deterministic.
+   *
+   * @param vendorId the USB vendor ID
+   * @param productId the USB product ID
+   * @param deviceName the device name
+   * @param linuxEventCode the Linux input event code
+   * @return the mapped axis ID, or empty if no mapping matches
+   */
   public static Optional<InputComponent.ID> getAxisMapping(int vendorId,
       int productId, String deviceName, int linuxEventCode) {
-    for (Map.Entry<MappingKey, AxisMapping> entry : AXIS_MAPPINGS.entrySet()) {
+    return findBestMatch(AXIS_MAPPINGS, vendorId, productId, deviceName, linuxEventCode,
+        entry -> entry.getValue().axisId);
+  }
+
+  private static <T, R> Optional<R> findBestMatch(Map<MappingKey, T> map, int vendorId,
+      int productId, String deviceName, int linuxEventCode,
+      Function<Map.Entry<MappingKey, T>, R> extractor) {
+    R bestResult = null;
+    int bestScore = -1;
+
+    for (Map.Entry<MappingKey, T> entry : map.entrySet()) {
       MappingKey k = entry.getKey();
 
       if (k.linuxEventCode != linuxEventCode) {
@@ -87,14 +141,59 @@ public final class LinuxInputMappings {
         continue;
       }
 
-      if (matchesDeviceName(deviceName, k.deviceNamePattern)) {
-        return Optional.of(entry.getValue().axisId);
+      int nameScore = scoreDeviceName(deviceName, k.deviceNamePattern);
+      if (nameScore == 0) {
+        continue;
+      }
+
+      int score = scoreSpecificity(k.vendorId, k.productId) + nameScore;
+      if (score > bestScore) {
+        bestScore = score;
+        bestResult = extractor.apply(entry);
       }
     }
 
-    return Optional.empty();
+    return bestResult != null ? Optional.of(bestResult) : Optional.empty();
   }
 
+  private static int scoreSpecificity(int vendorId, int productId) {
+    int score = 0;
+    if (vendorId != -1) {
+      score += 2;
+    }
+    if (productId != -1) {
+      score += 2;
+    }
+    return score;
+  }
+
+  private static int scoreDeviceName(String deviceName, String pattern) {
+    if (deviceName == null || pattern == null) {
+      return 0;
+    }
+
+    if (pattern.endsWith("%")) {
+      String prefix = pattern.substring(0, pattern.length() - 1);
+      if (deviceName.startsWith(prefix)) {
+        return 1;
+      }
+      return 0;
+    }
+
+    if (deviceName.equals(pattern)) {
+      return 3;
+    }
+    return 0;
+  }
+
+  /**
+   * Returns all button mappings applicable to the given device.
+   *
+   * @param vendorId the USB vendor ID
+   * @param productId the USB product ID
+   * @param deviceName the device name
+   * @return a list of matching button mappings
+   */
   public static List<MappingInfo> getButtonMappingsForDevice(int vendorId,
       int productId, String deviceName) {
     List<MappingInfo> results = new ArrayList<>();
@@ -106,13 +205,21 @@ public final class LinuxInputMappings {
       if (k.productId != -1 && k.productId != productId) {
         continue;
       }
-      if (matchesDeviceName(deviceName, k.deviceNamePattern)) {
+      if (scoreDeviceName(deviceName, k.deviceNamePattern) > 0) {
         results.add(new MappingInfo(k.linuxEventCode, entry.getValue().buttonId));
       }
     }
     return results;
   }
 
+  /**
+   * Returns all axis mappings applicable to the given device.
+   *
+   * @param vendorId the USB vendor ID
+   * @param productId the USB product ID
+   * @param deviceName the device name
+   * @return a list of matching axis mappings
+   */
   public static List<MappingInfo> getAxisMappingsForDevice(int vendorId,
       int productId, String deviceName) {
     List<MappingInfo> results = new ArrayList<>();
@@ -124,32 +231,29 @@ public final class LinuxInputMappings {
       if (k.productId != -1 && k.productId != productId) {
         continue;
       }
-      if (matchesDeviceName(deviceName, k.deviceNamePattern)) {
+      if (scoreDeviceName(deviceName, k.deviceNamePattern) > 0) {
         results.add(new MappingInfo(k.linuxEventCode, entry.getValue().axisId));
       }
     }
     return results;
   }
 
-  public static void clearCustomMappings() {
+  /**
+   * Clears all custom mappings and reloads the built-in mappings.
+   */
+  public static void resetMappings() {
     BUTTON_MAPPINGS.clear();
     AXIS_MAPPINGS.clear();
     loadBuiltInMappings();
   }
 
-  public record MappingInfo(int linuxEventCode, InputComponent.ID inputId) {}
-
-  private static boolean matchesDeviceName(String deviceName, String pattern) {
-    if (deviceName == null || pattern == null) {
-      return false;
-    }
-
-    if (pattern.endsWith("%")) {
-      String prefix = pattern.substring(0, pattern.length() - 1);
-      return deviceName.startsWith(prefix);
-    }
-
-    return deviceName.equals(pattern);
+  /**
+   * Information about a single mapping entry.
+   *
+   * @param linuxEventCode the Linux input event code
+   * @param inputId the standardized input component ID
+   */
+  public record MappingInfo(int linuxEventCode, InputComponent.ID inputId) {
   }
 
   static void loadBuiltInMappings() {
@@ -320,10 +424,6 @@ public final class LinuxInputMappings {
     registerButtonMappingForType(ControllerType.PLAYSTATION, LinuxEventCode.BTN_2, Button.BUTTON_3);
     registerButtonMappingForType(ControllerType.PLAYSTATION, LinuxEventCode.BTN_3, Button.BUTTON_0);
 
-    registerButtonMapping(-1, -1, "Generic USB Joystick%", LinuxEventCode.BTN_0, Button.BUTTON_0);
-    registerButtonMapping(-1, -1, "Generic USB Joystick%", LinuxEventCode.BTN_1, Button.BUTTON_1);
-    registerButtonMapping(-1, -1, "Generic USB Joystick%", LinuxEventCode.BTN_2, Button.BUTTON_2);
-    registerButtonMapping(-1, -1, "Generic USB Joystick%", LinuxEventCode.BTN_3, Button.BUTTON_3);
     registerButtonMapping(-1, -1, "Generic USB Gamepad%", LinuxEventCode.BTN_0, Button.BUTTON_0);
     registerButtonMapping(-1, -1, "Generic USB Gamepad%", LinuxEventCode.BTN_1, Button.BUTTON_1);
   }
@@ -332,9 +432,12 @@ public final class LinuxInputMappings {
     loadBuiltInMappings();
   }
 
-  private record MappingKey(int vendorId, int productId, String deviceNamePattern, int linuxEventCode) {}
+  private record MappingKey(int vendorId, int productId, String deviceNamePattern, int linuxEventCode) {
+  }
 
-  private record ButtonMapping(InputComponent.ID buttonId) {}
+  private record ButtonMapping(InputComponent.ID buttonId) {
+  }
 
-  private record AxisMapping(InputComponent.ID axisId) {}
+  private record AxisMapping(InputComponent.ID axisId) {
+  }
 }

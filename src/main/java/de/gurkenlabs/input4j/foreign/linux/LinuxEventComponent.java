@@ -1,6 +1,5 @@
 package de.gurkenlabs.input4j.foreign.linux;
 
-
 import de.gurkenlabs.input4j.ComponentType;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.components.Axis;
@@ -183,7 +182,7 @@ final class LinuxEventComponent {
                   new InputComponent.ID(ComponentType.UNKNOWN, InputComponent.ID.getNextId(ComponentType.UNKNOWN, 0), name, this.nativeCode);
         };
         log.log(Level.FINE, "No mapping for device {0} (VID={1}, PID={2}) event code {3} ({4}), using dynamic ID: {5}",
-            new Object[] {deviceName, vendorId, productId, nativeCode, linuxComponentType.name(), id.toString()});
+            new Object[] {deviceName != null ? deviceName : "unknown", vendorId, productId, nativeCode, linuxComponentType.name(), id.toString()});
         yield id;
       }
     };

@@ -4,6 +4,7 @@ import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.components.Axis;
 import de.gurkenlabs.input4j.components.Button;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -12,6 +13,11 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 class LinuxInputMappingsTests {
+
+  @BeforeEach
+  void setUp() {
+    LinuxInputMappings.resetMappings();
+  }
 
   @Test
   void testRegisterAndLookupButtonMapping() {
@@ -177,7 +183,6 @@ class LinuxInputMappingsTests {
 
   @Test
   void testGetButtonMappingsForDevice() {
-    LinuxInputMappings.clearCustomMappings();
     LinuxInputMappings.registerButtonMapping(0x9999, 0x8888, "TestDevice%", LinuxEventCode.BTN_0, Button.BUTTON_0);
     LinuxInputMappings.registerButtonMapping(0x9999, 0x8888, "TestDevice%", LinuxEventCode.BTN_1, Button.BUTTON_1);
     LinuxInputMappings.registerButtonMapping(0x9999, 0x8888, "TestDevice%", LinuxEventCode.BTN_2, Button.BUTTON_2);
@@ -192,7 +197,6 @@ class LinuxInputMappingsTests {
 
   @Test
   void testGetMappingsForDeviceFiltersByVidPid() {
-    LinuxInputMappings.clearCustomMappings();
     LinuxInputMappings.registerButtonMapping(0x1111, 0x2222, "MyDevice%", LinuxEventCode.BTN_0, Button.BUTTON_0);
     LinuxInputMappings.registerButtonMapping(0x3333, 0x4444, "MyDevice%", LinuxEventCode.BTN_0, Button.BUTTON_1);
 
