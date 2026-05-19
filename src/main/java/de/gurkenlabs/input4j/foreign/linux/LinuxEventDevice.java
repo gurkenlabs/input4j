@@ -37,9 +37,10 @@ class LinuxEventDevice {
 
   /**
    * Whether the device supports force feedback (rumble).
-   * Requires both write access to the device node and FF_RUMBLE capability
-   * reported via EVIOCGBIT(EV_FF). The kernel auto-sets FF_RUMBLE when
-   * FF_PERIODIC is available, so this covers both native and emulated rumble.
+   * Requires write access to the device node and either FF_RUMBLE or FF_SINE
+   * capability reported via EVIOCGBIT(EV_FF). The kernel auto-sets FF_RUMBLE
+   * when FF_PERIODIC is available; FF_SINE serves as a fallback for older
+   * drivers that do not trigger the kernel's auto-emulation.
    */
   final boolean supportsForceFeedback;
 
