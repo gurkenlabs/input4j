@@ -50,8 +50,15 @@ class ff_effect {
   /**
    * Effect-specific data (union of different effect types).
    * For rumble effects, use the rumble field.
+   * For periodic effects (sine, square, etc.), use the periodic field.
    */
   public ff_rumble_effect rumble;
+
+  /**
+   * Periodic effect data (FF_PERIODIC type).
+   * Shares the same memory as rumble (union in C kernel struct).
+   */
+  public ff_periodic_effect periodic;
 
   static final int FF_EFFECT_MAX = 24;
 
@@ -80,6 +87,7 @@ class ff_effect {
     effect.trigger = ff_trigger.read(segment.asSlice(OFFSET_trigger));
     effect.replay = ff_replay.read(segment.asSlice(OFFSET_replay));
     effect.rumble = ff_rumble_effect.read(segment.asSlice(OFFSET_u));
+    effect.periodic = ff_periodic_effect.read(segment.asSlice(OFFSET_u));
     return effect;
   }
 
@@ -96,6 +104,9 @@ class ff_effect {
     }
     if (rumble != null) {
       rumble.write(segment.asSlice(OFFSET_u));
+    }
+    if (periodic != null) {
+      periodic.write(segment.asSlice(OFFSET_u));
     }
   }
 }

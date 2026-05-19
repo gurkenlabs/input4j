@@ -27,7 +27,6 @@ class LinuxEventDevice {
   static final int KEY_MAX = 0x2ff;
   static final int REL_MAX = 0x0f;
   static final int ABS_MAX = 0x3f;
-  static final int FF_MAX = 0x7f;
 
   private static final Logger log = Logger.getLogger(LinuxEventDevice.class.getName());
   final String filename;
@@ -35,7 +34,39 @@ class LinuxEventDevice {
   final String name;
   final input_id id;
   final List<LinuxEventComponent> componentList = new ArrayList<>();
+
+  /**
+   * Whether the device supports force feedback (rumble).
+   * Requires write access to the device node and either FF_RUMBLE or FF_SINE
+   * capability reported via EVIOCGBIT(EV_FF). The kernel auto-sets FF_RUMBLE
+   * when FF_PERIODIC is available; FF_SINE serves as a fallback for older
+   * drivers that do not trigger the kernel's auto-emulation.
+   */
   final boolean supportsForceFeedback;
+
+  /**
+   * Whether the device reports FF_RUMBLE (0x50) capability via EVIOCGBIT(EV_FF).
+   * This is the authoritative way to detect rumble support — checking maxEffects
+   * alone is insufficient because a device may have effect slots but not support
+   * the rumble effect type.
+   */
+  final boolean supportsRumble;
+
+  /**
+   * Whether the device reports FF_SINE (0x5a) capability via EVIOCGBIT(EV_FF).
+   * Used as a fallback when FF_RUMBLE is not available — the kernel can emulate
+   * rumble via FF_PERIODIC/FF_SINE, but some older drivers only expose FF_SINE
+   * without the kernel's auto-emulation of FF_RUMBLE.
+   */
+  final boolean supportsSine;
+
+  /**
+   * Whether the device reports FF_GAIN (0x60) capability via EVIOCGBIT(EV_FF).
+   * The kernel silently ignores FF_GAIN writes when unsupported (returns bytes
+   * written without applying gain), so this flag prevents false-positive gain
+   * detection that leaves rumble at zero intensity on some controllers.
+   */
+  final boolean supportsGain;
   final int maxEffects;
   boolean openedReadOnly = false;
 
@@ -44,7 +75,6 @@ class LinuxEventDevice {
   int currentEffectId = -1;
   float currentStrongMagnitude = 0f;
   float currentWeakMagnitude = 0f;
-  boolean gainSet = false;
 
   public int version;
 
@@ -58,14 +88,27 @@ class LinuxEventDevice {
       this.id = null;
       this.version = 0;
       this.supportsForceFeedback = false;
+      this.supportsRumble = false;
+      this.supportsSine = false;
+      this.supportsGain = false;
       this.maxEffects = 0;
     } else {
       this.name = Linux.getEventDeviceName(memoryArena, this.fd);
       this.id = Linux.getEventDeviceId(memoryArena, this.fd);
       this.version = Linux.getEventDeviceVersion(memoryArena, this.fd);
       this.maxEffects = Linux.getNumEffects(memoryArena, this.fd);
-      // Force feedback requires write access - read-only disables it
-      this.supportsForceFeedback = !this.openedReadOnly && this.maxEffects > 0;
+      byte[] ffBits = Linux.getBits(memoryArena, EV_FF, this.fd);
+      if (ffBits != null) {
+        this.supportsRumble = isBitSet(ffBits, Linux.FF_RUMBLE);
+        this.supportsSine = isBitSet(ffBits, Linux.FF_SINE);
+        this.supportsGain = isBitSet(ffBits, Linux.FF_GAIN);
+      } else {
+        this.supportsRumble = false;
+        this.supportsSine = false;
+        this.supportsGain = false;
+      }
+      // Force feedback requires write access and rumble (or sine fallback) support
+      this.supportsForceFeedback = !this.openedReadOnly && (this.supportsRumble || this.supportsSine);
     }
   }
 
@@ -96,14 +139,27 @@ class LinuxEventDevice {
       this.id = null;
       this.version = 0;
       this.supportsForceFeedback = false;
+      this.supportsRumble = false;
+      this.supportsSine = false;
+      this.supportsGain = false;
       this.maxEffects = 0;
     } else {
       this.name = Linux.getEventDeviceName(memoryArena, this.fd);
       this.id = Linux.getEventDeviceId(memoryArena, this.fd);
       this.version = Linux.getEventDeviceVersion(memoryArena, this.fd);
       this.maxEffects = Linux.getNumEffects(memoryArena, this.fd);
-      // Force feedback requires write access - read-only disables it
-      this.supportsForceFeedback = !isReadOnly && this.maxEffects > 0;
+      byte[] ffBits = Linux.getBits(memoryArena, EV_FF, this.fd);
+      if (ffBits != null) {
+        this.supportsRumble = isBitSet(ffBits, Linux.FF_RUMBLE);
+        this.supportsSine = isBitSet(ffBits, Linux.FF_SINE);
+        this.supportsGain = isBitSet(ffBits, Linux.FF_GAIN);
+      } else {
+        this.supportsRumble = false;
+        this.supportsSine = false;
+        this.supportsGain = false;
+      }
+      // Force feedback requires write access and rumble (or sine fallback) support
+      this.supportsForceFeedback = !isReadOnly && (this.supportsRumble || this.supportsSine);
     }
   }
 
@@ -117,7 +173,7 @@ class LinuxEventDevice {
       case EV_KEY -> KEY_MAX;
       case EV_REL -> REL_MAX;
       case EV_ABS -> ABS_MAX;
-      case EV_FF -> FF_MAX;
+      case EV_FF -> Linux.FF_CNT;
       default -> 0;
     };
   }
