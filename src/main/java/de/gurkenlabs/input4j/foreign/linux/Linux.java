@@ -61,7 +61,7 @@ class Linux {
   static final int FF_INERTIA = 0x56;
   static final int FF_RAMP = 0x57;
   static final int FF_EFFECT_MIN = 0x50;
-  static final int FF_EFFECT_MAX = 0x5f;
+  static final int FF_EFFECT_MAX = 0x57;
   static final int FF_MAX = 0x7f;
   static final int FF_CNT = FF_MAX + 1;
 
@@ -70,6 +70,7 @@ class Linux {
   static final int FF_STATUS_MAX = 0x01;
 
   static final int FF_GAIN = 0x60;
+  static final int FF_SINE = 0x5a;
 
   private static int EVIOCGKEY(int len) {
     return _IOC(_IOC_READ, 'E', 0x18, len);

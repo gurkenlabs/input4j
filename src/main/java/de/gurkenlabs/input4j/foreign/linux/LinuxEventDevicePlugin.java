@@ -159,6 +159,9 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
       if (device.supportsForceFeedback) {
         log.log(Level.FINE, "Device supports force feedback: " + device.name + " with " + device.maxEffects + " effects");
+        if (device.supportsGain) {
+          Linux.setGain(this.memoryArena, device.fd, MAX_MAGNITUDE);
+        }
       }
 
       int vendorId = device.id != null ? Short.toUnsignedInt(device.id.vendor) : -1;
@@ -280,6 +283,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   private static final int MAX_MAGNITUDE = 65535;
 
   private final ff_effect rumbleEffectTemplate = createRumbleEffectTemplate();
+  private final ff_effect sineEffectTemplate = createSineEffectTemplate();
   private final input_event playEventTemplate = new input_event();
   private final input_event stopEventTemplate = new input_event();
 
@@ -295,6 +299,30 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     effect.replay.length = 0;
     effect.replay.delay = 0;
     effect.rumble = new ff_rumble_effect();
+    return effect;
+  }
+
+  private ff_effect createSineEffectTemplate() {
+    var effect = new ff_effect();
+    effect.type = Linux.FF_PERIODIC;
+    effect.id = -1;
+    effect.direction = 0;
+    effect.trigger = new ff_trigger();
+    effect.trigger.button = 0;
+    effect.trigger.interval = 0;
+    effect.replay = new ff_replay();
+    effect.replay.length = 0;
+    effect.replay.delay = 0;
+    effect.periodic = new ff_periodic_effect();
+    effect.periodic.waveform = Linux.FF_SINE;
+    effect.periodic.period = 50;
+    effect.periodic.offset = 0;
+    effect.periodic.phase = 0;
+    effect.periodic.envelope = new ff_envelope();
+    effect.periodic.envelope.attack_length = 0;
+    effect.periodic.envelope.attack_level = 0;
+    effect.periodic.envelope.fade_length = 0;
+    effect.periodic.envelope.fade_level = 0;
     return effect;
   }
 
@@ -314,15 +342,16 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     }
 
     if (!linuxEventDevice.supportsForceFeedback) {
+      if (linuxEventDevice.openedReadOnly) {
+        log.log(Level.WARNING, "Rumble not supported - device opened read-only (requires write access): {0}", linuxEventDevice.filename);
+      } else if (!linuxEventDevice.supportsRumble && !linuxEventDevice.supportsSine) {
+        log.log(Level.WARNING, "Rumble not supported - device does not report FF_RUMBLE or FF_SINE capability: {0}", linuxEventDevice.name);
+      }
       return;
     }
 
     if (linuxEventDevice.fd == Linux.ERROR) {
       return;
-    }
-
-    if (linuxEventDevice.supportsGain) {
-      Linux.setGain(this.memoryArena, linuxEventDevice.fd, MAX_MAGNITUDE);
     }
 
     if (intensity == null || intensity.length == 0 || (intensity.length > 0 && intensity[0] < RUMBLE_THRESHOLD && (intensity.length == 1 || intensity[1] < RUMBLE_THRESHOLD))) {
@@ -348,28 +377,54 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       }
     }
 
-    rumbleEffectTemplate.rumble.strong_magnitude = (short) (strongMagnitude * MAX_MAGNITUDE);
-    rumbleEffectTemplate.rumble.weak_magnitude = (short) (weakMagnitude * MAX_MAGNITUDE);
+    if (linuxEventDevice.supportsRumble) {
+      rumbleEffectTemplate.rumble.strong_magnitude = (short) (strongMagnitude * MAX_MAGNITUDE);
+      rumbleEffectTemplate.rumble.weak_magnitude = (short) (weakMagnitude * MAX_MAGNITUDE);
 
-    int effectId = Linux.uploadEffect(this.memoryArena, linuxEventDevice.fd, rumbleEffectTemplate);
-    if (effectId == Linux.ERROR) {
-      log.log(Level.WARNING, "Failed to upload rumble effect for device " + inputDevice.getName());
-      return;
-    }
+      int effectId = Linux.uploadEffect(this.memoryArena, linuxEventDevice.fd, rumbleEffectTemplate);
+      if (effectId == Linux.ERROR) {
+        log.log(Level.WARNING, "Failed to upload rumble effect for device " + inputDevice.getName());
+        return;
+      }
 
-    linuxEventDevice.currentEffectId = effectId;
-    linuxEventDevice.currentStrongMagnitude = strongMagnitude;
-    linuxEventDevice.currentWeakMagnitude = weakMagnitude;
+      linuxEventDevice.currentEffectId = effectId;
+      linuxEventDevice.currentStrongMagnitude = strongMagnitude;
+      linuxEventDevice.currentWeakMagnitude = weakMagnitude;
 
-    playEventTemplate.type = (short) LinuxEventDevice.EV_FF;
-    playEventTemplate.code = (short) effectId;
-    playEventTemplate.value = 1;
+      playEventTemplate.type = (short) LinuxEventDevice.EV_FF;
+      playEventTemplate.code = (short) effectId;
+      playEventTemplate.value = 1;
 
-    int result = Linux.writeEvent(this.memoryArena, linuxEventDevice.fd, playEventTemplate);
-    if (result == Linux.ERROR) {
-      log.log(Level.WARNING, "Failed to play rumble effect for device " + inputDevice.getName());
-      Linux.removeEffect(this.memoryArena, linuxEventDevice.fd, effectId);
-      linuxEventDevice.currentEffectId = -1;
+      int result = Linux.writeEvent(this.memoryArena, linuxEventDevice.fd, playEventTemplate);
+      if (result == Linux.ERROR) {
+        log.log(Level.WARNING, "Failed to play rumble effect for device " + inputDevice.getName());
+        Linux.removeEffect(this.memoryArena, linuxEventDevice.fd, effectId);
+        linuxEventDevice.currentEffectId = -1;
+      }
+    } else {
+      int magnitude = (int) (strongMagnitude * MAX_MAGNITUDE / 3 + weakMagnitude * MAX_MAGNITUDE / 6);
+      sineEffectTemplate.periodic.magnitude = (short) magnitude;
+
+      int effectId = Linux.uploadEffect(this.memoryArena, linuxEventDevice.fd, sineEffectTemplate);
+      if (effectId == Linux.ERROR) {
+        log.log(Level.WARNING, "Failed to upload sine fallback effect for device " + inputDevice.getName());
+        return;
+      }
+
+      linuxEventDevice.currentEffectId = effectId;
+      linuxEventDevice.currentStrongMagnitude = strongMagnitude;
+      linuxEventDevice.currentWeakMagnitude = weakMagnitude;
+
+      playEventTemplate.type = (short) LinuxEventDevice.EV_FF;
+      playEventTemplate.code = (short) effectId;
+      playEventTemplate.value = 1;
+
+      int result = Linux.writeEvent(this.memoryArena, linuxEventDevice.fd, playEventTemplate);
+      if (result == Linux.ERROR) {
+        log.log(Level.WARNING, "Failed to play sine fallback effect for device " + inputDevice.getName());
+        Linux.removeEffect(this.memoryArena, linuxEventDevice.fd, effectId);
+        linuxEventDevice.currentEffectId = -1;
+      }
     }
   }
 
