@@ -35,8 +35,29 @@ class LinuxEventDevice {
   final String name;
   final input_id id;
   final List<LinuxEventComponent> componentList = new ArrayList<>();
+
+  /**
+   * Whether the device supports force feedback (rumble).
+   * Requires both write access to the device node and FF_RUMBLE capability
+   * reported via EVIOCGBIT(EV_FF). The kernel auto-sets FF_RUMBLE when
+   * FF_PERIODIC is available, so this covers both native and emulated rumble.
+   */
   final boolean supportsForceFeedback;
+
+  /**
+   * Whether the device reports FF_RUMBLE (0x50) capability via EVIOCGBIT(EV_FF).
+   * This is the authoritative way to detect rumble support — checking maxEffects
+   * alone is insufficient because a device may have effect slots but not support
+   * the rumble effect type.
+   */
   final boolean supportsRumble;
+
+  /**
+   * Whether the device reports FF_GAIN (0x60) capability via EVIOCGBIT(EV_FF).
+   * The kernel silently ignores FF_GAIN writes when unsupported (returns bytes
+   * written without applying gain), so this flag prevents false-positive gain
+   * detection that leaves rumble at zero intensity on some controllers.
+   */
   final boolean supportsGain;
   final int maxEffects;
   boolean openedReadOnly = false;
