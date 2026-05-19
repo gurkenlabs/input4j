@@ -36,6 +36,8 @@ class LinuxEventDevice {
   final input_id id;
   final List<LinuxEventComponent> componentList = new ArrayList<>();
   final boolean supportsForceFeedback;
+  final boolean supportsRumble;
+  final boolean supportsGain;
   final int maxEffects;
   boolean openedReadOnly = false;
 
@@ -44,7 +46,6 @@ class LinuxEventDevice {
   int currentEffectId = -1;
   float currentStrongMagnitude = 0f;
   float currentWeakMagnitude = 0f;
-  boolean gainSet = false;
 
   public int version;
 
@@ -58,14 +59,24 @@ class LinuxEventDevice {
       this.id = null;
       this.version = 0;
       this.supportsForceFeedback = false;
+      this.supportsRumble = false;
+      this.supportsGain = false;
       this.maxEffects = 0;
     } else {
       this.name = Linux.getEventDeviceName(memoryArena, this.fd);
       this.id = Linux.getEventDeviceId(memoryArena, this.fd);
       this.version = Linux.getEventDeviceVersion(memoryArena, this.fd);
       this.maxEffects = Linux.getNumEffects(memoryArena, this.fd);
-      // Force feedback requires write access - read-only disables it
-      this.supportsForceFeedback = !this.openedReadOnly && this.maxEffects > 0;
+      byte[] ffBits = Linux.getBits(memoryArena, EV_FF, this.fd);
+      if (ffBits != null) {
+        this.supportsRumble = isBitSet(ffBits, Linux.FF_RUMBLE);
+        this.supportsGain = isBitSet(ffBits, Linux.FF_GAIN);
+      } else {
+        this.supportsRumble = false;
+        this.supportsGain = false;
+      }
+      // Force feedback requires write access and rumble support
+      this.supportsForceFeedback = !this.openedReadOnly && this.supportsRumble;
     }
   }
 
@@ -96,14 +107,24 @@ class LinuxEventDevice {
       this.id = null;
       this.version = 0;
       this.supportsForceFeedback = false;
+      this.supportsRumble = false;
+      this.supportsGain = false;
       this.maxEffects = 0;
     } else {
       this.name = Linux.getEventDeviceName(memoryArena, this.fd);
       this.id = Linux.getEventDeviceId(memoryArena, this.fd);
       this.version = Linux.getEventDeviceVersion(memoryArena, this.fd);
       this.maxEffects = Linux.getNumEffects(memoryArena, this.fd);
-      // Force feedback requires write access - read-only disables it
-      this.supportsForceFeedback = !isReadOnly && this.maxEffects > 0;
+      byte[] ffBits = Linux.getBits(memoryArena, EV_FF, this.fd);
+      if (ffBits != null) {
+        this.supportsRumble = isBitSet(ffBits, Linux.FF_RUMBLE);
+        this.supportsGain = isBitSet(ffBits, Linux.FF_GAIN);
+      } else {
+        this.supportsRumble = false;
+        this.supportsGain = false;
+      }
+      // Force feedback requires write access and rumble support
+      this.supportsForceFeedback = !isReadOnly && this.supportsRumble;
     }
   }
 

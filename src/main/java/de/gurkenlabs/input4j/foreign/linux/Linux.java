@@ -62,7 +62,8 @@ class Linux {
   static final int FF_RAMP = 0x57;
   static final int FF_EFFECT_MIN = 0x50;
   static final int FF_EFFECT_MAX = 0x5f;
-  static final int FF_CNT = FF_EFFECT_MAX + 1;
+  static final int FF_MAX = 0x7f;
+  static final int FF_CNT = FF_MAX + 1;
 
   static final int FF_STATUS_STOPPED = 0x00;
   static final int FF_STATUS_PLAYING = 0x01;

@@ -321,11 +321,8 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       return;
     }
 
-    if (!linuxEventDevice.gainSet) {
-      int gainResult = Linux.setGain(this.memoryArena, linuxEventDevice.fd, MAX_MAGNITUDE);
-      if (gainResult != Linux.ERROR) {
-        linuxEventDevice.gainSet = true;
-      }
+    if (linuxEventDevice.supportsGain) {
+      Linux.setGain(this.memoryArena, linuxEventDevice.fd, MAX_MAGNITUDE);
     }
 
     if (intensity == null || intensity.length == 0 || (intensity.length > 0 && intensity[0] < RUMBLE_THRESHOLD && (intensity.length == 1 || intensity[1] < RUMBLE_THRESHOLD))) {
