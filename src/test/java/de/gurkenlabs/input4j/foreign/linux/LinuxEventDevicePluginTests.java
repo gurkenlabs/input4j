@@ -8,6 +8,8 @@ import de.gurkenlabs.input4j.components.Button;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LinuxEventDevicePluginTests {
   @Test
@@ -124,5 +126,47 @@ public class LinuxEventDevicePluginTests {
     event.code = 4;
     index = LinuxEventDevicePlugin.getComponentIndexByNativeId(event, inputDevice);
     assertEquals(Linux.ERROR, index);
+  }
+
+  @Test
+  void testIsBitSetForFfRumble() {
+    byte[] ffBits = new byte[16];
+    ffBits[10] = (byte) 0x01;
+    assertTrue(LinuxEventDevice.isBitSet(ffBits, Linux.FF_RUMBLE));
+    assertFalse(LinuxEventDevice.isBitSet(ffBits, Linux.FF_SINE));
+    assertFalse(LinuxEventDevice.isBitSet(ffBits, Linux.FF_GAIN));
+  }
+
+  @Test
+  void testIsBitSetForFfSine() {
+    byte[] ffBits = new byte[16];
+    ffBits[11] = (byte) 0x04;
+    assertTrue(LinuxEventDevice.isBitSet(ffBits, Linux.FF_SINE));
+    assertFalse(LinuxEventDevice.isBitSet(ffBits, Linux.FF_RUMBLE));
+    assertFalse(LinuxEventDevice.isBitSet(ffBits, Linux.FF_GAIN));
+  }
+
+  @Test
+  void testIsBitSetForFfGain() {
+    byte[] ffBits = new byte[16];
+    ffBits[12] = (byte) 0x01;
+    assertTrue(LinuxEventDevice.isBitSet(ffBits, Linux.FF_GAIN));
+    assertFalse(LinuxEventDevice.isBitSet(ffBits, Linux.FF_RUMBLE));
+    assertFalse(LinuxEventDevice.isBitSet(ffBits, Linux.FF_SINE));
+  }
+
+  @Test
+  void testIsBitSetForFfRumbleAndGain() {
+    byte[] ffBits = new byte[16];
+    ffBits[10] = (byte) 0x01;
+    ffBits[12] = (byte) 0x01;
+    assertTrue(LinuxEventDevice.isBitSet(ffBits, Linux.FF_RUMBLE));
+    assertFalse(LinuxEventDevice.isBitSet(ffBits, Linux.FF_SINE));
+    assertTrue(LinuxEventDevice.isBitSet(ffBits, Linux.FF_GAIN));
+  }
+
+  @Test
+  void testGetMaxBitsForEvFfReturnsFfCnt() {
+    assertEquals(Linux.FF_CNT, LinuxEventDevice.getMaxBits(LinuxEventDevice.EV_FF));
   }
 }
