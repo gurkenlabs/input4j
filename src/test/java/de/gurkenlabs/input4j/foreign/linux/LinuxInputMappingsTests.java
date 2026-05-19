@@ -231,4 +231,32 @@ class LinuxInputMappingsTests {
       assertTrue(result.isPresent(), "Button " + i + " should be present");
     }
   }
+
+  @Test
+  void testGameSirPrefixFallback() {
+    InputComponent.ID[] expectedButtons = {
+        Button.BUTTON_0, Button.BUTTON_1, Button.BUTTON_2, Button.BUTTON_3,
+        Button.BUTTON_4, Button.BUTTON_5, Button.BUTTON_6, Button.BUTTON_7,
+        Button.BUTTON_8, Button.BUTTON_9
+    };
+    for (int i = 0; i < expectedButtons.length; i++) {
+      Optional<InputComponent.ID> result = LinuxInputMappings.getButtonMapping(0x3735, 0xFFFF, "GameSir Nova 2 Lite", LinuxEventCode.BTN_0 + i);
+      assertTrue(result.isPresent(), "BTN_" + i + " should be mapped for unknown GameSir");
+      assertEquals(expectedButtons[i], result.get());
+    }
+  }
+
+  @Test
+  void testGameSirSpecificMappingOverridesPrefix() {
+    // GameSir G3 has specific VID/PID mappings that should take precedence over the prefix fallback
+    Optional<InputComponent.ID> result = LinuxInputMappings.getButtonMapping(0x05AC, 0x03DD, "GameSir G3", LinuxEventCode.BTN_2);
+    assertTrue(result.isPresent());
+    assertEquals(Button.BUTTON_2, result.get());
+  }
+
+  @Test
+  void testGameSirPrefixDoesNotMatchNonGameSir() {
+    Optional<InputComponent.ID> result = LinuxInputMappings.getButtonMapping(-1, -1, "Xbox Controller", LinuxEventCode.BTN_5);
+    assertFalse(result.isPresent());
+  }
 }

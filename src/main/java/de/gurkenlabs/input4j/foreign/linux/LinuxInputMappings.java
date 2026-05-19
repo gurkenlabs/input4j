@@ -309,6 +309,19 @@ public final class LinuxInputMappings {
     registerButtonMapping(0xBC20, 0x5656, "GameSir T4w", LinuxEventCode.BTN_0, Button.BUTTON_0);
     registerButtonMapping(0xBC20, 0x5656, "GameSir T4w", LinuxEventCode.BTN_1, Button.BUTTON_1);
 
+    // GameSir generic fallback for controllers reporting BTN_0-BTN_9 in non-XInput mode.
+    // Per-model mappings take precedence due to higher specificity scoring.
+    registerButtonMapping(-1, -1, "GameSir%", LinuxEventCode.BTN_0, Button.BUTTON_0);
+    registerButtonMapping(-1, -1, "GameSir%", LinuxEventCode.BTN_1, Button.BUTTON_1);
+    registerButtonMapping(-1, -1, "GameSir%", LinuxEventCode.BTN_2, Button.BUTTON_2);
+    registerButtonMapping(-1, -1, "GameSir%", LinuxEventCode.BTN_3, Button.BUTTON_3);
+    registerButtonMapping(-1, -1, "GameSir%", LinuxEventCode.BTN_4, Button.BUTTON_4);
+    registerButtonMapping(-1, -1, "GameSir%", LinuxEventCode.BTN_5, Button.BUTTON_5);
+    registerButtonMapping(-1, -1, "GameSir%", LinuxEventCode.BTN_6, Button.BUTTON_6);
+    registerButtonMapping(-1, -1, "GameSir%", LinuxEventCode.BTN_7, Button.BUTTON_7);
+    registerButtonMapping(-1, -1, "GameSir%", LinuxEventCode.BTN_8, Button.BUTTON_8);
+    registerButtonMapping(-1, -1, "GameSir%", LinuxEventCode.BTN_9, Button.BUTTON_9);
+
     registerButtonMapping(-1, -1, "Generic USB Joystick%", LinuxEventCode.BTN_0, Button.BUTTON_0);
     registerButtonMapping(-1, -1, "Generic USB Joystick%", LinuxEventCode.BTN_1, Button.BUTTON_1);
     registerButtonMapping(-1, -1, "Generic USB Joystick%", LinuxEventCode.BTN_2, Button.BUTTON_2);
