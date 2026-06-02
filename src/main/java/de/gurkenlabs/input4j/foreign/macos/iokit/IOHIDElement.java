@@ -92,7 +92,7 @@ class IOHIDElement {
    */
   int reportSize;
 
-  int currentValue;
+  volatile int currentValue;
 
   String getName() {
     if (this.name != null) {
