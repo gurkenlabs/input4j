@@ -55,7 +55,20 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
    */
   private final Map<Long, Map<Integer, IOHIDElement>> elementsByDeviceAndCookie = new ConcurrentHashMap<>();
   private Thread eventLoopThread;
+  /**
+   * {@code CFRunLoopRef} of the event-loop thread, captured before
+   * {@link #internalInitDevices(Frame)} releases the calling thread via
+   * {@code initLatch.countDown()}. Used by {@link #close()} to wake the
+   * blocked {@code CFRunLoopRun} so the thread can exit cleanly.
+   * {@code volatile} because it is written by the event-loop thread and
+   * read by any thread that calls {@code close()}; the write happens
+   * before the latch count-down, which establishes happens-before with
+   * any thread that has already observed the latch release.
+   */
+  private volatile MemorySegment eventLoopRunLoop;
   private Arena batteryArena;
+
+  private static final long SHUTDOWN_TIMEOUT_MS = 3_000;
 
   @Override
   public void internalInitDevices(Frame owner) {
@@ -69,6 +82,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
         var ioHIDDevices = MacOS.getSupportedHIDDevices(memoryArena, ioHIDManager);
 
         populateDevices(ioHIDDevices);
+        this.eventLoopRunLoop = MacOS.CFRunLoopGetCurrent();
         initLatch.countDown();
 
         if (!nativeDevices.isEmpty()) {
@@ -163,14 +177,27 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
   @Override
   public void close() {
-    super.close();
+    if (eventLoopRunLoop != null && !eventLoopRunLoop.equals(MemorySegment.NULL)) {
+      try {
+        MacOS.CFRunLoopStop(eventLoopRunLoop);
+      } catch (Throwable t) {
+        log.log(Level.WARNING, "Failed to stop HID event loop", t);
+      }
+    }
 
     if (eventLoopThread != null) {
-      eventLoopThread.interrupt();
+      try {
+        eventLoopThread.join(SHUTDOWN_TIMEOUT_MS);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
     }
+
+    super.close();
 
     this.nativeDevices.clear();
     this.elementsByDeviceAndCookie.clear();
+    this.eventLoopRunLoop = null;
   }
 
   @Override

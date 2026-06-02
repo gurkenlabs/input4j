@@ -84,6 +84,7 @@ class MacOS {
   private static final MethodHandle CFStringGetCString;
   private static final MethodHandle CFRunLoopGetCurrent;
   private static final MethodHandle CFRunLoopRun;
+  private static final MethodHandle CFRunLoopStop;
 
   private static final MethodHandle IOHIDManagerCreate;
   private static final MethodHandle IOHIDManagerOpen;
@@ -156,6 +157,7 @@ class MacOS {
     CFStringGetCString = downcallHandle("CFStringGetCString", FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, ADDRESS, JAVA_INT, JAVA_INT));
     CFRunLoopGetCurrent = downcallHandle("CFRunLoopGetCurrent", FunctionDescriptor.of(ADDRESS));
     CFRunLoopRun = downcallHandle("CFRunLoopRun", FunctionDescriptor.ofVoid());
+    CFRunLoopStop = downcallHandle("CFRunLoopStop", FunctionDescriptor.ofVoid(ADDRESS));
 
     // IOKit methods
     IOHIDManagerCreate = downcallHandle("IOHIDManagerCreate", FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_INT));
@@ -378,6 +380,32 @@ class MacOS {
       }
 
       CFRunLoopRun.invoke();
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  /**
+   * Returns the {@code CFRunLoopRef} for the calling thread. Used by
+   * {@link IOKitPlugin} to capture the event-loop thread's run loop so
+   * {@link #CFRunLoopStop(MemorySegment)} can later wake it.
+   */
+  static MemorySegment CFRunLoopGetCurrent() {
+    try {
+      return (MemorySegment) CFRunLoopGetCurrent.invoke();
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  /**
+   * Forces a run loop to stop. {@code CFRunLoopRun} checks this flag at
+   * the top of each iteration; an in-flight callback is allowed to
+   * complete first.
+   */
+  static void CFRunLoopStop(MemorySegment runLoop) {
+    try {
+      CFRunLoopStop.invoke(runLoop);
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
