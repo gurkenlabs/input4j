@@ -19,6 +19,8 @@ import java.lang.invoke.MethodType;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import static java.lang.foreign.ValueLayout.ADDRESS;
@@ -45,11 +47,12 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
   private Thread eventLoopThread;
   private Arena batteryArena;
 
-  private boolean devicesInitialized;
+  private CountDownLatch initLatch;
 
   @Override
   public void internalInitDevices(Frame owner) {
     batteryArena = Arena.ofShared();
+    initLatch = new CountDownLatch(1);
     eventLoopThread = new Thread(() -> {
       MemorySegment ioHIDManager = MemorySegment.NULL;
       try (Arena memoryArena = Arena.ofConfined()) {
@@ -76,16 +79,19 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
           nativeDevices.put(inputDevice.getID(), ioHIDDevice);
         }
 
-        devicesInitialized = true;
+        // Set the devices BEFORE the blocking run loop so the caller of init() can
+        // observe them as soon as we are done discovering.
+        this.setDevices(this.nativeDevices.values().stream().map(d -> d.inputDevice).toList());
+        initLatch.countDown();
+
         if (!nativeDevices.isEmpty()) {
           log.log(Level.FINE, "Starting event loop for HID manager");
           // Start the event loop in a separate thread
           MacOS.runEventLoop(memoryArena, ioHIDManager);
         }
-
-        this.setDevices(this.nativeDevices.values().stream().map(d -> d.inputDevice).toList());
       } catch (Throwable e) {
         log.log(Level.SEVERE, "Failed to initialize IOKit devices", e);
+        initLatch.countDown();
       } finally {
         if (!ioHIDManager.equals(MemorySegment.NULL)) {
           var closeReturn = MacOS.IOHIDManagerClose(ioHIDManager);
@@ -98,22 +104,16 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
     eventLoopThread.start();
 
-    // Wait for devices to be initialized or timeout after 3 seconds to prevent blocking the main thread
-    int waited = 0;
-    while (waited < 3000 && !devicesInitialized) {
-      try {
-        Thread.sleep(100);
-        waited += 100;
-      } catch (InterruptedException e) {
-        log.log(Level.SEVERE, "Initialization interrupted", e);
-        throw new RuntimeException(e);
+    try {
+      // Wait for devices to be initialized or timeout after 3 seconds to prevent blocking the main thread
+      if (!initLatch.await(3, TimeUnit.SECONDS)) {
+        log.log(Level.WARNING, "Device initialization timed out");
+      } else {
+        log.log(Level.FINE, "Devices initialized successfully");
       }
-    }
-
-    if (devicesInitialized) {
-      log.log(Level.FINE, "Devices initialized successfully");
-    } else {
-      log.log(Level.WARNING, "Device initialization timed out");
+    } catch (InterruptedException e) {
+      log.log(Level.SEVERE, "Initialization interrupted", e);
+      throw new RuntimeException(e);
     }
   }
 
