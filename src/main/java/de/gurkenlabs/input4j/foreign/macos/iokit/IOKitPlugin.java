@@ -23,6 +23,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
+
 import static java.lang.foreign.ValueLayout.ADDRESS;
 import static java.lang.foreign.ValueLayout.JAVA_BYTE;
 import static java.lang.foreign.ValueLayout.JAVA_INT;
@@ -56,12 +57,10 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
   private Thread eventLoopThread;
   private Arena batteryArena;
 
-  private CountDownLatch initLatch;
-
   @Override
   public void internalInitDevices(Frame owner) {
     batteryArena = Arena.ofShared();
-    initLatch = new CountDownLatch(1);
+    var initLatch = new CountDownLatch(1);
     eventLoopThread = new Thread(() -> {
       MemorySegment ioHIDManager = MemorySegment.NULL;
       try (Arena memoryArena = Arena.ofConfined()) {
@@ -74,7 +73,6 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
         if (!nativeDevices.isEmpty()) {
           log.log(Level.FINE, "Starting event loop for HID manager");
-          // Start the event loop in a separate thread
           MacOS.runEventLoop(memoryArena, ioHIDManager);
         }
       } catch (Throwable e) {
@@ -93,7 +91,6 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     eventLoopThread.start();
 
     try {
-      // Wait for devices to be initialized or timeout after 3 seconds to prevent blocking the main thread
       if (!initLatch.await(3, TimeUnit.SECONDS)) {
         log.log(Level.WARNING, "Device initialization timed out");
       } else {

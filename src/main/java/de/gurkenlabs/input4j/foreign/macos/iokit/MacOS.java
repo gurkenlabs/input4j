@@ -23,6 +23,7 @@ class MacOS {
   // dictionary to joystick/gamepad/multi-axis controllers.
   private static final int kHIDUsage_GD_Joystick = 0x04;
   private static final int kHIDUsage_GD_Gamepad = 0x05;
+  private static final int kHIDUsage_GD_MultiAxisController = 0x08;
   private static final int kHIDPage_GenericDesktop = 0x01;
 
   // IOHID Report Types
@@ -58,6 +59,15 @@ class MacOS {
    * safe, has no owner, and is implicitly closed when the JVM exits.
    */
   private static final Arena CORE_FOUNDATION_LOOKUP_ARENA = Arena.global();
+
+  /**
+   * Singleton matching dictionary for the IOHIDManager, restricting the
+   * matched devices to joystick / gamepad / multi-axis controller on the
+   * Generic Desktop usage page. Built once at class init and reused across
+   * {@link #initHIDManager} invocations. The IOHIDManager retains the dict
+   * for as long as it is scheduled, so we never release our +1 reference.
+   */
+  private static final MemorySegment GAMEPAD_MATCHING_DICTIONARY;
 
   private static final MethodHandle CFRelease;
   private static final MethodHandle CFStringCreateWithCString;
@@ -119,12 +129,14 @@ class MacOS {
     // {@link #CORE_FOUNDATION_LOOKUP_ARENA} ({@code Arena.global()}) so the
     // resulting MemorySegments remain valid for the JVM lifetime; a confined
     // arena would invalidate them as soon as this static block returns.
-    var cfLookup = SymbolLookup.libraryLookup(
-        Path.of("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"),
-        CORE_FOUNDATION_LOOKUP_ARENA);
-    kCFTypeDictionaryKeyCallBacks = cfLookup.find("kCFTypeDictionaryKeyCallBacks").orElseThrow();
-    kCFTypeDictionaryValueCallBacks = cfLookup.find("kCFTypeDictionaryValueCallBacks").orElseThrow();
-    kCFTypeArrayCallBacks = cfLookup.find("kCFTypeArrayCallBacks").orElseThrow();
+  var cfLookup = SymbolLookup.libraryLookup(
+      Path.of("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"),
+      CORE_FOUNDATION_LOOKUP_ARENA);
+  kCFTypeDictionaryKeyCallBacks = cfLookup.find("kCFTypeDictionaryKeyCallBacks").orElseThrow();
+  kCFTypeDictionaryValueCallBacks = cfLookup.find("kCFTypeDictionaryValueCallBacks").orElseThrow();
+  kCFTypeArrayCallBacks = cfLookup.find("kCFTypeArrayCallBacks").orElseThrow();
+
+  GAMEPAD_MATCHING_DICTIONARY = createGamepadMatchingDictionary();
 
     // CoreFoundation methods
     CFRelease = downcallHandle("CFRelease", FunctionDescriptor.ofVoid(ADDRESS));
@@ -258,19 +270,7 @@ class MacOS {
         throw new RuntimeException("Failed to open HID manager: " + openResult);
       }
 
-      // Restrict the HID manager to joystick / gamepad / multi-axis controllers
-      // on the Generic Desktop usage page. Without this, the input value
-      // callback fires for keyboards, mice, trackpads, and any other HID
-      // device on the system, which floods the log and pollutes the
-      // device list. The matching dict is retained by the IOHIDManager so
-      // we release our reference below.
-      var matchingDict = createGamepadMatchingDictionary();
-      try {
-        IOHIDManagerSetDeviceMatching.invoke(hidManager, matchingDict);
-      } finally {
-        CFRelease.invoke(matchingDict);
-      }
-
+      IOHIDManagerSetDeviceMatching.invoke(hidManager, GAMEPAD_MATCHING_DICTIONARY);
       IOHIDManagerRegisterInputValueCallback.invoke(hidManager, hidInputValueCallbackPointer, MemorySegment.NULL);
       return hidManager;
     } catch (Throwable t) {
@@ -279,18 +279,16 @@ class MacOS {
   }
 
   /**
-   * Builds a CoreFoundation matching dictionary that restricts the
-   * IOHIDManager to HID devices whose primary usage page is
-   * {@code kHIDPage_GenericDesktop} (0x01) and whose primary usage is one of
-   * joystick, gamepad, or multi-axis controller. The returned
-   * {@link MemorySegment} is a +1 retain owned by the caller.
+   * Builds the singleton {@link #GAMEPAD_MATCHING_DICTIONARY}. See that
+   * field for the matching semantics. The returned {@link MemorySegment}
+   * is a +1 retain owned by the JVM (never released).
    */
   private static MemorySegment createGamepadMatchingDictionary() {
     try (var arena = Arena.ofConfined()) {
       var usagesArray = (MemorySegment) CFArrayCreateMutable.invoke(
           MemorySegment.NULL, 0L, kCFTypeArrayCallBacks);
       try {
-        for (int usage : new int[] {kHIDUsage_GD_Joystick, kHIDUsage_GD_Gamepad}) {
+        for (int usage : new int[] {kHIDUsage_GD_Joystick, kHIDUsage_GD_Gamepad, kHIDUsage_GD_MultiAxisController}) {
           var usageValue = arena.allocate(JAVA_INT);
           usageValue.set(JAVA_INT, 0, usage);
           var usageNumber = (MemorySegment) CFNumberCreate.invoke(
