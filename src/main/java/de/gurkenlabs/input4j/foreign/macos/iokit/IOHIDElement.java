@@ -17,6 +17,16 @@ class IOHIDElement {
   long address;
 
   /**
+   * The 32-bit identifier unique to this element within its parent device,
+   * as reported by {@code IOHIDElementGetCookie}. Apple guarantees that
+   * this value is stable for the lifetime of the device and is unique
+   * among siblings. We use it as the disambiguation key in the input
+   * value callback so the lookup is robust against FFM address-carrier
+   * quirks that can confuse raw pointer comparison.
+   */
+  int cookie;
+
+  /**
    * The name of the HID element.
    * Corresponds to the `kIOHIDElementNameKey` in native C.
    */
@@ -82,7 +92,7 @@ class IOHIDElement {
    */
   int reportSize;
 
-  int currentValue;
+  volatile int currentValue;
 
   String getName() {
     if (this.name != null) {

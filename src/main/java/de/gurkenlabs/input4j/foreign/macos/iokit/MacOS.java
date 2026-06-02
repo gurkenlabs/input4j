@@ -3,8 +3,10 @@ package de.gurkenlabs.input4j.foreign.macos.iokit;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SymbolLookup;
 import java.lang.invoke.MethodHandle;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -16,6 +18,13 @@ class MacOS {
 
   private static final int kCFStringEncodingUTF8 = 0x08000100;
   private static final int kCFNumberIntType = 9;
+
+  // HID usage values (kHIDUsage_GD_*) used to narrow the IOHIDManager matching
+  // dictionary to joystick/gamepad/multi-axis controllers.
+  private static final int kHIDUsage_GD_Joystick = 0x04;
+  private static final int kHIDUsage_GD_Gamepad = 0x05;
+  private static final int kHIDUsage_GD_MultiAxisController = 0x08;
+  private static final int kHIDPage_GenericDesktop = 0x01;
 
   // IOHID Report Types
   // See: kIOHIDReportType (Apple Developer Documentation)
@@ -33,16 +42,49 @@ class MacOS {
 
   private static final String kCFRunLoopDefaultMode = "kCFRunLoopDefaultMode";
 
+  // CoreFoundation collection/box call-back structs, looked up at static init
+  // time from the CoreFoundation framework so we do not have to depend on
+  // hard-coded addresses that change between macOS releases.
+  private static final MemorySegment kCFTypeDictionaryKeyCallBacks;
+  private static final MemorySegment kCFTypeDictionaryValueCallBacks;
+  private static final MemorySegment kCFTypeArrayCallBacks;
+
+  /**
+   * Long-lived arena for the CoreFoundation callback-struct lookups performed
+   * in the static initializer below. The three MemorySegments we resolve
+   * (kCFTypeDictionaryKeyCallBacks, kCFTypeDictionaryValueCallBacks,
+   * kCFTypeArrayCallBacks) point at read-only data in the framework binary
+   * that stays loaded for the JVM's lifetime, so we want the segments to be
+   * valid for the same duration. {@code Arena.global()} is multi-thread
+   * safe, has no owner, and is implicitly closed when the JVM exits.
+   */
+  private static final Arena CORE_FOUNDATION_LOOKUP_ARENA = Arena.global();
+
+  /**
+   * Singleton matching dictionary for the IOHIDManager, restricting the
+   * matched devices to joystick / gamepad / multi-axis controller on the
+   * Generic Desktop usage page. Built once at class init and reused across
+   * {@link #initHIDManager} invocations. The IOHIDManager retains the dict
+   * for as long as it is scheduled, so we never release our +1 reference.
+   */
+  private static final MemorySegment GAMEPAD_MATCHING_DICTIONARY;
+
   private static final MethodHandle CFRelease;
   private static final MethodHandle CFStringCreateWithCString;
   private static final MethodHandle CFNumberGetValue;
+  private static final MethodHandle CFNumberCreate;
   private static final MethodHandle CFArrayGetCount;
   private static final MethodHandle CFArrayGetValueAtIndex;
+  private static final MethodHandle CFArrayCreateMutable;
+  private static final MethodHandle CFArrayAppendValue;
+  private static final MethodHandle CFDictionaryCreateMutable;
+  private static final MethodHandle CFDictionarySetValue;
   private static final MethodHandle CFSetGetCount;
   private static final MethodHandle CFSetGetValues;
   private static final MethodHandle CFStringGetCString;
   private static final MethodHandle CFRunLoopGetCurrent;
   private static final MethodHandle CFRunLoopRun;
+  private static final MethodHandle CFRunLoopStop;
 
   private static final MethodHandle IOHIDManagerCreate;
   private static final MethodHandle IOHIDManagerOpen;
@@ -60,6 +102,7 @@ class MacOS {
   private static final MethodHandle IOHIDValueGetTimeStamp;
 
   private static final MethodHandle IOHIDElementGetName;
+  private static final MethodHandle IOHIDElementGetCookie;
   private static final MethodHandle IOHIDElementGetUsage;
   private static final MethodHandle IOHIDElementGetUsagePage;
   private static final MethodHandle IOHIDElementGetType;
@@ -79,17 +122,42 @@ class MacOS {
     System.load("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation");
     System.load("/System/Library/Frameworks/IOKit.framework/IOKit");
 
+    // Look up the CoreFoundation collection/box call-back struct addresses so
+    // we can pass them to CFDictionaryCreateMutable / CFArrayCreateMutable.
+    // These are exported CoreFoundation symbols; their addresses change
+    // between macOS releases, so we resolve them dynamically instead of
+    // hard-coding pointers. The lookups are backed by
+    // {@link #CORE_FOUNDATION_LOOKUP_ARENA} ({@code Arena.global()}) so the
+    // resulting MemorySegments remain valid for the JVM lifetime; a confined
+    // arena would invalidate them as soon as this static block returns.
+  var cfLookup = SymbolLookup.libraryLookup(
+      Path.of("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"),
+      CORE_FOUNDATION_LOOKUP_ARENA);
+  kCFTypeDictionaryKeyCallBacks = cfLookup.find("kCFTypeDictionaryKeyCallBacks").orElseThrow();
+  kCFTypeDictionaryValueCallBacks = cfLookup.find("kCFTypeDictionaryValueCallBacks").orElseThrow();
+  kCFTypeArrayCallBacks = cfLookup.find("kCFTypeArrayCallBacks").orElseThrow();
+
+  GAMEPAD_MATCHING_DICTIONARY = createGamepadMatchingDictionary();
+
     // CoreFoundation methods
     CFRelease = downcallHandle("CFRelease", FunctionDescriptor.ofVoid(ADDRESS));
     CFStringCreateWithCString = downcallHandle("CFStringCreateWithCString", FunctionDescriptor.of(ADDRESS, ADDRESS, ADDRESS, JAVA_INT));
     CFNumberGetValue = downcallHandle("CFNumberGetValue", FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, JAVA_INT, ADDRESS));
-    CFArrayGetCount = downcallHandle("CFArrayGetCount", FunctionDescriptor.of(JAVA_INT, ADDRESS));
-    CFArrayGetValueAtIndex = downcallHandle("CFArrayGetValueAtIndex", FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_INT));
-    CFSetGetCount = downcallHandle("CFSetGetCount", FunctionDescriptor.of(JAVA_INT, ADDRESS));
+    CFNumberCreate = downcallHandle("CFNumberCreate", FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_INT, ADDRESS));
+    // CFIndex is long on 64-bit macOS, so the count / index return / arg
+    // layouts must use JAVA_LONG, not JAVA_INT.
+    CFArrayGetCount = downcallHandle("CFArrayGetCount", FunctionDescriptor.of(JAVA_LONG, ADDRESS));
+    CFArrayGetValueAtIndex = downcallHandle("CFArrayGetValueAtIndex", FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_LONG));
+    CFArrayCreateMutable = downcallHandle("CFArrayCreateMutable", FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_LONG, ADDRESS));
+    CFArrayAppendValue = downcallHandle("CFArrayAppendValue", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS));
+    CFDictionaryCreateMutable = downcallHandle("CFDictionaryCreateMutable", FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_LONG, ADDRESS, ADDRESS));
+    CFDictionarySetValue = downcallHandle("CFDictionarySetValue", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS, ADDRESS));
+    CFSetGetCount = downcallHandle("CFSetGetCount", FunctionDescriptor.of(JAVA_LONG, ADDRESS));
     CFSetGetValues = downcallHandle("CFSetGetValues", FunctionDescriptor.ofVoid(ADDRESS, ADDRESS));
     CFStringGetCString = downcallHandle("CFStringGetCString", FunctionDescriptor.of(JAVA_BOOLEAN, ADDRESS, ADDRESS, JAVA_INT, JAVA_INT));
     CFRunLoopGetCurrent = downcallHandle("CFRunLoopGetCurrent", FunctionDescriptor.of(ADDRESS));
     CFRunLoopRun = downcallHandle("CFRunLoopRun", FunctionDescriptor.ofVoid());
+    CFRunLoopStop = downcallHandle("CFRunLoopStop", FunctionDescriptor.ofVoid(ADDRESS));
 
     // IOKit methods
     IOHIDManagerCreate = downcallHandle("IOHIDManagerCreate", FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_INT));
@@ -108,6 +176,7 @@ class MacOS {
     IOHIDValueGetTimeStamp = downcallHandle("IOHIDValueGetTimeStamp", FunctionDescriptor.of(JAVA_LONG, ADDRESS));
 
     IOHIDElementGetName = downcallHandle("IOHIDElementGetName", FunctionDescriptor.of(ADDRESS, JAVA_LONG));
+    IOHIDElementGetCookie = downcallHandle("IOHIDElementGetCookie", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetUsage = downcallHandle("IOHIDElementGetUsage", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetUsagePage = downcallHandle("IOHIDElementGetUsagePage", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetType = downcallHandle("IOHIDElementGetType", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
@@ -133,6 +202,25 @@ class MacOS {
   static MemorySegment IOHIDValueGetElement(MemorySegment ioHIDValue) {
     try {
       return (MemorySegment) IOHIDValueGetElement.invoke(ioHIDValue);
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  /**
+   * Retrieves the cookie (a 32-bit identifier unique within a device) of the
+   * given IOHIDElement. The cookie is the stable disambiguation key we use
+   * in the input value callback to map a value back to its element, in
+   * preference to comparing raw {@code IOHIDElementRef} pointers, which can
+   * be confused by FFM address-carrier MemorySegments.
+   *
+   * @param element The IOHIDElement whose cookie to read.
+   * @return The element cookie.
+   * @throws RuntimeException if the underlying FFM call fails.
+   */
+  static int IOHIDElementGetCookie(MemorySegment element) {
+    try {
+      return (int) IOHIDElementGetCookie.invoke(element.address());
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
@@ -184,11 +272,79 @@ class MacOS {
         throw new RuntimeException("Failed to open HID manager: " + openResult);
       }
 
-      IOHIDManagerSetDeviceMatching.invoke(hidManager, MemorySegment.NULL);
+      IOHIDManagerSetDeviceMatching.invoke(hidManager, GAMEPAD_MATCHING_DICTIONARY);
       IOHIDManagerRegisterInputValueCallback.invoke(hidManager, hidInputValueCallbackPointer, MemorySegment.NULL);
       return hidManager;
     } catch (Throwable t) {
       throw new RuntimeException(t);
+    }
+  }
+
+  /**
+   * Builds the singleton {@link #GAMEPAD_MATCHING_DICTIONARY}. See that
+   * field for the matching semantics. The returned {@link MemorySegment}
+   * is a +1 retain owned by the JVM (never released).
+   */
+  private static MemorySegment createGamepadMatchingDictionary() {
+    try (var arena = Arena.ofConfined()) {
+      var usagesArray = (MemorySegment) CFArrayCreateMutable.invoke(
+          MemorySegment.NULL, 0L, kCFTypeArrayCallBacks);
+      try {
+        for (int usage : new int[] {kHIDUsage_GD_Joystick, kHIDUsage_GD_Gamepad, kHIDUsage_GD_MultiAxisController}) {
+          var usageValue = arena.allocate(JAVA_INT);
+          usageValue.set(JAVA_INT, 0, usage);
+          var usageNumber = (MemorySegment) CFNumberCreate.invoke(
+              MemorySegment.NULL, kCFNumberIntType, usageValue);
+          try {
+            CFArrayAppendValue.invoke(usagesArray, usageNumber);
+          } finally {
+            CFRelease.invoke(usageNumber);
+          }
+        }
+
+        var matchingDict = (MemorySegment) CFDictionaryCreateMutable.invoke(
+            MemorySegment.NULL, 0L, kCFTypeDictionaryKeyCallBacks, kCFTypeDictionaryValueCallBacks);
+        try {
+          putCFDictionaryInt(matchingDict, arena, kIOHIDPrimaryUsagePageKey, kHIDPage_GenericDesktop);
+          putCFDictionaryValue(matchingDict, arena, kIOHIDPrimaryUsageKey, usagesArray);
+          return matchingDict;
+        } catch (Throwable t) {
+          CFRelease.invoke(matchingDict);
+          throw t;
+        }
+      } catch (Throwable t) {
+        CFRelease.invoke(usagesArray);
+        throw t;
+      }
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  private static void putCFDictionaryInt(MemorySegment dict, Arena arena, String key, int value) throws Throwable {
+    var valueSegment = arena.allocate(JAVA_INT);
+    valueSegment.set(JAVA_INT, 0, value);
+    var number = (MemorySegment) CFNumberCreate.invoke(MemorySegment.NULL, kCFNumberIntType, valueSegment);
+    try {
+      var keyString = (MemorySegment) CFStringCreateWithCString.invoke(
+          MemorySegment.NULL, arena.allocateFrom(key), kCFStringEncodingUTF8);
+      try {
+        CFDictionarySetValue.invoke(dict, keyString, number);
+      } finally {
+        CFRelease.invoke(keyString);
+      }
+    } finally {
+      CFRelease.invoke(number);
+    }
+  }
+
+  private static void putCFDictionaryValue(MemorySegment dict, Arena arena, String key, MemorySegment value) throws Throwable {
+    var keyString = (MemorySegment) CFStringCreateWithCString.invoke(
+        MemorySegment.NULL, arena.allocateFrom(key), kCFStringEncodingUTF8);
+    try {
+      CFDictionarySetValue.invoke(dict, keyString, value);
+    } finally {
+      CFRelease.invoke(keyString);
     }
   }
 
@@ -230,6 +386,32 @@ class MacOS {
   }
 
   /**
+   * Returns the {@code CFRunLoopRef} for the calling thread. Used by
+   * {@link IOKitPlugin} to capture the event-loop thread's run loop so
+   * {@link #CFRunLoopStop(MemorySegment)} can later wake it.
+   */
+  static MemorySegment CFRunLoopGetCurrent() {
+    try {
+      return (MemorySegment) CFRunLoopGetCurrent.invoke();
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  /**
+   * Forces a run loop to stop. {@code CFRunLoopRun} checks this flag at
+   * the top of each iteration; an in-flight callback is allowed to
+   * complete first.
+   */
+  static void CFRunLoopStop(MemorySegment runLoop) {
+    try {
+      CFRunLoopStop.invoke(runLoop);
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  /**
    * Retrieves the supported HID devices from the HID manager.
    *
    * @param memoryArena The memory arena to use for allocations.
@@ -241,46 +423,57 @@ class MacOS {
     try {
       // Copy the set of devices from the HID manager
       var deviceSet = (MemorySegment) IOHIDManagerCopyDevices.invoke(hidManager);
-      var count = (int) CFSetGetCount.invoke(deviceSet);
       if (deviceSet.equals(MemorySegment.NULL)) {
         throw new RuntimeException("Failed to copy devices from HID manager");
       }
 
-      // Allocate memory for the devices
-      var devices = memoryArena.allocate(JAVA_LONG, count);
-      CFSetGetValues.invoke(deviceSet, devices);
-
       var hidDevices = new ArrayList<IOHIDDevice>();
-      for (int i = 0; i < count; i++) {
-        var device = new IOHIDDevice();
-        device.address = devices.get(JAVA_LONG, i * JAVA_LONG.byteSize());
+      try {
+        var count = (long) CFSetGetCount.invoke(deviceSet);
 
-        // Initialize the device and check if it is supported
-        if (!initializeDevice(memoryArena, device)) {
-          continue;
-        }
+        // Allocate memory for the devices
+        var devices = memoryArena.allocate(JAVA_LONG, count);
+        CFSetGetValues.invoke(deviceSet, devices);
 
-        // Copy matching elements for the device
-        var elements = (MemorySegment) IOHIDDeviceCopyMatchingElements.invoke(device.address, MemorySegment.NULL, 0);
-        if (!elements.equals(MemorySegment.NULL)) {
-          var elementCount = (int) CFArrayGetCount.invoke(elements);
-          for (int j = 0; j < elementCount; j++) {
-            var elementAddress = (MemorySegment) CFArrayGetValueAtIndex.invoke(elements, j);
-            if (elementAddress.equals(MemorySegment.NULL)) {
-              continue;
-            }
+        for (long i = 0; i < count; i++) {
+          var device = new IOHIDDevice();
+          device.address = devices.get(JAVA_LONG, i * JAVA_LONG.byteSize());
 
-            // Get the IOHIDElement and add it to the device
-            var element = getIOHIDElement(memoryArena, elementAddress);
-            device.addElement(element);
+          // Initialize the device and check if it is supported
+          if (!initializeDevice(memoryArena, device)) {
+            continue;
           }
+
+          // Copy matching elements for the device
+          var elements = (MemorySegment) IOHIDDeviceCopyMatchingElements.invoke(device.address, MemorySegment.NULL, 0);
+          if (!elements.equals(MemorySegment.NULL)) {
+            try {
+              var elementCount = (long) CFArrayGetCount.invoke(elements);
+              for (long j = 0; j < elementCount; j++) {
+                var elementAddress = (MemorySegment) CFArrayGetValueAtIndex.invoke(elements, j);
+                if (elementAddress.equals(MemorySegment.NULL)) {
+                  continue;
+                }
+
+                // Get the IOHIDElement and add it to the device
+                var element = getIOHIDElement(memoryArena, elementAddress);
+                device.addElement(element);
+              }
+            } finally {
+              // IOHIDDeviceCopyMatchingElements follows the Create Rule: caller owns the +1 retain.
+              CFRelease.invoke(elements);
+            }
+          }
+
+          // Add the device to the list of HID devices
+          hidDevices.add(device);
         }
 
-        // Add the device to the list of HID devices
-        hidDevices.add(device);
+        return hidDevices;
+      } finally {
+        // IOHIDManagerCopyDevices follows the Create Rule: caller owns the +1 retain.
+        CFRelease.invoke(deviceSet);
       }
-
-      return hidDevices;
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
@@ -301,6 +494,7 @@ class MacOS {
   private static IOHIDElement getIOHIDElement(Arena memoryArena, MemorySegment elementAddress) throws Throwable {
     var element = new IOHIDElement();
     element.address = elementAddress.address();
+    element.cookie = (int) IOHIDElementGetCookie.invoke(element.address);
 
     var elementNameRef = (MemorySegment) IOHIDElementGetName.invoke(element.address);
     if (!elementNameRef.equals(MemorySegment.NULL)) {

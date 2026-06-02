@@ -19,7 +19,10 @@ import java.lang.invoke.MethodType;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+
 
 import static java.lang.foreign.ValueLayout.ADDRESS;
 import static java.lang.foreign.ValueLayout.JAVA_BYTE;
@@ -42,14 +45,35 @@ import static java.lang.foreign.ValueLayout.JAVA_INT;
  */
 public class IOKitPlugin extends AbstractInputDevicePlugin {
   private final Map<String, IOHIDDevice> nativeDevices = new ConcurrentHashMap<>();
+  /**
+   * Cookie-based reverse index used by {@link #hidInputValueCallback} to
+   * resolve an incoming {@code IOHIDValue} to the {@link IOHIDElement} that
+   * produced it. The outer key is the {@code IOHIDDeviceRef} address; the
+   * inner key is the element's {@code IOHIDElementGetCookie} value. The
+   * cookie is unique within a device, so this lookup is robust against any
+   * ambiguity in raw {@code IOHIDElementRef} pointer comparison.
+   */
+  private final Map<Long, Map<Integer, IOHIDElement>> elementsByDeviceAndCookie = new ConcurrentHashMap<>();
   private Thread eventLoopThread;
+  /**
+   * {@code CFRunLoopRef} of the event-loop thread, captured before
+   * {@link #internalInitDevices(Frame)} releases the calling thread via
+   * {@code initLatch.countDown()}. Used by {@link #close()} to wake the
+   * blocked {@code CFRunLoopRun} so the thread can exit cleanly.
+   * {@code volatile} because it is written by the event-loop thread and
+   * read by any thread that calls {@code close()}; the write happens
+   * before the latch count-down, which establishes happens-before with
+   * any thread that has already observed the latch release.
+   */
+  private volatile MemorySegment eventLoopRunLoop;
   private Arena batteryArena;
 
-  private boolean devicesInitialized;
+  private static final long SHUTDOWN_TIMEOUT_MS = 3_000;
 
   @Override
   public void internalInitDevices(Frame owner) {
     batteryArena = Arena.ofShared();
+    var initLatch = new CountDownLatch(1);
     eventLoopThread = new Thread(() -> {
       MemorySegment ioHIDManager = MemorySegment.NULL;
       try (Arena memoryArena = Arena.ofConfined()) {
@@ -57,35 +81,17 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
         ioHIDManager = MacOS.initHIDManager(hidInputValueCallbackPointer(memoryArena));
         var ioHIDDevices = MacOS.getSupportedHIDDevices(memoryArena, ioHIDManager);
 
-        for (var ioHIDDevice : ioHIDDevices) {
-          log.log(Level.FINE, "Found HID device: " + ioHIDDevice.productName);
-          String displayName = ControllerDatabase.getDisplayName(ioHIDDevice.vendorId, ioHIDDevice.productId);
-          var inputDevice = new InputDevice(Long.toString(ioHIDDevice.address), ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", ioHIDDevice.vendorId, ioHIDDevice.productId, displayName, this::pollIOHIDDevice, this::rumbleIOHIDDevice, this::getBatteryInfo);
-          ioHIDDevice.inputDevice = inputDevice;
+        populateDevices(ioHIDDevices);
+        this.eventLoopRunLoop = MacOS.CFRunLoopGetCurrent();
+        initLatch.countDown();
 
-          for (var element : ioHIDDevice.getElements()) {
-            if (element.getUsage() == IOHIDElementUsage.UNDEFINED) {
-              continue;
-            }
-
-            var component = new InputComponent(inputDevice, element.getIdentifier(), element.getName());
-            inputDevice.addComponent(component);
-          }
-
-          IOKitVirtualComponentHandler.prepareVirtualComponents(inputDevice, inputDevice.getComponents());
-          nativeDevices.put(inputDevice.getID(), ioHIDDevice);
-        }
-
-        devicesInitialized = true;
         if (!nativeDevices.isEmpty()) {
           log.log(Level.FINE, "Starting event loop for HID manager");
-          // Start the event loop in a separate thread
           MacOS.runEventLoop(memoryArena, ioHIDManager);
         }
-
-        this.setDevices(this.nativeDevices.values().stream().map(d -> d.inputDevice).toList());
       } catch (Throwable e) {
         log.log(Level.SEVERE, "Failed to initialize IOKit devices", e);
+        initLatch.countDown();
       } finally {
         if (!ioHIDManager.equals(MemorySegment.NULL)) {
           var closeReturn = MacOS.IOHIDManagerClose(ioHIDManager);
@@ -98,34 +104,100 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
     eventLoopThread.start();
 
-    // Wait for devices to be initialized or timeout after 3 seconds to prevent blocking the main thread
-    int waited = 0;
-    while (waited < 3000 && !devicesInitialized) {
-      try {
-        Thread.sleep(100);
-        waited += 100;
-      } catch (InterruptedException e) {
-        log.log(Level.SEVERE, "Initialization interrupted", e);
-        throw new RuntimeException(e);
+    try {
+      if (!initLatch.await(3, TimeUnit.SECONDS)) {
+        log.log(Level.WARNING, "Device initialization timed out");
+      } else {
+        log.log(Level.FINE, "Devices initialized successfully");
       }
+    } catch (InterruptedException e) {
+      log.log(Level.SEVERE, "Initialization interrupted", e);
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Assembles {@link InputDevice} wrappers for the given discovered native
+   * devices, attaches their components, runs virtual-component preparation,
+   * registers the devices in {@link #nativeDevices} and publishes the
+   * resulting {@link InputDevice}s via {@link #setDevices}.
+   * <p>
+   * Package-private for unit testing so that the FFM-bound discovery path
+   * can be exercised on non-macOS hosts by passing in hand-built
+   * {@link IOHIDDevice} fixtures.
+   *
+   * @param discoveredDevices the native devices returned by
+   *                          {@link MacOS#getSupportedHIDDevices(Arena, MemorySegment)}.
+   */
+  void populateDevices(Collection<IOHIDDevice> discoveredDevices) {
+    for (var ioHIDDevice : discoveredDevices) {
+      log.log(Level.FINE, "Found HID device: " + ioHIDDevice.productName);
+      String displayName = ControllerDatabase.getDisplayName(ioHIDDevice.vendorId, ioHIDDevice.productId);
+      var inputDevice = new InputDevice(Long.toString(ioHIDDevice.address), ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", ioHIDDevice.vendorId, ioHIDDevice.productId, displayName, this::pollIOHIDDevice, this::rumbleIOHIDDevice, this::getBatteryInfo);
+      ioHIDDevice.inputDevice = inputDevice;
+
+      var cookieIndex = new ConcurrentHashMap<Integer, IOHIDElement>();
+      for (var element : ioHIDDevice.getElements()) {
+        cookieIndex.put(element.cookie, element);
+        if (element.getUsage() == IOHIDElementUsage.UNDEFINED) {
+          continue;
+        }
+
+        var component = new InputComponent(inputDevice, element.getIdentifier(), element.getName());
+        inputDevice.addComponent(component);
+      }
+
+      IOKitVirtualComponentHandler.prepareVirtualComponents(inputDevice, inputDevice.getComponents());
+      nativeDevices.put(inputDevice.getID(), ioHIDDevice);
+      elementsByDeviceAndCookie.put(ioHIDDevice.address, cookieIndex);
     }
 
-    if (devicesInitialized) {
-      log.log(Level.FINE, "Devices initialized successfully");
-    } else {
-      log.log(Level.WARNING, "Device initialization timed out");
+    // Publish the input devices so callers of getAll() can observe them as
+    // soon as we are done discovering. Must be called from the event-loop
+    // thread (which is the only thread that runs populateDevices) so that
+    // the writes to AbstractInputDevicePlugin.devices / .lastDeviceUpdate
+    // happen-before the main thread wakes from initLatch.await().
+    this.setDevices(this.nativeDevices.values().stream().map(d -> d.inputDevice).toList());
+  }
+
+  /**
+   * Resolves an input value to its originating {@link IOHIDElement} using
+   * the cookie-based lookup. Returns {@code null} if the device is not
+   * registered or if the cookie is unknown.
+   * <p>
+   * Package-private for unit testing.
+   */
+  IOHIDElement findElement(long deviceAddress, int cookie) {
+    var deviceMap = elementsByDeviceAndCookie.get(deviceAddress);
+    if (deviceMap == null) {
+      return null;
     }
+    return deviceMap.get(cookie);
   }
 
   @Override
   public void close() {
-    super.close();
-
-    if (eventLoopThread != null) {
-      eventLoopThread.interrupt();
+    if (eventLoopRunLoop != null && !eventLoopRunLoop.equals(MemorySegment.NULL)) {
+      try {
+        MacOS.CFRunLoopStop(eventLoopRunLoop);
+      } catch (Throwable t) {
+        log.log(Level.WARNING, "Failed to stop HID event loop", t);
+      }
     }
 
+    if (eventLoopThread != null) {
+      try {
+        eventLoopThread.join(SHUTDOWN_TIMEOUT_MS);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+    }
+
+    super.close();
+
     this.nativeDevices.clear();
+    this.elementsByDeviceAndCookie.clear();
+    this.eventLoopRunLoop = null;
   }
 
   @Override
@@ -187,13 +259,20 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
    * This is called out of native code when an IOHIDElement  provides a value.
    */
   private void hidInputValueCallback(MemorySegment context, int result, MemorySegment sender, MemorySegment ioHIDValueRef) {
+    // The sender parameter is the IOHIDDeviceRef that produced the value.
+    // Together with the element's cookie (a 32-bit identifier unique within
+    // a device) we can resolve the value back to the exact IOHIDElement
+    // without relying on raw IOHIDElementRef pointer comparison, which can
+    // be unreliable when the FFM downcall layer hands us a carrier
+    // MemorySegment.
+    var deviceAddress = sender.address();
     var element = MacOS.IOHIDValueGetElement(ioHIDValueRef);
-    var value = MacOS.IOHIDValueGetIntegerValue(ioHIDValueRef);
-    var timestamp = MacOS.IOHIDValueGetTimeStamp(ioHIDValueRef);
-    // find element from the list in this instance according to the address of the element
-    var ioHIDElement = this.nativeDevices.values().stream().flatMap(x -> x.getElements().stream()).filter(x -> x.address == element.address()).findFirst().orElse(null);
+    int cookie = MacOS.IOHIDElementGetCookie(element);
+    int value = MacOS.IOHIDValueGetIntegerValue(ioHIDValueRef);
+
+    var ioHIDElement = findElement(deviceAddress, cookie);
     if (ioHIDElement == null) {
-      log.log(Level.WARNING, "IOHIDElement not found for address " + element.address());
+      log.log(Level.FINE, "IOHIDElement not found for device " + deviceAddress + " cookie " + cookie);
       return;
     }
 
