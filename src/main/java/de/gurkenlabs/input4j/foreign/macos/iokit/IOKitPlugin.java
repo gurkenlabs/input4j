@@ -60,24 +60,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
         ioHIDManager = MacOS.initHIDManager(hidInputValueCallbackPointer(memoryArena));
         var ioHIDDevices = MacOS.getSupportedHIDDevices(memoryArena, ioHIDManager);
 
-        for (var ioHIDDevice : ioHIDDevices) {
-          log.log(Level.FINE, "Found HID device: " + ioHIDDevice.productName);
-          String displayName = ControllerDatabase.getDisplayName(ioHIDDevice.vendorId, ioHIDDevice.productId);
-          var inputDevice = new InputDevice(Long.toString(ioHIDDevice.address), ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", ioHIDDevice.vendorId, ioHIDDevice.productId, displayName, this::pollIOHIDDevice, this::rumbleIOHIDDevice, this::getBatteryInfo);
-          ioHIDDevice.inputDevice = inputDevice;
-
-          for (var element : ioHIDDevice.getElements()) {
-            if (element.getUsage() == IOHIDElementUsage.UNDEFINED) {
-              continue;
-            }
-
-            var component = new InputComponent(inputDevice, element.getIdentifier(), element.getName());
-            inputDevice.addComponent(component);
-          }
-
-          IOKitVirtualComponentHandler.prepareVirtualComponents(inputDevice, inputDevice.getComponents());
-          nativeDevices.put(inputDevice.getID(), ioHIDDevice);
-        }
+        populateDevices(ioHIDDevices);
 
         // Set the devices BEFORE the blocking run loop so the caller of init() can
         // observe them as soon as we are done discovering.
@@ -114,6 +97,39 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     } catch (InterruptedException e) {
       log.log(Level.SEVERE, "Initialization interrupted", e);
       throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Assembles {@link InputDevice} wrappers for the given discovered native
+   * devices, attaches their components, runs virtual-component preparation
+   * and registers the devices in {@link #nativeDevices}.
+   * <p>
+   * Package-private for unit testing so that the FFM-bound discovery path
+   * can be exercised on non-macOS hosts by passing in hand-built
+   * {@link IOHIDDevice} fixtures.
+   *
+   * @param discoveredDevices the native devices returned by
+   *                          {@link MacOS#getSupportedHIDDevices(Arena, MemorySegment)}.
+   */
+  void populateDevices(Collection<IOHIDDevice> discoveredDevices) {
+    for (var ioHIDDevice : discoveredDevices) {
+      log.log(Level.FINE, "Found HID device: " + ioHIDDevice.productName);
+      String displayName = ControllerDatabase.getDisplayName(ioHIDDevice.vendorId, ioHIDDevice.productId);
+      var inputDevice = new InputDevice(Long.toString(ioHIDDevice.address), ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", ioHIDDevice.vendorId, ioHIDDevice.productId, displayName, this::pollIOHIDDevice, this::rumbleIOHIDDevice, this::getBatteryInfo);
+      ioHIDDevice.inputDevice = inputDevice;
+
+      for (var element : ioHIDDevice.getElements()) {
+        if (element.getUsage() == IOHIDElementUsage.UNDEFINED) {
+          continue;
+        }
+
+        var component = new InputComponent(inputDevice, element.getIdentifier(), element.getName());
+        inputDevice.addComponent(component);
+      }
+
+      IOKitVirtualComponentHandler.prepareVirtualComponents(inputDevice, inputDevice.getComponents());
+      nativeDevices.put(inputDevice.getID(), ioHIDDevice);
     }
   }
 
