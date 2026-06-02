@@ -48,6 +48,17 @@ class MacOS {
   private static final MemorySegment kCFTypeDictionaryValueCallBacks;
   private static final MemorySegment kCFTypeArrayCallBacks;
 
+  /**
+   * Long-lived arena for the CoreFoundation callback-struct lookups performed
+   * in the static initializer below. The three MemorySegments we resolve
+   * (kCFTypeDictionaryKeyCallBacks, kCFTypeDictionaryValueCallBacks,
+   * kCFTypeArrayCallBacks) point at read-only data in the framework binary
+   * that stays loaded for the JVM's lifetime, so we want the segments to be
+   * valid for the same duration. {@code Arena.global()} is multi-thread
+   * safe, has no owner, and is implicitly closed when the JVM exits.
+   */
+  private static final Arena CORE_FOUNDATION_LOOKUP_ARENA = Arena.global();
+
   private static final MethodHandle CFRelease;
   private static final MethodHandle CFStringCreateWithCString;
   private static final MethodHandle CFNumberGetValue;
@@ -104,15 +115,16 @@ class MacOS {
     // we can pass them to CFDictionaryCreateMutable / CFArrayCreateMutable.
     // These are exported CoreFoundation symbols; their addresses change
     // between macOS releases, so we resolve them dynamically instead of
-    // hard-coding pointers.
-    try (var lookupArena = Arena.ofConfined()) {
-      var cfLookup = SymbolLookup.libraryLookup(
-          Path.of("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"),
-          lookupArena);
-      kCFTypeDictionaryKeyCallBacks = cfLookup.find("kCFTypeDictionaryKeyCallBacks").orElseThrow();
-      kCFTypeDictionaryValueCallBacks = cfLookup.find("kCFTypeDictionaryValueCallBacks").orElseThrow();
-      kCFTypeArrayCallBacks = cfLookup.find("kCFTypeArrayCallBacks").orElseThrow();
-    }
+    // hard-coding pointers. The lookups are backed by
+    // {@link #CORE_FOUNDATION_LOOKUP_ARENA} ({@code Arena.global()}) so the
+    // resulting MemorySegments remain valid for the JVM lifetime; a confined
+    // arena would invalidate them as soon as this static block returns.
+    var cfLookup = SymbolLookup.libraryLookup(
+        Path.of("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"),
+        CORE_FOUNDATION_LOOKUP_ARENA);
+    kCFTypeDictionaryKeyCallBacks = cfLookup.find("kCFTypeDictionaryKeyCallBacks").orElseThrow();
+    kCFTypeDictionaryValueCallBacks = cfLookup.find("kCFTypeDictionaryValueCallBacks").orElseThrow();
+    kCFTypeArrayCallBacks = cfLookup.find("kCFTypeArrayCallBacks").orElseThrow();
 
     // CoreFoundation methods
     CFRelease = downcallHandle("CFRelease", FunctionDescriptor.ofVoid(ADDRESS));

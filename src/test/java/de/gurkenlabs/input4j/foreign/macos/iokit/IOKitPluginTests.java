@@ -142,14 +142,13 @@ public class IOKitPluginTests {
   }
 
   @Test
-  void testPopulateDevices_registersDevicesAndComponents() throws Exception {
+  void testPopulateDevices_registersDevicesAndComponents() {
     var plugin = new IOKitPlugin();
     var button = makeElement(0x10, 0xAAAA0001L, IOHIDElementUsage.BUTTON_1, IOHIDElementType.BUTTON);
     var axis = makeElement(0x20, 0xAAAA0002L, IOHIDElementUsage.X, IOHIDElementType.AXIS);
     var device = makeDevice(0x1234L, 0x046D, 0xC21D, button, axis);
 
     plugin.populateDevices(List.of(device));
-    publishDevices(plugin);
 
     var all = plugin.getAll();
     assertEquals(1, all.size());
@@ -162,14 +161,13 @@ public class IOKitPluginTests {
   }
 
   @Test
-  void testPopulateDevices_skipsUndefinedElements() throws Exception {
+  void testPopulateDevices_skipsUndefinedElements() {
     var plugin = new IOKitPlugin();
     var defined = makeElement(0x10, 0x1L, IOHIDElementUsage.BUTTON_1, IOHIDElementType.BUTTON);
     var undefined = makeElement(0x11, 0x2L, IOHIDElementUsage.UNDEFINED, IOHIDElementType.MISC);
     var device = makeDevice(0xCAFE, 0x1234, 0x5678, defined, undefined);
 
     plugin.populateDevices(List.of(device));
-    publishDevices(plugin);
 
     // Even though the UNDEFINED element is skipped for components, it must
     // still be added to the cookie index so the input value callback can
@@ -213,7 +211,7 @@ public class IOKitPluginTests {
   }
 
   @Test
-  void testFindElement_isolatesCookiesAcrossDevices() throws Exception {
+  void testFindElement_isolatesCookiesAcrossDevices() {
     var plugin = new IOKitPlugin();
     // Two devices, each with an element that happens to share a cookie
     // value. The lookup must distinguish them by device address.
@@ -248,18 +246,5 @@ public class IOKitPluginTests {
     @SuppressWarnings("unchecked")
     Map<String, IOHIDDevice> nativeDevices = (Map<String, IOHIDDevice>) nativeDevicesField.get(plugin);
     assertTrue(nativeDevices.isEmpty());
-  }
-
-  /** Mirrors the setDevices call done in {@code internalInitDevices} so the tests can exercise {@code getAll}. */
-  private static void publishDevices(IOKitPlugin plugin) throws Exception {
-    Field nativeDevicesField = IOKitPlugin.class.getDeclaredField("nativeDevices");
-    nativeDevicesField.setAccessible(true);
-    @SuppressWarnings("unchecked")
-    Map<String, IOHIDDevice> nativeDevices = (Map<String, IOHIDDevice>) nativeDevicesField.get(plugin);
-    var inputDevices = nativeDevices.values().stream().map(d -> d.inputDevice).toList();
-    var setDevices = Class.forName("de.gurkenlabs.input4j.AbstractInputDevicePlugin")
-        .getDeclaredMethod("setDevices", java.util.Collection.class);
-    setDevices.setAccessible(true);
-    setDevices.invoke(plugin, inputDevices);
   }
 }

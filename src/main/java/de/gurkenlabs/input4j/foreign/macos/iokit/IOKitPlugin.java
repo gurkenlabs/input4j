@@ -70,10 +70,6 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
         var ioHIDDevices = MacOS.getSupportedHIDDevices(memoryArena, ioHIDManager);
 
         populateDevices(ioHIDDevices);
-
-        // Set the devices BEFORE the blocking run loop so the caller of init() can
-        // observe them as soon as we are done discovering.
-        this.setDevices(this.nativeDevices.values().stream().map(d -> d.inputDevice).toList());
         initLatch.countDown();
 
         if (!nativeDevices.isEmpty()) {
@@ -111,8 +107,9 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
   /**
    * Assembles {@link InputDevice} wrappers for the given discovered native
-   * devices, attaches their components, runs virtual-component preparation
-   * and registers the devices in {@link #nativeDevices}.
+   * devices, attaches their components, runs virtual-component preparation,
+   * registers the devices in {@link #nativeDevices} and publishes the
+   * resulting {@link InputDevice}s via {@link #setDevices}.
    * <p>
    * Package-private for unit testing so that the FFM-bound discovery path
    * can be exercised on non-macOS hosts by passing in hand-built
@@ -143,6 +140,13 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
       nativeDevices.put(inputDevice.getID(), ioHIDDevice);
       elementsByDeviceAndCookie.put(ioHIDDevice.address, cookieIndex);
     }
+
+    // Publish the input devices so callers of getAll() can observe them as
+    // soon as we are done discovering. Must be called from the event-loop
+    // thread (which is the only thread that runs populateDevices) so that
+    // the writes to AbstractInputDevicePlugin.devices / .lastDeviceUpdate
+    // happen-before the main thread wakes from initLatch.await().
+    this.setDevices(this.nativeDevices.values().stream().map(d -> d.inputDevice).toList());
   }
 
   /**
