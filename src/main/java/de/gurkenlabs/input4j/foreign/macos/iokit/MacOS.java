@@ -201,7 +201,8 @@ class MacOS {
    * be confused by FFM address-carrier MemorySegments.
    *
    * @param element The IOHIDElement whose cookie to read.
-   * @return The element cookie, or 0 if it could not be read.
+   * @return The element cookie.
+   * @throws RuntimeException if the underlying FFM call fails.
    */
   static int IOHIDElementGetCookie(MemorySegment element) {
     try {

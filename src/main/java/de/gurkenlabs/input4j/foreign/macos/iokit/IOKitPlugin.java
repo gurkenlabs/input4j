@@ -245,7 +245,6 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     var element = MacOS.IOHIDValueGetElement(ioHIDValueRef);
     int cookie = MacOS.IOHIDElementGetCookie(element);
     int value = MacOS.IOHIDValueGetIntegerValue(ioHIDValueRef);
-    MacOS.IOHIDValueGetTimeStamp(ioHIDValueRef);
 
     var ioHIDElement = findElement(deviceAddress, cookie);
     if (ioHIDElement == null) {

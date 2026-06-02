@@ -1,12 +1,13 @@
 package de.gurkenlabs.input4j.foreign.macos.iokit;
 
-import de.gurkenlabs.input4j.InputComponent;
-import de.gurkenlabs.input4j.InputDevice;
-import org.junit.jupiter.api.Test;
-
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+
+import org.junit.jupiter.api.Test;
+
+import de.gurkenlabs.input4j.InputComponent;
+import de.gurkenlabs.input4j.InputDevice;
 
 import static org.junit.jupiter.api.Assertions.*;
 
