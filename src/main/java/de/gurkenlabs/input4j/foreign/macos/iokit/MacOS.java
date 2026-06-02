@@ -241,46 +241,57 @@ class MacOS {
     try {
       // Copy the set of devices from the HID manager
       var deviceSet = (MemorySegment) IOHIDManagerCopyDevices.invoke(hidManager);
-      var count = (int) CFSetGetCount.invoke(deviceSet);
       if (deviceSet.equals(MemorySegment.NULL)) {
         throw new RuntimeException("Failed to copy devices from HID manager");
       }
 
-      // Allocate memory for the devices
-      var devices = memoryArena.allocate(JAVA_LONG, count);
-      CFSetGetValues.invoke(deviceSet, devices);
-
       var hidDevices = new ArrayList<IOHIDDevice>();
-      for (int i = 0; i < count; i++) {
-        var device = new IOHIDDevice();
-        device.address = devices.get(JAVA_LONG, i * JAVA_LONG.byteSize());
+      try {
+        var count = (int) CFSetGetCount.invoke(deviceSet);
 
-        // Initialize the device and check if it is supported
-        if (!initializeDevice(memoryArena, device)) {
-          continue;
-        }
+        // Allocate memory for the devices
+        var devices = memoryArena.allocate(JAVA_LONG, count);
+        CFSetGetValues.invoke(deviceSet, devices);
 
-        // Copy matching elements for the device
-        var elements = (MemorySegment) IOHIDDeviceCopyMatchingElements.invoke(device.address, MemorySegment.NULL, 0);
-        if (!elements.equals(MemorySegment.NULL)) {
-          var elementCount = (int) CFArrayGetCount.invoke(elements);
-          for (int j = 0; j < elementCount; j++) {
-            var elementAddress = (MemorySegment) CFArrayGetValueAtIndex.invoke(elements, j);
-            if (elementAddress.equals(MemorySegment.NULL)) {
-              continue;
-            }
+        for (int i = 0; i < count; i++) {
+          var device = new IOHIDDevice();
+          device.address = devices.get(JAVA_LONG, i * JAVA_LONG.byteSize());
 
-            // Get the IOHIDElement and add it to the device
-            var element = getIOHIDElement(memoryArena, elementAddress);
-            device.addElement(element);
+          // Initialize the device and check if it is supported
+          if (!initializeDevice(memoryArena, device)) {
+            continue;
           }
+
+          // Copy matching elements for the device
+          var elements = (MemorySegment) IOHIDDeviceCopyMatchingElements.invoke(device.address, MemorySegment.NULL, 0);
+          if (!elements.equals(MemorySegment.NULL)) {
+            try {
+              var elementCount = (int) CFArrayGetCount.invoke(elements);
+              for (int j = 0; j < elementCount; j++) {
+                var elementAddress = (MemorySegment) CFArrayGetValueAtIndex.invoke(elements, j);
+                if (elementAddress.equals(MemorySegment.NULL)) {
+                  continue;
+                }
+
+                // Get the IOHIDElement and add it to the device
+                var element = getIOHIDElement(memoryArena, elementAddress);
+                device.addElement(element);
+              }
+            } finally {
+              // IOHIDDeviceCopyMatchingElements follows the Create Rule: caller owns the +1 retain.
+              CFRelease.invoke(elements);
+            }
+          }
+
+          // Add the device to the list of HID devices
+          hidDevices.add(device);
         }
 
-        // Add the device to the list of HID devices
-        hidDevices.add(device);
+        return hidDevices;
+      } finally {
+        // IOHIDManagerCopyDevices follows the Create Rule: caller owns the +1 retain.
+        CFRelease.invoke(deviceSet);
       }
-
-      return hidDevices;
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }

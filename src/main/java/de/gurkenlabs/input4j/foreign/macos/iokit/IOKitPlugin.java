@@ -193,7 +193,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     // find element from the list in this instance according to the address of the element
     var ioHIDElement = this.nativeDevices.values().stream().flatMap(x -> x.getElements().stream()).filter(x -> x.address == element.address()).findFirst().orElse(null);
     if (ioHIDElement == null) {
-      log.log(Level.WARNING, "IOHIDElement not found for address " + element.address());
+      log.log(Level.FINE, "IOHIDElement not found for address " + element.address());
       return;
     }
 
