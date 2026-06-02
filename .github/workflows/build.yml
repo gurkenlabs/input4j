@@ -17,8 +17,19 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    name: Build
+    name: Build (${{ matrix.os }}, JDK ${{ matrix.java }})
+    runs-on: ${{ matrix.os }}
+    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+        java:
+          - 22
+          - 25
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -29,7 +40,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 22
+          java-version: ${{ matrix.java }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
@@ -41,11 +52,13 @@ jobs:
         run: ./gradlew build -PskipSpotless
 
       - name: Publish Test Results
+        if: ${{ !cancelled() }}
         uses: dorny/test-reporter@v3
         with:
-          name: JUnit test results
+          name: JUnit (${{ matrix.os }}, JDK ${{ matrix.java }})
           reporter: java-junit
           path: '**/test-results/**/*.xml'
 
       - name: Code Style Validation
+        if: matrix.os == 'ubuntu-latest' && matrix.java == '22'
         run: ./gradlew spotlessCheck
