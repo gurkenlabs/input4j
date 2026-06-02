@@ -80,6 +80,7 @@ class MacOS {
   private static final MethodHandle IOHIDValueGetTimeStamp;
 
   private static final MethodHandle IOHIDElementGetName;
+  private static final MethodHandle IOHIDElementGetCookie;
   private static final MethodHandle IOHIDElementGetUsage;
   private static final MethodHandle IOHIDElementGetUsagePage;
   private static final MethodHandle IOHIDElementGetType;
@@ -149,6 +150,7 @@ class MacOS {
     IOHIDValueGetTimeStamp = downcallHandle("IOHIDValueGetTimeStamp", FunctionDescriptor.of(JAVA_LONG, ADDRESS));
 
     IOHIDElementGetName = downcallHandle("IOHIDElementGetName", FunctionDescriptor.of(ADDRESS, JAVA_LONG));
+    IOHIDElementGetCookie = downcallHandle("IOHIDElementGetCookie", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetUsage = downcallHandle("IOHIDElementGetUsage", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetUsagePage = downcallHandle("IOHIDElementGetUsagePage", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
     IOHIDElementGetType = downcallHandle("IOHIDElementGetType", FunctionDescriptor.of(JAVA_INT, JAVA_LONG));
@@ -174,6 +176,24 @@ class MacOS {
   static MemorySegment IOHIDValueGetElement(MemorySegment ioHIDValue) {
     try {
       return (MemorySegment) IOHIDValueGetElement.invoke(ioHIDValue);
+    } catch (Throwable t) {
+      throw new RuntimeException(t);
+    }
+  }
+
+  /**
+   * Retrieves the cookie (a 32-bit identifier unique within a device) of the
+   * given IOHIDElement. The cookie is the stable disambiguation key we use
+   * in the input value callback to map a value back to its element, in
+   * preference to comparing raw {@code IOHIDElementRef} pointers, which can
+   * be confused by FFM address-carrier MemorySegments.
+   *
+   * @param element The IOHIDElement whose cookie to read.
+   * @return The element cookie, or 0 if it could not be read.
+   */
+  static int IOHIDElementGetCookie(MemorySegment element) {
+    try {
+      return (int) IOHIDElementGetCookie.invoke(element.address());
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
@@ -435,6 +455,7 @@ class MacOS {
   private static IOHIDElement getIOHIDElement(Arena memoryArena, MemorySegment elementAddress) throws Throwable {
     var element = new IOHIDElement();
     element.address = elementAddress.address();
+    element.cookie = (int) IOHIDElementGetCookie.invoke(element.address);
 
     var elementNameRef = (MemorySegment) IOHIDElementGetName.invoke(element.address);
     if (!elementNameRef.equals(MemorySegment.NULL)) {

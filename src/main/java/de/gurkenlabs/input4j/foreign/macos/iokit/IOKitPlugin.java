@@ -44,6 +44,15 @@ import static java.lang.foreign.ValueLayout.JAVA_INT;
  */
 public class IOKitPlugin extends AbstractInputDevicePlugin {
   private final Map<String, IOHIDDevice> nativeDevices = new ConcurrentHashMap<>();
+  /**
+   * Cookie-based reverse index used by {@link #hidInputValueCallback} to
+   * resolve an incoming {@code IOHIDValue} to the {@link IOHIDElement} that
+   * produced it. The outer key is the {@code IOHIDDeviceRef} address; the
+   * inner key is the element's {@code IOHIDElementGetCookie} value. The
+   * cookie is unique within a device, so this lookup is robust against any
+   * ambiguity in raw {@code IOHIDElementRef} pointer comparison.
+   */
+  private final Map<Long, Map<Integer, IOHIDElement>> elementsByDeviceAndCookie = new ConcurrentHashMap<>();
   private Thread eventLoopThread;
   private Arena batteryArena;
 
@@ -119,7 +128,9 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
       var inputDevice = new InputDevice(Long.toString(ioHIDDevice.address), ioHIDDevice.productName, ioHIDDevice.manufacturer + " (" + ioHIDDevice.transport + ")", ioHIDDevice.vendorId, ioHIDDevice.productId, displayName, this::pollIOHIDDevice, this::rumbleIOHIDDevice, this::getBatteryInfo);
       ioHIDDevice.inputDevice = inputDevice;
 
+      var cookieIndex = new ConcurrentHashMap<Integer, IOHIDElement>();
       for (var element : ioHIDDevice.getElements()) {
+        cookieIndex.put(element.cookie, element);
         if (element.getUsage() == IOHIDElementUsage.UNDEFINED) {
           continue;
         }
@@ -130,7 +141,23 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
       IOKitVirtualComponentHandler.prepareVirtualComponents(inputDevice, inputDevice.getComponents());
       nativeDevices.put(inputDevice.getID(), ioHIDDevice);
+      elementsByDeviceAndCookie.put(ioHIDDevice.address, cookieIndex);
     }
+  }
+
+  /**
+   * Resolves an input value to its originating {@link IOHIDElement} using
+   * the cookie-based lookup. Returns {@code null} if the device is not
+   * registered or if the cookie is unknown.
+   * <p>
+   * Package-private for unit testing.
+   */
+  IOHIDElement findElement(long deviceAddress, int cookie) {
+    var deviceMap = elementsByDeviceAndCookie.get(deviceAddress);
+    if (deviceMap == null) {
+      return null;
+    }
+    return deviceMap.get(cookie);
   }
 
   @Override
@@ -142,6 +169,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
     }
 
     this.nativeDevices.clear();
+    this.elementsByDeviceAndCookie.clear();
   }
 
   @Override
@@ -203,13 +231,21 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
    * This is called out of native code when an IOHIDElement  provides a value.
    */
   private void hidInputValueCallback(MemorySegment context, int result, MemorySegment sender, MemorySegment ioHIDValueRef) {
+    // The sender parameter is the IOHIDDeviceRef that produced the value.
+    // Together with the element's cookie (a 32-bit identifier unique within
+    // a device) we can resolve the value back to the exact IOHIDElement
+    // without relying on raw IOHIDElementRef pointer comparison, which can
+    // be unreliable when the FFM downcall layer hands us a carrier
+    // MemorySegment.
+    var deviceAddress = sender.address();
     var element = MacOS.IOHIDValueGetElement(ioHIDValueRef);
-    var value = MacOS.IOHIDValueGetIntegerValue(ioHIDValueRef);
-    var timestamp = MacOS.IOHIDValueGetTimeStamp(ioHIDValueRef);
-    // find element from the list in this instance according to the address of the element
-    var ioHIDElement = this.nativeDevices.values().stream().flatMap(x -> x.getElements().stream()).filter(x -> x.address == element.address()).findFirst().orElse(null);
+    int cookie = MacOS.IOHIDElementGetCookie(element);
+    int value = MacOS.IOHIDValueGetIntegerValue(ioHIDValueRef);
+    MacOS.IOHIDValueGetTimeStamp(ioHIDValueRef);
+
+    var ioHIDElement = findElement(deviceAddress, cookie);
     if (ioHIDElement == null) {
-      log.log(Level.FINE, "IOHIDElement not found for address " + element.address());
+      log.log(Level.FINE, "IOHIDElement not found for device " + deviceAddress + " cookie " + cookie);
       return;
     }
 
