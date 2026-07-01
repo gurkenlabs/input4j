@@ -1,4 +1,4 @@
-![Input4j](input4j_logo.png)
+<img src="input4j_logo.png" width="140">
 
 # 🎮 Input4j - The modern Java controller and gamepad stack
 [![Maven Central](https://img.shields.io/maven-central/v/de.gurkenlabs/input4j)](https://search.maven.org/artifact/de.gurkenlabs/input4j)
