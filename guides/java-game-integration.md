@@ -69,7 +69,7 @@ keywords: Java game gamepad, game controller Java, input handling game Java, Jav
           <button class="code-copy" onclick="copyCode(this)">Copy</button>
         </div>
         <pre><code class="language-gradle">dependencies {
-    implementation 'de.gurkenlabs:input4j:1.1.1'
+    implementation 'de.gurkenlabs:input4j:1.3.1'
 }</code></pre>
       </div>
       
@@ -83,7 +83,7 @@ keywords: Java game gamepad, game controller Java, input handling game Java, Jav
         <pre><code class="language-markup">&lt;dependency&gt;
     &lt;groupId&gt;de.gurkenlabs&lt;/groupId&gt;
     &lt;artifactId&gt;input4j&lt;/artifactId&gt;
-    &lt;version&gt;1.1.1&lt;/version&gt;
+    &lt;version&gt;1.3.1&lt;/version&gt;
 &lt;/dependency&gt;</code></pre>
       </div>
     </div>

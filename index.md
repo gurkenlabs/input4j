@@ -16,7 +16,7 @@ keywords: java gamepad, java controller, java joystick, gamepad library, control
     {
       "@type": "HowToStep",
       "name": "Add input4j dependency",
-      "text": "Add input4j to your project using Gradle or Maven. For Gradle, add 'implementation de.gurkenlabs:input4j:1.1.1' to your dependencies. For Maven, add the dependency XML to your pom.xml.",
+      "text": "Add input4j to your project using Gradle or Maven. For Gradle, add 'implementation de.gurkenlabs:input4j:1.3.1' to your dependencies. For Maven, add the dependency XML to your pom.xml.",
       "url": "https://gurkenlabs.github.io/input4j/#quickstart",
       "position": 1
     },
@@ -106,7 +106,7 @@ keywords: java gamepad, java controller, java joystick, gamepad library, control
         <button class="code-copy" onclick="copyCode(this)">Copy</button>
       </div>
       <pre><code class="language-gradle">dependencies {
-    implementation 'de.gurkenlabs:input4j:1.1.1'
+    implementation 'de.gurkenlabs:input4j:1.3.1'
 }</code></pre>
     </div>
     
@@ -118,7 +118,7 @@ keywords: java gamepad, java controller, java joystick, gamepad library, control
       <pre><code class="language-markup">&lt;dependency&gt;
     &lt;groupId&gt;de.gurkenlabs&lt;/groupId&gt;
     &lt;artifactId&gt;input4j&lt;/artifactId&gt;
-    &lt;version&gt;1.1.1&lt;/version&gt;
+    &lt;version&gt;1.3.1&lt;/version&gt;
 &lt;/dependency&gt;</code></pre>
     </div>
     

@@ -19,5 +19,5 @@ input4j is a pure Java input library that provides a unified API for gamepad, jo
 - **Platforms**: Windows (XInput, DirectInput), Linux (evdev), macOS (IOKit HID)
 - **Dependencies**: None (pure Java via FFM API)
 - **License**: MIT
-- **Maven**: `de.gurkenlabs:input4j:1.1.1`
+- **Maven**: `de.gurkenlabs:input4j:1.3.1`
 - **Source**: https://github.com/gurkenlabs/input4j
