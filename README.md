@@ -1,3 +1,5 @@
+![Input4j](input4j_logo.png)
+
 # 🎮 Input4j - The modern Java controller and gamepad stack
 [![Maven Central](https://img.shields.io/maven-central/v/de.gurkenlabs/input4j)](https://search.maven.org/artifact/de.gurkenlabs/input4j)
 [![Build](https://img.shields.io/github/actions/workflow/status/gurkenlabs/input4j/build.yml)](https://github.com/gurkenlabs/input4j/actions)
@@ -39,7 +41,7 @@ Add the following dependency to your `build.gradle` file to start using Input4j:
 
 ```groovy
 dependencies {
-  implementation 'de.gurkenlabs:input4j:1.0.0'
+  implementation 'de.gurkenlabs:input4j:1.3.1'
 }
 ```
 ### Maven
@@ -48,7 +50,7 @@ dependencies {
 <dependency>
   <groupId>de.gurkenlabs</groupId>
   <artifactId>input4j</artifactId>
-  <version>1.0.0</version>
+  <version>1.3.1</version>
 </dependency>
 ```
 
