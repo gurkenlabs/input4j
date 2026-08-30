@@ -128,6 +128,13 @@ final class LinuxEventComponent {
     }
   }
 
+  float normalizedDeadzone() {
+    if (!isAnalog() || min == max) {
+      return 0f;
+    }
+    return Math.clamp(2f * Math.max(Math.abs(flat), Math.abs(fuzz)) / (max - min), 0f, 1f);
+  }
+
   public InputComponent.ID getIdentifier() {
     if (deviceName != null) {
       if (componentType == ComponentType.BUTTON || componentType == ComponentType.AXIS) {
