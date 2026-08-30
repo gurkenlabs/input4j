@@ -5,6 +5,7 @@ import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
 import de.gurkenlabs.input4j.ControllerDatabase;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
+import de.gurkenlabs.input4j.components.Axis;
 
 import java.awt.*;
 import java.lang.foreign.*;
@@ -246,11 +247,36 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
         var convertedData = directInputDevice.deviceObjects.get(i).convertRawInputValue(deviceStateResultSegment.get(JAVA_INT, i * JAVA_INT.byteSize()));
         polledValues[i] = convertedData;
       }
+
+      applyCircularDeadzone(directInputDevice, polledValues, Axis.AXIS_X, Axis.AXIS_Y);
+      applyCircularDeadzone(directInputDevice, polledValues, Axis.AXIS_RX, Axis.AXIS_RY);
     } catch (Throwable e) {
       log.log(Level.SEVERE, e.getMessage(), e);
     }
 
     return DirectInputVirtualComponentHandler.handlePolledValues(directInputDevice.inputDevice, polledValues);
+  }
+
+  private static void applyCircularDeadzone(
+      IDirectInputDevice8 device, float[] values, InputComponent.ID xAxis, InputComponent.ID yAxis) {
+    var xIndex = findAxisIndex(device, xAxis);
+    var yIndex = findAxisIndex(device, yAxis);
+    if (xIndex < 0 || yIndex < 0) {
+      return;
+    }
+
+    var deadzone = Math.max(device.deviceObjects.get(xIndex).normalizedDeadzone(),
+        device.deviceObjects.get(yIndex).normalizedDeadzone());
+    AbstractInputDevicePlugin.applyCircularDeadzone(values, xIndex, yIndex, deadzone);
+  }
+
+  private static int findAxisIndex(IDirectInputDevice8 device, InputComponent.ID axis) {
+    for (int i = 0; i < device.deviceObjects.size(); i++) {
+      if (axis.equals(device.deviceObjects.get(i).getIdentifier())) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   private static MemorySegment defineDataFormat(List<DIDEVICEOBJECTINSTANCE> deviceObjects, Arena memoryArena) {
@@ -462,7 +488,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
       if (values != null && values.length > 0) {
         leftMotor = values[0];
         // Use last provided value for right motor if not explicitly specified
-        rightMotor = values.length >= 2 ? values[1] : values[values.length - 1];
+        rightMotor = values[values.length > 1 ? 1 : 0];
       }
 
       // Map normalized 0.0-1.0 values to DirectInput 0-10000 range
