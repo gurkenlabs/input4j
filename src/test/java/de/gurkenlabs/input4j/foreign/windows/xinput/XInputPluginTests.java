@@ -46,27 +46,29 @@ public class XInputPluginTests {
 
   @Test
   @EnabledOnOs(OS.WINDOWS)
-  void testNormalizeSignedShort() {
-    // Test case 1: Value within deadzone
-    assertEquals(0.0f, XInputPlugin.normalizeSignedShort((short) 500, 1000), 0.01);
+  void normalizeStick_appliesCircularDeadzone() {
+    var values = new float[2];
 
-    // Test case 2: Value at deadzone boundary
-    assertEquals(0.0305f, XInputPlugin.normalizeSignedShort((short) 1000, 1000), 0.01);
+    XInputPlugin.normalizeStick((short) 1000, (short) 0, 1000, values, 0);
+    assertEquals(0.0f, values[0]);
+    assertEquals(0.0f, values[1]);
 
-    // Test case 3: Value outside deadzone
-    assertEquals(0.5f, XInputPlugin.normalizeSignedShort((short) 16384, 1000), 0.01);
+    // Although both axes are individually below the threshold, their radial magnitude is not.
+    XInputPlugin.normalizeStick((short) 800, (short) 800, 1000, values, 0);
+    assertTrue(values[0] > 0.0f);
+    assertEquals(values[0], values[1], 0.000001f);
 
-    // Test case 4: Value is Short.MIN_VALUE
-    assertEquals(-1.0f, XInputPlugin.normalizeSignedShort(Short.MIN_VALUE, 1000), 0.01);
+    XInputPlugin.normalizeStick((short) 1001, (short) 0, 1000, values, 0);
+    assertEquals(1.0f / 31767, values[0], 0.000001f);
+    assertEquals(0.0f, values[1]);
 
-    // Test case 5: Value is Short.MAX_VALUE
-    assertEquals(1.0f, XInputPlugin.normalizeSignedShort(Short.MAX_VALUE, 1000), 0.01);
+    XInputPlugin.normalizeStick(Short.MAX_VALUE, Short.MAX_VALUE, 1000, values, 0);
+    assertEquals(1.0f, Math.hypot(values[0], values[1]), 0.000001f);
+    assertEquals(values[0], values[1], 0.000001f);
 
-    // Test case 6: Negative value within deadzone
-    assertEquals(0.0f, XInputPlugin.normalizeSignedShort((short) -500, 1000), 0.01);
-
-    // Test case 7: Negative value outside deadzone
-    assertEquals(-0.5f, XInputPlugin.normalizeSignedShort((short) -16384, 1000), 0.01);
+    XInputPlugin.normalizeStick(Short.MIN_VALUE, (short) 0, 1000, values, 0);
+    assertEquals(-1.0f, values[0]);
+    assertEquals(0.0f, values[1]);
   }
 
   @Test

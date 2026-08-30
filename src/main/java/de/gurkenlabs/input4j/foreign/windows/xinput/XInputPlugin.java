@@ -125,25 +125,28 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
   }
 
   /**
-   * Normalizes a signed short value to a float between -1.0 and 1.0.
+   * Normalizes a thumbstick using a circular deadzone and writes its two axes to an output array.
    *
-   * @param shortValue The signed short value.
-   * @param deadzone   The deadzone values are used to filter out small movements of the thumbsticks that are within a certain threshold.
-   *                   This helps to avoid unintentional movements due to slight pressure or drift.
-   * @return The normalized float value.
+   * @param xValue The raw horizontal axis value.
+   * @param yValue The raw vertical axis value.
+   * @param deadzone The radial deadzone in raw axis units.
+   * @param output The array that receives the normalized axes.
+   * @param offset The output index for the horizontal axis; the vertical axis follows it.
    */
-  static float normalizeSignedShort(short shortValue, int deadzone) {
-    if (Math.abs(shortValue) < deadzone) {
-      return 0.0f;
+  static void normalizeStick(
+    short xValue, short yValue, int deadzone, float[] output, int offset
+  ) {
+    var magnitude = (float) Math.hypot(xValue, yValue);
+    if (magnitude <= deadzone) {
+      output[offset] = 0.0f;
+      output[offset + 1] = 0.0f;
+      return;
     }
 
-    if (shortValue == Short.MIN_VALUE) {
-      return -1.0f;
-    }
-    if (shortValue == Short.MAX_VALUE) {
-      return 1.0f;
-    }
-    return (float) shortValue / Short.MAX_VALUE;
+    var normalizedMagnitude =
+      (Math.min(magnitude, Short.MAX_VALUE) - deadzone) / (Short.MAX_VALUE - deadzone);
+    output[offset] = xValue / magnitude * normalizedMagnitude;
+    output[offset + 1] = yValue / magnitude * normalizedMagnitude;
   }
 
   private InputDevice initInputDevice(XINPUT_GAMEPAD gamepad) {
@@ -242,10 +245,21 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
 
     polledValues[i++] = normalizeTrigger(state.Gamepad.bLeftTrigger);
     polledValues[i++] = normalizeTrigger(state.Gamepad.bRightTrigger);
-    polledValues[i++] = normalizeSignedShort(state.Gamepad.sThumbLX, XINPUT_GAMEPAD.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
-    polledValues[i++] = normalizeSignedShort(state.Gamepad.sThumbLY, XINPUT_GAMEPAD.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
-    polledValues[i++] = normalizeSignedShort(state.Gamepad.sThumbRX, XINPUT_GAMEPAD.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
-    polledValues[i] = normalizeSignedShort(state.Gamepad.sThumbRY, XINPUT_GAMEPAD.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
+    normalizeStick(
+      state.Gamepad.sThumbLX,
+      state.Gamepad.sThumbLY,
+      XINPUT_GAMEPAD.XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE,
+      polledValues,
+      i
+    );
+    i += 2;
+    normalizeStick(
+      state.Gamepad.sThumbRX,
+      state.Gamepad.sThumbRY,
+      XINPUT_GAMEPAD.XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE,
+      polledValues,
+      i
+    );
 
     return polledValues;
   }
