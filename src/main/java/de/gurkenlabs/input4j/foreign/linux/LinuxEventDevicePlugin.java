@@ -77,7 +77,10 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
         return 0f;
       }
       value = Math.max(nativeComponent.min, Math.min(nativeComponent.max, value));
-      value = (value - nativeComponent.min) / (float) (nativeComponent.max - nativeComponent.min) * 2 - 1;
+      value = (value - nativeComponent.min) / (float) (nativeComponent.max - nativeComponent.min);
+      if (!nativeComponent.isOneSided()) {
+        value = value * 2 - 1;
+      }
       if (!isStickAxis(nativeComponent)) {
         value = AbstractInputDevicePlugin.applyDeadzone(value, nativeComponent.normalizedDeadzone());
       }

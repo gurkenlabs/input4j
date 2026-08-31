@@ -112,6 +112,11 @@ final class LinuxEventComponent {
     return linuxComponentType.isAxis() && !this.isRelative();
   }
 
+  boolean isOneSided() {
+    return min >= 0 && (linuxComponentType == LinuxComponentType.ABS_Z
+        || linuxComponentType == LinuxComponentType.ABS_RZ);
+  }
+
   float convertValue(float value) {
     if (linuxComponentType.isAxis() && !relative) {
       if (min == max) {
@@ -132,7 +137,9 @@ final class LinuxEventComponent {
     if (!isAnalog() || min == max) {
       return 0f;
     }
-    return Math.clamp(2f * Math.max(Math.abs(flat), Math.abs(fuzz)) / (max - min), 0f, 1f);
+    var range = max - min;
+    var deadzone = Math.abs(flat) / (float) range;
+    return Math.clamp(isOneSided() ? deadzone : deadzone * 2f, 0f, 1f);
   }
 
   public InputComponent.ID getIdentifier() {
