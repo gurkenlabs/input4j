@@ -213,7 +213,4 @@ final class DIDEVICEOBJECTINSTANCE {
     return convertedValue;
   }
 
-  float normalizedDeadzone() {
-    return Math.clamp(this.deadzone / 10000f, 0f, 1f);
-  }
 }
