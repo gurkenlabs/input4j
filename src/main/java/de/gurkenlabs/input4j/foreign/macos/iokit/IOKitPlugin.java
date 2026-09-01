@@ -7,6 +7,7 @@ import de.gurkenlabs.input4j.BatteryType;
 import de.gurkenlabs.input4j.ControllerDatabase;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
+import de.gurkenlabs.input4j.components.Axis;
 
 import java.awt.*;
 import java.lang.foreign.Arena;
@@ -209,15 +210,14 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
   static float normalizeInputValue(int elementValue, IOHIDElement element, boolean isAxis) {
     float value = elementValue;
     if (isAxis && element.usage != IOHIDElementUsage.HAT_SWITCH) {
-      int midpoint = Math.round((element.min + element.max) / 2.0f);
-      if (value == 0 || Math.abs(elementValue - midpoint) <= 2) {
-        value = 0;
-      } else {
-        // Ensure value is within the range [min, max]
-        // Then normalize the value to the range [-1, 1]
-        value = Math.max(element.min, Math.min(element.max, value));
-        value = (value - element.min) / (float) (element.max - element.min) * 2 - 1;
+      if (elementValue == 0) {
+        return 0f;
       }
+      if (element.min == element.max) {
+        return 0f;
+      }
+      value = Math.max(element.min, Math.min(element.max, value));
+      value = (value - element.min) / (float) (element.max - element.min) * 2 - 1;
     }
 
     if (element.type == IOHIDElementType.BUTTON) {
@@ -252,7 +252,44 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
       values[i] = value;
     }
 
+    applyCircularDeadzone(values, inputDevice, ioHIDDevice, Axis.AXIS_X, Axis.AXIS_Y);
+    applyCircularDeadzone(values, inputDevice, ioHIDDevice, Axis.AXIS_RX, Axis.AXIS_RY);
+
     return IOKitVirtualComponentHandler.handlePolledValues(inputDevice, values);
+  }
+
+  private static void applyCircularDeadzone(
+      float[] values, InputDevice inputDevice, IOHIDDevice device,
+      InputComponent.ID xAxis, InputComponent.ID yAxis) {
+    var xIndex = findAxisIndex(inputDevice, xAxis);
+    var yIndex = findAxisIndex(inputDevice, yAxis);
+    if (xIndex < 0 || yIndex < 0) {
+      return;
+    }
+
+    var xElement = findElement(inputDevice, device, xIndex);
+    var yElement = findElement(inputDevice, device, yIndex);
+    var xRange = Math.max(1, xElement.max - xElement.min);
+    var yRange = Math.max(1, yElement.max - yElement.min);
+    var deadzone = Math.max(4f / xRange, 4f / yRange);
+    AbstractInputDevicePlugin.applyCircularDeadzone(values, xIndex, yIndex, deadzone);
+  }
+
+  private static int findAxisIndex(InputDevice device, InputComponent.ID axis) {
+    for (int i = 0; i < device.getComponents().size(); i++) {
+      if (axis.equals(device.getComponents().get(i).getId())) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  private static IOHIDElement findElement(InputDevice inputDevice, IOHIDDevice device, int index) {
+    var component = inputDevice.getComponents().get(index);
+    return device.getElements().stream()
+        .filter(element -> element.getIdentifier().equals(component.getId()))
+        .findFirst()
+        .orElseThrow();
   }
 
   /**

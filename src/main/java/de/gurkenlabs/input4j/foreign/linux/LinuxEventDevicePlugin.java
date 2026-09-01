@@ -7,6 +7,7 @@ import de.gurkenlabs.input4j.BatteryType;
 import de.gurkenlabs.input4j.ComponentType;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
+import de.gurkenlabs.input4j.components.Axis;
 
 import java.awt.*;
 import java.io.File;
@@ -72,14 +73,16 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   static float normalizeInputValue(input_event inputEvent, LinuxEventComponent nativeComponent) {
     float value = inputEvent.value;
     if (nativeComponent.nativeType == LinuxEventDevice.EV_ABS) {
-      int midpoint = Math.round((nativeComponent.min + nativeComponent.max) / 2.0f);
-      if (inputEvent.value == nativeComponent.flat || Math.abs(inputEvent.value - midpoint) <= nativeComponent.fuzz) {
-        value = 0;
-      } else {
-        // Ensure value is within the range [min, max]
-        // Then normalize the value to the range [-1, 1]
-        value = Math.max(nativeComponent.min, Math.min(nativeComponent.max, value));
-        value = (value - nativeComponent.min) / (float) (nativeComponent.max - nativeComponent.min) * 2 - 1;
+      if (nativeComponent.min == nativeComponent.max) {
+        return 0f;
+      }
+      value = Math.max(nativeComponent.min, Math.min(nativeComponent.max, value));
+      value = (value - nativeComponent.min) / (float) (nativeComponent.max - nativeComponent.min);
+      if (!nativeComponent.isOneSided()) {
+        value = value * 2 - 1;
+      }
+      if (!isStickAxis(nativeComponent)) {
+        value = AbstractInputDevicePlugin.applyDeadzone(value, nativeComponent.normalizedDeadzone());
       }
     }
 
@@ -88,6 +91,12 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     }
 
     return value;
+  }
+
+  private static boolean isStickAxis(LinuxEventComponent component) {
+    var identifier = component.getIdentifier();
+    return identifier.equals(Axis.AXIS_X) || identifier.equals(Axis.AXIS_Y)
+        || identifier.equals(Axis.AXIS_RX) || identifier.equals(Axis.AXIS_RY);
   }
 
   /**
@@ -279,7 +288,32 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       linuxEventDevice.currentValues[componentIndex] = normalizeInputValue(inputEvent, nativeComponent);
     }
 
-    return LinuxVirtualComponentHandler.handlePolledValues(inputDevice, linuxEventDevice.currentValues);
+    var polledValues = linuxEventDevice.currentValues.clone();
+    applyCircularDeadzone(linuxEventDevice, polledValues, Axis.AXIS_X, Axis.AXIS_Y);
+    applyCircularDeadzone(linuxEventDevice, polledValues, Axis.AXIS_RX, Axis.AXIS_RY);
+    return LinuxVirtualComponentHandler.handlePolledValues(inputDevice, polledValues);
+  }
+
+  private static void applyCircularDeadzone(
+      LinuxEventDevice device, float[] values, InputComponent.ID xAxis, InputComponent.ID yAxis) {
+    var xIndex = findAxisIndex(device, xAxis);
+    var yIndex = findAxisIndex(device, yAxis);
+    if (xIndex < 0 || yIndex < 0) {
+      return;
+    }
+
+    var deadzone = Math.max(device.componentList.get(xIndex).normalizedDeadzone(),
+        device.componentList.get(yIndex).normalizedDeadzone());
+    AbstractInputDevicePlugin.applyCircularDeadzone(values, xIndex, yIndex, deadzone);
+  }
+
+  private static int findAxisIndex(LinuxEventDevice device, InputComponent.ID axis) {
+    for (int i = 0; i < device.componentList.size(); i++) {
+      if (axis.equals(device.componentList.get(i).getIdentifier())) {
+        return i;
+      }
+    }
+    return -1;
   }
 
   private static final float RUMBLE_THRESHOLD = 0.01f;

@@ -230,4 +230,16 @@ class DirectInputDataStructTests {
     assertEquals(DIDATAFORMAT.$LAYOUT.byteSize(), diDataFormat.dwSize);
     assertEquals(DIOBJECTDATAFORMAT.$LAYOUT.byteSize(), diDataFormat.dwObjSize);
   }
+
+  @Test
+  void convertRawInputValue_keepsSmallNormalizedAxisValues() {
+    var object = new DIDEVICEOBJECTINSTANCE();
+    object.objectType = DI8DEVOBJECTTYPE.XAxis;
+    object.dwType = IDirectInputDevice8.DIDFT_AXIS;
+    object.min = -100;
+    object.max = 100;
+    object.deadzone = 2000;
+
+    assertEquals(0.05f, object.convertRawInputValue(5f), 0.000001f);
+  }
 }

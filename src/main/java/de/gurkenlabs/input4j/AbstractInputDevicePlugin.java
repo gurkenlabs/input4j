@@ -129,6 +129,46 @@ public abstract class AbstractInputDevicePlugin implements InputDevicePlugin {
    * @return A collection of currently available input devices.
    */
   protected abstract Collection<InputDevice> refreshInputDevices();
+
+  /**
+   * Applies a radial deadzone to two already normalized stick axes.
+   *
+   * @param values the values containing the two axes
+   * @param xIndex the index of the horizontal axis
+   * @param yIndex the index of the vertical axis
+   * @param deadzone the radial deadzone in the range {@code 0..1}
+   */
+  protected static void applyCircularDeadzone(float[] values, int xIndex, int yIndex, float deadzone) {
+    deadzone = Math.clamp(deadzone, 0f, 1f);
+    var x = values[xIndex];
+    var y = values[yIndex];
+    var magnitude = (float) Math.hypot(x, y);
+    if (magnitude <= deadzone || magnitude == 0f || deadzone >= 1f) {
+      values[xIndex] = 0f;
+      values[yIndex] = 0f;
+      return;
+    }
+
+    var normalizedMagnitude = (Math.min(magnitude, 1f) - deadzone) / (1f - deadzone);
+    values[xIndex] = x / magnitude * normalizedMagnitude;
+    values[yIndex] = y / magnitude * normalizedMagnitude;
+  }
+
+  /**
+   * Applies a one-dimensional deadzone and rescales the remaining range.
+   *
+   * @param value the normalized axis value
+   * @param deadzone the deadzone in the range {@code 0..1}
+   * @return the deadzone-adjusted value
+   */
+  protected static float applyDeadzone(float value, float deadzone) {
+    deadzone = Math.clamp(deadzone, 0f, 1f);
+    var magnitude = Math.abs(value);
+    if (magnitude <= deadzone || deadzone >= 1f) {
+      return 0f;
+    }
+    return Math.copySign((Math.min(magnitude, 1f) - deadzone) / (1f - deadzone), value);
+  }
   
   public void onDevicesChanged(Runnable listener) {
     this.devicesChangedListeners.add(listener);

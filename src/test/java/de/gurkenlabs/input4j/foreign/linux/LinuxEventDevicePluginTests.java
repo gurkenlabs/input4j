@@ -38,10 +38,10 @@ public class LinuxEventDevicePluginTests {
     normalizedValue = LinuxEventDevicePlugin.normalizeInputValue(event, component);
     assertEquals(1, normalizedValue, 0.01);
 
-    // Test case 5: EV_ABS type, value within fuzz range
+    // Test case 5: fuzz does not define a deadzone
     event.value = 5;
     normalizedValue = LinuxEventDevicePlugin.normalizeInputValue(event, component);
-    assertEquals(0, normalizedValue, 0.01);
+    assertEquals(0.005, normalizedValue, 0.000001);
 
     // Test case 6: EV_ABS type, value outside min range
     event.value = -5000;
@@ -52,6 +52,19 @@ public class LinuxEventDevicePluginTests {
     event.value = 5000;
     normalizedValue = LinuxEventDevicePlugin.normalizeInputValue(event, component);
     assertEquals(1, normalizedValue, 0.01);
+  }
+
+  @Test
+  void testNormalizeInputValueForOneSidedAxis() {
+    var component = new LinuxEventComponent(LinuxComponentType.ABS_Z, true, false,
+        LinuxEventDevice.EV_ABS, LinuxEventCode.ABS_Z, 0, 255, 0, 10);
+    var event = new input_event();
+
+    event.value = 0;
+    assertEquals(0f, LinuxEventDevicePlugin.normalizeInputValue(event, component));
+
+    event.value = 255;
+    assertEquals(1f, LinuxEventDevicePlugin.normalizeInputValue(event, component));
   }
 
   @Test

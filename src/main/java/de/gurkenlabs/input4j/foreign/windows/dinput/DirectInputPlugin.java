@@ -462,7 +462,7 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
       if (values != null && values.length > 0) {
         leftMotor = values[0];
         // Use last provided value for right motor if not explicitly specified
-        rightMotor = values.length >= 2 ? values[1] : values[values.length - 1];
+        rightMotor = values[values.length > 1 ? 1 : 0];
       }
 
       // Map normalized 0.0-1.0 values to DirectInput 0-10000 range
