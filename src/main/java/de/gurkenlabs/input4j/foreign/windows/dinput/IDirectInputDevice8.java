@@ -17,6 +17,7 @@ final class IDirectInputDevice8 {
   public static final int DIDFT_POV = 0x00000010;
 
   public static final int DIDFT_RELAXIS = 0x00000001;
+  public static final int DIDFT_ABSAXIS = 0x00000002;
 
   public static final int DIDF_ABSAXIS = 0x00000001;
   public static final int DIDF_RELAXIS = 0x00000002;

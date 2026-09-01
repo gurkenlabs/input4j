@@ -235,7 +235,7 @@ class DirectInputDataStructTests {
   void convertRawInputValue_keepsSmallNormalizedAxisValues() {
     var object = new DIDEVICEOBJECTINSTANCE();
     object.objectType = DI8DEVOBJECTTYPE.XAxis;
-    object.dwType = IDirectInputDevice8.DIDFT_AXIS;
+    object.dwType = IDirectInputDevice8.DIDFT_ABSAXIS;
     object.min = -100;
     object.max = 100;
     object.deadzone = 2000;

@@ -19,7 +19,6 @@ jobs:
   build:
     name: Build (${{ matrix.os }}, JDK ${{ matrix.java }})
     runs-on: ${{ matrix.os }}
-    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
     strategy:
       fail-fast: false
       matrix:
@@ -53,6 +52,7 @@ jobs:
 
       - name: Publish Test Results
         if: ${{ !cancelled() }}
+        continue-on-error: true
         uses: dorny/test-reporter@v3
         with:
           name: JUnit (${{ matrix.os }}, JDK ${{ matrix.java }})
