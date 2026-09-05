@@ -12,8 +12,10 @@ import static org.junit.jupiter.api.Assertions.*;
 public class LinuxPermissionTests {
   @Test
   void testErrnoConstants() {
+    assertEquals(9, Linux.EBADF, "EBADF should be 9");
     assertEquals(11, Linux.EAGAIN, "EAGAIN should be 11");
     assertEquals(13, Linux.EACCES, "EACCES should be 13");
+    assertEquals(19, Linux.ENODEV, "ENODEV should be 19");
   }
 
   @Test
@@ -99,4 +101,43 @@ public class LinuxPermissionTests {
       }
     }
   }
-}
+
+  @Test
+  @EnabledOnOs(OS.LINUX)
+  void testReadWriteHandleReturnTypes() {
+    var readHandle = Linux.getHandle(Linux.HANDLE_READ);
+    var writeHandle = Linux.getHandle(Linux.HANDLE_WRITE);
+    assertNotNull(readHandle, "HANDLE_READ downcall handle must be present");
+    assertNotNull(writeHandle, "HANDLE_WRITE downcall handle must be present");
+
+    boolean is32Bit = System.getProperty("os.arch", "").toLowerCase().matches(".*(arm|i[3-6]86|x86).*")
+        && !System.getProperty("os.arch", "").toLowerCase().contains("64");
+    Class<?> expectedReturnType = is32Bit ? int.class : long.class;
+
+    assertEquals(expectedReturnType, readHandle.type().returnType(),
+        "read downcall handle return type must match ssize_t for the architecture");
+    assertEquals(expectedReturnType, writeHandle.type().returnType(),
+        "write downcall handle return type must match ssize_t for the architecture");
+  }
+
+  @Test
+  @EnabledOnOs(OS.LINUX)
+  void testLinuxEventDeviceIsDisconnected() {
+    try (var arena = Arena.ofShared()) {
+      LinuxEventDevice device = new LinuxEventDevice(arena, "/nonexistent/device");
+      assertTrue(device.isDisconnected(), "Device with ERROR fd should be disconnected");
+      device.close();
+      assertTrue(device.isDisconnected(), "Closed device should be disconnected");
+      assertDoesNotThrow(() -> device.close());
+    }
+  }
+
+  @Test
+  @EnabledOnOs(OS.LINUX)
+  void testLinuxEventDeviceOwnArenaLifecycle() {
+    LinuxEventDevice device = new LinuxEventDevice("/nonexistent/device", true);
+    assertTrue(device.arena.scope().isAlive());
+    device.close();
+    assertFalse(device.arena.scope().isAlive(), "Closing LinuxEventDevice must close its own arena");
+  }
+}

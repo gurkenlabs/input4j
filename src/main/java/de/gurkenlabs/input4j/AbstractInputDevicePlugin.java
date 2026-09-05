@@ -1,7 +1,9 @@
 package de.gurkenlabs.input4j;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
@@ -38,6 +40,7 @@ public abstract class AbstractInputDevicePlugin implements InputDevicePlugin {
       throw new IllegalStateException("The plugin has not been initialized yet.");
     }
 
+    this.refreshDevices();
     return this.devices;
   }
 
@@ -63,12 +66,21 @@ public abstract class AbstractInputDevicePlugin implements InputDevicePlugin {
    * @param devices The devices to set.
    */
   protected void setDevices(Collection<InputDevice> devices) {
-    this.devices = devices;
+    this.devices = devices != null ? new CopyOnWriteArrayList<>(devices) : new CopyOnWriteArrayList<>();
     this.lastDeviceUpdate = System.currentTimeMillis();
   }
 
   /**
-   * Refreshes the list of input devices.
+   * Gets the current collection of devices without triggering a hot-plug refresh.
+   *
+   * @return The current collection of devices, or {@code null} if not initialized.
+   */
+  protected Collection<InputDevice> getDevices() {
+    return this.devices;
+  }
+
+  /**
+   * Refreshes the list of input devices if the hot-plug interval has elapsed.
    * <p>
    * This method needs to be called explicitly to support hot-plugging devices.
    * If a new device is connected or an existing device is disconnected, the list of input devices is updated accordingly.
@@ -81,46 +93,79 @@ public abstract class AbstractInputDevicePlugin implements InputDevicePlugin {
    * This also triggers the {@link #onDeviceConnected(Consumer)} and {@link #onDeviceDisconnected(Consumer)} events when necessary.
    * </p>
    */
-  protected void refreshDevices() {
-    if (this.lastDeviceUpdate == 0 || System.currentTimeMillis() - this.lastDeviceUpdate < this.hotPlugInterval) {
+  protected synchronized void refreshDevices() {
+    refreshDevices(false);
+  }
+
+  /**
+   * Refreshes the list of input devices, optionally forcing an update even if the hot-plug
+   * interval has not yet elapsed.
+   *
+   * @param force whether to bypass the hot-plug interval check
+   */
+  protected synchronized void refreshDevices(boolean force) {
+    if (this.devices == null) {
+      return;
+    }
+
+    if (!force
+        && (this.lastDeviceUpdate == 0
+            || System.currentTimeMillis() - this.lastDeviceUpdate < this.hotPlugInterval)) {
       return;
     }
 
     this.lastDeviceUpdate = System.currentTimeMillis();
-    final var oldDeviceIds = this.getAll().stream().map(InputDevice::getID).toList();
+    final var oldDeviceIds = this.devices.stream().map(InputDevice::getID).toList();
     var refreshedDevices = this.refreshInputDevices();
     var refreshedDeviceIds = refreshedDevices.stream().map(InputDevice::getID).toList();
 
     var devicesChanged = false;
+    var disconnected = new ArrayList<InputDevice>();
     // Check for disconnected devices
     for (var currentDeviceId : oldDeviceIds) {
       if (!refreshedDeviceIds.contains(currentDeviceId)) {
         // Device was disconnected
-        var disconnectedDevice = this.devices.stream().filter(d -> d.getID().equals(currentDeviceId)).findFirst().orElse(null);
+        var disconnectedDevice =
+            this.devices.stream()
+                .filter(d -> d.getID().equals(currentDeviceId))
+                .findFirst()
+                .orElse(null);
         if (disconnectedDevice != null) {
-          this.deviceDisconnectedListeners.forEach(listener -> listener.accept(disconnectedDevice));
+          disconnected.add(disconnectedDevice);
           devicesChanged = true;
         }
       }
     }
 
     // Check for newly connected devices
+    var connected = new ArrayList<InputDevice>();
     for (var connectedDeviceId : refreshedDeviceIds) {
       if (!oldDeviceIds.contains(connectedDeviceId)) {
         // New device connected
-        InputDevice connectedDevice = refreshedDevices.stream().filter(d -> d.getID().equals(connectedDeviceId)).findFirst().orElse(null);
+        InputDevice connectedDevice =
+            refreshedDevices.stream()
+                .filter(d -> d.getID().equals(connectedDeviceId))
+                .findFirst()
+                .orElse(null);
         if (connectedDevice != null) {
-          this.deviceConnectedListeners.forEach(listener -> listener.accept(connectedDevice));
+          connected.add(connectedDevice);
           devicesChanged = true;
         }
       }
     }
 
+    this.setDevices(refreshedDevices);
+
+    for (var d : disconnected) {
+      this.deviceDisconnectedListeners.forEach(listener -> listener.accept(d));
+    }
+    for (var d : connected) {
+      this.deviceConnectedListeners.forEach(listener -> listener.accept(d));
+    }
+
     if (devicesChanged) {
       this.devicesChangedListeners.forEach(Runnable::run);
     }
-
-    this.setDevices(refreshedDevices);
   }
 
   /**

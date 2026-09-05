@@ -182,4 +182,107 @@ public class LinuxEventDevicePluginTests {
   void testGetMaxBitsForEvFfReturnsFfCnt() {
     assertEquals(Linux.FF_CNT, LinuxEventDevice.getMaxBits(LinuxEventDevice.EV_FF));
   }
+
+  @Test
+  void isGamepadOrJoystick_xboxGamepad_returnsTrue() {
+    byte[] keyBits = createBitmask(LinuxInputDefinitions.BTN_A, LinuxInputDefinitions.BTN_B);
+    byte[] absBits = createBitmask(LinuxInputDefinitions.ABS_X, LinuxInputDefinitions.ABS_Y);
+    assertTrue(LinuxEventDevicePlugin.isGamepadOrJoystick(keyBits, absBits));
+  }
+
+  @Test
+  void isGamepadOrJoystick_flightStick_returnsTrue() {
+    byte[] keyBits = createBitmask(LinuxInputDefinitions.BTN_TRIGGER, LinuxInputDefinitions.BTN_THUMB);
+    byte[] absBits = createBitmask(LinuxInputDefinitions.ABS_X, LinuxInputDefinitions.ABS_Y);
+    assertTrue(LinuxEventDevicePlugin.isGamepadOrJoystick(keyBits, absBits));
+  }
+
+  @Test
+  void isGamepadOrJoystick_arcadeStickTriggerHappy_returnsTrue() {
+    byte[] keyBits = createBitmask(LinuxInputDefinitions.BTN_TRIGGER_HAPPY1);
+    assertTrue(LinuxEventDevicePlugin.isGamepadOrJoystick(keyBits, null));
+  }
+
+  @Test
+  void isGamepadOrJoystick_rudderPedals_returnsTrue() {
+    byte[] absBits = createBitmask(LinuxInputDefinitions.ABS_RUDDER, LinuxInputDefinitions.ABS_BRAKE);
+    assertTrue(LinuxEventDevicePlugin.isGamepadOrJoystick(null, absBits));
+  }
+
+  @Test
+  void isGamepadOrJoystick_hatSwitch_returnsTrue() {
+    byte[] absBits = createBitmask(LinuxInputDefinitions.ABS_HAT0X, LinuxInputDefinitions.ABS_HAT0Y);
+    assertTrue(LinuxEventDevicePlugin.isGamepadOrJoystick(null, absBits));
+  }
+
+  @Test
+  void isGamepadOrJoystick_touchpad_returnsFalse() {
+    byte[] keyBits = createBitmask(LinuxInputDefinitions.BTN_TOUCH, LinuxInputDefinitions.BTN_TOOL_FINGER, LinuxInputDefinitions.BTN_LEFT);
+    byte[] absBits = createBitmask(LinuxInputDefinitions.ABS_X, LinuxInputDefinitions.ABS_Y);
+    assertFalse(LinuxEventDevicePlugin.isGamepadOrJoystick(keyBits, absBits));
+  }
+
+  @Test
+  void isGamepadOrJoystick_mouse_returnsFalse() {
+    byte[] keyBits = createBitmask(LinuxInputDefinitions.BTN_LEFT, LinuxInputDefinitions.BTN_RIGHT, LinuxInputDefinitions.BTN_MIDDLE);
+    assertFalse(LinuxEventDevicePlugin.isGamepadOrJoystick(keyBits, null));
+  }
+
+  @Test
+  void isGamepadOrJoystick_keyboard_returnsFalse() {
+    byte[] keyBits = createBitmask(LinuxComponentType.KEY_A.getCode(), LinuxComponentType.KEY_ENTER.getCode());
+    assertFalse(LinuxEventDevicePlugin.isGamepadOrJoystick(keyBits, null));
+  }
+
+  @Test
+  void isGamepadOrJoystick_nullOrEmpty_returnsFalse() {
+    assertFalse(LinuxEventDevicePlugin.isGamepadOrJoystick(null, null));
+    assertFalse(LinuxEventDevicePlugin.isGamepadOrJoystick(new byte[0], new byte[0]));
+  }
+
+  @Test
+  void isGamepadOrJoystick_gamepadWithTouchpad_returnsTrue() {
+    // DualShock / DualSense having both gamepad buttons and touchpad tool bits on the same device
+    byte[] keyBits = createBitmask(LinuxInputDefinitions.BTN_A, LinuxInputDefinitions.BTN_TOUCH);
+    byte[] absBits = createBitmask(LinuxInputDefinitions.ABS_X, LinuxInputDefinitions.ABS_Y);
+    assertTrue(LinuxEventDevicePlugin.isGamepadOrJoystick(keyBits, absBits));
+  }
+
+  private static byte[] createBitmask(int... bits) {
+    int maxBit = 0;
+    for (int b : bits) {
+      if (b > maxBit) {
+        maxBit = b;
+      }
+    }
+    byte[] array = new byte[(maxBit / 8) + 1];
+    for (int b : bits) {
+      array[b / 8] |= (byte) (1 << (b % 8));
+    }
+    return array;
+  }
+
+  @Test
+  void isIgnoredDeviceName_filtersKnownNonGamepads() {
+    assertTrue(LinuxEventDevicePlugin.isIgnoredDeviceName("Video Bus"));
+    assertTrue(LinuxEventDevicePlugin.isIgnoredDeviceName("Virtual Core Pointer"));
+    assertTrue(LinuxEventDevicePlugin.isIgnoredDeviceName("Power Button"));
+    assertTrue(LinuxEventDevicePlugin.isIgnoredDeviceName("HDA Intel PCH Front Headphone"));
+    assertTrue(LinuxEventDevicePlugin.isIgnoredDeviceName("HDA Intel PCH Line Out"));
+    assertTrue(LinuxEventDevicePlugin.isIgnoredDeviceName("HDMI / DisplayPort"));
+    assertFalse(LinuxEventDevicePlugin.isIgnoredDeviceName("Microsoft X-Box 360 pad"));
+    assertFalse(LinuxEventDevicePlugin.isIgnoredDeviceName("Sony Interactive Entertainment Wireless Controller"));
+    assertFalse(LinuxEventDevicePlugin.isIgnoredDeviceName(null));
+  }
+
+  @Test
+  void testCandidateProbeConfinedArenaLifecycle() {
+    for (int i = 0; i < 1000; i++) {
+      try (java.lang.foreign.Arena probeArena = java.lang.foreign.Arena.ofConfined()) {
+        var segment = probeArena.allocate(java.lang.foreign.ValueLayout.JAVA_INT);
+        segment.set(java.lang.foreign.ValueLayout.JAVA_INT, 0, i);
+        assertEquals(i, segment.get(java.lang.foreign.ValueLayout.JAVA_INT, 0));
+      }
+    }
+  }
 }

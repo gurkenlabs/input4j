@@ -17,9 +17,11 @@ class Linux {
 
   private static final Logger log = Logger.getLogger(Linux.class.getName());
   final static int ERROR = -1;
+  final static int ENOENT = 2;
+  final static int EBADF = 9;
   final static int EAGAIN = 11;
   final static int EACCES = 13;
-  final static int ENOENT = 2;
+  final static int ENODEV = 19;
 
   final static int O_RDONLY = 0;
   final static int O_RDWR = 2;
@@ -95,13 +97,18 @@ class Linux {
     strerror = downcallHandle(HANDLE_STRERROR, FunctionDescriptor.of(ADDRESS, JAVA_INT));
 
     ValueLayout sizeT = IS_32_BIT ? JAVA_INT : JAVA_LONG;
+    ValueLayout ssizeT = IS_32_BIT ? JAVA_INT : JAVA_LONG;
 
     handles.put(HANDLE_OPEN, downcallHandle(HANDLE_OPEN, FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT), ERRNO));
     handles.put(HANDLE_CLOSE, downcallHandle(HANDLE_CLOSE, FunctionDescriptor.of(JAVA_INT, JAVA_INT), ERRNO));
     handles.put(HANDLE_IOCTL, downcallHandle(HANDLE_IOCTL, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), ERRNO));
-    handles.put(HANDLE_READ, downcallHandle(HANDLE_READ, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, sizeT), ERRNO));
+    handles.put(HANDLE_READ, downcallHandle(HANDLE_READ, FunctionDescriptor.of(ssizeT, JAVA_INT, ADDRESS, sizeT), ERRNO));
     handles.put(HANDLE_SELECT, downcallHandle(HANDLE_SELECT, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS, sizeT), ERRNO));
-    handles.put(HANDLE_WRITE, downcallHandle(HANDLE_WRITE, FunctionDescriptor.of(sizeT, JAVA_INT, ADDRESS, sizeT), ERRNO));
+    handles.put(HANDLE_WRITE, downcallHandle(HANDLE_WRITE, FunctionDescriptor.of(ssizeT, JAVA_INT, ADDRESS, sizeT), ERRNO));
+  }
+
+  static MethodHandle getHandle(String name) {
+    return handles.get(name);
   }
 
   /**
@@ -148,7 +155,7 @@ class Linux {
     invoke(HANDLE_CLOSE, memoryArena, fd);
   }
 
- /**
+  /**
    * Read an input event from the device.
    *
    * @param memoryArena the memory arena to allocate memory from
@@ -156,14 +163,40 @@ class Linux {
    * @return the input event or null if no more events are available
    */
   public static input_event read(Arena memoryArena, int fd) {
+    return read(memoryArena, fd, null);
+  }
+
+  /**
+   * Read an input event from the device, capturing errno if an error occurs.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @param outErrno    an array of size 1 to receive the errno value, or null
+   * @return the input event or null if no more events are available or an error occurred
+   */
+  public static input_event read(Arena memoryArena, int fd, int[] outErrno) {
     MemorySegment inputEventMemorySegment = memoryArena.allocate(input_event.$LAYOUT);
-    int result = invoke("read", memoryArena, fd, inputEventMemorySegment, input_event.$LAYOUT.byteSize());
+    MemorySegment capturedState = memoryArena.allocate(Linker.Option.captureStateLayout());
+    return read(inputEventMemorySegment, capturedState, fd, outErrno);
+  }
+
+  /**
+   * Read an input event using pre-allocated native segments to avoid memory allocation during polling.
+   *
+   * @param inputEventSegment pre-allocated segment for input_event
+   * @param capturedState     pre-allocated segment for captureState
+   * @param fd                the file descriptor of the event device
+   * @param outErrno          an array of size 1 to receive the errno value, or null
+   * @return the input event or null if no more events are available or an error occurred
+   */
+  public static input_event read(MemorySegment inputEventSegment, MemorySegment capturedState, int fd, int[] outErrno) {
+    int result = invokeWithCapturedState(HANDLE_READ, capturedState, outErrno, fd, inputEventSegment, input_event.$LAYOUT.byteSize());
     if (result == ERROR) {
       log.log(Level.FINE, "No more events to read from device ({0})", fd);
       return null;
     }
 
-    return input_event.read(inputEventMemorySegment);
+    return input_event.read(inputEventSegment);
   }
 
   /**
@@ -205,7 +238,18 @@ class Linux {
     return versionMemorySegment.get(JAVA_INT, 0);
   }
 
-  /**
+  static int getEventDeviceVersion(MemorySegment versionSegment, MemorySegment capturedState, int fd) {
+    int[] outErrno = new int[1];
+    int result = invokeWithCapturedState(HANDLE_IOCTL, capturedState, outErrno, fd, EVIOCGVERSION, versionSegment);
+    if (result == ERROR) {
+      if (outErrno[0] != ENODEV && outErrno[0] != EBADF) {
+        log.log(Level.SEVERE, "Failed to get device version for device ({0})", fd);
+      }
+      return 0;
+    }
+
+    return versionSegment.get(JAVA_INT, 0);
+  }  /**
    * Get the id of the event device.
    *
    * @param memoryArena the memory arena to allocate memory from
@@ -271,9 +315,12 @@ class Linux {
    * @return 0 on success, or -1 if an error occurred
    */
   static int removeEffect(Arena memoryArena, int fd, int effectId) {
-    int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCRMFF, effectId);
+    int[] outErrno = new int[1];
+    int result = invoke(HANDLE_IOCTL, memoryArena, outErrno, fd, EVIOCRMFF, effectId);
     if (result == ERROR) {
-      log.log(Level.SEVERE, "Failed to remove effect ({0}) from device ({1})", new Object[] {effectId, fd});
+      if (outErrno[0] != ENODEV && outErrno[0] != EBADF) {
+        log.log(Level.SEVERE, "Failed to remove effect ({0}) from device ({1})", new Object[] {effectId, fd});
+      }
       return ERROR;
     }
     return result;
@@ -294,9 +341,12 @@ class Linux {
   static int writeEvent(Arena memoryArena, int fd, input_event event) {
     var eventSegment = memoryArena.allocate(input_event.$LAYOUT);
     event.write(eventSegment);
-    int result = invoke(HANDLE_WRITE, memoryArena, fd, eventSegment, input_event.$LAYOUT.byteSize());
+    int[] outErrno = new int[1];
+    int result = invoke(HANDLE_WRITE, memoryArena, outErrno, fd, eventSegment, input_event.$LAYOUT.byteSize());
     if (result == ERROR) {
-      log.log(Level.WARNING, "Failed to write event to device ({0})", fd);
+      if (outErrno[0] != ENODEV && outErrno[0] != EBADF) {
+        log.log(Level.WARNING, "Failed to write event to device ({0})", fd);
+      }
       return ERROR;
     }
     return result;
@@ -357,8 +407,7 @@ class Linux {
     return invoke(handleName, memoryArena, null, args);
   }
 
-  private static int invoke(String handleName, Arena memoryArena, int[] outErrno, Object... args) {
-    var capturedState = memoryArena.allocate(Linker.Option.captureStateLayout());
+  private static int invokeWithCapturedState(String handleName, MemorySegment capturedState, int[] outErrno, Object... args) {
     var methodHandle = handles.get(handleName);
     if (methodHandle == null) {
       log.log(Level.SEVERE, "Could not find method handle for ''{0}''", handleName);
@@ -367,18 +416,36 @@ class Linux {
 
     try {
       var result = ERROR;
-      if (args == null || args.length == 0) {
-        result = (int) methodHandle.invoke(capturedState);
-      } else if (args.length == 1) {
-        result = (int) methodHandle.invoke(capturedState, args[0]);
-      } else if (args.length == 2) {
-        result = (int) methodHandle.invoke(capturedState, args[0], args[1]);
-      } else if (args.length == 3) {
-        result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2]);
-      } else if (args.length == 4) {
-        result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3]);
-      } else if (args.length == 5) {
-        result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3], args[4]);
+      if (methodHandle.type().returnType() == long.class) {
+        long rawResult = ERROR;
+        if (args == null || args.length == 0) {
+          rawResult = (long) methodHandle.invoke(capturedState);
+        } else if (args.length == 1) {
+          rawResult = (long) methodHandle.invoke(capturedState, args[0]);
+        } else if (args.length == 2) {
+          rawResult = (long) methodHandle.invoke(capturedState, args[0], args[1]);
+        } else if (args.length == 3) {
+          rawResult = (long) methodHandle.invoke(capturedState, args[0], args[1], args[2]);
+        } else if (args.length == 4) {
+          rawResult = (long) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3]);
+        } else if (args.length == 5) {
+          rawResult = (long) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3], args[4]);
+        }
+        result = (int) rawResult;
+      } else {
+        if (args == null || args.length == 0) {
+          result = (int) methodHandle.invoke(capturedState);
+        } else if (args.length == 1) {
+          result = (int) methodHandle.invoke(capturedState, args[0]);
+        } else if (args.length == 2) {
+          result = (int) methodHandle.invoke(capturedState, args[0], args[1]);
+        } else if (args.length == 3) {
+          result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2]);
+        } else if (args.length == 4) {
+          result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3]);
+        } else if (args.length == 5) {
+          result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3], args[4]);
+        }
       }
 
       if (result == ERROR) {
@@ -389,6 +456,13 @@ class Linux {
 
         // we are using non-blocking mode, so we can ignore EAGAIN because it is not an error, just a signal that we're done reading
         if (errorNo == EAGAIN) {
+          return result;
+        }
+
+        // ENODEV and EBADF are expected when a device is disconnected/unplugged
+        if (errorNo == ENODEV || errorNo == EBADF) {
+          log.log(Level.FINE, "Device disconnected: could not invoke ''{0}'' - {1}({2})",
+              new Object[] {handleName, getErrorString(errorNo), errorNo});
           return result;
         }
 
@@ -407,6 +481,11 @@ class Linux {
     }
 
     return ERROR;
+  }
+
+  private static int invoke(String handleName, Arena memoryArena, int[] outErrno, Object... args) {
+    var capturedState = memoryArena.allocate(Linker.Option.captureStateLayout());
+    return invokeWithCapturedState(handleName, capturedState, outErrno, args);
   }
 
   private static int invokeWithErrno(String handleName, Arena memoryArena, int[] outErrno, Object... args) {
