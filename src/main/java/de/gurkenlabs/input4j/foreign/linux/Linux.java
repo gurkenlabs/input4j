@@ -97,13 +97,18 @@ class Linux {
     strerror = downcallHandle(HANDLE_STRERROR, FunctionDescriptor.of(ADDRESS, JAVA_INT));
 
     ValueLayout sizeT = IS_32_BIT ? JAVA_INT : JAVA_LONG;
+    ValueLayout ssizeT = IS_32_BIT ? JAVA_INT : JAVA_LONG;
 
     handles.put(HANDLE_OPEN, downcallHandle(HANDLE_OPEN, FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT), ERRNO));
     handles.put(HANDLE_CLOSE, downcallHandle(HANDLE_CLOSE, FunctionDescriptor.of(JAVA_INT, JAVA_INT), ERRNO));
     handles.put(HANDLE_IOCTL, downcallHandle(HANDLE_IOCTL, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), ERRNO));
-    handles.put(HANDLE_READ, downcallHandle(HANDLE_READ, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, sizeT), ERRNO));
+    handles.put(HANDLE_READ, downcallHandle(HANDLE_READ, FunctionDescriptor.of(ssizeT, JAVA_INT, ADDRESS, sizeT), ERRNO));
     handles.put(HANDLE_SELECT, downcallHandle(HANDLE_SELECT, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS, sizeT), ERRNO));
-    handles.put(HANDLE_WRITE, downcallHandle(HANDLE_WRITE, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, sizeT), ERRNO));
+    handles.put(HANDLE_WRITE, downcallHandle(HANDLE_WRITE, FunctionDescriptor.of(ssizeT, JAVA_INT, ADDRESS, sizeT), ERRNO));
+  }
+
+  static MethodHandle getHandle(String name) {
+    return handles.get(name);
   }
 
   /**
@@ -185,7 +190,7 @@ class Linux {
    * @return the input event or null if no more events are available or an error occurred
    */
   public static input_event read(MemorySegment inputEventSegment, MemorySegment capturedState, int fd, int[] outErrno) {
-    int result = invokeWithCapturedState("read", capturedState, outErrno, fd, inputEventSegment, input_event.$LAYOUT.byteSize());
+    int result = invokeWithCapturedState(HANDLE_READ, capturedState, outErrno, fd, inputEventSegment, input_event.$LAYOUT.byteSize());
     if (result == ERROR) {
       log.log(Level.FINE, "No more events to read from device ({0})", fd);
       return null;
@@ -232,6 +237,8 @@ class Linux {
 
     return versionMemorySegment.get(JAVA_INT, 0);
   }
+
+
 
   /**
    * Get the id of the event device.
@@ -400,18 +407,36 @@ class Linux {
 
     try {
       var result = ERROR;
-      if (args == null || args.length == 0) {
-        result = (int) methodHandle.invoke(capturedState);
-      } else if (args.length == 1) {
-        result = (int) methodHandle.invoke(capturedState, args[0]);
-      } else if (args.length == 2) {
-        result = (int) methodHandle.invoke(capturedState, args[0], args[1]);
-      } else if (args.length == 3) {
-        result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2]);
-      } else if (args.length == 4) {
-        result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3]);
-      } else if (args.length == 5) {
-        result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3], args[4]);
+      if (methodHandle.type().returnType() == long.class) {
+        long rawResult = ERROR;
+        if (args == null || args.length == 0) {
+          rawResult = (long) methodHandle.invoke(capturedState);
+        } else if (args.length == 1) {
+          rawResult = (long) methodHandle.invoke(capturedState, args[0]);
+        } else if (args.length == 2) {
+          rawResult = (long) methodHandle.invoke(capturedState, args[0], args[1]);
+        } else if (args.length == 3) {
+          rawResult = (long) methodHandle.invoke(capturedState, args[0], args[1], args[2]);
+        } else if (args.length == 4) {
+          rawResult = (long) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3]);
+        } else if (args.length == 5) {
+          rawResult = (long) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3], args[4]);
+        }
+        result = (int) rawResult;
+      } else {
+        if (args == null || args.length == 0) {
+          result = (int) methodHandle.invoke(capturedState);
+        } else if (args.length == 1) {
+          result = (int) methodHandle.invoke(capturedState, args[0]);
+        } else if (args.length == 2) {
+          result = (int) methodHandle.invoke(capturedState, args[0], args[1]);
+        } else if (args.length == 3) {
+          result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2]);
+        } else if (args.length == 4) {
+          result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3]);
+        } else if (args.length == 5) {
+          result = (int) methodHandle.invoke(capturedState, args[0], args[1], args[2], args[3], args[4]);
+        }
       }
 
       if (result == ERROR) {

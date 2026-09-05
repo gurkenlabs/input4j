@@ -101,4 +101,22 @@ public class LinuxPermissionTests {
       }
     }
   }
+
+  @Test
+  @EnabledOnOs(OS.LINUX)
+  void testReadWriteHandleReturnTypes() {
+    var readHandle = Linux.getHandle(Linux.HANDLE_READ);
+    var writeHandle = Linux.getHandle(Linux.HANDLE_WRITE);
+    assertNotNull(readHandle, "HANDLE_READ downcall handle must be present");
+    assertNotNull(writeHandle, "HANDLE_WRITE downcall handle must be present");
+
+    boolean is32Bit = System.getProperty("os.arch", "").toLowerCase().matches(".*(arm|i[3-6]86|x86).*")
+        && !System.getProperty("os.arch", "").toLowerCase().contains("64");
+    Class<?> expectedReturnType = is32Bit ? int.class : long.class;
+
+    assertEquals(expectedReturnType, readHandle.type().returnType(),
+        "read downcall handle return type must match ssize_t for the architecture");
+    assertEquals(expectedReturnType, writeHandle.type().returnType(),
+        "write downcall handle return type must match ssize_t for the architecture");
+  }
 }
