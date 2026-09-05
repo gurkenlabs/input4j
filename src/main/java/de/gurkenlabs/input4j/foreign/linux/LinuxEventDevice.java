@@ -3,6 +3,8 @@ package de.gurkenlabs.input4j.foreign.linux;
 import de.gurkenlabs.input4j.InputDevice;
 
 import java.lang.foreign.Arena;
+import java.lang.foreign.Linker;
+import java.lang.foreign.MemorySegment;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -75,6 +77,12 @@ class LinuxEventDevice {
   int currentEffectId = -1;
   float currentStrongMagnitude = 0f;
   float currentWeakMagnitude = 0f;
+  volatile boolean isDisconnected = false;
+  private boolean closed = false;
+
+  final MemorySegment inputEventSegment;
+  final MemorySegment capturedStateSegment;
+  final int[] pollErrno = new int[1];
 
   public int version;
 
@@ -84,6 +92,8 @@ class LinuxEventDevice {
     this.fd = Linux.open(memoryArena, this.filename);
     this.openedReadOnly = (this.fd != Linux.ERROR);
     if (this.fd == Linux.ERROR) {
+      this.inputEventSegment = null;
+      this.capturedStateSegment = null;
       this.name = null;
       this.id = null;
       this.version = 0;
@@ -93,6 +103,8 @@ class LinuxEventDevice {
       this.supportsGain = false;
       this.maxEffects = 0;
     } else {
+      this.inputEventSegment = memoryArena.allocate(input_event.$LAYOUT);
+      this.capturedStateSegment = memoryArena.allocate(Linker.Option.captureStateLayout());
       this.name = Linux.getEventDeviceName(memoryArena, this.fd);
       this.id = Linux.getEventDeviceId(memoryArena, this.fd);
       this.version = Linux.getEventDeviceVersion(memoryArena, this.fd);
@@ -135,6 +147,8 @@ class LinuxEventDevice {
     this.openedReadOnly = isReadOnly;
 
     if (this.fd == Linux.ERROR) {
+      this.inputEventSegment = null;
+      this.capturedStateSegment = null;
       this.name = null;
       this.id = null;
       this.version = 0;
@@ -144,6 +158,8 @@ class LinuxEventDevice {
       this.supportsGain = false;
       this.maxEffects = 0;
     } else {
+      this.inputEventSegment = memoryArena.allocate(input_event.$LAYOUT);
+      this.capturedStateSegment = memoryArena.allocate(Linker.Option.captureStateLayout());
       this.name = Linux.getEventDeviceName(memoryArena, this.fd);
       this.id = Linux.getEventDeviceId(memoryArena, this.fd);
       this.version = Linux.getEventDeviceVersion(memoryArena, this.fd);
@@ -163,6 +179,13 @@ class LinuxEventDevice {
     }
   }
 
+  public input_event readEvent(int[] outErrno) {
+    if (this.fd == Linux.ERROR || this.closed || this.isDisconnected) {
+      return null;
+    }
+    return Linux.read(this.inputEventSegment, this.capturedStateSegment, this.fd, outErrno);
+  }
+
   public static boolean isBitSet(byte[] bits, int bit) {
     return (bits[bit / 8] & (1 << (bit % 8))) != 0;
   }
@@ -179,11 +202,12 @@ class LinuxEventDevice {
   }
 
   public void close(Arena memoryArena) {
-    if (this.fd == Linux.ERROR) {
+    if (this.fd == Linux.ERROR || this.closed) {
       return;
     }
+    this.closed = true;
 
-    if (this.currentEffectId != -1) {
+    if (this.currentEffectId != -1 && !this.isDisconnected) {
       var stopEvent = new input_event();
       stopEvent.type = (short) EV_FF;
       stopEvent.code = (short) this.currentEffectId;

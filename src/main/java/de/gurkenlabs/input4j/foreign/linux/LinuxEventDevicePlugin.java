@@ -14,12 +14,14 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -41,8 +43,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
   @Override
   public void internalInitDevices(Frame owner) {
-    initEventDevices();
-    this.setDevices(this.nativeDevices.values().stream().map(d -> d.inputDevice).toList());
+    this.setDevices(refreshInputDevices());
   }
 
   @Override
@@ -58,8 +59,60 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
   @Override
   protected Collection<InputDevice> refreshInputDevices() {
-    // TODO: implement refresh support
-    return this.getAll();
+    final File dev = new File("/dev/input");
+    File[] eventDeviceFiles = dev.listFiles((File _, String name) -> name.startsWith("event"));
+    if (eventDeviceFiles == null) {
+      eventDeviceFiles = new File[0];
+    } else {
+      Arrays.sort(eventDeviceFiles, Comparator.comparing(File::getName));
+    }
+
+    var currentPaths =
+        Arrays.stream(eventDeviceFiles)
+            .map(File::getAbsolutePath)
+            .collect(Collectors.toSet());
+
+    // Check existing native devices: remove any that are no longer present or disconnected
+    for (var entry : this.nativeDevices.entrySet()) {
+      var deviceId = entry.getKey();
+      var device = entry.getValue();
+
+      boolean disconnected =
+          device.isDisconnected
+              || !currentPaths.contains(device.filename)
+              || !new File(device.filename).exists()
+              || isDeviceDisconnected(device);
+
+      if (disconnected) {
+        device.close(this.memoryArena);
+        this.nativeDevices.remove(deviceId);
+      }
+    }
+
+    var refreshedDevices = new ArrayList<InputDevice>();
+    for (var eventDeviceFile : eventDeviceFiles) {
+      var path = eventDeviceFile.getAbsolutePath();
+      var existingDevice = this.nativeDevices.get(path);
+      if (existingDevice != null) {
+        refreshedDevices.add(existingDevice.inputDevice);
+        continue;
+      }
+
+      var newDevice = initSingleDevice(eventDeviceFile);
+      if (newDevice != null) {
+        this.nativeDevices.put(newDevice.inputDevice.getID(), newDevice);
+        refreshedDevices.add(newDevice.inputDevice);
+      }
+    }
+
+    return refreshedDevices;
+  }
+
+  private boolean isDeviceDisconnected(LinuxEventDevice device) {
+    if (device.fd == Linux.ERROR) {
+      return true;
+    }
+    return Linux.getEventDeviceVersion(this.memoryArena, device.fd) == 0;
   }
 
 
@@ -134,74 +187,66 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     return Linux.ERROR;
   }
 
-  private void initEventDevices() {
-    final File dev = new File("/dev/input");
-    File[] eventDeviceFiles = dev.listFiles((File _, String name) -> name.startsWith("event"));
-    if (eventDeviceFiles == null) {
-      log.log(Level.SEVERE, "No event devices found");
-      return;
-    } else {
-      Arrays.sort(eventDeviceFiles, Comparator.comparing(File::getName));
+  private LinuxEventDevice initSingleDevice(File eventDeviceFile) {
+    LinuxEventDevice device = new LinuxEventDevice(this.memoryArena, eventDeviceFile.getAbsolutePath(), true);
+    if (device.fd == Linux.ERROR) {
+      log.log(Level.INFO, "Could not open device (permission denied): " + eventDeviceFile.getAbsolutePath());
+      return null;
     }
 
-    for (var eventDeviceFile : eventDeviceFiles) {
-      LinuxEventDevice device = new LinuxEventDevice(this.memoryArena, eventDeviceFile.getAbsolutePath(), true);
-      if (device.fd == Linux.ERROR) {
-        log.log(Level.INFO, "Could not open device (permission denied): " + eventDeviceFile.getAbsolutePath());
-        continue;
-      }
-
-      if (device.openedReadOnly) {
-        log.log(Level.INFO, "Device opened read-only (no force feedback): " + device.filename);
-      }
-
-      // ignore some devices since they are not useful for input
-      if (device.name != null
-        && (device.name.toUpperCase().contains("VIDEO BUS")
-        || device.name.toUpperCase().contains("VIRTUAL")
-        || device.name.toUpperCase().contains("POWER BUTTON")
-        || device.name.toUpperCase().contains("HDA INTEL")
-        || device.name.toUpperCase().contains("HDMI"))) {
-        log.log(Level.FINE, "Ignoring virtual device: " + device.name);
-        continue;
-      }
-
-      if (device.supportsForceFeedback) {
-        log.log(Level.FINE, "Device supports force feedback: " + device.name + " with " + device.maxEffects + " effects");
-        if (device.supportsGain) {
-          Linux.setGain(this.memoryArena, device.fd, MAX_MAGNITUDE);
-        }
-      }
-
-      int vendorId = device.id != null ? Short.toUnsignedInt(device.id.vendor) : -1;
-      int productId = device.id != null ? Short.toUnsignedInt(device.id.product) : -1;
-      String displayName = de.gurkenlabs.input4j.ControllerDatabase.getDisplayName(vendorId, productId);
-
-      var inputDevice = new InputDevice(eventDeviceFile.getAbsolutePath(), device.name, device.name, vendorId, productId, displayName, this::pollLinuxEventDevice, this::rumbleLinuxEventDevice, this::getBatteryInfo);
-      device.inputDevice = inputDevice;
-
-      // Check for available event types
-      byte[] eventTypes = Linux.getBits(this.memoryArena, LinuxEventDevice.EV_SYN, device.fd);
-      if (eventTypes == null) {
-        log.log(Level.SEVERE, "Failed to get event types for " + device.filename);
-        continue;
-      }
-
-      // Check for available components per event type (EV_KEY, EV_ABS, EV_REL, etc.)
-      addEventComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_KEY, LinuxEventDevice.KEY_MAX, "EV_KEY");
-      addEventComponents(memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_ABS, LinuxEventDevice.ABS_MAX, "EV_ABS");
-
-      // ignore devices without components
-      // also ignore devices that have no buttons, axis or dpad (this should also exclude keyboards)
-      if (device.componentList.isEmpty() || device.componentList.stream().noneMatch(x -> x.componentType == ComponentType.BUTTON || x.componentType == ComponentType.AXIS)) {
-        continue;
-      }
-
-      LinuxVirtualComponentHandler.prepareVirtualComponents(device.inputDevice, inputDevice.getComponents());
-      String accessMode = device.supportsForceFeedback ? "full" : "read-only";
-      log.log(Level.INFO, "Found input device: " + device.filename + " - " + device.name + " (" + accessMode + ") with " + device.componentList.size() + " components");
-      this.nativeDevices.put(inputDevice.getID(), device);
+    if (device.openedReadOnly) {
+      log.log(Level.INFO, "Device opened read-only (no force feedback): " + device.filename);
     }
+
+    // ignore some devices since they are not useful for input
+    if (device.name != null
+      && (device.name.toUpperCase().contains("VIDEO BUS")
+      || device.name.toUpperCase().contains("VIRTUAL")
+      || device.name.toUpperCase().contains("POWER BUTTON")
+      || device.name.toUpperCase().contains("HDA INTEL")
+      || device.name.toUpperCase().contains("HDMI"))) {
+      log.log(Level.FINE, "Ignoring virtual device: " + device.name);
+      device.close(this.memoryArena);
+      return null;
+    }
+
+    // Check for available event types
+    byte[] eventTypes = Linux.getBits(this.memoryArena, LinuxEventDevice.EV_SYN, device.fd);
+    if (eventTypes == null) {
+      log.log(Level.SEVERE, "Failed to get event types for " + device.filename);
+      device.close(this.memoryArena);
+      return null;
+    }
+
+    if (device.supportsForceFeedback) {
+      log.log(Level.FINE, "Device supports force feedback: " + device.name + " with " + device.maxEffects + " effects");
+      if (device.supportsGain) {
+        Linux.setGain(this.memoryArena, device.fd, MAX_MAGNITUDE);
+      }
+    }
+
+    int vendorId = device.id != null ? Short.toUnsignedInt(device.id.vendor) : -1;
+    int productId = device.id != null ? Short.toUnsignedInt(device.id.product) : -1;
+    String displayName = de.gurkenlabs.input4j.ControllerDatabase.getDisplayName(vendorId, productId);
+
+    var inputDevice = new InputDevice(eventDeviceFile.getAbsolutePath(), device.name, device.name, vendorId, productId, displayName, this::pollLinuxEventDevice, this::rumbleLinuxEventDevice, this::getBatteryInfo);
+    device.inputDevice = inputDevice;
+
+    // Check for available components per event type (EV_KEY, EV_ABS, EV_REL, etc.)
+    addEventComponents(this.memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_KEY, LinuxEventDevice.KEY_MAX, "EV_KEY");
+    addEventComponents(this.memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_ABS, LinuxEventDevice.ABS_MAX, "EV_ABS");
+
+    // ignore devices without components
+    // also ignore devices that have no buttons, axis or dpad (this should also exclude keyboards)
+    if (device.componentList.isEmpty() || device.componentList.stream().noneMatch(x -> x.componentType == ComponentType.BUTTON || x.componentType == ComponentType.AXIS)) {
+      device.close(this.memoryArena);
+      return null;
+    }
+
+    LinuxVirtualComponentHandler.prepareVirtualComponents(device.inputDevice, inputDevice.getComponents());
+    String accessMode = device.supportsForceFeedback ? "full" : "read-only";
+    log.log(Level.INFO, "Found input device: " + device.filename + " - " + device.name + " (" + accessMode + ") with " + device.componentList.size() + " components");
+    return device;
   }
 
   private void addEventComponents(Arena memoryArena, LinuxEventDevice device, InputDevice inputDevice, byte[] eventTypes, int eventType, int max, String componentType) {
@@ -251,11 +296,13 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
    * </p>
    */
   private float[] pollLinuxEventDevice(InputDevice inputDevice) {
+    this.refreshDevices();
+
     var emptyValues = new float[inputDevice.getComponents().size()];
 
     // find native LinuxEventDevice and poll it
     var linuxEventDevice = this.nativeDevices.getOrDefault(inputDevice.getID(), null);
-    if (linuxEventDevice == null) {
+    if (linuxEventDevice == null || linuxEventDevice.isDisconnected) {
       log.log(Level.WARNING, "LinuxEventDevice not found for input device " + inputDevice.getName());
       return emptyValues;
     }
@@ -265,8 +312,9 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       linuxEventDevice.currentValues = emptyValues;
     }
 
+    linuxEventDevice.pollErrno[0] = 0;
     input_event inputEvent;
-    while ((inputEvent = Linux.read(this.memoryArena, linuxEventDevice.fd)) != null) {
+    while ((inputEvent = linuxEventDevice.readEvent(linuxEventDevice.pollErrno)) != null) {
       if (inputEvent.type == LinuxEventDevice.EV_SYN
         || inputEvent.type == LinuxEventDevice.EV_MSC
         || inputEvent.type == LinuxEventDevice.EV_REL) {
@@ -286,6 +334,12 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       }
 
       linuxEventDevice.currentValues[componentIndex] = normalizeInputValue(inputEvent, nativeComponent);
+    }
+
+    if (linuxEventDevice.pollErrno[0] == Linux.ENODEV || linuxEventDevice.pollErrno[0] == Linux.EBADF) {
+      linuxEventDevice.isDisconnected = true;
+      this.refreshDevices(true);
+      return emptyValues;
     }
 
     var polledValues = linuxEventDevice.currentValues.clone();
@@ -373,7 +427,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
    */
   private void rumbleLinuxEventDevice(InputDevice inputDevice, float[] intensity) {
     var linuxEventDevice = this.nativeDevices.getOrDefault(inputDevice.getID(), null);
-    if (linuxEventDevice == null) {
+    if (linuxEventDevice == null || linuxEventDevice.isDisconnected) {
       log.log(Level.WARNING, "LinuxEventDevice not found for input device " + inputDevice.getName());
       return;
     }
@@ -486,7 +540,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
 
   private BatteryInfo getBatteryInfo(InputDevice inputDevice) {
     var device = nativeDevices.get(inputDevice.getID());
-    if (device == null || device.id == null) {
+    if (device == null || device.isDisconnected || device.id == null) {
       return null;
     }
 
