@@ -261,4 +261,28 @@ public class LinuxEventDevicePluginTests {
     }
     return array;
   }
+
+  @Test
+  void isIgnoredDeviceName_filtersKnownNonGamepads() {
+    assertTrue(LinuxEventDevicePlugin.isIgnoredDeviceName("Video Bus"));
+    assertTrue(LinuxEventDevicePlugin.isIgnoredDeviceName("Virtual Core Pointer"));
+    assertTrue(LinuxEventDevicePlugin.isIgnoredDeviceName("Power Button"));
+    assertTrue(LinuxEventDevicePlugin.isIgnoredDeviceName("HDA Intel PCH Front Headphone"));
+    assertTrue(LinuxEventDevicePlugin.isIgnoredDeviceName("HDA Intel PCH Line Out"));
+    assertTrue(LinuxEventDevicePlugin.isIgnoredDeviceName("HDMI / DisplayPort"));
+    assertFalse(LinuxEventDevicePlugin.isIgnoredDeviceName("Microsoft X-Box 360 pad"));
+    assertFalse(LinuxEventDevicePlugin.isIgnoredDeviceName("Sony Interactive Entertainment Wireless Controller"));
+    assertFalse(LinuxEventDevicePlugin.isIgnoredDeviceName(null));
+  }
+
+  @Test
+  void testCandidateProbeConfinedArenaLifecycle() {
+    for (int i = 0; i < 1000; i++) {
+      try (java.lang.foreign.Arena probeArena = java.lang.foreign.Arena.ofConfined()) {
+        var segment = probeArena.allocate(java.lang.foreign.ValueLayout.JAVA_INT);
+        segment.set(java.lang.foreign.ValueLayout.JAVA_INT, 0, i);
+        assertEquals(i, segment.get(java.lang.foreign.ValueLayout.JAVA_INT, 0));
+      }
+    }
+  }
 }

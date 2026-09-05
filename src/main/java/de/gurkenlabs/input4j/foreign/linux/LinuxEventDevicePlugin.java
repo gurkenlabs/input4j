@@ -38,7 +38,6 @@ import java.util.stream.Stream;
  * </ul>
  */
 public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
-  private final Arena memoryArena = Arena.ofShared();
   private final Map<String, LinuxEventDevice> nativeDevices = new ConcurrentHashMap<>();
 
   @Override
@@ -50,11 +49,10 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
   public void close() {
     super.close();
     for (LinuxEventDevice device : nativeDevices.values()) {
-      device.close(this.memoryArena);
+      device.close();
     }
 
     this.nativeDevices.clear();
-    memoryArena.close();
   }
 
   @Override
@@ -78,13 +76,12 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       var device = entry.getValue();
 
       boolean disconnected =
-          device.isDisconnected
+          device.isDisconnected()
               || !currentPaths.contains(device.filename)
-              || !new File(device.filename).exists()
-              || isDeviceDisconnected(device);
+              || !new File(device.filename).exists();
 
       if (disconnected) {
-        device.close(this.memoryArena);
+        device.close();
         this.nativeDevices.remove(deviceId);
       }
     }
@@ -106,13 +103,6 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     }
 
     return refreshedDevices;
-  }
-
-  private boolean isDeviceDisconnected(LinuxEventDevice device) {
-    if (device.fd == Linux.ERROR) {
-      return true;
-    }
-    return Linux.getEventDeviceVersion(this.memoryArena, device.fd) == 0;
   }
 
 
@@ -187,52 +177,75 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     return Linux.ERROR;
   }
 
+  static boolean isIgnoredDeviceName(String name) {
+    if (name == null) {
+      return false;
+    }
+    var upper = name.toUpperCase();
+    return upper.contains("VIDEO BUS")
+        || upper.contains("VIRTUAL")
+        || upper.contains("POWER BUTTON")
+        || upper.contains("HDA INTEL")
+        || upper.contains("HDMI");
+  }
+
   private LinuxEventDevice initSingleDevice(File eventDeviceFile) {
-    LinuxEventDevice device = new LinuxEventDevice(this.memoryArena, eventDeviceFile.getAbsolutePath(), true);
+    String path = eventDeviceFile.getAbsolutePath();
+
+    // 1. Probe candidate node using a short-lived confined arena
+    byte[] probeKeyBits;
+    byte[] probeAbsBits;
+    try (Arena probeArena = Arena.ofConfined()) {
+      int probeFd = Linux.open(probeArena, path);
+      if (probeFd == Linux.ERROR) {
+        log.log(Level.INFO, "Could not open device (permission denied): {0}", path);
+        return null;
+      }
+
+      try {
+        String deviceName = Linux.getEventDeviceName(probeArena, probeFd);
+        if (isIgnoredDeviceName(deviceName)) {
+          log.log(Level.FINE, "Ignoring virtual device: {0}", deviceName);
+          return null;
+        }
+
+        byte[] eventTypes = Linux.getBits(probeArena, LinuxEventDevice.EV_SYN, probeFd);
+        if (eventTypes == null) {
+          log.log(Level.SEVERE, "Failed to get event types for {0}", path);
+          return null;
+        }
+
+        probeKeyBits = LinuxEventDevice.isBitSet(eventTypes, LinuxEventDevice.EV_KEY)
+            ? Linux.getBits(probeArena, LinuxEventDevice.EV_KEY, probeFd) : null;
+        probeAbsBits = LinuxEventDevice.isBitSet(eventTypes, LinuxEventDevice.EV_ABS)
+            ? Linux.getBits(probeArena, LinuxEventDevice.EV_ABS, probeFd) : null;
+
+        if (!isGamepadOrJoystick(probeKeyBits, probeAbsBits)) {
+          log.log(Level.FINE, "Ignoring non-gamepad device: {0} ({1})", new Object[] {deviceName, path});
+          return null;
+        }
+      } finally {
+        Linux.close(probeArena, probeFd);
+      }
+    }
+
+    // 2. Candidate confirmed as gamepad/joystick! Allocate dedicated arena for its lifetime.
+    Arena deviceArena = Arena.ofShared();
+    LinuxEventDevice device = new LinuxEventDevice(deviceArena, path, true);
     if (device.fd == Linux.ERROR) {
-      log.log(Level.INFO, "Could not open device (permission denied): " + eventDeviceFile.getAbsolutePath());
+      device.close();
       return null;
     }
 
     if (device.openedReadOnly) {
-      log.log(Level.INFO, "Device opened read-only (no force feedback): " + device.filename);
-    }
-
-    // ignore some devices since they are not useful for input
-    if (device.name != null
-      && (device.name.toUpperCase().contains("VIDEO BUS")
-      || device.name.toUpperCase().contains("VIRTUAL")
-      || device.name.toUpperCase().contains("POWER BUTTON")
-      || device.name.toUpperCase().contains("HDA INTEL")
-      || device.name.toUpperCase().contains("HDMI"))) {
-      log.log(Level.FINE, "Ignoring virtual device: " + device.name);
-      device.close(this.memoryArena);
-      return null;
-    }
-
-    // Check for available event types
-    byte[] eventTypes = Linux.getBits(this.memoryArena, LinuxEventDevice.EV_SYN, device.fd);
-    if (eventTypes == null) {
-      log.log(Level.SEVERE, "Failed to get event types for " + device.filename);
-      device.close(this.memoryArena);
-      return null;
-    }
-
-    byte[] keyBits = LinuxEventDevice.isBitSet(eventTypes, LinuxEventDevice.EV_KEY)
-        ? Linux.getBits(this.memoryArena, LinuxEventDevice.EV_KEY, device.fd) : null;
-    byte[] absBits = LinuxEventDevice.isBitSet(eventTypes, LinuxEventDevice.EV_ABS)
-        ? Linux.getBits(this.memoryArena, LinuxEventDevice.EV_ABS, device.fd) : null;
-
-    if (!isGamepadOrJoystick(keyBits, absBits)) {
-      log.log(Level.FINE, "Ignoring non-gamepad device: " + device.name + " (" + device.filename + ")");
-      device.close(this.memoryArena);
-      return null;
+      log.log(Level.INFO, "Device opened read-only (no force feedback): {0}", device.filename);
     }
 
     if (device.supportsForceFeedback) {
-      log.log(Level.FINE, "Device supports force feedback: " + device.name + " with " + device.maxEffects + " effects");
+      log.log(Level.FINE, "Device supports force feedback: {0} with {1} effects",
+          new Object[] {device.name, device.maxEffects});
       if (device.supportsGain) {
-        Linux.setGain(this.memoryArena, device.fd, MAX_MAGNITUDE);
+        Linux.setGain(deviceArena, device.fd, MAX_MAGNITUDE);
       }
     }
 
@@ -240,26 +253,27 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     int productId = device.id != null ? Short.toUnsignedInt(device.id.product) : -1;
     String displayName = de.gurkenlabs.input4j.ControllerDatabase.getDisplayName(vendorId, productId);
 
-    var inputDevice = new InputDevice(eventDeviceFile.getAbsolutePath(), device.name, device.name, vendorId, productId, displayName, this::pollLinuxEventDevice, this::rumbleLinuxEventDevice, this::getBatteryInfo);
+    var inputDevice = new InputDevice(path, device.name, device.name, vendorId, productId, displayName,
+        this::pollLinuxEventDevice, this::rumbleLinuxEventDevice, this::getBatteryInfo);
     device.inputDevice = inputDevice;
 
-    if (keyBits != null) {
-      addEventComponents(this.memoryArena, device, inputDevice, keyBits, LinuxEventDevice.EV_KEY, LinuxEventDevice.KEY_MAX, "EV_KEY");
+    if (probeKeyBits != null) {
+      addEventComponents(deviceArena, device, inputDevice, probeKeyBits, LinuxEventDevice.EV_KEY, LinuxEventDevice.KEY_MAX, "EV_KEY");
     }
-    if (absBits != null) {
-      addEventComponents(this.memoryArena, device, inputDevice, absBits, LinuxEventDevice.EV_ABS, LinuxEventDevice.ABS_MAX, "EV_ABS");
+    if (probeAbsBits != null) {
+      addEventComponents(deviceArena, device, inputDevice, probeAbsBits, LinuxEventDevice.EV_ABS, LinuxEventDevice.ABS_MAX, "EV_ABS");
     }
 
     // ignore devices without components
-    // also ignore devices that have no buttons, axis or dpad (this should also exclude keyboards)
     if (device.componentList.isEmpty() || device.componentList.stream().noneMatch(x -> x.componentType == ComponentType.BUTTON || x.componentType == ComponentType.AXIS)) {
-      device.close(this.memoryArena);
+      device.close();
       return null;
     }
 
     LinuxVirtualComponentHandler.prepareVirtualComponents(device.inputDevice, inputDevice.getComponents());
     String accessMode = device.supportsForceFeedback ? "full" : "read-only";
-    log.log(Level.INFO, "Found input device: " + device.filename + " - " + device.name + " (" + accessMode + ") with " + device.componentList.size() + " components");
+    log.log(Level.INFO, "Found input device: {0} - {1} ({2}) with {3} components",
+        new Object[] {device.filename, device.name, accessMode, device.componentList.size()});
     return device;
   }
 
@@ -459,68 +473,70 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     float strongMagnitude = Math.clamp(intensity[0], 0f, 1f);
     float weakMagnitude = intensity.length > 1 ? Math.clamp(intensity[1], 0f, 1f) : strongMagnitude;
 
-    if (linuxEventDevice.currentEffectId != -1) {
-      if (Math.abs(linuxEventDevice.currentStrongMagnitude - strongMagnitude) >= RUMBLE_THRESHOLD
-          || Math.abs(linuxEventDevice.currentWeakMagnitude - weakMagnitude) >= RUMBLE_THRESHOLD) {
-        Linux.removeEffect(this.memoryArena, linuxEventDevice.fd, linuxEventDevice.currentEffectId);
-        linuxEventDevice.currentEffectId = -1;
-      } else {
+    try (Arena rumbleArena = Arena.ofConfined()) {
+      if (linuxEventDevice.currentEffectId != -1) {
+        if (Math.abs(linuxEventDevice.currentStrongMagnitude - strongMagnitude) >= RUMBLE_THRESHOLD
+            || Math.abs(linuxEventDevice.currentWeakMagnitude - weakMagnitude) >= RUMBLE_THRESHOLD) {
+          Linux.removeEffect(rumbleArena, linuxEventDevice.fd, linuxEventDevice.currentEffectId);
+          linuxEventDevice.currentEffectId = -1;
+        } else {
+          playEventTemplate.type = (short) LinuxEventDevice.EV_FF;
+          playEventTemplate.code = (short) linuxEventDevice.currentEffectId;
+          playEventTemplate.value = 1;
+
+          Linux.writeEvent(rumbleArena, linuxEventDevice.fd, playEventTemplate);
+          return;
+        }
+      }
+
+      if (linuxEventDevice.supportsRumble) {
+        rumbleEffectTemplate.rumble.strong_magnitude = (short) (strongMagnitude * MAX_MAGNITUDE);
+        rumbleEffectTemplate.rumble.weak_magnitude = (short) (weakMagnitude * MAX_MAGNITUDE);
+
+        int effectId = Linux.uploadEffect(rumbleArena, linuxEventDevice.fd, rumbleEffectTemplate);
+        if (effectId == Linux.ERROR) {
+          log.log(Level.WARNING, "Failed to upload rumble effect for device " + inputDevice.getName());
+          return;
+        }
+
+        linuxEventDevice.currentEffectId = effectId;
+        linuxEventDevice.currentStrongMagnitude = strongMagnitude;
+        linuxEventDevice.currentWeakMagnitude = weakMagnitude;
+
         playEventTemplate.type = (short) LinuxEventDevice.EV_FF;
-        playEventTemplate.code = (short) linuxEventDevice.currentEffectId;
+        playEventTemplate.code = (short) effectId;
         playEventTemplate.value = 1;
 
-        Linux.writeEvent(this.memoryArena, linuxEventDevice.fd, playEventTemplate);
-        return;
-      }
-    }
+        int result = Linux.writeEvent(rumbleArena, linuxEventDevice.fd, playEventTemplate);
+        if (result == Linux.ERROR) {
+          log.log(Level.WARNING, "Failed to play rumble effect for device " + inputDevice.getName());
+          Linux.removeEffect(rumbleArena, linuxEventDevice.fd, effectId);
+          linuxEventDevice.currentEffectId = -1;
+        }
+      } else {
+        int magnitude = (int) (strongMagnitude * MAX_MAGNITUDE / 3 + weakMagnitude * MAX_MAGNITUDE / 6);
+        sineEffectTemplate.periodic.magnitude = (short) magnitude;
 
-    if (linuxEventDevice.supportsRumble) {
-      rumbleEffectTemplate.rumble.strong_magnitude = (short) (strongMagnitude * MAX_MAGNITUDE);
-      rumbleEffectTemplate.rumble.weak_magnitude = (short) (weakMagnitude * MAX_MAGNITUDE);
+        int effectId = Linux.uploadEffect(rumbleArena, linuxEventDevice.fd, sineEffectTemplate);
+        if (effectId == Linux.ERROR) {
+          log.log(Level.WARNING, "Failed to upload sine fallback effect for device " + inputDevice.getName());
+          return;
+        }
 
-      int effectId = Linux.uploadEffect(this.memoryArena, linuxEventDevice.fd, rumbleEffectTemplate);
-      if (effectId == Linux.ERROR) {
-        log.log(Level.WARNING, "Failed to upload rumble effect for device " + inputDevice.getName());
-        return;
-      }
+        linuxEventDevice.currentEffectId = effectId;
+        linuxEventDevice.currentStrongMagnitude = strongMagnitude;
+        linuxEventDevice.currentWeakMagnitude = weakMagnitude;
 
-      linuxEventDevice.currentEffectId = effectId;
-      linuxEventDevice.currentStrongMagnitude = strongMagnitude;
-      linuxEventDevice.currentWeakMagnitude = weakMagnitude;
+        playEventTemplate.type = (short) LinuxEventDevice.EV_FF;
+        playEventTemplate.code = (short) effectId;
+        playEventTemplate.value = 1;
 
-      playEventTemplate.type = (short) LinuxEventDevice.EV_FF;
-      playEventTemplate.code = (short) effectId;
-      playEventTemplate.value = 1;
-
-      int result = Linux.writeEvent(this.memoryArena, linuxEventDevice.fd, playEventTemplate);
-      if (result == Linux.ERROR) {
-        log.log(Level.WARNING, "Failed to play rumble effect for device " + inputDevice.getName());
-        Linux.removeEffect(this.memoryArena, linuxEventDevice.fd, effectId);
-        linuxEventDevice.currentEffectId = -1;
-      }
-    } else {
-      int magnitude = (int) (strongMagnitude * MAX_MAGNITUDE / 3 + weakMagnitude * MAX_MAGNITUDE / 6);
-      sineEffectTemplate.periodic.magnitude = (short) magnitude;
-
-      int effectId = Linux.uploadEffect(this.memoryArena, linuxEventDevice.fd, sineEffectTemplate);
-      if (effectId == Linux.ERROR) {
-        log.log(Level.WARNING, "Failed to upload sine fallback effect for device " + inputDevice.getName());
-        return;
-      }
-
-      linuxEventDevice.currentEffectId = effectId;
-      linuxEventDevice.currentStrongMagnitude = strongMagnitude;
-      linuxEventDevice.currentWeakMagnitude = weakMagnitude;
-
-      playEventTemplate.type = (short) LinuxEventDevice.EV_FF;
-      playEventTemplate.code = (short) effectId;
-      playEventTemplate.value = 1;
-
-      int result = Linux.writeEvent(this.memoryArena, linuxEventDevice.fd, playEventTemplate);
-      if (result == Linux.ERROR) {
-        log.log(Level.WARNING, "Failed to play sine fallback effect for device " + inputDevice.getName());
-        Linux.removeEffect(this.memoryArena, linuxEventDevice.fd, effectId);
-        linuxEventDevice.currentEffectId = -1;
+        int result = Linux.writeEvent(rumbleArena, linuxEventDevice.fd, playEventTemplate);
+        if (result == Linux.ERROR) {
+          log.log(Level.WARNING, "Failed to play sine fallback effect for device " + inputDevice.getName());
+          Linux.removeEffect(rumbleArena, linuxEventDevice.fd, effectId);
+          linuxEventDevice.currentEffectId = -1;
+        }
       }
     }
   }
@@ -531,13 +547,15 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     }
 
     if (linuxEventDevice.fd != Linux.ERROR) {
-      stopEventTemplate.type = (short) LinuxEventDevice.EV_FF;
-      stopEventTemplate.code = (short) linuxEventDevice.currentEffectId;
-      stopEventTemplate.value = 0;
+      try (Arena stopArena = Arena.ofConfined()) {
+        stopEventTemplate.type = (short) LinuxEventDevice.EV_FF;
+        stopEventTemplate.code = (short) linuxEventDevice.currentEffectId;
+        stopEventTemplate.value = 0;
 
-      Linux.writeEvent(this.memoryArena, linuxEventDevice.fd, stopEventTemplate);
+        Linux.writeEvent(stopArena, linuxEventDevice.fd, stopEventTemplate);
 
-      Linux.removeEffect(this.memoryArena, linuxEventDevice.fd, linuxEventDevice.currentEffectId);
+        Linux.removeEffect(stopArena, linuxEventDevice.fd, linuxEventDevice.currentEffectId);
+      }
     }
     linuxEventDevice.currentEffectId = -1;
     linuxEventDevice.currentStrongMagnitude = 0f;

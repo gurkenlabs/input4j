@@ -238,9 +238,18 @@ class Linux {
     return versionMemorySegment.get(JAVA_INT, 0);
   }
 
+  static int getEventDeviceVersion(MemorySegment versionSegment, MemorySegment capturedState, int fd) {
+    int[] outErrno = new int[1];
+    int result = invokeWithCapturedState(HANDLE_IOCTL, capturedState, outErrno, fd, EVIOCGVERSION, versionSegment);
+    if (result == ERROR) {
+      if (outErrno[0] != ENODEV && outErrno[0] != EBADF) {
+        log.log(Level.SEVERE, "Failed to get device version for device ({0})", fd);
+      }
+      return 0;
+    }
 
-
-  /**
+    return versionSegment.get(JAVA_INT, 0);
+  }  /**
    * Get the id of the event device.
    *
    * @param memoryArena the memory arena to allocate memory from

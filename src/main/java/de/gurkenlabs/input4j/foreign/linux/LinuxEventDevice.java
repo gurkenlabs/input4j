@@ -5,6 +5,7 @@ import de.gurkenlabs.input4j.InputDevice;
 import java.lang.foreign.Arena;
 import java.lang.foreign.Linker;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -80,51 +81,29 @@ class LinuxEventDevice {
   volatile boolean isDisconnected = false;
   private boolean closed = false;
 
+  public final Arena arena;
   final MemorySegment inputEventSegment;
   final MemorySegment capturedStateSegment;
+  final MemorySegment versionSegment;
+  final MemorySegment versionCapturedState;
   final int[] pollErrno = new int[1];
 
   public int version;
 
-  public LinuxEventDevice(Arena memoryArena, String filename) {
-    this.filename = filename;
+  public LinuxEventDevice(String filename) {
+    this(Arena.ofShared(), filename, false);
+  }
 
-    this.fd = Linux.open(memoryArena, this.filename);
-    this.openedReadOnly = (this.fd != Linux.ERROR);
-    if (this.fd == Linux.ERROR) {
-      this.inputEventSegment = null;
-      this.capturedStateSegment = null;
-      this.name = null;
-      this.id = null;
-      this.version = 0;
-      this.supportsForceFeedback = false;
-      this.supportsRumble = false;
-      this.supportsSine = false;
-      this.supportsGain = false;
-      this.maxEffects = 0;
-    } else {
-      this.inputEventSegment = memoryArena.allocate(input_event.$LAYOUT);
-      this.capturedStateSegment = memoryArena.allocate(Linker.Option.captureStateLayout());
-      this.name = Linux.getEventDeviceName(memoryArena, this.fd);
-      this.id = Linux.getEventDeviceId(memoryArena, this.fd);
-      this.version = Linux.getEventDeviceVersion(memoryArena, this.fd);
-      this.maxEffects = Linux.getNumEffects(memoryArena, this.fd);
-      byte[] ffBits = Linux.getBits(memoryArena, EV_FF, this.fd);
-      if (ffBits != null) {
-        this.supportsRumble = isBitSet(ffBits, Linux.FF_RUMBLE);
-        this.supportsSine = isBitSet(ffBits, Linux.FF_SINE);
-        this.supportsGain = isBitSet(ffBits, Linux.FF_GAIN);
-      } else {
-        this.supportsRumble = false;
-        this.supportsSine = false;
-        this.supportsGain = false;
-      }
-      // Force feedback requires write access and rumble (or sine fallback) support
-      this.supportsForceFeedback = !this.openedReadOnly && (this.supportsRumble || this.supportsSine);
-    }
+  public LinuxEventDevice(String filename, boolean forceRumble) {
+    this(Arena.ofShared(), filename, forceRumble);
+  }
+
+  public LinuxEventDevice(Arena memoryArena, String filename) {
+    this(memoryArena, filename, false);
   }
 
   public LinuxEventDevice(Arena memoryArena, String filename, boolean forceRumble) {
+    this.arena = memoryArena;
     this.filename = filename;
 
     int openedFd = Linux.ERROR;
@@ -149,6 +128,8 @@ class LinuxEventDevice {
     if (this.fd == Linux.ERROR) {
       this.inputEventSegment = null;
       this.capturedStateSegment = null;
+      this.versionSegment = null;
+      this.versionCapturedState = null;
       this.name = null;
       this.id = null;
       this.version = 0;
@@ -160,6 +141,8 @@ class LinuxEventDevice {
     } else {
       this.inputEventSegment = memoryArena.allocate(input_event.$LAYOUT);
       this.capturedStateSegment = memoryArena.allocate(Linker.Option.captureStateLayout());
+      this.versionSegment = memoryArena.allocate(ValueLayout.JAVA_INT);
+      this.versionCapturedState = memoryArena.allocate(Linker.Option.captureStateLayout());
       this.name = Linux.getEventDeviceName(memoryArena, this.fd);
       this.id = Linux.getEventDeviceId(memoryArena, this.fd);
       this.version = Linux.getEventDeviceVersion(memoryArena, this.fd);
@@ -177,6 +160,16 @@ class LinuxEventDevice {
       // Force feedback requires write access and rumble (or sine fallback) support
       this.supportsForceFeedback = !isReadOnly && (this.supportsRumble || this.supportsSine);
     }
+  }
+
+  public boolean isDisconnected() {
+    if (this.fd == Linux.ERROR || this.closed || this.isDisconnected) {
+      return true;
+    }
+    if (this.versionSegment != null && this.versionCapturedState != null) {
+      return Linux.getEventDeviceVersion(this.versionSegment, this.versionCapturedState, this.fd) == 0;
+    }
+    return false;
   }
 
   public input_event readEvent(int[] outErrno) {
@@ -204,23 +197,41 @@ class LinuxEventDevice {
     };
   }
 
+  public void close() {
+    close(this.arena);
+  }
+
   public void close(Arena memoryArena) {
-    if (this.fd == Linux.ERROR || this.closed) {
+    if (this.closed) {
       return;
     }
     this.closed = true;
 
-    if (this.currentEffectId != -1 && !this.isDisconnected) {
+    Arena arenaToUse = memoryArena != null ? memoryArena : this.arena;
+
+    if (this.currentEffectId != -1 && !this.isDisconnected && this.fd != Linux.ERROR && arenaToUse != null) {
       var stopEvent = new input_event();
       stopEvent.type = (short) EV_FF;
       stopEvent.code = (short) this.currentEffectId;
       stopEvent.value = 0;
-      Linux.writeEvent(memoryArena, this.fd, stopEvent);
-      Linux.removeEffect(memoryArena, this.fd, this.currentEffectId);
+      Linux.writeEvent(arenaToUse, this.fd, stopEvent);
+      Linux.removeEffect(arenaToUse, this.fd, this.currentEffectId);
       this.currentEffectId = -1;
     }
 
-    Linux.close(memoryArena, this.fd);
+    if (this.fd != Linux.ERROR) {
+      if (arenaToUse != null && arenaToUse.scope().isAlive()) {
+        Linux.close(arenaToUse, this.fd);
+      } else {
+        try (Arena closeArena = Arena.ofConfined()) {
+          Linux.close(closeArena, this.fd);
+        }
+      }
+    }
+
+    if (this.arena != null && this.arena.scope().isAlive()) {
+      this.arena.close();
+    }
   }
 
   public LinuxEventComponent getNativeComponent(input_event inputEvent) {

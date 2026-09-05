@@ -119,4 +119,26 @@ public class LinuxPermissionTests {
     assertEquals(expectedReturnType, writeHandle.type().returnType(),
         "write downcall handle return type must match ssize_t for the architecture");
   }
-}
+
+  @Test
+  @EnabledOnOs(OS.LINUX)
+  void testLinuxEventDeviceIsDisconnected() {
+    try (var arena = Arena.ofShared()) {
+      LinuxEventDevice device = new LinuxEventDevice(arena, "/nonexistent/device");
+      assertTrue(device.isDisconnected(), "Device with ERROR fd should be disconnected");
+      device.close();
+      assertTrue(device.isDisconnected(), "Closed device should be disconnected");
+      assertDoesNotThrow(() -> device.close());
+    }
+  }
+
+  @Test
+  @EnabledOnOs(OS.LINUX)
+  void testLinuxEventDeviceOwnArenaLifecycle() {
+    var arena = Arena.ofShared();
+    LinuxEventDevice device = new LinuxEventDevice(arena, "/nonexistent/device");
+    assertTrue(arena.scope().isAlive());
+    device.close();
+    assertFalse(arena.scope().isAlive(), "Closing LinuxEventDevice must close its own arena");
+  }
+}
