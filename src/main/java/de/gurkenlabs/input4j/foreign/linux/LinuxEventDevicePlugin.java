@@ -218,6 +218,17 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       return null;
     }
 
+    byte[] keyBits = LinuxEventDevice.isBitSet(eventTypes, LinuxEventDevice.EV_KEY)
+        ? Linux.getBits(this.memoryArena, LinuxEventDevice.EV_KEY, device.fd) : null;
+    byte[] absBits = LinuxEventDevice.isBitSet(eventTypes, LinuxEventDevice.EV_ABS)
+        ? Linux.getBits(this.memoryArena, LinuxEventDevice.EV_ABS, device.fd) : null;
+
+    if (!isGamepadOrJoystick(keyBits, absBits)) {
+      log.log(Level.FINE, "Ignoring non-gamepad device: " + device.name + " (" + device.filename + ")");
+      device.close(this.memoryArena);
+      return null;
+    }
+
     if (device.supportsForceFeedback) {
       log.log(Level.FINE, "Device supports force feedback: " + device.name + " with " + device.maxEffects + " effects");
       if (device.supportsGain) {
@@ -232,9 +243,12 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     var inputDevice = new InputDevice(eventDeviceFile.getAbsolutePath(), device.name, device.name, vendorId, productId, displayName, this::pollLinuxEventDevice, this::rumbleLinuxEventDevice, this::getBatteryInfo);
     device.inputDevice = inputDevice;
 
-    // Check for available components per event type (EV_KEY, EV_ABS, EV_REL, etc.)
-    addEventComponents(this.memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_KEY, LinuxEventDevice.KEY_MAX, "EV_KEY");
-    addEventComponents(this.memoryArena, device, inputDevice, eventTypes, LinuxEventDevice.EV_ABS, LinuxEventDevice.ABS_MAX, "EV_ABS");
+    if (keyBits != null) {
+      addEventComponents(this.memoryArena, device, inputDevice, keyBits, LinuxEventDevice.EV_KEY, LinuxEventDevice.KEY_MAX, "EV_KEY");
+    }
+    if (absBits != null) {
+      addEventComponents(this.memoryArena, device, inputDevice, absBits, LinuxEventDevice.EV_ABS, LinuxEventDevice.ABS_MAX, "EV_ABS");
+    }
 
     // ignore devices without components
     // also ignore devices that have no buttons, axis or dpad (this should also exclude keyboards)
@@ -249,39 +263,31 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     return device;
   }
 
-  private void addEventComponents(Arena memoryArena, LinuxEventDevice device, InputDevice inputDevice, byte[] eventTypes, int eventType, int max, String componentType) {
-    if (LinuxEventDevice.isBitSet(eventTypes, eventType)) {
-      byte[] components = Linux.getBits(memoryArena, eventType, device.fd);
-      if (components == null) {
-        log.log(Level.SEVERE, "Failed to get " + componentType + " components for " + device.filename);
-        return;
-      }
+  private void addEventComponents(Arena memoryArena, LinuxEventDevice device, InputDevice inputDevice, byte[] components, int eventType, int max, String componentType) {
+    int vendorId = device.id != null ? Short.toUnsignedInt(device.id.vendor) : -1;
+    int productId = device.id != null ? Short.toUnsignedInt(device.id.product) : -1;
+    String deviceName = device.name;
 
-      int vendorId = device.id != null ? Short.toUnsignedInt(device.id.vendor) : -1;
-      int productId = device.id != null ? Short.toUnsignedInt(device.id.product) : -1;
-      String deviceName = device.name;
-
-      for (int i = 0; i < max; i++) {
-        if (LinuxEventDevice.isBitSet(components, i)) {
-          LinuxEventComponent nativeComponent;
-          if (eventType == LinuxEventDevice.EV_ABS) {
-            input_absinfo absInfo = Linux.getAbsInfo(memoryArena, device.fd, i);
-            if (absInfo == null) {
-              nativeComponent = new LinuxEventComponent(eventType, i, vendorId, productId, deviceName);
-            } else {
-              nativeComponent = new LinuxEventComponent(eventType, i, absInfo, vendorId, productId, deviceName);
-            }
-          } else {
+    for (int i = 0; i < max; i++) {
+      if (LinuxEventDevice.isBitSet(components, i)) {
+        LinuxEventComponent nativeComponent;
+        if (eventType == LinuxEventDevice.EV_ABS) {
+          input_absinfo absInfo = Linux.getAbsInfo(memoryArena, device.fd, i);
+          if (absInfo == null) {
             nativeComponent = new LinuxEventComponent(eventType, i, vendorId, productId, deviceName);
+          } else {
+            nativeComponent = new LinuxEventComponent(eventType, i, absInfo, vendorId, productId, deviceName);
           }
-
-          device.componentList.add(nativeComponent);
-
-          var id = nativeComponent.getIdentifier();
-          var inputComponent = new InputComponent(inputDevice, id, nativeComponent.linuxComponentType.name(), nativeComponent.relative);
-          nativeComponent.inputComponent = inputComponent;
-          inputDevice.addComponent(inputComponent);
+        } else {
+          nativeComponent = new LinuxEventComponent(eventType, i, vendorId, productId, deviceName);
         }
+
+        device.componentList.add(nativeComponent);
+
+        var id = nativeComponent.getIdentifier();
+        var inputComponent = new InputComponent(inputDevice, id, nativeComponent.linuxComponentType.name(), nativeComponent.relative);
+        nativeComponent.inputComponent = inputComponent;
+        inputDevice.addComponent(inputComponent);
       }
     }
   }
@@ -644,5 +650,118 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     }
 
     return -1;
+  }
+
+  /**
+   * Determines whether the given event bitmasks represent a gamepad, joystick, or flight controller
+   * rather than a mouse, touchpad, touchscreen, or keyboard.
+   *
+   * @param keyBits the EV_KEY bitmask, or null
+   * @param absBits the EV_ABS bitmask, or null
+   * @return true if the device is identified as a gamepad/joystick, false otherwise
+   */
+  static boolean isGamepadOrJoystick(byte[] keyBits, byte[] absBits) {
+    boolean hasGamepadButtons = false;
+    if (keyBits != null) {
+      // BTN_MISC (0x100 - 0x109: BTN_0..BTN_9)
+      for (int btn = LinuxInputDefinitions.BTN_0; btn <= LinuxInputDefinitions.BTN_9; btn++) {
+        if (LinuxEventDevice.isBitSet(keyBits, btn)) {
+          hasGamepadButtons = true;
+          break;
+        }
+      }
+      // BTN_JOYSTICK (0x120 - 0x12f: BTN_TRIGGER, BTN_THUMB, etc.)
+      if (!hasGamepadButtons) {
+        for (int btn = LinuxInputDefinitions.BTN_JOYSTICK; btn <= LinuxInputDefinitions.BTN_DEAD; btn++) {
+          if (LinuxEventDevice.isBitSet(keyBits, btn)) {
+            hasGamepadButtons = true;
+            break;
+          }
+        }
+      }
+      // BTN_GAMEPAD (0x130 - 0x13e: BTN_A..BTN_THUMBR)
+      if (!hasGamepadButtons) {
+        for (int btn = LinuxInputDefinitions.BTN_GAMEPAD; btn <= LinuxInputDefinitions.BTN_THUMBR; btn++) {
+          if (LinuxEventDevice.isBitSet(keyBits, btn)) {
+            hasGamepadButtons = true;
+            break;
+          }
+        }
+      }
+      // BTN_WHEEL (0x150, 0x151: BTN_GEAR_DOWN, BTN_GEAR_UP)
+      if (!hasGamepadButtons
+          && (LinuxEventDevice.isBitSet(keyBits, LinuxInputDefinitions.BTN_GEAR_DOWN)
+              || LinuxEventDevice.isBitSet(keyBits, LinuxInputDefinitions.BTN_GEAR_UP))) {
+        hasGamepadButtons = true;
+      }
+      // BTN_DPAD_UP..BTN_DPAD_RIGHT (0x220 - 0x223)
+      if (!hasGamepadButtons) {
+        for (int btn = 0x220; btn <= 0x223; btn++) {
+          if (LinuxEventDevice.isBitSet(keyBits, btn)) {
+            hasGamepadButtons = true;
+            break;
+          }
+        }
+      }
+      // BTN_TRIGGER_HAPPY (0x2c0 - 0x2e7)
+      if (!hasGamepadButtons) {
+        for (int btn = LinuxInputDefinitions.BTN_TRIGGER_HAPPY1; btn <= LinuxInputDefinitions.BTN_TRIGGER_HAPPY40; btn++) {
+          if (LinuxEventDevice.isBitSet(keyBits, btn)) {
+            hasGamepadButtons = true;
+            break;
+          }
+        }
+      }
+    }
+
+    if (hasGamepadButtons) {
+      return true;
+    }
+
+    // Reject touchpads, touchscreens, and digitizer tools when lacking gamepad buttons
+    if (keyBits != null) {
+      boolean hasTouchOrTool = LinuxEventDevice.isBitSet(keyBits, LinuxInputDefinitions.BTN_TOUCH)
+          || LinuxEventDevice.isBitSet(keyBits, LinuxInputDefinitions.BTN_TOOL_FINGER)
+          || LinuxEventDevice.isBitSet(keyBits, LinuxInputDefinitions.BTN_TOOL_DOUBLETAP)
+          || LinuxEventDevice.isBitSet(keyBits, LinuxInputDefinitions.BTN_TOOL_TRIPLETAP)
+          || LinuxEventDevice.isBitSet(keyBits, LinuxInputDefinitions.BTN_TOOL_QUADTAP)
+          || LinuxEventDevice.isBitSet(keyBits, LinuxInputDefinitions.BTN_TOOL_PEN);
+      if (hasTouchOrTool) {
+        return false;
+      }
+
+      // Reject mice when lacking gamepad buttons (BTN_LEFT..BTN_TASK: 0x110..0x117)
+      boolean hasMouseButtons = false;
+      for (int btn = LinuxInputDefinitions.BTN_MOUSE; btn <= LinuxInputDefinitions.BTN_TASK; btn++) {
+        if (LinuxEventDevice.isBitSet(keyBits, btn)) {
+          hasMouseButtons = true;
+          break;
+        }
+      }
+      if (hasMouseButtons) {
+        return false;
+      }
+    }
+
+    // Accept joysticks, rudder pedals, flight sticks, and racing wheels without buttons
+    if (absBits != null) {
+      for (int axis = LinuxInputDefinitions.ABS_HAT0X; axis <= LinuxInputDefinitions.ABS_HAT3Y; axis++) {
+        if (LinuxEventDevice.isBitSet(absBits, axis)) {
+          return true;
+        }
+      }
+      if (LinuxEventDevice.isBitSet(absBits, LinuxInputDefinitions.ABS_THROTTLE)
+          || LinuxEventDevice.isBitSet(absBits, LinuxInputDefinitions.ABS_RUDDER)
+          || LinuxEventDevice.isBitSet(absBits, LinuxInputDefinitions.ABS_WHEEL)
+          || LinuxEventDevice.isBitSet(absBits, LinuxInputDefinitions.ABS_GAS)
+          || LinuxEventDevice.isBitSet(absBits, LinuxInputDefinitions.ABS_BRAKE)
+          || LinuxEventDevice.isBitSet(absBits, LinuxInputDefinitions.ABS_RX)
+          || LinuxEventDevice.isBitSet(absBits, LinuxInputDefinitions.ABS_RY)
+          || LinuxEventDevice.isBitSet(absBits, LinuxInputDefinitions.ABS_RZ)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

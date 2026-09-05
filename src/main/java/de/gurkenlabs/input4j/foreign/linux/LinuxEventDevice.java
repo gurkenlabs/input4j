@@ -187,6 +187,9 @@ class LinuxEventDevice {
   }
 
   public static boolean isBitSet(byte[] bits, int bit) {
+    if (bits == null || bit < 0 || (bit / 8) >= bits.length) {
+      return false;
+    }
     return (bits[bit / 8] & (1 << (bit % 8))) != 0;
   }
 
