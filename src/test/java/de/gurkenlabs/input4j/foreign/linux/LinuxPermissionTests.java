@@ -135,10 +135,9 @@ public class LinuxPermissionTests {
   @Test
   @EnabledOnOs(OS.LINUX)
   void testLinuxEventDeviceOwnArenaLifecycle() {
-    var arena = Arena.ofShared();
-    LinuxEventDevice device = new LinuxEventDevice(arena, "/nonexistent/device");
-    assertTrue(arena.scope().isAlive());
+    LinuxEventDevice device = new LinuxEventDevice("/nonexistent/device", true);
+    assertTrue(device.arena.scope().isAlive());
     device.close();
-    assertFalse(arena.scope().isAlive(), "Closing LinuxEventDevice must close its own arena");
+    assertFalse(device.arena.scope().isAlive(), "Closing LinuxEventDevice must close its own arena");
   }
 }

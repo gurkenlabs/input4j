@@ -230,8 +230,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     }
 
     // 2. Candidate confirmed as gamepad/joystick! Allocate dedicated arena for its lifetime.
-    Arena deviceArena = Arena.ofShared();
-    LinuxEventDevice device = new LinuxEventDevice(deviceArena, path, true);
+    LinuxEventDevice device = new LinuxEventDevice(path, true);
     if (device.fd == Linux.ERROR) {
       device.close();
       return null;
@@ -245,7 +244,7 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
       log.log(Level.FINE, "Device supports force feedback: {0} with {1} effects",
           new Object[] {device.name, device.maxEffects});
       if (device.supportsGain) {
-        Linux.setGain(deviceArena, device.fd, MAX_MAGNITUDE);
+        Linux.setGain(device.arena, device.fd, MAX_MAGNITUDE);
       }
     }
 
@@ -258,10 +257,10 @@ public class LinuxEventDevicePlugin extends AbstractInputDevicePlugin {
     device.inputDevice = inputDevice;
 
     if (probeKeyBits != null) {
-      addEventComponents(deviceArena, device, inputDevice, probeKeyBits, LinuxEventDevice.EV_KEY, LinuxEventDevice.KEY_MAX, "EV_KEY");
+      addEventComponents(device.arena, device, inputDevice, probeKeyBits, LinuxEventDevice.EV_KEY, LinuxEventDevice.KEY_MAX, "EV_KEY");
     }
     if (probeAbsBits != null) {
-      addEventComponents(deviceArena, device, inputDevice, probeAbsBits, LinuxEventDevice.EV_ABS, LinuxEventDevice.ABS_MAX, "EV_ABS");
+      addEventComponents(device.arena, device, inputDevice, probeAbsBits, LinuxEventDevice.EV_ABS, LinuxEventDevice.ABS_MAX, "EV_ABS");
     }
 
     // ignore devices without components

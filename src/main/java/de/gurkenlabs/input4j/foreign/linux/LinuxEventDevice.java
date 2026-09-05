@@ -71,7 +71,8 @@ class LinuxEventDevice {
    */
   final boolean supportsGain;
   final int maxEffects;
-  boolean openedReadOnly = false;
+  final boolean openedReadOnly;
+  private final boolean ownsArena;
 
   InputDevice inputDevice;
   float[] currentValues;
@@ -91,20 +92,25 @@ class LinuxEventDevice {
   public int version;
 
   public LinuxEventDevice(String filename) {
-    this(Arena.ofShared(), filename, false);
+    this(filename, false);
   }
 
   public LinuxEventDevice(String filename, boolean forceRumble) {
-    this(Arena.ofShared(), filename, forceRumble);
+    this(Arena.ofShared(), filename, forceRumble, true);
   }
 
   public LinuxEventDevice(Arena memoryArena, String filename) {
-    this(memoryArena, filename, false);
+    this(memoryArena, filename, false, false);
   }
 
   public LinuxEventDevice(Arena memoryArena, String filename, boolean forceRumble) {
+    this(memoryArena, filename, forceRumble, false);
+  }
+
+  public LinuxEventDevice(Arena memoryArena, String filename, boolean forceRumble, boolean ownsArena) {
     this.arena = memoryArena;
     this.filename = filename;
+    this.ownsArena = ownsArena;
 
     int openedFd = Linux.ERROR;
     boolean isReadOnly = false;
@@ -229,7 +235,7 @@ class LinuxEventDevice {
       }
     }
 
-    if (this.arena != null && this.arena.scope().isAlive()) {
+    if (this.ownsArena && this.arena != null && this.arena.scope().isAlive()) {
       this.arena.close();
     }
   }
