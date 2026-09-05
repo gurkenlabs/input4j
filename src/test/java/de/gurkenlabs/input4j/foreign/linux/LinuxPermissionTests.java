@@ -12,8 +12,10 @@ import static org.junit.jupiter.api.Assertions.*;
 public class LinuxPermissionTests {
   @Test
   void testErrnoConstants() {
+    assertEquals(9, Linux.EBADF, "EBADF should be 9");
     assertEquals(11, Linux.EAGAIN, "EAGAIN should be 11");
     assertEquals(13, Linux.EACCES, "EACCES should be 13");
+    assertEquals(19, Linux.ENODEV, "ENODEV should be 19");
   }
 
   @Test

@@ -17,9 +17,11 @@ class Linux {
 
   private static final Logger log = Logger.getLogger(Linux.class.getName());
   final static int ERROR = -1;
+  final static int ENOENT = 2;
+  final static int EBADF = 9;
   final static int EAGAIN = 11;
   final static int EACCES = 13;
-  final static int ENOENT = 2;
+  final static int ENODEV = 19;
 
   final static int O_RDONLY = 0;
   final static int O_RDWR = 2;
@@ -101,7 +103,7 @@ class Linux {
     handles.put(HANDLE_IOCTL, downcallHandle(HANDLE_IOCTL, FunctionDescriptor.of(JAVA_INT, JAVA_INT, JAVA_INT, ADDRESS), ERRNO));
     handles.put(HANDLE_READ, downcallHandle(HANDLE_READ, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, sizeT), ERRNO));
     handles.put(HANDLE_SELECT, downcallHandle(HANDLE_SELECT, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, ADDRESS, ADDRESS, sizeT), ERRNO));
-    handles.put(HANDLE_WRITE, downcallHandle(HANDLE_WRITE, FunctionDescriptor.of(sizeT, JAVA_INT, ADDRESS, sizeT), ERRNO));
+    handles.put(HANDLE_WRITE, downcallHandle(HANDLE_WRITE, FunctionDescriptor.of(JAVA_INT, JAVA_INT, ADDRESS, sizeT), ERRNO));
   }
 
   /**
@@ -148,7 +150,7 @@ class Linux {
     invoke(HANDLE_CLOSE, memoryArena, fd);
   }
 
- /**
+  /**
    * Read an input event from the device.
    *
    * @param memoryArena the memory arena to allocate memory from
@@ -156,14 +158,40 @@ class Linux {
    * @return the input event or null if no more events are available
    */
   public static input_event read(Arena memoryArena, int fd) {
+    return read(memoryArena, fd, null);
+  }
+
+  /**
+   * Read an input event from the device, capturing errno if an error occurs.
+   *
+   * @param memoryArena the memory arena to allocate memory from
+   * @param fd          the file descriptor of the event device
+   * @param outErrno    an array of size 1 to receive the errno value, or null
+   * @return the input event or null if no more events are available or an error occurred
+   */
+  public static input_event read(Arena memoryArena, int fd, int[] outErrno) {
     MemorySegment inputEventMemorySegment = memoryArena.allocate(input_event.$LAYOUT);
-    int result = invoke("read", memoryArena, fd, inputEventMemorySegment, input_event.$LAYOUT.byteSize());
+    MemorySegment capturedState = memoryArena.allocate(Linker.Option.captureStateLayout());
+    return read(inputEventMemorySegment, capturedState, fd, outErrno);
+  }
+
+  /**
+   * Read an input event using pre-allocated native segments to avoid memory allocation during polling.
+   *
+   * @param inputEventSegment pre-allocated segment for input_event
+   * @param capturedState     pre-allocated segment for captureState
+   * @param fd                the file descriptor of the event device
+   * @param outErrno          an array of size 1 to receive the errno value, or null
+   * @return the input event or null if no more events are available or an error occurred
+   */
+  public static input_event read(MemorySegment inputEventSegment, MemorySegment capturedState, int fd, int[] outErrno) {
+    int result = invokeWithCapturedState("read", capturedState, outErrno, fd, inputEventSegment, input_event.$LAYOUT.byteSize());
     if (result == ERROR) {
       log.log(Level.FINE, "No more events to read from device ({0})", fd);
       return null;
     }
 
-    return input_event.read(inputEventMemorySegment);
+    return input_event.read(inputEventSegment);
   }
 
   /**
@@ -271,9 +299,12 @@ class Linux {
    * @return 0 on success, or -1 if an error occurred
    */
   static int removeEffect(Arena memoryArena, int fd, int effectId) {
-    int result = invoke(HANDLE_IOCTL, memoryArena, fd, EVIOCRMFF, effectId);
+    int[] outErrno = new int[1];
+    int result = invoke(HANDLE_IOCTL, memoryArena, outErrno, fd, EVIOCRMFF, effectId);
     if (result == ERROR) {
-      log.log(Level.SEVERE, "Failed to remove effect ({0}) from device ({1})", new Object[] {effectId, fd});
+      if (outErrno[0] != ENODEV && outErrno[0] != EBADF) {
+        log.log(Level.SEVERE, "Failed to remove effect ({0}) from device ({1})", new Object[] {effectId, fd});
+      }
       return ERROR;
     }
     return result;
@@ -294,9 +325,12 @@ class Linux {
   static int writeEvent(Arena memoryArena, int fd, input_event event) {
     var eventSegment = memoryArena.allocate(input_event.$LAYOUT);
     event.write(eventSegment);
-    int result = invoke(HANDLE_WRITE, memoryArena, fd, eventSegment, input_event.$LAYOUT.byteSize());
+    int[] outErrno = new int[1];
+    int result = invoke(HANDLE_WRITE, memoryArena, outErrno, fd, eventSegment, input_event.$LAYOUT.byteSize());
     if (result == ERROR) {
-      log.log(Level.WARNING, "Failed to write event to device ({0})", fd);
+      if (outErrno[0] != ENODEV && outErrno[0] != EBADF) {
+        log.log(Level.WARNING, "Failed to write event to device ({0})", fd);
+      }
       return ERROR;
     }
     return result;
@@ -357,8 +391,7 @@ class Linux {
     return invoke(handleName, memoryArena, null, args);
   }
 
-  private static int invoke(String handleName, Arena memoryArena, int[] outErrno, Object... args) {
-    var capturedState = memoryArena.allocate(Linker.Option.captureStateLayout());
+  private static int invokeWithCapturedState(String handleName, MemorySegment capturedState, int[] outErrno, Object... args) {
     var methodHandle = handles.get(handleName);
     if (methodHandle == null) {
       log.log(Level.SEVERE, "Could not find method handle for ''{0}''", handleName);
@@ -392,6 +425,13 @@ class Linux {
           return result;
         }
 
+        // ENODEV and EBADF are expected when a device is disconnected/unplugged
+        if (errorNo == ENODEV || errorNo == EBADF) {
+          log.log(Level.FINE, "Device disconnected: could not invoke ''{0}'' - {1}({2})",
+              new Object[] {handleName, getErrorString(errorNo), errorNo});
+          return result;
+        }
+
         // EACCES is expected when user lacks write permissions - log at FINE level
         if (errorNo == EACCES) {
           log.log(Level.INFO, "Could not invoke ''{0}'' - {1}({2}) - likely not in input group or device requires root access",
@@ -407,6 +447,11 @@ class Linux {
     }
 
     return ERROR;
+  }
+
+  private static int invoke(String handleName, Arena memoryArena, int[] outErrno, Object... args) {
+    var capturedState = memoryArena.allocate(Linker.Option.captureStateLayout());
+    return invokeWithCapturedState(handleName, capturedState, outErrno, args);
   }
 
   private static int invokeWithErrno(String handleName, Arena memoryArena, int[] outErrno, Object... args) {
