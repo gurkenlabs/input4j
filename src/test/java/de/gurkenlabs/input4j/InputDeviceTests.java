@@ -84,8 +84,13 @@ public class InputDeviceTests {
 
   @Test
   public void testClose() {
+    InputComponent component = new InputComponent(inputDevice, new InputComponent.ID(ComponentType.BUTTON, 1, "BUTTON_1"));
+    inputDevice.addComponent(component);
+    assertEquals(1, inputDevice.getComponents().size());
+
     inputDevice.close();
     assertTrue(inputDevice.getComponents().isEmpty());
+    assertTrue(inputDevice.getComponent("BUTTON_1").isEmpty());
   }
 
   @Test
@@ -176,5 +181,55 @@ public class InputDeviceTests {
     InputDevice device = new InputDevice("123", "Test", "Test", 
         ControllerDatabase.VENDOR_SONY, 0x0CE6, null, _ -> new float[]{}, (_, _) -> {});
     assertEquals(ControllerType.PLAYSTATION, device.getControllerType());
+  }
+
+  @Test
+  public void testGetBatteryInfo_NullCallback() {
+    assertTrue(inputDevice.getBatteryInfo().isEmpty());
+  }
+
+  @Test
+  public void testGetBatteryInfo_WithCallback() {
+    var expectedBattery = new BatteryInfo(BatteryType.UNKNOWN, BatteryLevel.FULL, false);
+    InputDevice device = new InputDevice("123", "Test", "Test", -1, -1, null,
+        _ -> new float[]{}, (_, _) -> {}, _ -> expectedBattery);
+    var battery = device.getBatteryInfo();
+    assertTrue(battery.isPresent());
+    assertEquals(expectedBattery, battery.get());
+  }
+
+  @Test
+  public void testPoll_NullPolledData() {
+    InputDevice device = new InputDevice("123", "Test", "Test", _ -> null, (_, _) -> {});
+    assertDoesNotThrow(device::poll);
+  }
+
+  @Test
+  public void testPoll_ListenerExceptionDoesNotAbortPolling() {
+    InputDevice device = new InputDevice("123", "Test", "Test", _ -> new float[]{1.0f, 1.0f}, (_, _) -> {});
+    var btn1 = new InputComponent(device, new InputComponent.ID(ComponentType.BUTTON, 1, "BTN1"));
+    var btn2 = new InputComponent(device, new InputComponent.ID(ComponentType.BUTTON, 2, "BTN2"));
+    device.addComponent(btn1);
+    device.addComponent(btn2);
+
+    device.onButtonPressed(btn1.getId(), () -> {
+      throw new RuntimeException("Simulated listener failure");
+    });
+    var secondListenerFired = new java.util.concurrent.atomic.AtomicBoolean(false);
+    device.onButtonPressed(btn2.getId(), () -> secondListenerFired.set(true));
+
+    assertDoesNotThrow(device::poll);
+    assertTrue(secondListenerFired.get());
+    assertEquals(1.0f, btn1.getData());
+    assertEquals(1.0f, btn2.getData());
+  }
+
+  @Test
+  public void testClose_StopsRumble() {
+    var rumbleValues = new java.util.concurrent.atomic.AtomicReference<float[]>();
+    InputDevice device = new InputDevice("123", "Test", "Test", _ -> new float[0], (_, val) -> rumbleValues.set(val));
+    device.close();
+    assertNotNull(rumbleValues.get());
+    assertEquals(0f, rumbleValues.get()[0]);
   }
 }

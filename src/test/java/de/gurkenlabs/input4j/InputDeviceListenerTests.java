@@ -113,6 +113,53 @@ class InputDeviceListenerTests {
   }
 
   @Test
+  void testOnButtonReleased_FiredOnTransitionFromOneToZero() {
+    float[][] testData = new float[][]{{1.0f, 0.0f}, {0.0f, 0.0f}};
+    int[] pollIndex = new int[]{0};
+    InputDevice dev = new InputDevice("123", "TestDevice", "TestProduct",
+        d -> testData[Math.min(pollIndex[0]++, 1)], (_, _) -> {});
+    var btn = new InputComponent(dev, new InputComponent.ID(ComponentType.BUTTON, 1, "BUTTON_1"));
+    dev.addComponent(btn);
+
+    AtomicBoolean pressed = new AtomicBoolean(false);
+    AtomicBoolean released = new AtomicBoolean(false);
+    dev.onButtonPressed(btn.getId(), () -> pressed.set(true));
+    dev.onButtonReleased(btn.getId(), () -> released.set(true));
+
+    dev.poll();
+    assertTrue(pressed.get());
+    assertFalse(released.get());
+
+    dev.poll();
+    assertTrue(released.get());
+  }
+
+  @Test
+  void testOnButtonReleased_WithIntId() {
+    float[][] testData = new float[][]{{1.0f, 0.0f}, {0.0f, 0.0f}};
+    int[] pollIndex = new int[]{0};
+    InputDevice dev = new InputDevice("123", "TestDevice", "TestProduct",
+        d -> testData[Math.min(pollIndex[0]++, 1)], (_, _) -> {});
+    var btn = new InputComponent(dev, InputComponent.ID.getButton(1));
+    dev.addComponent(btn);
+
+    AtomicBoolean released = new AtomicBoolean(false);
+    dev.onButtonReleased(1, () -> released.set(true));
+
+    dev.poll();
+    assertFalse(released.get());
+
+    dev.poll();
+    assertTrue(released.get());
+  }
+
+  @Test
+  void testOnButtonReleased_ReturnsFalseForInvalidId() {
+    boolean result = inputDevice.onButtonReleased(new InputComponent.ID(ComponentType.BUTTON, 999, "INVALID"), () -> {});
+    assertFalse(result);
+  }
+
+  @Test
   void testClearButtonPressedListeners_RemovesListeners() {
     AtomicBoolean called = new AtomicBoolean(false);
     inputDevice.onButtonPressed(buttonComponent.getId(), () -> called.set(true));
@@ -122,10 +169,74 @@ class InputDeviceListenerTests {
   }
 
   @Test
+  void testClearButtonPressedListeners_WithIntId() {
+    AtomicBoolean called = new AtomicBoolean(false);
+    inputDevice.onButtonPressed(1, () -> called.set(true));
+    inputDevice.clearButtonPressedListeners(1);
+    inputDevice.poll();
+    assertFalse(called.get());
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void testClearButtonPresedListeners_DeprecatedMethodCallsCorrectHandler() {
+    AtomicBoolean called = new AtomicBoolean(false);
+    inputDevice.onButtonPressed(1, () -> called.set(true));
+    inputDevice.clearButtonPresedListeners(1);
+    inputDevice.poll();
+    assertFalse(called.get());
+  }
+
+  @Test
+  void testClearButtonReleasedListeners_RemovesListeners() {
+    float[][] testData = new float[][]{{1.0f, 0.0f}, {0.0f, 0.0f}};
+    int[] pollIndex = new int[]{0};
+    InputDevice dev = new InputDevice("123", "TestDevice", "TestProduct",
+        d -> testData[Math.min(pollIndex[0]++, 1)], (_, _) -> {});
+    var btn = new InputComponent(dev, InputComponent.ID.getButton(1));
+    dev.addComponent(btn);
+
+    AtomicBoolean released = new AtomicBoolean(false);
+    dev.onButtonReleased(btn.getId(), () -> released.set(true));
+    dev.clearButtonReleasedListeners(btn.getId());
+
+    dev.poll();
+    dev.poll();
+    assertFalse(released.get());
+  }
+
+  @Test
+  void testClearButtonReleasedListeners_WithIntId() {
+    float[][] testData = new float[][]{{1.0f, 0.0f}, {0.0f, 0.0f}};
+    int[] pollIndex = new int[]{0};
+    InputDevice dev = new InputDevice("123", "TestDevice", "TestProduct",
+        d -> testData[Math.min(pollIndex[0]++, 1)], (_, _) -> {});
+    var btn = new InputComponent(dev, InputComponent.ID.getButton(1));
+    dev.addComponent(btn);
+
+    AtomicBoolean released = new AtomicBoolean(false);
+    dev.onButtonReleased(1, () -> released.set(true));
+    dev.clearButtonReleasedListeners(1);
+
+    dev.poll();
+    dev.poll();
+    assertFalse(released.get());
+  }
+
+  @Test
   void testClearAxisChangedListeners_RemovesListeners() {
     AtomicReference<Float> receivedValue = new AtomicReference<>(-1f);
     inputDevice.onAxisChanged(axisComponent.getId(), value -> receivedValue.set(value));
     inputDevice.clearAxisChangedListeners(axisComponent.getId());
+    inputDevice.poll();
+    assertEquals(-1, receivedValue.get());
+  }
+
+  @Test
+  void testClearAxisChangedListeners_WithIntId() {
+    AtomicReference<Float> receivedValue = new AtomicReference<>(-1f);
+    inputDevice.onAxisChanged(1, value -> receivedValue.set(value));
+    inputDevice.clearAxisChangedListeners(1);
     inputDevice.poll();
     assertEquals(-1, receivedValue.get());
   }
@@ -140,6 +251,28 @@ class InputDeviceListenerTests {
     inputDevice.onButtonPressed(buttonComponent.getId(), listener2);
     inputDevice.removeButtonPressedListener(listener1);
     inputDevice.poll();
+    assertEquals(1, callCount.get());
+  }
+
+  @Test
+  void testRemoveButtonReleasedListener_RemovesSpecificListener() {
+    float[][] testData = new float[][]{{1.0f, 0.0f}, {0.0f, 0.0f}};
+    int[] pollIndex = new int[]{0};
+    InputDevice dev = new InputDevice("123", "TestDevice", "TestProduct",
+        d -> testData[Math.min(pollIndex[0]++, 1)], (_, _) -> {});
+    var btn = new InputComponent(dev, InputComponent.ID.getButton(1));
+    dev.addComponent(btn);
+
+    AtomicInteger callCount = new AtomicInteger(0);
+    Runnable listener1 = callCount::incrementAndGet;
+    Runnable listener2 = callCount::incrementAndGet;
+
+    dev.onButtonReleased(btn.getId(), listener1);
+    dev.onButtonReleased(btn.getId(), listener2);
+    dev.removeButtonReleasedListener(listener1);
+
+    dev.poll();
+    dev.poll();
     assertEquals(1, callCount.get());
   }
 
