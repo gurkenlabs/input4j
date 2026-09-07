@@ -2,14 +2,13 @@ package de.gurkenlabs.input4j.foreign.macos.iokit;
 
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
 import de.gurkenlabs.input4j.BatteryInfo;
-import de.gurkenlabs.input4j.BatteryLevel;
 import de.gurkenlabs.input4j.BatteryType;
 import de.gurkenlabs.input4j.ControllerDatabase;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
 import de.gurkenlabs.input4j.components.Axis;
 
-import java.awt.*;
+import java.awt.Frame;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
@@ -196,6 +195,11 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
     super.close();
 
+    if (this.batteryArena != null) {
+      this.batteryArena.close();
+      this.batteryArena = null;
+    }
+
     this.nativeDevices.clear();
     this.elementsByDeviceAndCookie.clear();
     this.eventLoopRunLoop = null;
@@ -204,7 +208,8 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
   @Override
   protected Collection<InputDevice> refreshInputDevices() {
     // TODO: implement refresh support
-    return this.getAll();
+    var devices = this.getDevices();
+    return devices != null ? new java.util.ArrayList<>(devices) : java.util.Collections.emptyList();
   }
 
   static float normalizeInputValue(int elementValue, IOHIDElement element, boolean isAxis) {
@@ -405,6 +410,8 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
       if (result != IOReturn.kIOReturnSuccess) {
         log.log(Level.FINE, "Failed to send rumble report with error: " + IOReturn.toString(result));
       }
+    } catch (LinkageError e) {
+      log.log(Level.FINE, "Cannot send rumble report on non-macOS host", e);
     } catch (Exception e) {
       log.log(Level.WARNING, "Failed to send rumble report", e);
     }
@@ -412,7 +419,7 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
 
   private BatteryInfo getBatteryInfo(InputDevice inputDevice) {
     var ioHIDDevice = nativeDevices.get(inputDevice.getID());
-    if (ioHIDDevice == null) {
+    if (ioHIDDevice == null || batteryArena == null) {
       return null;
     }
 
@@ -422,18 +429,6 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
       return null;
     }
 
-    BatteryLevel level;
-
-    if (batteryPercent >= 75) {
-      level = BatteryLevel.FULL;
-    } else if (batteryPercent >= 50) {
-      level = BatteryLevel.MEDIUM;
-    } else if (batteryPercent >= 25) {
-      level = BatteryLevel.LOW;
-    } else {
-      level = BatteryLevel.EMPTY;
-    }
-
-    return new BatteryInfo(BatteryType.UNKNOWN, level, false);
+    return BatteryInfo.fromPercentage(BatteryType.UNKNOWN, false, batteryPercent);
   }
 }

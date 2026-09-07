@@ -21,11 +21,14 @@ public final class NativeHelper {
     return Linker.nativeLinker().downcallHandle(address, fdesc);
   }
 
-  public static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc, String captureCallState){
+  public static MethodHandle downcallHandle(String name, FunctionDescriptor fdesc, String captureCallState) {
     Linker.Option ccs = Linker.Option.captureCallState(captureCallState);
     return Linker.nativeLinker().downcallHandle(
-            SymbolLookup.loaderLookup().find(name).or(() -> Linker.nativeLinker().defaultLookup().find(name)).orElseThrow(),
-            fdesc,
-            ccs);
+        SymbolLookup.loaderLookup().find(name)
+            .or(() -> Linker.nativeLinker().defaultLookup().find(name))
+            .orElseThrow(() -> new UnsatisfiedLinkError(
+                "Native symbol not found: " + name + " with descriptor " + fdesc)),
+        fdesc,
+        ccs);
   }
 }

@@ -10,6 +10,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Represents an input device.
@@ -31,6 +33,7 @@ import java.util.function.Function;
  * @see Closeable
  */
 public final class InputDevice implements Closeable {
+  private static final Logger log = Logger.getLogger(InputDevice.class.getName());
   private final String identifier;
   private final String name;
   private final String productName;
@@ -299,6 +302,10 @@ public final class InputDevice implements Closeable {
    */
   public void poll() {
     var polledData = this.pollCallback.apply(this);
+    if (polledData == null) {
+      return;
+    }
+
     var hasInputData = false;
 
     var componentList = this.components;
@@ -313,33 +320,67 @@ public final class InputDevice implements Closeable {
         hasInputData = true;
         component.setData(newData);
 
-        var inputEvent = new InputComponent.InputValueChangedEvent(component, oldData, newData);
-        for (var listener : listeners) {
-          listener.onValueChanged(inputEvent);
-        }
+        this.notifyValueChanged(new InputComponent.InputValueChangedEvent(component, oldData, newData));
 
         if (component.isButton()) {
-          var id = component.getId();
-          if (newData == 1 && buttonPressedListeners.containsKey(id)) {
-            for (var listener : buttonPressedListeners.get(id)) {
-              listener.run();
-            }
-          } else if (newData == 0 && buttonReleasedListeners.containsKey(id)) {
-            for (var listener : buttonReleasedListeners.get(id)) {
-              listener.run();
-            }
-          }
+          this.notifyButtonChanged(component.getId(), newData);
         }
 
-        if (component.isAxis() && axisChangedListeners.containsKey(component.getId())) {
-          for (var listener : axisChangedListeners.get(component.getId())) {
-            listener.accept(newData);
-          }
+        if (component.isAxis()) {
+          this.notifyAxisChanged(component.getId(), newData);
         }
       }
     }
 
     this.hasInputData = hasInputData;
+  }
+
+  private void notifyValueChanged(InputComponent.InputValueChangedEvent event) {
+    for (var listener : this.listeners) {
+      try {
+        listener.onValueChanged(event);
+      } catch (Exception e) {
+        log.log(Level.WARNING, "Exception in InputDeviceListener onValueChanged", e);
+      }
+    }
+  }
+
+  private void notifyButtonChanged(InputComponent.ID id, float newData) {
+    if (newData == 1) {
+      notifyButtonListeners(this.buttonPressedListeners.get(id), "buttonPressedListener");
+    } else if (newData == 0) {
+      notifyButtonListeners(this.buttonReleasedListeners.get(id), "buttonReleasedListener");
+    }
+  }
+
+  private static void notifyButtonListeners(
+      Collection<Runnable> listeners, String listenerType) {
+    if (listeners == null) {
+      return;
+    }
+
+    for (var listener : listeners) {
+      try {
+        listener.run();
+      } catch (Exception e) {
+        log.log(Level.WARNING, "Exception in " + listenerType, e);
+      }
+    }
+  }
+
+  private void notifyAxisChanged(InputComponent.ID id, float newData) {
+    var axisListeners = this.axisChangedListeners.get(id);
+    if (axisListeners == null) {
+      return;
+    }
+
+    for (var listener : axisListeners) {
+      try {
+        listener.accept(newData);
+      } catch (Exception e) {
+        log.log(Level.WARNING, "Exception in axisChangedListener", e);
+      }
+    }
   }
 
   /**
@@ -384,9 +425,17 @@ public final class InputDevice implements Closeable {
 
   @Override
   public void close() {
+    try {
+      this.rumble(0f);
+    } catch (Exception e) {
+      log.log(Level.FINEST, "Failed to stop rumble on close", e);
+    }
+    this.hasInputData = false;
     this.listeners.clear();
     this.buttonPressedListeners.clear();
     this.buttonReleasedListeners.clear();
+    this.axisChangedListeners.clear();
+    this.components.clear();
     this.componentIndex.clear();
   }
 
@@ -480,13 +529,24 @@ public final class InputDevice implements Closeable {
    * Clears all listeners for a specific button.
    *
    * @param buttonId The ID of the button to clear listeners for.
+   * @deprecated Use {@link #clearButtonPressedListeners(int)} instead.
    */
+  @Deprecated(since = "1.4.0", forRemoval = true)
   public void clearButtonPresedListeners(int buttonId) {
+    this.clearButtonPressedListeners(buttonId);
+  }
+
+  /**
+   * Clears all pressed listeners for a specific button.
+   *
+   * @param buttonId The ID of the button to clear listeners for.
+   */
+  public void clearButtonPressedListeners(int buttonId) {
     this.clearButtonPressedListeners(InputComponent.ID.getButton(buttonId));
   }
 
   /**
-   * Clears all listeners for a specific button.
+   * Clears all pressed listeners for a specific button.
    *
    * @param buttonId The ID of the button to clear listeners for.
    */
@@ -495,16 +555,16 @@ public final class InputDevice implements Closeable {
   }
 
   /**
-   * Clears all listeners for a specific button.
+   * Clears all released listeners for a specific button.
    *
    * @param buttonId The ID of the button to clear listeners for.
    */
   public void clearButtonReleasedListeners(int buttonId) {
-    this.clearButtonPressedListeners(InputComponent.ID.getButton(buttonId));
+    this.clearButtonReleasedListeners(InputComponent.ID.getButton(buttonId));
   }
 
   /**
-   * Clears all listeners for a specific button.
+   * Clears all released listeners for a specific button.
    *
    * @param buttonId The ID of the button to clear listeners for.
    */

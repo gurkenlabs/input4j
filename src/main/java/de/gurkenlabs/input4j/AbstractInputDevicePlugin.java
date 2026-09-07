@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -157,14 +158,35 @@ public abstract class AbstractInputDevicePlugin implements InputDevicePlugin {
     this.setDevices(refreshedDevices);
 
     for (var d : disconnected) {
-      this.deviceDisconnectedListeners.forEach(listener -> listener.accept(d));
+      this.deviceDisconnectedListeners.forEach(
+          listener -> {
+            try {
+              listener.accept(d);
+            } catch (Exception e) {
+              log.log(Level.WARNING, "Exception in deviceDisconnectedListener", e);
+            }
+          });
     }
     for (var d : connected) {
-      this.deviceConnectedListeners.forEach(listener -> listener.accept(d));
+      this.deviceConnectedListeners.forEach(
+          listener -> {
+            try {
+              listener.accept(d);
+            } catch (Exception e) {
+              log.log(Level.WARNING, "Exception in deviceConnectedListener", e);
+            }
+          });
     }
 
     if (devicesChanged) {
-      this.devicesChangedListeners.forEach(Runnable::run);
+      this.devicesChangedListeners.forEach(
+          listener -> {
+            try {
+              listener.run();
+            } catch (Exception e) {
+              log.log(Level.WARNING, "Exception in devicesChangedListener", e);
+            }
+          });
     }
   }
 

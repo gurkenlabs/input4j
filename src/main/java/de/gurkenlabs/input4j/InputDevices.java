@@ -1,7 +1,6 @@
 package de.gurkenlabs.input4j;
 
-import java.awt.*;
-import java.io.IOException;
+import java.awt.Frame;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -92,7 +91,7 @@ public final class InputDevices {
    *                         The plugin class must be a fully qualified class name of a class that implements the {@link InputDevicePlugin} interface.
    *                         <p>
    *                         This can be used to explicitly select a custom input library implementation.
-   *                         If the class is not found or cannot be instantiated, an {@link IOException} is thrown.
+   *                         If the class is not found or cannot be instantiated, null is returned and the error is logged.
    *                         The class must have a public no-argument constructor.
    *                         </p>
    * @return The initialized input device provider or null if the initialization fails.

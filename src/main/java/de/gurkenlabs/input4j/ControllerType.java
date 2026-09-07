@@ -1,7 +1,5 @@
 package de.gurkenlabs.input4j;
 
-import java.util.Locale;
-
 /**
  * Represents the type of game controller.
  * This enum is used to identify the category of a controller based on its vendor and product IDs.

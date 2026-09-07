@@ -75,7 +75,6 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
     for (var device : this.nativeDevices.values()) {
       try {
         device.Unacquire();
-        device.inputDevice.close();
       } catch (Throwable e) {
         log.log(Level.SEVERE, e.getMessage(), e);
       }
@@ -98,7 +97,8 @@ public final class DirectInputPlugin extends AbstractInputDevicePlugin {
   protected Collection<InputDevice> refreshInputDevices() {
     // TODO: implement refresh support
     // TODO: handle disconnect or permanent unavailability => retry X times => handle in hotplug thread if a device is unavailable throw it away
-    return this.getAll();
+    var devices = this.getDevices();
+    return devices != null ? new java.util.ArrayList<>(devices) : java.util.Collections.emptyList();
   }
 
   private void initializeDirectInput() throws Throwable {

@@ -10,10 +10,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AbstractInputDevicePluginTests {
 
@@ -132,5 +134,23 @@ class AbstractInputDevicePluginTests {
     plugin.refreshDevices(true);
 
     assertFalse(listenerFired.get());
+  }
+
+  @Test
+  void testListenerExceptionDoesNotHaltOtherListeners() {
+    var plugin = new TestPlugin();
+    plugin.internalInitDevices(null);
+
+    var secondConnectedFired = new AtomicBoolean(false);
+    plugin.onDeviceConnected(_ -> {
+      throw new RuntimeException("Simulated connected listener failure");
+    });
+    plugin.onDeviceConnected(_ -> secondConnectedFired.set(true));
+
+    var dev1 = new InputDevice("1", "Gamepad 1", "Gamepad", _ -> new float[0], (_, _) -> {});
+    plugin.currentDevices.add(dev1);
+
+    assertDoesNotThrow(() -> plugin.refreshDevices(true));
+    assertTrue(secondConnectedFired.get());
   }
 }
