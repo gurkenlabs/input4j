@@ -35,7 +35,15 @@ public final class ControllerDatabase {
   public static final int VENDOR_LOGITECH = 0x046D;
 
   /** Known vendor ID for Thrustmaster. */
-  public static final int VENDOR_THURSTMASTER = 0x044F;
+  public static final int VENDOR_THRUSTMASTER = 0x044F;
+
+  /**
+   * Known vendor ID for Thrustmaster.
+   *
+   * @deprecated Typo in constant name, use {@link #VENDOR_THRUSTMASTER} instead.
+   */
+  @Deprecated
+  public static final int VENDOR_THURSTMASTER = VENDOR_THRUSTMASTER;
 
   /** Known vendor ID for Mad Catz. */
   public static final int VENDOR_MAD_CATZ = 0x0738;

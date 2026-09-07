@@ -51,6 +51,19 @@ public class ControllerDatabaseTests {
   }
 
   @Test
+  void testLookupKnownController_Thrustmaster() {
+    var result = ControllerDatabase.lookup(ControllerDatabase.VENDOR_THRUSTMASTER, 0x0F00);
+    assertTrue(result.isPresent());
+    assertEquals("Thrustmaster Wheel Xbox", result.get().displayName());
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void testDeprecatedThrustmasterConstantEqualsCorrectConstant() {
+    assertEquals(ControllerDatabase.VENDOR_THRUSTMASTER, ControllerDatabase.VENDOR_THURSTMASTER);
+  }
+
+  @Test
   void testLookupUnknownReturnsEmpty() {
     var result = ControllerDatabase.lookup(0x1234, 0x5678);
     assertTrue(result.isEmpty());
