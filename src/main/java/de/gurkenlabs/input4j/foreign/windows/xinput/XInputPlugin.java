@@ -85,6 +85,7 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
   @Override
   protected Collection<InputDevice> refreshInputDevices() {
     // Initialize XInput devices
+    var currentDevices = this.getDevices();
     var inputDevices = new ArrayList<InputDevice>();
     for (int i = 0; i < MAX_XINPUT_DEVICES; i++) {
       var deviceId = Integer.toString(i);
@@ -94,8 +95,8 @@ public final class XInputPlugin extends AbstractInputDevicePlugin {
         continue;
       }
 
-      if (this.nativeDevices.containsKey(deviceId)) {
-        var existingDevice = this.getAll().stream().filter(device -> device.getID().equals(deviceId)).findFirst();
+      if (this.nativeDevices.containsKey(deviceId) && currentDevices != null) {
+        var existingDevice = currentDevices.stream().filter(device -> device.getID().equals(deviceId)).findFirst();
         if (existingDevice.isPresent()) {
           inputDevices.add(existingDevice.get());
           continue;
