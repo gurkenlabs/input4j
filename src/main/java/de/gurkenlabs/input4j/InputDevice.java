@@ -347,39 +347,38 @@ public final class InputDevice implements Closeable {
 
   private void notifyButtonChanged(InputComponent.ID id, float newData) {
     if (newData == 1) {
-      var pressed = this.buttonPressedListeners.get(id);
-      if (pressed != null) {
-        for (var listener : pressed) {
-          try {
-            listener.run();
-          } catch (Exception e) {
-            log.log(Level.WARNING, "Exception in buttonPressedListener", e);
-          }
-        }
-      }
+      notifyButtonListeners(this.buttonPressedListeners.get(id), "buttonPressedListener");
     } else if (newData == 0) {
-      var released = this.buttonReleasedListeners.get(id);
-      if (released != null) {
-        for (var listener : released) {
-          try {
-            listener.run();
-          } catch (Exception e) {
-            log.log(Level.WARNING, "Exception in buttonReleasedListener", e);
-          }
-        }
+      notifyButtonListeners(this.buttonReleasedListeners.get(id), "buttonReleasedListener");
+    }
+  }
+
+  private static void notifyButtonListeners(
+      Collection<Runnable> listeners, String listenerType) {
+    if (listeners == null) {
+      return;
+    }
+
+    for (var listener : listeners) {
+      try {
+        listener.run();
+      } catch (Exception e) {
+        log.log(Level.WARNING, "Exception in " + listenerType, e);
       }
     }
   }
 
   private void notifyAxisChanged(InputComponent.ID id, float newData) {
     var axisListeners = this.axisChangedListeners.get(id);
-    if (axisListeners != null) {
-      for (var listener : axisListeners) {
-        try {
-          listener.accept(newData);
-        } catch (Exception e) {
-          log.log(Level.WARNING, "Exception in axisChangedListener", e);
-        }
+    if (axisListeners == null) {
+      return;
+    }
+
+    for (var listener : axisListeners) {
+      try {
+        listener.accept(newData);
+      } catch (Exception e) {
+        log.log(Level.WARNING, "Exception in axisChangedListener", e);
       }
     }
   }
