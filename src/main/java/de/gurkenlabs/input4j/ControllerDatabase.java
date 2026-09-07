@@ -42,7 +42,7 @@ public final class ControllerDatabase {
    *
    * @deprecated Typo in constant name, use {@link #VENDOR_THRUSTMASTER} instead.
    */
-  @Deprecated
+  @Deprecated(since = "1.4.0", forRemoval = true)
   public static final int VENDOR_THURSTMASTER = VENDOR_THRUSTMASTER;
 
   /** Known vendor ID for Mad Catz. */

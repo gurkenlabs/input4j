@@ -158,32 +158,35 @@ public abstract class AbstractInputDevicePlugin implements InputDevicePlugin {
     this.setDevices(refreshedDevices);
 
     for (var d : disconnected) {
-      this.deviceDisconnectedListeners.forEach(listener -> {
-        try {
-          listener.accept(d);
-        } catch (Throwable t) {
-          log.log(Level.WARNING, "Exception in deviceDisconnectedListener", t);
-        }
-      });
+      this.deviceDisconnectedListeners.forEach(
+          listener -> {
+            try {
+              listener.accept(d);
+            } catch (Exception e) {
+              log.log(Level.WARNING, "Exception in deviceDisconnectedListener", e);
+            }
+          });
     }
     for (var d : connected) {
-      this.deviceConnectedListeners.forEach(listener -> {
-        try {
-          listener.accept(d);
-        } catch (Throwable t) {
-          log.log(Level.WARNING, "Exception in deviceConnectedListener", t);
-        }
-      });
+      this.deviceConnectedListeners.forEach(
+          listener -> {
+            try {
+              listener.accept(d);
+            } catch (Exception e) {
+              log.log(Level.WARNING, "Exception in deviceConnectedListener", e);
+            }
+          });
     }
 
     if (devicesChanged) {
-      this.devicesChangedListeners.forEach(listener -> {
-        try {
-          listener.run();
-        } catch (Throwable t) {
-          log.log(Level.WARNING, "Exception in devicesChangedListener", t);
-        }
-      });
+      this.devicesChangedListeners.forEach(
+          listener -> {
+            try {
+              listener.run();
+            } catch (Exception e) {
+              log.log(Level.WARNING, "Exception in devicesChangedListener", e);
+            }
+          });
     }
   }
 

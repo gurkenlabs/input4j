@@ -1,7 +1,6 @@
 package de.gurkenlabs.input4j;
 
-import java.awt.*;
-import java.io.IOException;
+import java.awt.Frame;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

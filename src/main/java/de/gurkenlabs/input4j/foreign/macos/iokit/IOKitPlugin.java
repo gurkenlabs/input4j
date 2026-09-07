@@ -2,14 +2,13 @@ package de.gurkenlabs.input4j.foreign.macos.iokit;
 
 import de.gurkenlabs.input4j.AbstractInputDevicePlugin;
 import de.gurkenlabs.input4j.BatteryInfo;
-import de.gurkenlabs.input4j.BatteryLevel;
 import de.gurkenlabs.input4j.BatteryType;
 import de.gurkenlabs.input4j.ControllerDatabase;
 import de.gurkenlabs.input4j.InputComponent;
 import de.gurkenlabs.input4j.InputDevice;
 import de.gurkenlabs.input4j.components.Axis;
 
-import java.awt.*;
+import java.awt.Frame;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
@@ -411,6 +410,8 @@ public class IOKitPlugin extends AbstractInputDevicePlugin {
       if (result != IOReturn.kIOReturnSuccess) {
         log.log(Level.FINE, "Failed to send rumble report with error: " + IOReturn.toString(result));
       }
+    } catch (LinkageError e) {
+      log.log(Level.FINE, "Cannot send rumble report on non-macOS host", e);
     } catch (Exception e) {
       log.log(Level.WARNING, "Failed to send rumble report", e);
     }

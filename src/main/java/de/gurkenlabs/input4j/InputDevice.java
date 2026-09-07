@@ -320,58 +320,68 @@ public final class InputDevice implements Closeable {
         hasInputData = true;
         component.setData(newData);
 
-        var inputEvent = new InputComponent.InputValueChangedEvent(component, oldData, newData);
-        for (var listener : listeners) {
-          try {
-            listener.onValueChanged(inputEvent);
-          } catch (Throwable t) {
-            log.log(Level.WARNING, "Exception in InputDeviceListener onValueChanged", t);
-          }
-        }
+        this.notifyValueChanged(new InputComponent.InputValueChangedEvent(component, oldData, newData));
 
         if (component.isButton()) {
-          var id = component.getId();
-          if (newData == 1) {
-            var pressed = buttonPressedListeners.get(id);
-            if (pressed != null) {
-              for (var listener : pressed) {
-                try {
-                  listener.run();
-                } catch (Throwable t) {
-                  log.log(Level.WARNING, "Exception in buttonPressedListener", t);
-                }
-              }
-            }
-          } else if (newData == 0) {
-            var released = buttonReleasedListeners.get(id);
-            if (released != null) {
-              for (var listener : released) {
-                try {
-                  listener.run();
-                } catch (Throwable t) {
-                  log.log(Level.WARNING, "Exception in buttonReleasedListener", t);
-                }
-              }
-            }
-          }
+          this.notifyButtonChanged(component.getId(), newData);
         }
 
         if (component.isAxis()) {
-          var axisListeners = axisChangedListeners.get(component.getId());
-          if (axisListeners != null) {
-            for (var listener : axisListeners) {
-              try {
-                listener.accept(newData);
-              } catch (Throwable t) {
-                log.log(Level.WARNING, "Exception in axisChangedListener", t);
-              }
-            }
-          }
+          this.notifyAxisChanged(component.getId(), newData);
         }
       }
     }
 
     this.hasInputData = hasInputData;
+  }
+
+  private void notifyValueChanged(InputComponent.InputValueChangedEvent event) {
+    for (var listener : this.listeners) {
+      try {
+        listener.onValueChanged(event);
+      } catch (Exception e) {
+        log.log(Level.WARNING, "Exception in InputDeviceListener onValueChanged", e);
+      }
+    }
+  }
+
+  private void notifyButtonChanged(InputComponent.ID id, float newData) {
+    if (newData == 1) {
+      var pressed = this.buttonPressedListeners.get(id);
+      if (pressed != null) {
+        for (var listener : pressed) {
+          try {
+            listener.run();
+          } catch (Exception e) {
+            log.log(Level.WARNING, "Exception in buttonPressedListener", e);
+          }
+        }
+      }
+    } else if (newData == 0) {
+      var released = this.buttonReleasedListeners.get(id);
+      if (released != null) {
+        for (var listener : released) {
+          try {
+            listener.run();
+          } catch (Exception e) {
+            log.log(Level.WARNING, "Exception in buttonReleasedListener", e);
+          }
+        }
+      }
+    }
+  }
+
+  private void notifyAxisChanged(InputComponent.ID id, float newData) {
+    var axisListeners = this.axisChangedListeners.get(id);
+    if (axisListeners != null) {
+      for (var listener : axisListeners) {
+        try {
+          listener.accept(newData);
+        } catch (Exception e) {
+          log.log(Level.WARNING, "Exception in axisChangedListener", e);
+        }
+      }
+    }
   }
 
   /**
@@ -418,8 +428,8 @@ public final class InputDevice implements Closeable {
   public void close() {
     try {
       this.rumble(0f);
-    } catch (Throwable t) {
-      // ignore errors if device is already disconnected or unavailable
+    } catch (Exception | LinkageError e) {
+      log.log(Level.FINEST, "Failed to stop rumble on close", e);
     }
     this.listeners.clear();
     this.buttonPressedListeners.clear();
@@ -521,7 +531,7 @@ public final class InputDevice implements Closeable {
    * @param buttonId The ID of the button to clear listeners for.
    * @deprecated Use {@link #clearButtonPressedListeners(int)} instead.
    */
-  @Deprecated
+  @Deprecated(since = "1.4.0", forRemoval = true)
   public void clearButtonPresedListeners(int buttonId) {
     this.clearButtonPressedListeners(buttonId);
   }
