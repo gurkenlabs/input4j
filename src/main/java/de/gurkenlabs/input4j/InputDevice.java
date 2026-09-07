@@ -428,9 +428,10 @@ public final class InputDevice implements Closeable {
   public void close() {
     try {
       this.rumble(0f);
-    } catch (Exception | LinkageError e) {
+    } catch (Exception e) {
       log.log(Level.FINEST, "Failed to stop rumble on close", e);
     }
+    this.hasInputData = false;
     this.listeners.clear();
     this.buttonPressedListeners.clear();
     this.buttonReleasedListeners.clear();

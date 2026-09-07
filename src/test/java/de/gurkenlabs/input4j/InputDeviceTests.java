@@ -88,9 +88,13 @@ public class InputDeviceTests {
     inputDevice.addComponent(component);
     assertEquals(1, inputDevice.getComponents().size());
 
+    inputDevice.poll();
+    assertTrue(inputDevice.hasInputData());
+
     inputDevice.close();
     assertTrue(inputDevice.getComponents().isEmpty());
     assertTrue(inputDevice.getComponent("BUTTON_1").isEmpty());
+    assertFalse(inputDevice.hasInputData());
   }
 
   @Test
