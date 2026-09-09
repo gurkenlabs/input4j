@@ -105,17 +105,17 @@ keywords: input4j guide, Java gamepad tutorial, game controller Java, FFM API in
     
     <div class="cards" style="margin-top: var(--space-xl);">
       <div class="card">
-        <div class="card-icon">🎮</div>
+        <div class="card-icon">{% include icon.html name="gamepad-2" %}</div>
         <h3 class="card-title">Java Game Controller API</h3>
         <p class="card-text">A clean, intuitive API for handling gamepad and joystick input in Java. Works with Xbox, PlayStation, and generic USB controllers.</p>
       </div>
       <div class="card">
-        <div class="card-icon">⚡</div>
+        <div class="card-icon">{% include icon.html name="zap" %}</div>
         <h3 class="card-title">No Native Dependencies</h3>
         <p class="card-text">Built on Java's Foreign Function & Memory API (FFM API), eliminating the need for JNI, DLLs, or SO files. Just add the JAR and start coding.</p>
       </div>
       <div class="card">
-        <div class="card-icon">🌍</div>
+        <div class="card-icon">{% include icon.html name="globe" %}</div>
         <h3 class="card-title">Cross-Platform</h3>
         <p class="card-text">Single API that works on Windows (XInput/DirectInput), Linux (evdev), and macOS (IOKit/HID). No platform-specific code needed.</p>
       </div>
@@ -128,28 +128,28 @@ keywords: input4j guide, Java gamepad tutorial, game controller Java, FFM API in
     <h2 class="section-title">Guides</h2>
     <div class="cards">
       <div class="card">
-        <div class="card-icon">🌐</div>
+        <div class="card-icon">{% include icon.html name="globe" %}</div>
         <h3 class="card-title">Cross-platform Java Input Without JNI</h3>
         <p class="card-text">Learn how input4j uses the Foreign Function & Memory API (FFM API) to provide cross-platform gamepad and joystick input handling without native dependencies or JNI complexity.</p>
         <a href="{{ '/docs/cross-platform-java-input' | relative_url }}" class="btn btn-primary" style="margin-top: var(--space-md);">Read Guide</a>
       </div>
       
       <div class="card">
-        <div class="card-icon">🎮</div>
+        <div class="card-icon">{% include icon.html name="gamepad-2" %}</div>
         <h3 class="card-title">How to use input4j in your Java Game</h3>
         <p class="card-text">A practical step-by-step guide to integrating gamepad controller support into your Java game. Covers event-based and polling input handling, controller mapping, and force feedback vibration.</p>
         <a href="{{ '/docs/java-game-integration' | relative_url }}" class="btn btn-primary" style="margin-top: var(--space-md);">Read Guide</a>
       </div>
       
       <div class="card">
-        <div class="card-icon">🏗️</div>
+        <div class="card-icon">{% include icon.html name="layers" %}</div>
         <h3 class="card-title">Internal Architecture & FFM API</h3>
         <p class="card-text">Deep dive into input4j's internal architecture and implementation. Learn how the Foreign Function & Memory API enables native system calls without JNI or native libraries.</p>
         <a href="{{ '/docs/architecture-ffm-api' | relative_url }}" class="btn btn-primary" style="margin-top: var(--space-md);">Read Guide</a>
       </div>
 
       <div class="card">
-        <div class="card-icon">🕹️</div>
+        <div class="card-icon">{% include icon.html name="puzzle" %}</div>
         <h3 class="card-title">Case Study: LITIENGINE Replaces JInput with Input4j</h3>
         <p class="card-text">Learn how LITIENGINE migrated from JInput to Input4j for gamepad support. See the benefits, code examples, and how game engines use input4j.</p>
         <a href="{{ '/docs/litiengine-input4j-migration' | relative_url }}" class="btn btn-primary" style="margin-top: var(--space-md);">Read Guide</a>
@@ -285,13 +285,13 @@ device.onDisconnected(() -> {
     <h2 class="section-title">API Reference</h2>
     <div class="cards">
       <div class="card">
-        <div class="card-icon">📚</div>
+        <div class="card-icon">{% include icon.html name="book-open" %}</div>
         <h3 class="card-title">Javadoc</h3>
         <p class="card-text">Complete API documentation for InputDevices, InputDevice, InputComponent, XInput, and all platform-specific implementations.</p>
         <a href="https://javadoc.io/doc/de.gurkenlabs/input4j" class="btn btn-primary" style="margin-top: var(--space-md);" target="_blank">View Javadoc</a>
       </div>
       <div class="card">
-        <div class="card-icon">📦</div>
+        <div class="card-icon">{% include icon.html name="package" %}</div>
         <h3 class="card-title">Maven Central</h3>
         <p class="card-text">Release artifacts, version history, and dependency information available on Maven Central.</p>
         <a href="https://central.sonatype.com/artifact/de.gurkenlabs/input4j" class="btn btn-primary" style="margin-top: var(--space-md);" target="_blank">View on Maven</a>

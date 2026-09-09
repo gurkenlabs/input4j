@@ -72,19 +72,19 @@ keywords: LITIENGINE Input4j, JInput replacement, Java gamepad migration, LITIEN
 
     <div class="cards" style="margin-top: var(--space-lg);">
       <div class="card">
-        <div class="card-icon">🔧</div>
+        <div class="card-icon">{% include icon.html name="wrench" %}</div>
         <h3 class="card-title">Native Dependencies</h3>
         <p class="card-text">JInput requires native DLL/SO files (jinput.dll, libjinput.so, libjinput.dylib) to be distributed with the application, complicating deployment.</p>
       </div>
       
       <div class="card">
-        <div class="card-icon">🐛</div>
+        <div class="card-icon">{% include icon.html name="bug" %}</div>
         <h3 class="card-title">Maintenance Issues</h3>
         <p class="card-text">JInput is no longer actively maintained, with the last major updates years ago, leading to compatibility issues with newer Java versions.</p>
       </div>
       
       <div class="card">
-        <div class="card-icon">🔨</div>
+        <div class="card-icon">{% include icon.html name="hammer" %}</div>
         <h3 class="card-title">JNI Complexity</h3>
         <p class="card-text">JInput uses traditional JNI (Java Native Interface), which requires writing C code and managing native build toolchains.</p>
       </div>
@@ -136,37 +136,37 @@ dependencies {
 
     <div class="cards" style="margin-top: var(--space-lg);">
       <div class="card">
-        <div class="card-icon">📦</div>
+        <div class="card-icon">{% include icon.html name="package" %}</div>
         <h3 class="card-title">No Native Artifacts</h3>
         <p class="card-text">Input4j uses FFM API instead of JNI, eliminating the need for DLLs, SOs, or DYLIBs. Just add the JAR to your classpath.</p>
       </div>
       
       <div class="card">
-        <div class="card-icon">🌍</div>
+        <div class="card-icon">{% include icon.html name="globe" %}</div>
         <h3 class="card-title">Cross-Platform</h3>
         <p class="card-text">Single codebase works on Windows (XInput/DirectInput), Linux (evdev), and macOS (IOKit/HID).</p>
       </div>
       
       <div class="card">
-        <div class="card-icon">⚡</div>
+        <div class="card-icon">{% include icon.html name="zap" %}</div>
         <h3 class="card-title">High Performance</h3>
         <p class="card-text">Direct native calls without JNI overhead provide low-latency input handling for real-time gaming.</p>
       </div>
       
       <div class="card">
-        <div class="card-icon">🔒</div>
+        <div class="card-icon">{% include icon.html name="shield-check" %}</div>
         <h3 class="card-title">Type Safety</h3>
         <p class="card-text">FFM API provides compile-time type checking for native function calls, reducing runtime errors.</p>
       </div>
       
       <div class="card">
-        <div class="card-icon">🚀</div>
+        <div class="card-icon">{% include icon.html name="rocket" %}</div>
         <h3 class="card-title">Future-Proof</h3>
         <p class="card-text">Built on standardized Java technology (FFM API in Java 22+) ensuring long-term support.</p>
       </div>
       
       <div class="card">
-        <div class="card-icon">🎮</div>
+        <div class="card-icon">{% include icon.html name="gamepad-2" %}</div>
         <h3 class="card-title">Modern API</h3>
         <p class="card-text">Clean, intuitive API with both polling and event-based input handling patterns.</p>
       </div>

@@ -73,9 +73,9 @@ keywords: java gamepad, java controller, java joystick, gamepad library, control
     <p class="hero-subtitle">Lightweight, cross-platform Java library for unified gamepad and joystick input handling</p>
     <p class="hero-subtitle" style="font-size: 1rem; color: var(--text-secondary); margin-top: -8px; margin-bottom: var(--space-lg);">The modern solution for <strong>java gamepad input</strong> and <strong>java joystick input</strong> - no native dependencies required.</p>
     <div class="hero-badges">
-      <span class="badge" aria-label="Windows">🪟 Windows</span>
-      <span class="badge" aria-label="Linux">🐧 Linux</span>
-      <span class="badge" aria-label="macOS">🍎 macOS</span>
+      <span class="badge" aria-label="Windows">{% include icon.html name="windows" %} Windows</span>
+      <span class="badge" aria-label="Linux">{% include icon.html name="linux" %} Linux</span>
+      <span class="badge" aria-label="macOS">{% include icon.html name="apple" %} macOS</span>
       <br>
       <span class="badge" aria-label="Java 22+">Java 22+</span>
       <span class="badge" aria-label="No Native Dependencies">No Native Dependencies</span>
@@ -177,32 +177,32 @@ device.onAxisChanged(XInput.Axis.LEFT_X, value ->
     <h2 class="section-title">Why Use input4j?</h2>
     <div class="cards">
       <div class="card">
-        <div class="card-icon" aria-label="Cross-Platform">🌍</div>
+        <div class="card-icon" aria-label="Cross-Platform">{% include icon.html name="globe" %}</div>
         <h3 class="card-title">Cross-Platform</h3>
         <p class="card-text">Works seamlessly on Windows, Linux, and macOS. Single API for all platforms with zero platform-specific code required.</p>
       </div>
       <div class="card">
-        <div class="card-icon" aria-label="Modern Java API">⚡</div>
+        <div class="card-icon" aria-label="Modern Java API">{% include icon.html name="zap" %}</div>
         <h3 class="card-title">Modern Java API</h3>
         <p class="card-text">Leverages the Foreign Function & Memory API (Java 22+) for high-performance native access without JNI complexity.</p>
       </div>
       <div class="card">
-        <div class="card-icon" aria-label="Unified Input API">🎮</div>
+        <div class="card-icon" aria-label="Unified Input API">{% include icon.html name="gamepad-2" %}</div>
         <h3 class="card-title">Unified Input API</h3>
         <p class="card-text">Single consistent <strong>java game controller API</strong> for gamepads, joysticks, and other input devices. Supports XInput, DirectInput, evdev, and IOKit/HID - the ultimate <strong>java controller library</strong> solution.</p>
       </div>
       <div class="card">
-        <div class="card-icon" aria-label="No Native Dependencies">🔌</div>
+        <div class="card-icon" aria-label="No Native Dependencies">{% include icon.html name="package" %}</div>
         <h3 class="card-title">No Native Dependencies</h3>
         <p class="card-text">No .dll, .so, or .dylib files to manage. Simply add the JAR and start coding. Perfect for distribution. The cleanest way to add <strong>java joystick input</strong> to your game.</p>
       </div>
       <div class="card">
-        <div class="card-icon" aria-label="Event-Based & Polling">📡</div>
+        <div class="card-icon" aria-label="Event-Based & Polling">{% include icon.html name="radio" %}</div>
         <h3 class="card-title">Event-Based &amp; Polling</h3>
         <p class="card-text">Flexible input handling with both event-driven callbacks and polling modes. Choose what fits your architecture.</p>
       </div>
       <div class="card">
-        <div class="card-icon" aria-label="Lightweight">🛠️</div>
+        <div class="card-icon" aria-label="Lightweight">{% include icon.html name="sparkles" %}</div>
         <h3 class="card-title">Lightweight</h3>
         <p class="card-text">Minimal footprint with no external dependencies. Designed for games, simulations, and applications.</p>
       </div>
@@ -215,17 +215,17 @@ device.onAxisChanged(XInput.Axis.LEFT_X, value ->
     <h2 class="section-title">Supported Platforms</h2>
     <div class="cards">
       <div class="card">
-        <div class="card-icon" aria-label="Windows">🪟</div>
+        <div class="card-icon" aria-label="Windows">{% include icon.html name="windows" %}</div>
         <h3 class="card-title">Windows</h3>
         <p class="card-text">Full support for XInput (Xbox controllers) and DirectInput (legacy gamepads).</p>
       </div>
       <div class="card">
-        <div class="card-icon" aria-label="Linux">🐧</div>
+        <div class="card-icon" aria-label="Linux">{% include icon.html name="linux" %}</div>
         <h3 class="card-title">Linux</h3>
         <p class="card-text">Native evdev integration via /dev/input interface for all HID-compliant gamepads.</p>
       </div>
       <div class="card">
-        <div class="card-icon" aria-label="macOS">🍎</div>
+        <div class="card-icon" aria-label="macOS">{% include icon.html name="apple" %}</div>
         <h3 class="card-title">macOS</h3>
         <p class="card-text">IOKit HID framework integration for reliable gamepad detection on Apple Silicon and Intel Macs.</p>
       </div>

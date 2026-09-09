@@ -34,12 +34,12 @@ keywords: Java game gamepad, game controller Java, input handling game Java, Jav
 <div class="guide-hero">
   <div class="container">
     <div class="guide-header">
-      <h1 class="guide-title">🎮 How to use input4j in your Java Game</h1>
+      <h1 class="guide-title">{% include icon.html name="gamepad-2" %} How to use input4j in your Java Game</h1>
       <p class="guide-subtitle">A practical guide to adding gamepad support to your Java game</p>
       <div class="guide-meta">
-        <span class="meta-item">📅 Updated Mar 2026</span>
-        <span class="meta-item">📄 10 min read</span>
-        <span class="meta-item">⭐ Beginner</span>
+        <span class="meta-item">{% include icon.html name="calendar" %} Updated Mar 2026</span>
+        <span class="meta-item">{% include icon.html name="clock" %} 10 min read</span>
+        <span class="meta-item">{% include icon.html name="star" %} Beginner</span>
       </div>
     </div>
   </div>
@@ -125,14 +125,14 @@ public class Game {
       
       <div class="feature-list">
         <div class="feature-item">
-          <div class="feature-icon">📡</div>
+          <div class="feature-icon">{% include icon.html name="radio" %}</div>
           <div class="feature-content">
             <h3>Event-Based (Recommended)</h3>
             <p>Register callbacks for button presses and axis changes. Better for event-driven architectures.</p>
           </div>
         </div>
         <div class="feature-item">
-          <div class="feature-icon">🔄</div>
+          <div class="feature-icon">{% include icon.html name="refresh-cw" %}</div>
           <div class="feature-content">
             <h3>Polling</h3>
             <p>Query current input state each frame. Better for game loops with fixed update cycles.</p>

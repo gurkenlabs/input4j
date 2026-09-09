@@ -34,12 +34,12 @@ keywords: Java FFM API, Foreign Function Memory API, gamepad input Java, XInput 
 <div class="guide-hero">
   <div class="container">
     <div class="guide-header">
-      <h1 class="guide-title">🌐 Cross-platform Java input handling without JNI</h1>
+      <h1 class="guide-title">{% include icon.html name="globe" %} Cross-platform Java input handling without JNI</h1>
       <p class="guide-subtitle">How input4j leverages the Foreign Function & Memory API for modern, dependency-free input handling</p>
       <div class="guide-meta">
-        <span class="meta-item">📅 Updated Mar 4, 2026</span>
-        <span class="meta-item">📄 15 min read</span>
-        <span class="meta-item">⭐ Advanced</span>
+        <span class="meta-item">{% include icon.html name="calendar" %} Updated Mar 4, 2026</span>
+        <span class="meta-item">{% include icon.html name="clock" %} 15 min read</span>
+        <span class="meta-item">{% include icon.html name="star" %} Advanced</span>
       </div>
     </div>
   </div>
@@ -50,18 +50,18 @@ keywords: Java FFM API, Foreign Function Memory API, gamepad input Java, XInput 
     <div class="guide-toc">
       <h3>Table of Contents</h3>
       <ul>
-        <li><a href="#traditional-challenges">Traditional Challenges with JNI</a></li>
+        <li><a href="#traditional-approaches">Traditional Java Input Approaches</a></li>
         <li><a href="#foreign-function-memory-api">The Foreign Function & Memory API</a></li>
         <li><a href="#platform-support">Platform Support in input4j</a></li>
         <li><a href="#performance-comparison">Performance Comparison</a></li>
-        <li><a href="#implementation-details">Implementation Details</a></li>
-        <li><a href="#getting-started">Getting Started</a></li>
+        <li><a href="#getting-started">Getting Started with input4j</a></li>
       </ul>
     </div>
 
-    <div class="guide-section" id="traditional-challenges">
-      <h2>Traditional Challenges with JNI</h2>
-      <p>Before the Foreign Function & Memory API, Java developers had limited options for accessing native input APIs:</p>
+    <div class="guide-section" id="traditional-approaches">
+      <h2>Traditional Java Input Approaches</h2>
+      <p>Before Java 22, developers had limited options for native input handling in Java:</p>
+      
       <div class="comparison-table">
         <table>
           <thead>
@@ -74,18 +74,18 @@ keywords: Java FFM API, Foreign Function Memory API, gamepad input Java, XInput 
           <tbody>
             <tr>
               <td>Java AWT Robot</td>
-              <td>✅ Simple API</td>
-              <td>❌ Limited to basic input</td>
+              <td>{% include icon.html name="check" class="icon-check" %} Simple API</td>
+              <td>{% include icon.html name="x" class="icon-x" %} Limited to basic input</td>
             </tr>
             <tr>
               <td>JNI</td>
-              <td>✅ Full native access</td>
-              <td>❌ Complex setup, platform-specific</td>
+              <td>{% include icon.html name="check" class="icon-check" %} Full native access</td>
+              <td>{% include icon.html name="x" class="icon-x" %} Complex setup, platform-specific</td>
             </tr>
             <tr>
               <td>Third-party libs</td>
-              <td>✅ Pre-built solutions</td>
-              <td>❌ Additional dependencies</td>
+              <td>{% include icon.html name="check" class="icon-check" %} Pre-built solutions</td>
+              <td>{% include icon.html name="x" class="icon-x" %} Additional dependencies</td>
             </tr>
           </tbody>
         </table>
@@ -120,28 +120,28 @@ public class NativeInput {
       
       <div class="feature-list">
         <div class="feature-item">
-          <div class="feature-icon">✅</div>
+          <div class="feature-icon">{% include icon.html name="shield-check" %}</div>
           <div class="feature-content">
             <h3>Type Safety</h3>
             <p>Compile-time checking of native function signatures</p>
           </div>
         </div>
         <div class="feature-item">
-          <div class="feature-icon">🔒</div>
+          <div class="feature-icon">{% include icon.html name="lock" %}</div>
           <div class="feature-content">
             <h3>Memory Safety</h3>
             <p>Automatic memory management and bounds checking</p>
           </div>
         </div>
         <div class="feature-item">
-          <div class="feature-icon">⚡</div>
+          <div class="feature-icon">{% include icon.html name="zap" %}</div>
           <div class="feature-content">
             <h3>Performance</h3>
             <p>Direct memory access without JNI overhead</p>
           </div>
         </div>
         <div class="feature-item">
-          <div class="feature-icon">📦</div>
+          <div class="feature-icon">{% include icon.html name="package" %}</div>
           <div class="feature-content">
             <h3>No Native Artifacts</h3>
             <p>No .dll, .so, or .dylib files required</p>
@@ -178,7 +178,7 @@ public class ModernInput {
       
       <div class="platform-support">
         <div class="platform-card">
-          <div class="platform-icon">🖥️</div>
+          <div class="platform-icon">{% include icon.html name="windows" %}</div>
           <h3>Windows</h3>
           <p>DirectInput & XInput via native APIs</p>
           <div class="platform-tech">
@@ -188,7 +188,7 @@ public class ModernInput {
         </div>
         
         <div class="platform-card">
-          <div class="platform-icon">🐧</div>
+          <div class="platform-icon">{% include icon.html name="linux" %}</div>
           <h3>Linux</h3>
           <p>evdev interface for input events</p>
           <div class="platform-tech">
@@ -198,7 +198,7 @@ public class ModernInput {
         </div>
         
         <div class="platform-card">
-          <div class="platform-icon">🍎</div>
+          <div class="platform-icon">{% include icon.html name="apple" %}</div>
           <h3>macOS</h3>
           <p>IOKit HID device access</p>
           <div class="platform-tech">

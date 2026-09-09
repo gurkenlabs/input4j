@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1254" height="1254" viewBox="0 0 1254 1254" fill="none">
+  <defs>
+    <linearGradient id="outerGrad" x1="110" y1="120" x2="1140" y2="1160" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4DF4C7"/>
+      <stop offset="0.32" stop-color="#0DDBD8"/>
+      <stop offset="0.67" stop-color="#05B5F0"/>
+      <stop offset="1" stop-color="#087DF8"/>
+    </linearGradient>
+    <linearGradient id="innerGrad" x1="350" y1="360" x2="900" y2="930" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3DF3D2"/>
+      <stop offset="0.40" stop-color="#0BD7DD"/>
+      <stop offset="0.74" stop-color="#08B2F2"/>
+      <stop offset="1" stop-color="#0789FA"/>
+    </linearGradient>
+    <linearGradient id="darkGrad" x1="270" y1="130" x2="990" y2="1130" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#071E2D"/>
+      <stop offset="0.45" stop-color="#031625"/>
+      <stop offset="1" stop-color="#02111F"/>
+    </linearGradient>
+    <linearGradient id="arrowGrad" x1="570" y1="390" x2="680" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#FCFCFB"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="300" y1="220" x2="900" y2="860" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A0FFE5" stop-opacity=".58"/>
+      <stop offset=".6" stop-color="#6EFAF5" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- dark backing diamond, traced from the generated mark -->
+  <path d="M623 37 L1223 632 L627 1230 L30 637 Z" fill="url(#darkGrad)"/>
+
+  <!-- outer chevrons: traced from the generated image -->
+  <path d="M626 104 L891 370 L815 445 L626 256 L437 445 L361 371 Z" fill="url(#outerGrad)"/>
+  <path d="M330 400 L404 477 L246 635 L404 793 L333 867 L98 633 Z" fill="url(#outerGrad)"/>
+  <path d="M922 400 L847 476 L1005 635 L847 794 L920 867 L1154 634 Z" fill="url(#outerGrad)"/>
+  <path d="M362 897 L436 824 L626 1013 L815 825 L890 899 L625 1162 Z" fill="url(#outerGrad)"/>
+
+  <!-- restrained facets that mimic the generated edge lighting -->
+  <path d="M626 104 L647 132 L386 394 L361 371 Z" fill="url(#shine)"/>
+  <path d="M98 633 L126 633 L333 840 L333 867 Z" fill="#5CFFE0" opacity=".18"/>
+  <path d="M1154 634 L1125 634 L920 840 L920 867 Z" fill="#0673F4" opacity=".12"/>
+  <path d="M625 1162 L625 1134 L863 896 L890 899 Z" fill="#0874F8" opacity=".18"/>
+
+  <!-- top directional key -->
+  <path d="M627 327
+           C635 327 641 331 647 337
+           L756 446
+           C760 450 762 456 762 463
+           L762 493
+           C762 501 759 507 754 512
+           L727 535
+           C723 538 717 539 711 539
+           L543 539
+           C536 539 530 537 525 532
+           L500 507
+           C495 502 493 496 493 489
+           L493 463
+           C493 456 496 450 501 445
+           L608 338
+           C614 331 620 327 627 327 Z" fill="url(#innerGrad)"/>
+
+  <!-- left directional key -->
+  <path d="M418 525
+           C410 525 405 528 399 534
+           L319 614
+           C314 619 312 626 312 633
+           C312 641 315 647 320 652
+           L405 738
+           C410 743 416 747 424 748
+           L477 750
+           C484 750 490 747 495 742
+           L507 729
+           C511 725 512 720 512 714
+           L512 562
+           C512 555 510 550 505 545
+           L492 532
+           C488 528 483 526 477 526 Z" fill="url(#innerGrad)"/>
+
+  <!-- right directional key -->
+  <path d="M839 526
+           C847 526 852 529 858 535
+           L938 616
+           C943 621 944 628 944 635
+           C944 643 941 649 936 654
+           L851 739
+           C846 744 840 748 832 749
+           L779 750
+           C772 750 766 747 761 742
+           L749 730
+           C745 726 744 721 744 715
+           L744 561
+           C744 554 746 549 751 544
+           L764 532
+           C768 528 773 526 779 526 Z" fill="url(#innerGrad)"/>
+
+  <!-- bottom directional key -->
+  <path d="M534 741
+           C528 741 523 744 519 748
+           L499 768
+           C495 772 493 778 493 784
+           L493 816
+           C493 823 496 829 501 834
+           L610 943
+           C615 948 621 951 628 951
+           C635 951 641 948 646 943
+           L755 834
+           C759 830 761 824 761 818
+           L761 784
+           C761 778 758 772 754 768
+           L728 744
+           C724 742 719 741 714 741 Z" fill="url(#innerGrad)"/>
+
+  <!-- center -->
+  <rect x="534" y="558" width="188" height="164" rx="13" fill="url(#innerGrad)"/>
+
+  <!-- subtle input-key edge glints -->
+  <path d="M509 456 L615 350 Q627 338 640 351" fill="none" stroke="#8BFFF0" stroke-opacity=".20" stroke-width="11" stroke-linecap="round"/>
+  <path d="M329 626 L416 539" fill="none" stroke="#8BFFF0" stroke-opacity=".16" stroke-width="10" stroke-linecap="round"/>
+  <path d="M758 545 L838 545 Q846 545 852 551" fill="none" stroke="#8BFFF0" stroke-opacity=".10" stroke-width="9" stroke-linecap="round"/>
+  <path d="M509 780 L509 816 Q509 823 514 828" fill="none" stroke="#8BFFF0" stroke-opacity=".10" stroke-width="9" stroke-linecap="round"/>
+  <path d="M548 566 H708" fill="none" stroke="#8BFFF0" stroke-opacity=".14" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- arrows, traced from the generated mark -->
+  <path d="M627 401 L691 473 L651 473 L651 523 L603 523 L603 473 L563 473 Z" fill="url(#arrowGrad)"/>
+  <path d="M434 583 L370 641 L434 699 L435 663 L491 663 L491 618 L435 618 Z" fill="url(#arrowGrad)"/>
+  <path d="M819 583 L819 618 L763 618 L763 662 L819 663 L819 699 L883 642 Z" fill="url(#arrowGrad)"/>
+  <path d="M651 762 L603 762 L603 811 L563 812 L626 883 L690 812 L651 811 Z" fill="url(#arrowGrad)"/>
+</svg>

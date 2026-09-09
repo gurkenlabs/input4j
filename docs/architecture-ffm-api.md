@@ -34,12 +34,12 @@ keywords: FFM API architecture, Java native input, JNI alternative, MemorySegmen
 <div class="guide-hero">
   <div class="container">
     <div class="guide-header">
-      <h1 class="guide-title">🏗️ Internal Architecture</h1>
+      <h1 class="guide-title">{% include icon.html name="layers" %} Internal Architecture</h1>
       <p class="guide-subtitle">How input4j uses the Foreign Function & Memory API for native input handling</p>
       <div class="guide-meta">
-        <span class="meta-item">📅 Updated Mar 2026</span>
-        <span class="meta-item">📄 15 min read</span>
-        <span class="meta-item">⭐ Advanced</span>
+        <span class="meta-item">{% include icon.html name="calendar" %} Updated Mar 2026</span>
+        <span class="meta-item">{% include icon.html name="clock" %} 15 min read</span>
+        <span class="meta-item">{% include icon.html name="star" %} Advanced</span>
       </div>
     </div>
   </div>
@@ -94,14 +94,14 @@ keywords: FFM API architecture, Java native input, JNI alternative, MemorySegmen
       
       <div class="feature-list">
         <div class="feature-item">
-          <div class="feature-icon">🔌</div>
+          <div class="feature-icon">{% include icon.html name="cpu" %}</div>
           <div class="feature-content">
             <h3>Foreign Function Calls</h3>
             <p>Call native functions directly from Java without JNI overhead</p>
           </div>
         </div>
         <div class="feature-item">
-          <div class="feature-icon">💾</div>
+          <div class="feature-icon">{% include icon.html name="hard-drive" %}</div>
           <div class="feature-content">
             <h3>Foreign Memory Access</h3>
             <p>Read and write native memory directly with strong safety guarantees</p>
@@ -271,7 +271,7 @@ public abstract class AbstractInputDevicePlugin implements InputDevicePlugin {
       
       <div class="platform-support">
         <div class="platform-card">
-          <div class="platform-icon">🎯</div>
+          <div class="platform-icon">{% include icon.html name="crosshair" %}</div>
           <h3>XInput</h3>
           <p>Modern API for Xbox controllers. 12 buttons, 2 analog sticks, 2 triggers.</p>
           <div class="platform-tech">
@@ -280,7 +280,7 @@ public abstract class AbstractInputDevicePlugin implements InputDevicePlugin {
           </div>
         </div>
         <div class="platform-card">
-          <div class="platform-icon">📺</div>
+          <div class="platform-icon">{% include icon.html name="monitor" %}</div>
           <h3>DirectInput</h3>
           <p>Legacy API for older gamepads. More flexible but deprecated.</p>
           <div class="platform-tech">
